@@ -1,0 +1,119 @@
+component probe
+uptime 135424.5
+freeMemory 1774435 totalMemory 2097152
+
+component me_controller ee1b3df1-8202-4f5a-a9d2-124fa398e732
+methods:
+  allItems indirect :: function():userdata -- Get an iterator object for the list of the items in the network. 
+  getAvgPowerInjection indirect :: function():number -- Get the average power injection into the network.
+  getAvgPowerUsage indirect :: function():number -- Get the average power usage of the network.
+  getCpus indirect :: function():table -- Get a list of tables representing the available CPUs in the network.
+  getCraftable indirect :: function([detail:table, type:string]):table -- Get a known recipe. This can be used to issue crafting requests.
+  getCraftables indirect :: function([filter:table]):table -- Get a list of known item recipes. These can be used to issue crafting requests.
+  getEnergyStored indirect :: function([direction:number=6]):number -- Returns the amount of stored energy for the given side.
+  getEssentiaInNetwork indirect :: function([aspect: string OR detail:table]):table -- Get a list of the stored essentia in the network, or a single requested essentia if a descriptor table is provided.
+  getFluidInNetwork indirect :: function([name:string]):table OR function(detail:table):table -- Get a list of the stored fluids in the network.
+  getFluidsInNetwork indirect :: function():table -- Get a list of the stored fluids in the network.
+  getIdlePowerUsage indirect :: function():number -- Get the idle power usage of the network.
+  getItemInNetwork indirect :: function(name:string|id:number[, damage:number[, nbt:string]]):table OR function(detail:table):table -- Retrieves the stored item in the network by its unlocalized name. For the first format, 'nbt' expects an SNBT string.
+  getItemsInNetwork indirect :: function([filter:table]):table -- Get a list of the stored items in the network.
+  getItemsInNetworkById indirect :: function(filter:table):table -- Get a list of the stored items in the network matching the filter. Filter is an Array of Item IDs
+  getMaxEnergyStored indirect :: function([direction:number=6]):number -- Returns the maximum amount of stored energy for the given side.
+  getMaxStoredPower indirect :: function():number -- Get the maximum stored power in the network.
+  getStoredPower indirect :: function():number -- Get the stored power in the network. 
+  isEnergyProvider indirect :: function():number -- Returns whether this component can provide energy.
+  isEnergyReceiver indirect :: function():number -- Returns whether this component can receive energy.
+  isEssentiaEventSubscription direct :: function(): boolean -- Returns whether the "network_essentia_changed" event subscription is currently enabled.
+  isFluidEventSubscription direct :: function(): boolean -- Returns whether the "network_fluid_changed" event subscription is currently enabled.
+  isItemEventSubscription direct :: function(): boolean -- Returns whether the "network_item_changed" event subscription is currently enabled.
+  setEssentiaEventSubscription indirect :: function(enabled: bool): nil -- Enable or disable subscription to the "network_essentia_changed" event.
+  setFluidEventSubscription indirect :: function(enabled: bool): nil -- Enable or disable subscription to the "network_fluid_changed" event.
+  setItemEventSubscription indirect :: function(enabled: bool): nil -- Enable or disable subscription to the "network_item_changed" event.
+  store indirect :: function(filter:table, dbAddress:string[, startSlot:number[, count:number]]): Boolean -- Store items in the network matching the specified filter in the database with the specified address.
+proxy keys:
+  address <string>
+  allItems <table>
+  getAvgPowerInjection <table>
+  getAvgPowerUsage <table>
+  getCpus <table>
+  getCraftable <table>
+  getCraftables <table>
+  getEnergyStored <table>
+  getEssentiaInNetwork <table>
+  getFluidInNetwork <table>
+  getFluidsInNetwork <table>
+  getIdlePowerUsage <table>
+  getItemInNetwork <table>
+  getItemsInNetwork <table>
+  getItemsInNetworkById <table>
+  getMaxEnergyStored <table>
+  getMaxStoredPower <table>
+  getStoredPower <table>
+  isEnergyProvider <table>
+  isEnergyReceiver <table>
+  isEssentiaEventSubscription <table>
+  isFluidEventSubscription <table>
+  isItemEventSubscription <table>
+  setEssentiaEventSubscription <table>
+  setFluidEventSubscription <table>
+  setItemEventSubscription <table>
+  slot <number>
+  store <table>
+  type <string>
+zero-arg probes:
+
+component me_interface_terminal e66c9a36-cc9d-46da-99be-b45933485913
+methods:
+  getEnergyStored indirect :: function([direction:number=6]):number -- Returns the amount of stored energy for the given side.
+  getInterfaces indirect :: function():table -- Returns a list of all interface
+  getInterfacesByLocation indirect :: function(location:table{x:number, y:number: z:number[, dimId:number]}[, side:number|string]):table -- Returns a list of interfaces at the specified location. 'side' can be a Forge direction number or name.
+  getInterfacesByName indirect :: function(filter:string):table -- Returns a list of interfaces with the specified display name.
+  getMaxEnergyStored indirect :: function([direction:number=6]):number -- Returns the maximum amount of stored energy for the given side.
+  isEnergyProvider indirect :: function():number -- Returns whether this component can provide energy.
+  isEnergyReceiver indirect :: function():number -- Returns whether this component can receive energy.
+  send indirect :: function(source:table{location:table, slot:number}, target:table{location:table[, slot:number]}):boolean, number|string -- Sends a pattern from source to target. Returns transfer result and target slot or error message.
+  sendBatch indirect :: function(tasks:table{{source:table, target:table}, ...}):table -- Executes multiple transfers in one batch. Returns an array of results, each containing [success:boolean, slotOrError:any].
+proxy keys:
+  address <string>
+  getEnergyStored <table>
+  getInterfaces <table>
+  getInterfacesByLocation <table>
+  getInterfacesByName <table>
+  getMaxEnergyStored <table>
+  isEnergyProvider <table>
+  isEnergyReceiver <table>
+  send <table>
+  sendBatch <table>
+  slot <number>
+  type <string>
+zero-arg probes:
+
+component me_interface 4c871f13-2137-40fe-a4de-5fd96a5546d0
+methods:
+  getEnergyStored indirect :: function([direction:number=6]):number -- Returns the amount of stored energy for the given side.
+  getInterfaceConfiguration indirect :: function(side:number[, slot:number]):table -- Get the configuration of the interface pointing in the specified direction.
+  getInterfacePattern indirect :: function([slot:number]):table -- Get the given pattern in the interface.
+  getMaxEnergyStored indirect :: function([direction:number=6]):number -- Returns the maximum amount of stored energy for the given side.
+  isEnergyProvider indirect :: function():number -- Returns whether this component can provide energy.
+  isEnergyReceiver indirect :: function():number -- Returns whether this component can receive energy.
+  setInterfaceConfiguration indirect :: function(side:number[, slot:number][, database:address, entry:number[, size:number]]):boolean -- Configure the interface pointing in the specified direction.
+  setInterfacePatternInput indirect :: function(slot:number, index:number[, database:address, entry:number, size:number]):boolean OR function(slot:number, index:number[, detail:table, type:string]):boolean -- Set the pattern input at the given index.
+  setInterfacePatternOutput indirect :: function(slot:number, index:number[, database:address, entry:number, size:number]):boolean OR function(slot:number, index:number[, detail:table, type:string]):boolean -- Set the pattern input at the given index.
+  storeInterfacePatternInput indirect :: function(slot:number, index:number, database:address, entry:number):boolean -- Store pattern input at the given index to the database entry.
+  storeInterfacePatternOutput indirect :: function(slot:number, index:number, database:address, entry:number):boolean -- Store pattern output at the given index to the database entry.
+proxy keys:
+  address <string>
+  getEnergyStored <table>
+  getInterfaceConfiguration <table>
+  getInterfacePattern <table>
+  getMaxEnergyStored <table>
+  isEnergyProvider <table>
+  isEnergyReceiver <table>
+  setInterfaceConfiguration <table>
+  setInterfacePatternInput <table>
+  setInterfacePatternOutput <table>
+  slot <number>
+  storeInterfacePatternInput <table>
+  storeInterfacePatternOutput <table>
+  type <string>
+zero-arg probes:
