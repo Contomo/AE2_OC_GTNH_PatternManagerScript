@@ -17,6 +17,10 @@ local function log(s)
 end
 local function each(result,visit)
   assert(result~=nil,'API returned nil')
+  -- Calling the iterator materializes all pattern NBT for each machine.
+  -- getAll(false) is the API's metadata-only path, including exact lookups.
+  if result.getAll then result=result.getAll(false)
+  elseif getmetatable(result) then error('Metadata-only getAll(false) unavailable; refusing full pattern scan') end
   if type(result)=='table' and not getmetatable(result) then
     for _,entry in pairs(result) do
       if type(entry)=='table' and entry.location then visit(entry) end
@@ -39,7 +43,7 @@ local function exact(p,name)
   end)
   log('EXACT '..quote(name)..': '..(ok and tostring(count)..' match(es)' or 'ERROR '..tostring(err)))
 end
-log('AE INTERFACE VISIBILITY PROBE v1 (read only)')
+log('AE INTERFACE VISIBILITY PROBE v2 (metadata only; read only)')
 log('Target: '..quote(target))
 log('Buffer: '..quote(buffer))
 log('Configured terminal prefix: '..quote(config.terminalAddress or ''))
@@ -57,11 +61,7 @@ for address,kind in component.list('me_interface_terminal',true) do
       log('Result type: '..type(result))
       each(result,function(i)
         total=total+1
-        local slots=0
-        for _,v in pairs(i.patterns or {}) do
-          if type(v)=='table' and v.name then slots=slots+1 end
-        end
-        log('  '..quote(i.name)..' '..location(i)..' occupied='..slots)
+        log('  '..quote(i.name)..' '..location(i))
       end)
       log('TOTAL '..total)
     end)

@@ -1,15 +1,22 @@
-# Assembly Line Pattern Renamer
+# AE2 OC GTNH Pattern Manager
 
 OpenOS program for GTNH 2.9, with a **160×50 color touchscreen UI**. Scan an ME
 interface, review duplicate-input changes, then apply them. The first occurrence
 of an item stays unchanged. Subsequent occurrences get unique names, starting
 over for each pattern. Stack quantities and recipe outputs are preserved.
 
-## Install
+The **History** tab shows recent operation reports. **Maker setup** configures
+pattern-maker modes in this same application: user-selected destinations and
+remote donor banks, capacity checks, reuse and sorting previews. The recipe
+library is a compact material/form/rule matrix, with shared semantic rules and capability sets. See
+[PATTERN_MAKER.md](PATTERN_MAKER.md) for scope and extension contracts.
+
+## Machine setup
 
 1. Install a **tier 1 or better Data Card**, keyboard, tier 3 GPU/screen and OpenOS.
-   A database upgrade is **not required**. Designed for the stated 2 MB RAM / 4 MB
-   disk computer; large previews stop with a memory error before being applied.
+   A database upgrade is **not required**. The renamer works with 2 MB RAM;
+   large maker previews use the stated Magical Memory setup. The entire deployed
+   application and matrix occupy about 0.5 MB, below the 4 MB disk cap.
 2. Connect an **ME Interface Terminal** through an adapter. The target, buffer,
    and rename interfaces must be visible through this terminal on the same AE
    network. Give the target its exact name, e.g. `Advanced Assline (1)`.
@@ -23,12 +30,44 @@ over for each pattern. Stack quantities and recipe outputs are preserved.
 5. Create the rename interfaces, e.g. `Rename NAME_1`, `Rename NAME_2`, etc., with
    machines configured to perform the corresponding item renaming. The program
    writes processing patterns; it does not configure or operate those machines.
-6. Run `edit /home/assline.lua`. Paste **all of [assline.lua](assline.lua)** in one
-   paste, save and close. It is one physical line and below 32,000 UTF-8 bytes.
-   Paste into the editor, not the shell prompt. No source modules are needed in game.
-7. Run `/home/assline.lua`. Set names in **Settings**, enter the target on the main
-   page, and **Scan**. Review **Input changes** and **Rename recipes**, then select
-   **Apply preview**.
+6. Install with the commands below, then run `/home/assline.lua`. Set names in
+   **Settings**, enter the target, and **Scan**. Review **Input changes** and
+   **Rename recipes**, then select **Apply preview**.
+
+## Install and update with wget
+
+The OpenOS computer needs an Internet Card for downloads. Run:
+
+```sh
+wget -f https://raw.githubusercontent.com/Contomo/AE2_OC_GTNH_PatternManagerScript/main/dist/install.lua /tmp/assline-install.lua
+/tmp/assline-install.lua https://raw.githubusercontent.com/Contomo/AE2_OC_GTNH_PatternManagerScript/main/dist
+/home/assline.lua
+```
+
+Updates remember the installation's URL:
+
+```sh
+/home/assline.lua --check-update
+/home/assline.lua --update
+```
+
+If the repository or branch changes, set the new channel with
+`/home/assline.lua --update NEW_BASE_URL`. The installer also accepts a custom
+installation directory as its second argument; its launcher is `<directory>.lua`.
+
+The installer downloads a complete release into a staging directory, checks each
+file's byte count, Adler-32 checksum and Lua syntax, then switches the active
+release. Failed downloads leave the installed release active. It retains one
+previous release and recovers the previous pointer after interrupted activation.
+Code lives under `/home/assline/releases/<release-id>/`; the launcher remains
+`/home/assline.lua`. Settings, history and recovery files keep their existing
+`/home/assline.*` paths. Updating does not operate on AE interfaces.
+
+Source and deployed Lua files are readable. There is no minification or paste-size
+limit. For debugging, inspect the active release's `assline_app.lua`; its source
+sections are named in comments. `assline_data.lua` is a single readable, lazily
+loaded material matrix. The installed probe is available at
+`/home/assline/releases/<release-id>/interface_probe.lua`.
 
 NBT access must be enabled in the OpenComputers configuration:
 `allowItemStackNBTTags`. If NBT is hidden or an API is unavailable, the program
@@ -57,6 +96,10 @@ and run it. It uses your saved target/buffer names, tests exact lookup, and list
 names and locations seen by **each connected terminal**. It needs no Data Card
 and performs no transfers or edits. Output is saved to
 `/home/interface_probe.txt`; the diagnostic file is replaced on the next run.
+Version 2 uses `getAll(false)` for exact lookups and the full name list. The old
+probe's iterator still loaded pattern NBT despite its "no pattern NBT" heading,
+which could exhaust Lua memory on a Large Molecular Assembler. The new probe
+omits occupied-slot counts because those require reading patterns.
 You can override the target with:
 
 ```text
@@ -162,10 +205,12 @@ from the default 25% to 75% can take a long time; the thresholds are editable.
 
 After each Scan, Apply or Recover (including a caught error), the program appends
 a timing summary to `/home/assline-perf.log`. It records starting and ending
-charge, total time, energy-sample count and time, recharge pauses,
+charge and free memory, total time, energy-sample count and time, recharge pauses,
 `event.pull` yields and wait time, plus call counts and timings by AE/Data Card
 method. `other time` is the remainder, including Lua planning, disk I/O and UI.
-Use `edit /home/assline-perf.log` to inspect it. The log resets above 64 KB.
+Open **History** for recent reports, newest first, with normal preview scrolling.
+It loads only the last 16 KB when opened and releases those lines when leaving.
+Use `edit /home/assline-perf.log` for the full log, which resets above 64 KB.
 An abrupt computer blackout can interrupt a report before it is saved.
 
 If energy keeps falling below half the pause threshold, or does not increase for
@@ -175,7 +220,12 @@ its supply cannot sustain idle consumption or an individual call exceeds the
 remaining buffer. Percentage checks use the OC energy buffer, not AE power.
 
 Repeated item identities and verified renamed NBT reuse small, bounded caches
-within a work session. These caches reset for the next Scan/Apply/Recover.
+within a work session. Caches and the progress callback are released after work,
+including caught errors. Quit also clears preview/history/editor references and
+restores the screen. Program state is local; shared OpenOS libraries stay loaded
+normally. No global-state leak was found during this review. Free-memory readings
+are taken during the operation, before cleanup/automatic collection, so they are
+diagnostics rather than proof of a leak.
 Unchanged UI regions are not repainted on every event, reducing GPU work.
 The program does **not** call `collectgarbage`: OC does not expose it. Unneeded
 references are released and OC performs collection during normal yields.
@@ -238,7 +288,7 @@ Sources: [GTNH interface inventories](https://github.com/GTNewHorizons/Applied-E
 [AE crafting pattern validation](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/src/main/java/appeng/helpers/PatternHelper.java).
 
 Touch fields/buttons or use **S** to scan, **A** to apply the reviewed preview,
-**Q** to quit, and mouse wheel / Page Up / Page Down to scroll. Text fields
+**Q** to quit, **Escape / Cancel work** to cancel an active operation, and mouse wheel / Page Up / Page Down to scroll. Text fields
 support paste, arrows, Home/End, Backspace/Delete, Ctrl+A, Enter and Escape.
 Clicking a field places the cursor at that position without selecting its text;
 click again to reposition or clear a selection. Only Ctrl+A selects everything.
@@ -248,10 +298,12 @@ when accepted and clears the old preview.
 
 ## Build and tests
 
-Source is in `src/`, concatenated in filename order. `build.js` uses the same
-AST-based **luamin 1.0.4** approach as the neighboring Waterline program and
-enforces a single-line, 32,000-byte deployment limit. It emits readable
-`assline.debug.lua` and pasteable `assline.lua`.
+Sources live in `src/`, `lib/` and `maker/`. `build.js` embeds each shared service
+once in readable `assline_app.lua`, copies the readable matrix and probe, and
+produces the **`dist/` download directory** and `deployment.json`. `install.lua`
+is both the wget bootstrap and the installed updater. `launcher.lua` is the
+stable entry point. The combined application/library has an enforced **4 MB** cap.
+There is no luamin dependency and no 64 KB file restriction.
 
 ```powershell
 .\build.ps1
@@ -264,15 +316,31 @@ npm install
 npm test
 ```
 
-The build can use the existing globally installed luamin. Tests can use the
-already-cached Fengari CLI or the local npm dependency. The same contract suite
-runs against **both** readable and minified artifacts. It exercises zero/one-based
-slot conversion, sparse patterns, multipart side arguments, NBT retention, quantities,
-read-only scans, stale previews, pattern reuse, failure recovery and the UI.
+Fengari runs the application, planner, mode and installer contract tests. It can
+use the already-cached CLI or the local npm dependency. Python is needed for the
+catalogue/compiler tests. Installer tests use the actual built file bytes and
+checksums, with mocked OpenOS I/O and HTTP; they cover install/update, unchanged
+releases, manifest-only checks, partial downloads, corrupt files, invalid Lua,
+disk limits, failed activation and interruption recovery.
+
+Publish **all files in `dist/`, including `release.manifest`, in the same Git
+commit**. Their contents determine the release ID, so subsequent builds with no
+changes do not trigger downloads. Do not publish local settings, journals or
+research caches. The desktop-only test fixtures in `tests/lib/` are not deployed.
 
 These are desktop mocks checked against upstream APIs, not an in-world GTNH run.
 Actual AE network tick timing and physical renamer behavior still need an in-game
-check with a small set of disposable patterns.
+check with a small set of disposable patterns. Normal work polls the UI about every
+100 ms without fixed sleeps at full power. Tabs and scrolling remain usable;
+mutating controls and configuration are disabled while a task is active.
+Quit releases previews, work caches and program-owned module cache entries.
+
+Apply validates only the rename recipes used by the next target, using one fresh
+snapshot per distinct interface. These snapshots expire after that target; they
+are not a persistent cache that hides later changes. Donor editing clears only
+nonempty trailing NBT cells, in reverse order, with semantic readback. Empty
+padding can remain: [AE's processing pattern parser](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/src/main/java/appeng/helpers/PatternHelper.java)
+ignores empty compounds when condensing inputs and outputs.
 
 API sources checked:
 

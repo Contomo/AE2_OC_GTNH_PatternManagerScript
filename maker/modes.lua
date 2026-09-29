@@ -1,0 +1,104 @@
+-- Compact runtime recipe compiler. This module has no component/UI calls.
+-- Eligibility uses form capabilities, production flags and rare exceptions.
+local U=require('assline_util')
+local Planner=require('assline_planner')
+local M={}
+local aliases={rod='stick',rodLong='stickLong',gear='gearGt',gearSmall='gearGtSmall',
+  casing='itemCasing',springLarge='spring',frameBox='frameGt',boltedCasing='casingBolted',reboltedCasing='casingRebolted'}
+local labels={ingot='Ingot',stick='Rod',dust='Dust',wireFine='Fine wire'}
+function M.supports(data,material,form)
+  form=aliases[form] or form
+  return U.check(data.capabilities[material.a],'Unknown capability set')[form]==true
+end
+function M.resolve(data,material,form)
+  form=aliases[form] or form
+  U.check(M.supports(data,material,form),'Material does not support '..form)
+  local override=(material.overrides or {})[form]
+  if override then return U.clone(override) end
+  local kind,size=form:match('^(wire)(%d+)$')
+  if not kind then kind,size=form:match('^(cable)(%d+)$') end
+  if kind then
+    local offsets={[1]=0,[2]=1,[4]=2,[8]=3,[12]=4,[16]=5}
+    local item=U.check(material.conductor,'Missing conductor resolver')
+    local offset=U.check(offsets[tonumber(size)],'Invalid conductor size')
+    return {name=item.name,damage=item.base+offset+(kind=='cable' and 6 or 0)}
+  end
+  local pipe,variant=form:match('^(pipeFluid)(.+)$')
+  if not pipe then pipe,variant=form:match('^(pipeItemRestrictive)(.+)$') end
+  if not pipe then pipe,variant=form:match('^(pipeItem)(.+)$') end
+  if pipe then
+    local offsets={Tiny=0,Small=1,Medium=2,Large=3,Huge=4,Quadruple=5,Nonuple=6}
+    local item=U.check(material[pipe],'Missing pipe resolver')
+    return {name=item.name,damage=item.base+U.check(offsets[variant],'Invalid pipe size')}
+  end
+  local family=U.check(data.families[material.family],'Unknown resolver family')
+  local item=U.check(family[form],'Missing form resolver')
+  if item.template then return {name=item.template:gsub('%%s',material.dsf),damage=0} end
+  U.check(U.integer(material.dsf),'Material has no metadata suffix')
+  return {name=item.name,damage=item.prefix+material.dsf}
+end
+function M.eligible(data,material,rule)
+  if (material.deny or {})[rule.id] then return false end
+  if rule.mode=='coating' then
+    if material.coating~=rule.coating then return false end
+  elseif not (data.production[material.p] or {})[rule.process] then return false end
+  for _,form in ipairs(rule.requires) do if not M.supports(data,material,form) then return false end end
+  return true
+end
+function M.compile(data,mode,options,checkpoint)
+  options=options or {}
+  U.check(data.version==2,'Unsupported material matrix')
+  U.check(mode=='wiremill' or mode=='coating','Mode has no verified recipe rules yet')
+  local manifest={version=1,source=U.clone(data.source),policy={mode=mode,pvc=options.pvc~=false,pps=options.pps~=false},recipes={}}
+  local seen,unresolved={},{}
+  manifest.unresolved={}
+  for _,material in ipairs(data.materials) do
+    if checkpoint then checkpoint() end
+    for _,rule in ipairs(data.rules) do
+      if rule.mode==mode and M.eligible(data,material,rule) then
+        local function resolve(e,stocked)
+          local item
+          if e.f then item=M.resolve(data,material,e.f)
+          else item=U.clone(U.check(data.items[e.i],'Unknown shared item')) end
+          if item.option and options[item.option]==false and not stocked then return nil end
+          item.option=nil;item.type='item';item.size=e.n
+          U.check(U.integer(item.size) and item.size>0,'Invalid ingredient quantity')
+          -- Oracle IDs are normalized to lower case. GT/Minecraft families above
+          -- have known spelling; other families still need a registry resolver.
+          if not item.name:match('^gregtech:') and not item.name:match('^minecraft:') and not unresolved[item.name] then
+            unresolved[item.name]=true;manifest.unresolved[#manifest.unresolved+1]=item.name
+          end
+          return item
+        end
+        local out=rule.outputs[1]
+        local label=labels[out.f] or out.f or 'item'
+        local kind,size=label:match('^(%a+)(%d+)$')
+        if kind=='wire' or kind=='cable' then label=size..'x '..(kind=='wire' and 'Wire' or 'Cable') end
+        local source=rule.inputs[1].f
+        local route=mode=='wiremill' and (' / from '..(labels[source] or source)) or ''
+        local recipe={kind='processing',inputs={},outputs={},label=material.name..' / '..label..route,stock={}}
+        for _,which in ipairs({'inputs','outputs'}) do
+          for _,e in ipairs(rule[which]) do
+            local item=resolve(e)
+            if item then recipe[which][#recipe[which]+1]=item
+            else recipe.stock[#recipe.stock+1]=resolve(e,true) end
+          end
+        end
+        for _,e in ipairs(rule.stock or {}) do
+          recipe.stock[#recipe.stock+1]=e.fluid and U.clone(e) or resolve(e,true)
+        end
+        U.check(#recipe.inputs>0 and #recipe.outputs>0,'Rule contains no consumed solids')
+        local key=Planner.recipeKey(recipe)
+        if not seen[key] then manifest.recipes[#manifest.recipes+1]=recipe;seen[key]=recipe
+        elseif U.canonical(seen[key].stock)~=U.canonical(recipe.stock) then
+          local existing=seen[key]
+          existing.stockAlternatives=existing.stockAlternatives or {}
+          existing.stockAlternatives[#existing.stockAlternatives+1]=recipe.stock
+        end
+      end
+    end
+  end
+  U.check(#manifest.recipes>0,'No verified recipes for this mode')
+  return manifest
+end
+return M

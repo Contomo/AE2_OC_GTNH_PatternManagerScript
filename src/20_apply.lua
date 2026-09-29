@@ -1,10 +1,10 @@
 -- One durable intent per moved pattern. Recovery completes only that operation;
 -- another scan is required before continuing the rest of a batch.
-local function listLength(data,p,which)
+local function rawList(data,p,which)
   local root=nbt(data,p.tag).__value
   local t=root[which=='inputs' and 'in' or 'out']
   check(t and t.__nbt_type=='list','Unsupported encoded pattern layout')
-  return largest(t.__value)
+  return t.__value
 end
 local function expected(op)
   local p=compact(op.original)
@@ -70,12 +70,20 @@ local function finish(hw,op,progress)
     -- Clearing removes an NBT list element: ALWAYS clear from the end.
     for _,which in ipairs({'inputs','outputs'}) do
       local s=which=='inputs' and op.input or op.output
-      setEntry(hw,op.slot,which,1,s)
-      local count=listLength(hw.data,direct(hw,'getInterfacePattern',op.slot),which)
-      for index=count,2,-1 do setEntry(hw,op.slot,which,index) end
+      local entries=rawList(hw.data,p,which)
+      if not stackEq(hw.data,p[which][1],s) then setEntry(hw,op.slot,which,1,s) end
+      for index=largest(entries),2,-1 do
+        local entry=entries[index]
+        check(entry and entry.__nbt_type=='compound' and type(entry.__value)=='table','Invalid pattern list entry')
+        -- AE ignores empty compounds. Do not spend a server tick removing every
+        -- unused cell in a padded processing donor. Clear nonempty cells only.
+        if next(entry.__value)~=nil then setEntry(hw,op.slot,which,index) end
+      end
     end
   else
-    for _,e in ipairs(op.edits) do setEntry(hw,op.slot,'inputs',e.index,e.after) end
+    for _,e in ipairs(op.edits) do
+      if not stackEq(hw.data,p.inputs[e.index],e.after) then setEntry(hw,op.slot,'inputs',e.index,e.after) end
+    end
   end
   p=direct(hw,'getInterfacePattern',op.slot)
   check(semantic(hw,p,goal),'Edited pattern read-back failed; saved recovery record retained')
@@ -94,10 +102,10 @@ local function saveOp(hw,op)
   writeFile(paths.pending,op)
 end
 local function clearOp() check(fs.remove(paths.pending),'Cannot clear completed recovery record') end
-local function apply(c,plan,progress)
+local function apply(c,plan,progress,control)
   check(not fs.exists(paths.pending),'Use Recover before applying another scan')
   check(#plan.errors==0,'Resolve scan blockers first')
-  local fresh,hw=scan(c,progress)
+  local fresh,hw=scan(c,progress,control)
   check(eq(fresh,plan),'Patterns or destinations changed since preview. Scan again.')
   fresh=nil
   writeFile(paths.backup,{config=clone(c),plan=plan})
@@ -111,10 +119,17 @@ local function apply(c,plan,progress)
     end
   end
   for _,v in ipairs(plan.changes) do
-    -- Ensure every required rename recipe still exists before editing targets.
+    -- One fresh snapshot per interface, used only for this target operation.
+    -- Check only the recipes used by this target, not the batch's full manifest.
+    local required={}
+    for _,e in ipairs(v.edits) do required[identity(hw.data,e.after)]=true end
+    local snapshots={}
     for _,r in ipairs(plan.recipes) do
-      local e=r.existing or r.destination
-      check(pureRecipe(hw.data,current(hw,e).patterns[e.slot],r),'Rename recipe removed or changed; scan again')
+      if required[identity(hw.data,r.output)] then
+        local e=r.existing or r.destination;local key=where(e)
+        if not snapshots[key] then snapshots[key]=current(hw,e) end
+        check(pureRecipe(hw.data,snapshots[key].patterns[e.slot],r),'Rename recipe removed or changed; scan again')
+      end
     end
     check(workspace~=nil,'No free buffer slot')
     local op={kind='edit',slot=workspace,original=v.original,edits=v.edits,destination=endpoint(plan.target,v.slot)}
@@ -122,8 +137,8 @@ local function apply(c,plan,progress)
     saveOp(hw,op); finish(hw,op,progress); clearOp()
   end
 end
-local function recover(c,progress)
+local function recover(c,progress,control)
   local op=check(readFile(paths.pending),'No pending operation')
-  local hw=connect(c,progress); finish(hw,op,progress); clearOp()
+  local hw=connect(c,progress,control); finish(hw,op,progress); clearOp()
 end
 C.apply=apply; C.recover=recover; C.paths=paths; C.finish=finish

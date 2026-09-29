@@ -6,28 +6,8 @@ local fs = require('filesystem')
 local serialization = require('serialization')
 local unicode = require('unicode')
 local C = {}
-local function check(ok, why) if not ok then error(why or 'Operation failed', 0) end return ok end
-local function clone(t)
-  if type(t) ~= 'table' then return t end
-  local r = {}; for k,v in pairs(t) do r[k] = clone(v) end; return r
-end
-local function keys(t)
-  local r = {}; for k in pairs(t or {}) do r[#r+1] = k end
-  table.sort(r, function(a,b) if type(a)==type(b) then return a<b end return type(a)<type(b) end)
-  return r
-end
-local function canonical(t)
-  if type(t) ~= 'table' then return string.format('%q', tostring(t)) end
-  local r = {}; for _,k in ipairs(keys(t)) do r[#r+1] = canonical(k)..':'..canonical(t[k]) end
-  return '{'..table.concat(r, ',')..'}'
-end
-local function eq(a,b)
-  if type(a)~=type(b) then return false end
-  if type(a)~='table' then return a==b end
-  for k,v in pairs(a) do if not eq(v,b[k]) then return false end end
-  for k in pairs(b) do if a[k]==nil then return false end end
-  return true
-end
+local U=require('assline_util')
+local check,clone,keys,canonical,eq=U.check,U.clone,U.keys,U.canonical,U.eq
 local function trim(s) return tostring(s or ''):match('^%s*(.-)%s*$') end
 local function truth(x) return x==true or x==1 end
 local function exists(x) return type(x)=='table' and type(x.name)=='string' end
@@ -39,10 +19,16 @@ local function token(t, label, n)
 end
 local defaults = {target='Advanced Assline (1)', buffer='OC Buffer', itemName='NAME_{n}',
   renameName='Rename NAME_{n}', terminalAddress='', bufferAddress='', dataAddress='', bufferSlots='9', renameSlots='9',
-  energyPause='25',energyResume='75'}
+  energyPause='25',energyResume='75',makerDestination='',makerDonors='',makerWorkspace='',
+  makerSlots='9',makerDonorSlots='9',makerWorkspaceSlots='9',makerMode='wiremill',makerPVC='on',makerPPS='on'}
 local cfg = clone(defaults)
 local work={pause=0.25,resume=0.75}
 local perf
+local tagKeys,renameTags,tagCount,renameCount={},{},0,0
+local function releaseWork()
+  perf=nil;work.progress=nil;work.control=nil
+  tagKeys,renameTags,tagCount,renameCount={},{},0,0
+end
 local function sampleEnergy()
   local t=computer.uptime();local e,m=computer.energy(),computer.maxEnergy()
   if perf then perf.samples=perf.samples+1;perf.sampleTime=perf.sampleTime+computer.uptime()-t end
@@ -59,6 +45,7 @@ local function perfReport(status)
   local e,m=sampleEnergy();local elapsed=computer.uptime()-perf.started;local callTime=0
   local out={string.format('\nuptime=%.1fs %s elapsed=%.2fs energy=%.0f/%.0f (%.1f%% -> %.1f%%)',
     computer.uptime(),status,elapsed,e,m,perf.startPct*100,e/m*100),
+    string.format('free memory=%d -> %d bytes',perf.memory,computer.freeMemory()),
     string.format('energy samples=%d time=%.3fs pauses=%d event.pull yields=%d wait=%.2fs',
       perf.samples,perf.sampleTime,perf.pauses,perf.yields,perf.wait)}
   for name,v in pairs(perf.calls) do
@@ -70,9 +57,8 @@ local function perfReport(status)
   if fs.exists(path) and fs.size(path)>65536 then fs.remove(path) end
   local f=io.open(path,'a')
   if f then f:write(table.concat(out,'\n')..'\n');f:close() end
-  perf=nil
+  releaseWork()
 end
-local tagKeys,renameTags,tagCount,renameCount={},{},0,0
 local function energyFraction()
   local e,m=sampleEnergy();return e/m
 end
@@ -81,13 +67,15 @@ local function rest(seconds)
   repeat
     if perf then perf.yields=perf.yields+1 end
     local t=computer.uptime()
-    local e={event.pull(math.max(0,math.min(0.25,deadline-computer.uptime())))}
+    local delay=math.max(0,math.min(0.25,deadline-computer.uptime()))
+    local e=work.control and (work.control(delay) or {}) or {event.pull(delay)}
     if perf then perf.wait=perf.wait+computer.uptime()-t end
     check(e[1]~='interrupted' and not (e[1]=='key_down' and e[4]==1),
       'Work cancelled. Use Recover if an operation is pending; otherwise scan again.')
   until computer.uptime()>=deadline
 end
 local function gate()
+  if work.control and work.control(0) and perf then perf.yields=perf.yields+1 end
   if energyFraction()<work.pause then
     if perf then perf.pauses=perf.pauses+1 end
     local lastGain,lastValue,lastReport=computer.uptime(),computer.energy(),-math.huge
@@ -105,10 +93,10 @@ local function gate()
     end
   end
 end
-local function startWork(c,progress)
-  work={pause=tonumber(c.energyPause)/100,resume=tonumber(c.energyResume)/100,progress=progress}
+local function startWork(c,progress,control)
+  work={pause=tonumber(c.energyPause)/100,resume=tonumber(c.energyResume)/100,progress=progress,control=control}
   local e,m=sampleEnergy()
-  perf={started=computer.uptime(),startPct=e/m,samples=0,sampleTime=0,pauses=0,yields=0,wait=0,calls={}}
+  perf={started=computer.uptime(),startPct=e/m,memory=computer.freeMemory(),samples=0,sampleTime=0,pauses=0,yields=0,wait=0,calls={}}
   tagKeys,renameTags,tagCount,renameCount={},{},0,0
 end
 local paths = {config='/home/assline.cfg', pending='/home/assline.pending', backup='/home/assline.last'}
@@ -143,9 +131,11 @@ local function validate(c)
   for _,k in ipairs({'itemName','renameName'}) do
     check(not c[k]:gsub('{label}',''):gsub('{n}',''):find('[{}]'),'Unknown template token: '..k)
   end
-  for _,k in ipairs({'bufferSlots','renameSlots'}) do
+  for _,k in ipairs({'bufferSlots','renameSlots','makerSlots','makerDonorSlots','makerWorkspaceSlots'}) do
     local n=tonumber(c[k]); check(n and n>=1 and n<=512 and n==math.floor(n),k..' must be 1..512')
   end
+  check(c.makerMode=='wiremill' or c.makerMode=='coating','Unknown maker mode')
+  for _,k in ipairs({'makerPVC','makerPPS'}) do check(c[k]=='on' or c[k]=='off',k..' must be on or off') end
   local pause,resume=tonumber(c.energyPause),tonumber(c.energyResume)
   check(pause and resume and pause>=10 and pause<=80 and resume>=pause+10 and resume<=95,
     'Energy pause must be 10..80%; resume at least 10% higher, up to 95%')
@@ -239,8 +229,8 @@ local function side(s)
   if type(s)=='number' then return s end
   return check(sides[tostring(s):lower()], 'Unknown interface side: '..tostring(s))
 end
-local function endpoint(i,slot) return {location=clone(i.location),side=side(i.side),slot=slot} end
-local function where(i) return canonical({i.location,side(i.side)}) end
+local function endpoint(i,slot) return U.endpoint({location=i.location,side=side(i.side)},slot) end
+local function where(i) return U.where(endpoint(i)) end
 local function iterate(result, callback)
   check(result~=nil,'Interface lookup failed')
   if type(result)=='table' and not getmetatable(result) then
@@ -249,12 +239,18 @@ local function iterate(result, callback)
     while true do gate();local t=computer.uptime();local i=result();record('terminal iterator',computer.uptime()-t);if not i then break end; callback(i) end
   end
 end
-local function lookup(hw,name)
+local function lookup(hw,name,metadata)
   local found={}
-  iterate(invoke(hw.terminal,'getInterfacesByName',name),function(i)
+  local result=invoke(hw.terminal,'getInterfacesByName',name)
+  if metadata then
+    check(result and result.getAll,'Metadata-only discovery requires getAll(false)')
+    result=invoke(result,'getAll',false)
+  end
+  iterate(result,function(i)
+    check(not metadata or i.patterns==nil,'Driver ignored metadata-only discovery')
     if i.name==name then found[#found+1]=i end
   end)
-  table.sort(found,function(a,b) return where(a)<where(b) end)
+  table.sort(found,function(a,b) return U.ordered(endpoint(a),endpoint(b)) end)
   return found
 end
 local function unique(hw,name)
@@ -272,14 +268,15 @@ local function direct(hw,name,slot,...)
   if hw.buffer.side~=6 then return invoke(hw.direct,name,hw.buffer.side,slot+1,...) end
   return invoke(hw.direct,name,slot+1,...)
 end
-local function connect(c,progress)
+local function connect(c,progress,control)
   validate(c)
-  startWork(c,progress)
+  startWork(c,progress,control)
   local hw={terminal=selectDevice('me_interface_terminal',c.terminalAddress),
     direct=selectDevice('me_interface',c.bufferAddress),data=selectDevice('data',c.dataAddress)}
   hw.buffer=endpoint(unique(hw,c.buffer))
   nbt(hw.data,invoke(hw.data,'encodeNBT',{__nbt_type='compound',__value={}}))
   return hw
 end
-C.clone=clone; C.canonical=canonical; C.defaults=defaults
+C.defaults=defaults
 C.perfReport=perfReport
+C.releaseWork=releaseWork

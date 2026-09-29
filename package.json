@@ -1,1 +1,1 @@
-{"name":"gtnh-assline-renamer","private":true,"scripts":{"build":"node build.js","test":"node test.js"},"devDependencies":{"luamin":"1.0.4","fengari-node-cli":"0.1.0"}}
+{"name":"gtnh-assline-renamer","private":true,"scripts":{"build":"node build.js","test":"node test.js"},"devDependencies":{"fengari-node-cli":"0.1.0"}}

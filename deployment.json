@@ -1,0 +1,32 @@
+{
+  "format": 1,
+  "release": "dfc21ed6884f46c3",
+  "bytes": 494748,
+  "files": [
+    {
+      "path": "assline.lua",
+      "bytes": 1059,
+      "checksum": "eb7166da"
+    },
+    {
+      "path": "assline_app.lua",
+      "bytes": 73678,
+      "checksum": "e148893c"
+    },
+    {
+      "path": "assline_data.lua",
+      "bytes": 407902,
+      "checksum": "717e26c9"
+    },
+    {
+      "path": "interface_probe.lua",
+      "bytes": 3103,
+      "checksum": "b86a0931"
+    },
+    {
+      "path": "install.lua",
+      "bytes": 9006,
+      "checksum": "ada37fee"
+    }
+  ]
+}

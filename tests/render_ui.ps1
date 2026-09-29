@@ -1,7 +1,7 @@
 param([string]$Name = 'preview')
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
-$data = Get-Content -LiteralPath (Join-Path $PSScriptRoot "assline.lua-$Name.actual.json") -Raw | ConvertFrom-Json
+$data = Get-Content -LiteralPath (Join-Path $PSScriptRoot "assline_app.lua-$Name.actual.json") -Raw | ConvertFrom-Json
 $bitmap = New-Object System.Drawing.Bitmap(1600, 900)
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
 $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit

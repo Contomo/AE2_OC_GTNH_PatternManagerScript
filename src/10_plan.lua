@@ -16,13 +16,15 @@ local function safeDonor(data,p)
 end
 local function pureRecipe(data,p,r)
   if not safeDonor(data,p) then return false end
-  if largest(p.inputs)~=1 or largest(p.outputs)~=1 then return false end
+  for _,which in ipairs({'inputs','outputs'}) do
+    for index,s in pairs(p[which]) do if exists(s) and index~=1 then return false end end
+  end
   local a,b=p.inputs[1],p.outputs[1]
   return item(a) and item(b) and a.size>0 and a.size==b.size
     and identity(data,a)==identity(data,r.input) and identity(data,b)==identity(data,r.output)
 end
-local function scan(c,progress)
-  local hw=connect(c,progress)
+local function scan(c,progress,control)
+  local hw=connect(c,progress,control)
   local target=unique(hw,c.target)
   check(where(target)~=where(hw.buffer),'Target is the buffer')
   local buffer=current(hw,hw.buffer)
@@ -30,6 +32,7 @@ local function scan(c,progress)
   local function problem(s) p.errors[#p.errors+1]=s end
   local wanted={}
   for _,slot in ipairs(keys(target.patterns)) do
+    gate()
     local original=target.patterns[slot]
     if exists(original) then
       p.scanned=p.scanned+1

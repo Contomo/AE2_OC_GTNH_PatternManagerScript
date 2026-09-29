@@ -3,7 +3,11 @@ local output,files={},{}
 local savedPrint=print
 print=function(s) output[#output+1]=s end
 local function iterator(list)
-  local n=0;return setmetatable({},{__call=function() n=n+1;return list[n] end})
+  return setmetatable({getAll=function(include)
+    assert(include==false,'Probe must request metadata only')
+    local r={};for _,i in ipairs(list) do r[#r+1]={name=i.name,location=i.location,side=i.side} end
+    return r
+  end},{__call=function() error('Full pattern iteration would exhaust memory') end})
 end
 local function entry(name,x)
   return {name=name,location={x=x,y=64,z=0,dimId=0},side=3,patterns={[0]={name='pattern'}}}
@@ -40,7 +44,7 @@ local s=files['/home/interface_probe.txt']
 assert(s:find('EXACT "Advanced Assline (1)": 0 match(es)',1,true))
 assert(s:find('EXACT "Advanced Assline (1)": 1 match(es)',1,true))
 assert(s:find('TERMINAL one',1,true) and s:find('TERMINAL two',1,true))
-assert(s:find('"Advanced Assline (1)" {x=2} side=3 occupied=1',1,true))
+assert(s:find('"Advanced Assline (1)" {x=2} side=3',1,true))
 -- A failing terminal must be reported while another terminal is still examined.
 grids.one=nil
 assert(loadfile(artifact))('Missing target')

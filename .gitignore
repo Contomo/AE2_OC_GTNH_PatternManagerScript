@@ -1,2 +1,8 @@
 node_modules/
 tests/*.actual.json
+.research/
+__pycache__/
+data/*.json.gz
+tests/lib/
+tests/*.log
+tests/maker_*.png

@@ -1,6 +1,7 @@
+package.path='tests/lib/?.lua;'..package.path
 -- Contract mocks based on GTNH source, including terminal zero-based slots,
 -- part-interface hidden side argument, typed NBT, and list-removing clears.
-local artifact=... or 'assline.debug.lua'
+local artifact=... or 'assline_app.lua'
 -- OC does not expose manual collection. Do not mask accidental calls in tests.
 collectgarbage=nil
 local function cp(t) if type(t)~='table' then return t end local r={} for k,v in pairs(t) do r[k]=cp(v) end return r end
@@ -18,6 +19,7 @@ local controlDown=false
 local now,energy,capacity,recharge,sleeps=123,10000,10000,0,0
 local waitEvent,dataCalls,dataCost=nil,0,0
 local powerDropAt,gpuFills=nil,0
+local callCost,callCounts,pollEvents=0,{},{}
 local function typed(kind,value) return {__nbt_type=kind,__value=value} end
 local function compound(value) return typed('compound',value or {}) end
 local function item(label,qty,damage,extra)
@@ -52,7 +54,10 @@ local function byref(ref)
 end
 local function iterator(list)
   local index=0
-  return setmetatable({}, {__call=function() index=index+1;return cp(list[index]) end})
+  return setmetatable({getAll=function(include)
+    assert(include==false,'Only metadata bulk reads are permitted')
+    local r={};for _,i in ipairs(list) do r[#r+1]={name=i.name,location=cp(i.location),side=i.side} end;return r
+  end}, {__call=function() index=index+1;return cp(list[index]) end})
 end
 local function mutate(label)
   mutations=mutations+1;history[#history+1]=label
@@ -122,7 +127,19 @@ local function dataCharge()
   energy=energy-dataCost
 end
 proxies.data={address='data',encodeNBT=function(t) dataCharge();return ser(encodeTree(t)) end,
-  decodeNBT=function(t) dataCharge();return unser(t) end}
+  decodeNBT=function(t) dataCharge();return unser(t) end,sha256=function(t) dataCharge();return 'mock-hash:'..t end}
+for _,proxy in pairs(proxies) do
+  for name,method in pairs(proxy) do
+    if type(method)=='function' then
+      proxy[name]=function(...)
+        callCounts[name]=(callCounts[name] or 0)+1
+        local result=table.pack(method(...))
+        if proxy~=proxies.data then now=now+callCost end
+        return table.unpack(result,1,result.n)
+      end
+    end
+  end
+end
 local gpu={}
 local width,height=160,50
 gpu.maxResolution=function() return 160,50 end;gpu.getResolution=function() return width,height end
@@ -163,6 +180,8 @@ package.preload.event=function() return {pull=function(timeout)
   if timeout and timeout<1 then
     sleeps=sleeps+1;now=now+timeout;energy=math.max(0,math.min(capacity,energy+recharge*timeout))
     if waitEvent then local e=waitEvent;waitEvent=nil;return table.unpack(e) end
+    local e=table.remove(pollEvents,1)
+    if type(e)=='function' then return e() elseif e then return table.unpack(e) end
     return
   end
   controlDown=false;local e=table.remove(events,1);assert(e,'test event queue empty')
@@ -171,11 +190,14 @@ end} end
 package.preload.computer=function() return {freeMemory=function() return 1900000 end,uptime=function() return now end,
   energy=function() return energy end,maxEnergy=function() return capacity end} end
 package.preload.filesystem=function() return {
+  path=function(p) return p:match('^(.*[/])') or './' end,
   exists=function(p) return files[p]~=nil end,size=function(p) return #(files[p] or '') end,
   remove=function(p) files[p]=nil;return true end,
   rename=function(a,b) files[b],files[a]=files[a],nil;return true end} end
 package.preload.serialization=function() return {serialize=ser,unserialize=unser} end
 package.preload.unicode=function() return {len=string.len,wlen=string.len,sub=string.sub,char=string.char} end
+package.preload.shell=function() return {resolve=function(p) return p end} end
+package.preload.process=function() return {info=function() return {path=artifact} end} end
 package.preload.term=function() return {clear=function() end,setCursor=function() end} end
 package.preload.keyboard=function() return {isControlDown=function() return controlDown end} end
 local origOpen=io.open
@@ -184,7 +206,9 @@ io.open=function(path,mode)
   if path:sub(1,6)~='/home/' then return origOpen(path,mode) end
   if mode=='r' and not files[path] then return nil end
   local content=(mode=='r' or mode=='a') and (files[path] or '') or ''
-  return {read=function() return content end,write=function(self,s) content=content..s;return self end,
+  local offset=0
+  return {seek=function(_,whence,n) assert(whence=='set');offset=n;return n end,
+    read=function() return content:sub(offset+1) end,write=function(self,s) content=content..s;return self end,
     flush=function(self) if failDisk then return nil,'disk full' end;files[path]=content;return self end,
     close=function() files[path]=content end}
 end
@@ -194,6 +218,7 @@ local function reset()
   files={};interfaces={};mutations=0;history={};fail=nil;failDisk=false;wrongDirect=nil;methodsAsTables=false
   now,energy,capacity,recharge,sleeps=123,10000,10000,0,0;waitEvent,dataCalls,dataCost=nil,0,0
   powerDropAt,gpuFills=nil,0
+  callCost,callCounts,pollEvents=0,{},{}
   cfg=cp(api.defaults)
   target=iface(cfg.target,1,{[0]=pattern({item('Samarium Rod',1,5),item(),item(),item()})})
   buffer=iface(cfg.buffer,2,{[0]=pattern({item('Junk',3,9),item('Other',2,8),item('Third',1,7)},
@@ -216,6 +241,47 @@ test('read-only preview and per-pattern numbering',function()
   assert(p.changes[1].edits[2].after.label=='NAME_2')
   assert(p.changes[2].edits[1].after.label=='NAME_1')
 end)
+test('interface reads scale with target dependencies and distinct locations',function()
+  cfg.renameName='Rename shared';dest1.name='Rename shared';target.patterns={}
+  for slot=0,7 do
+    local ingredient=item('Material '..slot,1,100+slot)
+    target.patterns[slot]=pattern({ingredient,ingredient})
+    buffer.patterns[slot]=cp(buffer.patterns[0])
+  end
+  local p=api.scan(cfg);assert(#p.recipes==8 and #p.changes==8)
+  callCounts={};callCost=0.05
+  api.apply(cfg,p)
+  assert(callCounts.getInterfacesByLocation==89,callCounts.getInterfacesByLocation)
+  assert(callCounts.getInterfacePattern==81,callCounts.getInterfacePattern)
+  print('BENCHMARK 8 targets / 8 recipes / shared destination: location reads 145 -> '..callCounts.getInterfacesByLocation..'; direct reads 97 -> '..callCounts.getInterfacePattern)
+end)
+
+test('full-power UI accepts tabs and Escape while an intent is active',function()
+  files[api.paths.config]=ser(cfg)
+  events={{'key_down','kbd',115,31},function()
+    callCost=0.05
+    -- Wait until a setter has completed, then switch tabs and cancel.
+    local function pending()
+      if (callCounts.setInterfacePatternInput or 0)==0 then
+        pollEvents[1]=pending;return 'key_up','kbd',0,0
+      end
+      pollEvents[1]=function()
+        assert(frame[12]:find('RECENT OPERATIONS',1,true),'History did not render during work')
+        return 'key_down','kbd',27,1
+      end
+      return 'touch','screen',63,9,0
+    end
+    pollEvents={pending}
+    return 'key_down','kbd',97,30
+  end,function()
+    assert(energy==capacity and files[api.paths.pending])
+    assert(frame[49]:find('Work cancelled',1,true))
+    assert(not dest1.patterns[0]);return 'key_down','kbd',113,16
+  end}
+  api.runUI();callCost=0;api.recover(cfg)
+  assert(dest1.patterns[0] and not files[api.paths.pending])
+end)
+
 test('full apply preserves first input, counts, outputs, flags and slots',function()
   target.patterns[4]=cp(target.patterns[0]);local before=cp(target.patterns[0]);local p=api.scan(cfg)
   api.apply(cfg,p)
@@ -227,6 +293,20 @@ test('full apply preserves first input, counts, outputs, flags and slots',functi
   assert(dest1.patterns[0].lengths.inputs==1 and dest1.patterns[0].lengths.outputs==1)
   assert(dest1.patterns[0].inputs[1].size==128 and dest1.patterns[0].outputs[1].size==128)
   assert(not files[api.paths.pending]);assert(files[api.paths.backup]);assert(#api.scan(cfg).changes==0)
+end)
+
+test('padded processing donors leave empty NBT cells without clearing them',function()
+  for slot=0,1 do
+    buffer.patterns[slot].lengths={inputs=64,outputs=32};refresh(buffer.patterns[slot])
+  end
+  local p=api.scan(cfg);callCounts={};api.apply(cfg,p)
+  assert(callCounts.setInterfacePatternInput==8,callCounts.setInterfacePatternInput)
+  assert(callCounts.setInterfacePatternOutput==4,callCounts.setInterfacePatternOutput)
+  assert(dest1.patterns[0].lengths.inputs==62 and dest1.patterns[0].lengths.outputs==31)
+  assert(not dest1.patterns[0].inputs[2] and not dest1.patterns[0].outputs[2])
+  -- Padded recipes must remain eligible for reuse in subsequent scans.
+  target.patterns[0]=pattern({item(),item(),item()})
+  local nextPlan=api.scan(cfg);assert(nextPlan.newRecipes==0)
 end)
 test('sparse input and pattern slots retained',function()
   target.patterns={[8]=pattern({[2]=item(),[5]=item(),[9]=item()})}
@@ -445,4 +525,116 @@ test('idle signals and cursor edits do not repaint the whole screen',function()
   end,{'key_down','kbd',113,16}}
   api.runUI()
 end)
+test('history reads saved operations newest first without scanning',function()
+  files[api.paths.config]=ser(cfg)
+  files['/home/assline-perf.log']='\nuptime=1 scan complete\nold report\n\nuptime=2 apply complete\nnew report\n'
+  events={{'touch','screen',63,9,0},function()
+    assert(frame[12]:find('RECENT OPERATIONS',1,true))
+    assert(frame[15]:find('uptime=2 apply complete',1,true))
+    assert(frame[18]:find('uptime=1 scan complete',1,true));snapshot('history')
+    return 'key_down','kbd',113,16
+  end}
+  api.runUI();assert(mutations==0)
+end)
+
+test('history excludes a truncated old report and handles empty log',function()
+  files[api.paths.config]=ser(cfg)
+  files['/home/assline-perf.log']='\nuptime=1 old\n'..string.rep('x',18000)..'\n\nuptime=2 recent\nfinished\n'
+  events={{'touch','screen',63,9,0},function()
+    assert(frame[15]:find('uptime=2 recent',1,true))
+    assert(not frame[18]:find('uptime=1',1,true));return 'key_down','kbd',113,16
+  end};api.runUI()
+  files['/home/assline-perf.log']=nil
+  events={{'touch','screen',63,9,0},function()
+    assert(frame[15]:find('No operations recorded',1,true));return 'interrupted'
+  end};api.runUI()
+end)
+
+test('operation failure appears in history and screen is restored on quit',function()
+  files[api.paths.config]=ser(cfg);target.name='gone';width,height=80,25
+  events={{'key_down','kbd',115,31},{'touch','screen',63,9,0},function()
+    assert(files['/home/assline-perf.log']:find('stopped:',1,true))
+    return 'interrupted'
+  end};api.runUI();assert(width==80 and height==25);width,height=160,50
+end)
+local maker=api.maker
+local function manifestFor(p)
+  local r={kind=p.isCraftable and 'crafting' or 'processing',inputs={},outputs={},destination=cfg.target,label='Test recipe'}
+  for _,which in ipairs({'inputs','outputs'}) do
+    for k,v in pairs(p[which]) do r[which][k]={type='item',name=v.name,damage=v.damage,size=v.size,tag=v.tag} end
+  end
+  return {version=1,source={recipeVersion='2.9.0-beta-2',targetVersion='2.9.0-beta-3'},
+    recipes={r}}
+end
+test('maker adapter discovers named banks without needing a local buffer',function()
+  local wanted=pattern({item('Input',2,555)},{item('Output',1,666)})
+  target.patterns={};iface('Editor',8);iface(cfg.buffer,9,{[0]=pattern({item('Other',1,556)})})
+  local prof=manifestFor(wanted);local before=ser(interfaces)
+  local p,s,r,labels=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9})
+  assert(#p.errors==0 and p.available.processing==3 and #p.creates==1 and #s.interfaces==4)
+  assert(ser(interfaces)==before and mutations==0);assert(maker.planner.revalidate(r,s,p))
+  local report=maker.report(p,prof,labels);assert(not report:find('VERSION MISMATCH',1,true));assert(report:find('slot 0',1,true))
+end)
+test('maker adapter reuses exact recipes and preserves substitutions as distinct',function()
+  target.patterns={[0]=pattern({item('Input',2,555)},{item('Output',1,666)})}
+  local prof=manifestFor(target.patterns[0]);local p=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});assert(p.reused==1 and #p.errors==0)
+  local root=unser(target.patterns[0].tag);root.__value.substitute=typed('byte',1);target.patterns[0].tag=ser(root)
+  p=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});assert(p.reused==0 and #p.preserved==1 and #p.errors>0)
+end)
+test('maker uses only crafting donors for crafting recipes',function()
+  local wanted=pattern({item('One',1,555),item('Two',1,555)},{item('Bundled',1,666)},true)
+  target.patterns={};iface('Editor',8);local prof=manifestFor(wanted)
+  local p=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});assert(#p.errors>0 and p.required.crafting==1)
+  buffer.patterns[8]=pattern({item('Craft ingredient',1,700)},{item('Craft output',1,701)},true)
+  p=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});assert(#p.errors==0 and p.creates[1].from.slot==8 and mutations==0)
+end)
+test('maker stops on hidden ingredient NBT instead of treating it as ordinary',function()
+  local prof=manifestFor(pattern({item('Input',1,555)},{item('Output',1,666)}))
+  target.patterns[0].inputs[1].hasTag=true;target.patterns[0].inputs[1].tag=nil
+  mustFail(function() maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9}) end,'Ingredient NBT hidden');assert(mutations==0)
+end)
+test('maker scan binds stale check to source version and policy',function()
+  local wanted=pattern({item('Input',2,555)},{item('Output',1,666)})
+  target.patterns={};iface('Editor',8);local prof=manifestFor(wanted)
+  local p,s,r=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});r.source.recipeVersion='other'
+  mustFail(function() maker.planner.revalidate(r,s,p) end,'changed')
+end)
+test('real maker preview uses the matrix and reports insufficient space without writes',function()
+  cfg.makerDestination=cfg.target;cfg.makerDonors=cfg.buffer;cfg.makerWorkspace='Editor'
+  iface('Editor',8)
+  local p,report=maker.preview(cfg)
+  assert(#p.layout>100 and #p.errors>0 and #p.moves==0 and #p.creates==0)
+  assert(report:find('Insufficient capacity',1,true) and not report:find('VERSION MISMATCH',1,true))
+  assert(mutations==0 and not files[api.paths.pending])
+  api.releaseWork()
+end)
+
+test('maker setup is a mode in the existing UI with user-selected routing',function()
+  cfg.makerDestination='My destination';cfg.makerDonors='My banks';cfg.makerWorkspace='My editor'
+  files[api.paths.config]=ser(cfg)
+  local original=maker.preview;local calls=0
+  maker.preview=function(c)
+    calls=calls+1;assert(c.makerDestination=='My destination' and c.makerDonors=='My banks' and c.makerWorkspace=='My editor')
+    assert(c.makerMode=='coating')
+    return {reused=1,layout={{}},moves={},errors={},required={processing=0,crafting=0}},'PATTERN MAKER / PREVIEW\nTest material\n'
+  end
+  events={{'touch','screen',70,7,0},function()
+    assert(frame[7]:find('Destination name',1,true));snapshot('maker_settings')
+    return 'touch','screen',17,5,0
+  end,{'touch','screen',4,5,0},function()
+    assert(frame[12]:find('PATTERN MAKER / PREVIEW',1,true));snapshot('maker_preview')
+    assert(unser(files[api.paths.config]).makerMode=='coating')
+    return 'key_down','kbd',113,16
+  end}
+  api.runUI();maker.preview=original;assert(calls==1 and mutations==0)
+end)
+if artifact=='assline_app.lua' then
+  test('launcher restores module search path and unloads program libraries on quit',function()
+    local before=package.path;package.loaded.assline_unused={large='previous run'}
+    events={{'key_down','kbd',113,16}}
+    assert(loadfile(artifact))()
+    assert(package.path==before)
+    for name in pairs(package.loaded) do assert(not name:match('^assline_'),'Retained module '..name) end
+  end)
+end
 print('SUCCESS: '..tests..' tests ('..artifact..')')
