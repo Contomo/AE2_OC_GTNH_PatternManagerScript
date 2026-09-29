@@ -12,7 +12,7 @@ from pathlib import Path
 from material_forms import descriptor, registry_forms, resolve
 
 
-def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None):
+def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None):
     resources = dict(resources or {})
     for rid, resource in catalog['resources'].items():
         resources[rid] = {**resources.get(rid, {}), **resource}
@@ -28,6 +28,8 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
         if rid not in item_index:
             name, damage = descriptor(rid)
             item = {'name': name, 'damage': damage}
+            if resources.get(rid, {}).get('displayName'):
+                item['label'] = resources[rid]['displayName']
             if name == 'gregtech:gt.metaitem.01' and damage in (1649, 2649):
                 item['option'] = 'pvc'
             if name == 'gregtech:gt.metaitem.01' and damage == 29631:
@@ -44,6 +46,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             if not any(e['id'] == 'gregtech:gt.metaitem.01@29631' for e in recipe['inputs']):
                 coating_standard.add(key)
     excluded = 0
+    excluded_outputs = {}
     for recipe in sorted(catalog['recipes'], key=lambda r: r['id']):
         mode = {'Wiremill': 'wiremill', 'Cable Coating': 'coating'}.get(recipe['machineType'])
         if not mode:
@@ -51,6 +54,13 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
         output = reverse.get(recipe['outputs'][0]['id'])
         if not output:
             excluded += 1
+            label = recipe['outputs'][0].get('displayName', recipe['outputs'][0]['id'])
+            excluded_outputs[label] = excluded_outputs.get(label, 0) + 1
+            continue
+        # One insulation route per cable: single-output PVC recipes. Other
+        # polymers and four-output batches are alternatives, not extra patterns.
+        if mode == 'coating' and (recipe['outputs'][0]['amount'] != 1 or not any(
+                e['id'] == 'gregtech:gt.metaitem.01@1649' for e in recipe['inputs'])):
             continue
         key, output_form = output
         row = rows[key]
@@ -152,8 +162,10 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
         del row['_forms'], row['_rank']
     return {'version': 2, 'source': {**catalog['source'], 'registryVersion': registry.get('gtVersion'),
                                    'alternativePolicy': 'primary-listed', 'excludedRecipes': excluded,
+                                   'excludedOutputs': excluded_outputs,
                                    'compatibleTargets': list(compatible_targets), 'compatibilityBasis': compatibility_basis},
             'families': families, 'capabilities': capabilities, 'production': production, 'items': items, 'rules': rules,
+            'registryNames': registry_names or {},
             'materials': sorted(rows.values(), key=lambda row: row['name'].lower())}
 
 
@@ -187,6 +199,7 @@ if __name__ == '__main__':
     parser.add_argument('--ore-resources', help='Source-annotated ore dictionary resources (gzip JSON)')
     parser.add_argument('--compatible-target', action='append', default=[])
     parser.add_argument('--compatibility-basis', default='')
+    parser.add_argument('--registry-names', help='Case-preserving source registration import')
     args = parser.parse_args()
     catalog = json.load(gzip.open(args.catalog, 'rt', encoding='utf-8'))
     registry = json.loads(Path(args.registry).read_text(encoding='utf-8-sig'))
@@ -196,7 +209,8 @@ if __name__ == '__main__':
         for rid, resource in json.load(gzip.open(args.ore_resources, 'rt', encoding='utf-8'))['resources'].items():
             if rid in resources:
                 resources[rid] = {**resources[rid], 'tags': resource.get('tags', [])}
-    model = compile_matrix(catalog, registry, args.compatible_target, args.compatibility_basis, resources)
+    names = json.loads(Path(args.registry_names).read_text())['names'] if args.registry_names else {}
+    model = compile_matrix(catalog, registry, args.compatible_target, args.compatibility_basis, resources, names)
     content = 'return ' + lua(model) + '\n'
     if len(content.encode()) > 4 * 1024 * 1024:
         raise ValueError('Library exceeds the absolute 4 MB budget')

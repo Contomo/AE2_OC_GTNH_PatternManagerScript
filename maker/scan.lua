@@ -3,6 +3,15 @@
 -- Pattern reads are performed one interface at a time; metadata discovery never
 -- converts an entire network's pattern inventories into Lua tables.
 local function discover(hw,name) return lookup(hw,name,true) end
+local function recipeKey(data,recipe)
+  local normalized=clone(recipe)
+  for _,which in ipairs({'inputs','outputs'}) do
+    for _,s in pairs(normalized[which]) do
+      local key=tagKey(data,s);s.tag=key~='{}' and key or nil
+    end
+  end
+  return Planner.recipeKey(normalized)
+end
 local function patternRecipe(data,p)
   check(type(p.tag)=='string','Pattern NBT hidden; enable allowItemStackNBTTags')
   local root=nbt(data,p.tag).__value
@@ -55,12 +64,12 @@ local function scanManifest(c,manifest,routing,progress,control,started)
         if exists(p) then
           check(type(p.tag)=='string','Pattern NBT hidden in '..g.name)
           local value={kind='unknown',fingerprint=patternFingerprint(hw,p)}
-          if p.name=='appliedenergistics2:item.ItemEncodedPattern' and p.isCraftable~=nil and p.inputs and p.outputs then
+          if encodedPattern(hw.data,p) then
             local r=patternRecipe(hw.data,p)
             value.kind=r.kind
-            local valid,key=pcall(Planner.recipeKey,r)
+            local valid,key=pcall(recipeKey,hw.data,r)
             if valid then value.recipeKey=key end
-            value.donor=valid and not r.substitute and not r.beSubstitute
+            value.donor=not r.substitute and not r.beSubstitute
           end
           compacted.patterns[slot]=value
         end
@@ -73,7 +82,7 @@ local function scanManifest(c,manifest,routing,progress,control,started)
   local request={recipes={},source=clone(manifest.source),policy=clone(manifest.policy or {}),unresolved=clone(manifest.unresolved)}
   local labels={}
   for _,r in ipairs(manifest.recipes) do
-    local key=Planner.recipeKey(r)
+    local key=recipeKey(hw.data,r);r.key=key
     request.recipes[#request.recipes+1]={key=key,kind=r.kind,destination=destination(r),
       stock=clone(r.stock),stockAlternatives=clone(r.stockAlternatives)}
     labels[key]=r.label or r.id or r.outputs[1].name
@@ -83,48 +92,48 @@ local function scanManifest(c,manifest,routing,progress,control,started)
   end)
   return plan,snapshot,request,labels
 end
-local function describe(e)
-  if not e then return '(no available slot)' end
-  return U.locationText(e)..' slot '..e.slot
-end
-local function previewReport(plan,manifest,labels)
-  local details={}
+local function previewRows(plan,manifest,labels)
+  local rows,details={},{}
+  local function add(s,tone) rows[#rows+1]={s,tone or 'text'} end
   local function ingredients(list)
     local out={}
-    for _,s in ipairs(list or {}) do
-      out[#out+1]=tostring(s.size or s.n)..'x '..(s.fluid or (s.name..':'..s.damage))
-    end
+    for _,s in ipairs(list) do out[#out+1]=s.size..' x '..(s.label or s.name) end
     return table.concat(out,', ')
   end
-  for _,recipe in ipairs(manifest.recipes) do details[Planner.recipeKey(recipe)]=recipe end
-  local lines={'RECIPE PLAN / PREVIEW','Recipe source: '..manifest.source.recipeVersion..
-    ' | target: '..manifest.source.targetVersion,'Slot numbers below are ZERO based. Destination capacity assumes 36 slots per interface.',
-    'Verify every destination interface has all 36 slots available before executing.'}
-  if manifest.source.excludedRecipes then lines[#lines+1]='Unsupported source recipes excluded: '..manifest.source.excludedRecipes end
-  for _,name in ipairs(manifest.unresolved or {}) do lines[#lines+1]='UNVERIFIED registry spelling: '..name end
-  lines[#lines+1]='Fluids, circuits and omitted PVC/PPS require external stocking; alternatives use the listed primary item.'
-  lines[#lines+1]=string.format('Reuse %d | Create %d processing + %d crafting | Preserve %d unrelated/duplicate patterns',
-    plan.reused,plan.required.processing,plan.required.crafting,#plan.preserved)
-  for _,err in ipairs(plan.errors) do lines[#lines+1]='BLOCKED: '..err end
-  lines[#lines+1]='FINAL LAYOUT (material and rule order)'
+  for _,recipe in ipairs(manifest.recipes) do details[recipe.key or Planner.recipeKey(recipe)]=recipe end
+  add('PATTERN PLAN','blue')
+  add(string.format('%d reuse   |   %d new   |   %d other patterns kept',plan.reused,
+    plan.required.processing+plan.required.crafting,#plan.preserved),'green')
+  add('')
+  local group,bank,material
   for _,r in ipairs(plan.layout) do
-    lines[#lines+1]=(r.existing and 'REUSE ' or 'CREATE ')..labels[r.key]..' -> '..describe(r.destination)
     local recipe=details[r.key]
-    lines[#lines+1]='  '..ingredients(recipe.inputs)..' -> '..ingredients(recipe.outputs)
-    if recipe.stock and #recipe.stock>0 then lines[#lines+1]='  External: '..ingredients(recipe.stock) end
-    if recipe.stockAlternatives then lines[#lines+1]='  Other external-stock alternatives: '..#recipe.stockAlternatives end
+    if group~=r.group then
+      group=r.group;bank=nil;material=nil;add('');add('DESTINATION: '..tostring(group),'blue')
+    end
+    local location=r.destination and where(r.destination)
+    if location and bank~=location then
+      bank=location;add('Interface: '..U.locationText(r.destination),'muted')
+    end
+    if material~=(recipe.material or recipe.label) then
+      material=recipe.material or recipe.label;add('');add(material,'blue')
+    end
+    add((r.existing and 'REUSE   ' or 'CREATE  ')..(recipe.outputLabel or recipe.outputForm or '')..
+      (r.destination and ('   slot '..r.destination.slot) or '   needs space'),r.existing and 'green' or 'yellow')
+    add('  '..ingredients(recipe.inputs))
+    add('  -> '..ingredients(recipe.outputs),'green')
+    add('')
   end
-  lines[#lines+1]='SORT EXISTING PATTERNS FIRST'
-  for _,m in ipairs(plan.moves) do lines[#lines+1]=describe(m.from)..' -> '..describe(m.to) end
-  for _,m in ipairs(plan.preserved) do lines[#lines+1]='PRESERVE '..describe(m.from)..' -> '..describe(m.to) end
-  lines[#lines+1]='THEN IMPRINT AND INSTALL'
-  for _,m in ipairs(plan.creates) do
-    lines[#lines+1]=labels[m.key]..': donor '..describe(m.from)..' via '..describe(m.workspace)..' -> '..describe(m.to)
-  end
+  return rows
+end
+local function previewReport(plan,manifest,labels)
+  local lines={}
+  for _,r in ipairs(previewRows(plan,manifest,labels)) do lines[#lines+1]=r[1] end
+  for _,err in ipairs(plan.errors) do lines[#lines+1]='BLOCKED: '..err end
   return table.concat(lines,'\n')..'\n'
 end
 
-C.maker={planner=Planner,scan=scanManifest,report=previewReport,discover=discover}
+C.maker={planner=Planner,scan=scanManifest,report=previewReport,rows=previewRows,discover=discover}
 local function programRouting(c,id)
   local program=Config.requireProgram(c,id)
   local values=c.programs[id]
@@ -134,7 +143,8 @@ local function programRouting(c,id)
     forms={};routing.destinations={}
     for form,key in pairs(program.outputs) do forms[form]=true;routing.destinations[form]=values[key] end
   end
-  return routing,{pvc=values.pvc~='off',pps=values.pps~='off',forms=forms},program
+  return routing,{pvc=values.pvc~='off',pps=values.pps~='off',forms=forms,
+    sources=id=='wiremill' and {wire1=values.wireSource,wireFine=values.fineSource} or nil},program
 end
 function C.maker.preview(c,id,progress,control)
   validate(c);startWork(c,progress,control)
@@ -209,7 +219,7 @@ function C.maker.apply(c,id,plan,manifest,progress,control)
     saveOp(hw,op);C.maker.finishSort(hw,op,progress);clearOp()
   end
   local recipes={}
-  for _,recipe in ipairs(manifest.recipes) do recipes[Planner.recipeKey(recipe)]=recipe end
+  for _,recipe in ipairs(manifest.recipes) do recipes[recipe.key or Planner.recipeKey(recipe)]=recipe end
   for _,create in ipairs(plan.creates) do
     local original=check(current(hw,create.from).patterns[create.from.slot],'Donor disappeared')
     check(patternFingerprint(hw,original)==create.fingerprint,'Donor pattern changed')

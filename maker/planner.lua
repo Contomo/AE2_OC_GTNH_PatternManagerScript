@@ -67,7 +67,7 @@ function M.plan(request,snapshot,checkpoint)
   need(#request.recipes>0,'Manifest contains no recipes')
   local interfaces=validateSnapshot(snapshot)
   local p={version=1,errors={},layout={},moves={},creates={},preserved={},reused=0,required={crafting=0,processing=0},
-    available={crafting=0,processing=0}}
+    available={crafting=0,processing=0},donorBanks=0,donorOccupied=0,donorRejected=0}
   local problems={}
   local function block(message) if not problems[message] then p.errors[#p.errors+1]=message;problems[message]=true end end
   local groups,donors,workspace,tokens,occupied={},{crafting={},processing={}},nil,{},{}
@@ -86,8 +86,10 @@ function M.plan(request,snapshot,checkpoint)
         end
       end
     elseif i.role=='donor' then
+      p.donorBanks=p.donorBanks+1
       for slot=0,i.capacity-1 do
         local pattern=i.patterns[slot]
+        if pattern then p.donorOccupied=p.donorOccupied+1;if not pattern.donor then p.donorRejected=p.donorRejected+1 end end
         if pattern and pattern.donor and donors[pattern.kind] then
           local list=donors[pattern.kind];list[#list+1]={from=ref(i,slot),fingerprint=pattern.fingerprint}
         end
@@ -121,7 +123,7 @@ function M.plan(request,snapshot,checkpoint)
         if not t.selected and t.pattern.recipeKey==r.key and t.pattern.kind==r.kind then match=t;break end
       end
       local dest=g.slots[n]
-      local entry={key=r.key,kind=r.kind,destination=dest,existing=match~=nil};p.layout[#p.layout+1]=entry
+      local entry={key=r.key,kind=r.kind,group=r.destination,destination=dest,existing=match~=nil};p.layout[#p.layout+1]=entry
       if match then match.selected=true;match.goal=dest;p.reused=p.reused+1
       else p.required[r.kind]=p.required[r.kind]+1 end
     end

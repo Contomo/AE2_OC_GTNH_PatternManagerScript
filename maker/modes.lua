@@ -6,11 +6,21 @@ local M={}
 local aliases={rod='stick',rodLong='stickLong',gear='gearGt',gearSmall='gearGtSmall',
   casing='itemCasing',springLarge='spring',frameBox='frameGt',boltedCasing='casingBolted',reboltedCasing='casingRebolted'}
 local labels={ingot='Ingot',stick='Rod',dust='Dust',wireFine='Fine wire'}
+local function formLabel(form)
+  local kind,size=form:match('^(%a+)(%d+)$')
+  if kind=='wire' or kind=='cable' then return size..'x '..(kind=='wire' and 'Wire' or 'Cable') end
+  return labels[form] or form
+end
 function M.supports(data,material,form)
   form=aliases[form] or form
   return U.check(data.capabilities[material.a],'Unknown capability set')[form]==true
 end
-function M.resolve(data,material,form)
+local function registeredItem(data,item)
+  local name=(data.registryNames or {})[item.name:lower()]
+  if name then item.name=name end
+  return item,name~=nil or item.name:match('^gregtech:')~=nil or item.name:match('^minecraft:')~=nil
+end
+local function resolveForm(data,material,form)
   form=aliases[form] or form
   U.check(M.supports(data,material,form),'Material does not support '..form)
   local override=(material.overrides or {})[form]
@@ -37,6 +47,9 @@ function M.resolve(data,material,form)
   U.check(U.integer(material.dsf),'Material has no metadata suffix')
   return {name=item.name,damage=item.prefix+material.dsf}
 end
+function M.resolve(data,material,form)
+  local item=registeredItem(data,resolveForm(data,material,form));return item
+end
 function M.eligible(data,material,rule)
   if (material.deny or {})[rule.id] then return false end
   if rule.mode=='coating' then
@@ -49,34 +62,35 @@ function M.compile(data,mode,options,checkpoint)
   options=options or {}
   U.check(data.version==2,'Unsupported material matrix')
   U.check(mode=='wiremill' or mode=='coating','Mode has no verified recipe rules yet')
-  local manifest={version=1,source=U.clone(data.source),policy={mode=mode,pvc=options.pvc~=false,pps=options.pps~=false},recipes={}}
+  local manifest={version=1,source=U.clone(data.source),policy={mode=mode,pvc=options.pvc~=false,pps=options.pps~=false,sources=U.clone(options.sources)},recipes={}}
   local seen,unresolved={},{}
   manifest.unresolved={}
   for _,material in ipairs(data.materials) do
     if checkpoint then checkpoint() end
     for _,rule in ipairs(data.rules) do
-      if rule.mode==mode and (not options.forms or options.forms[rule.outputs[1].f]) and M.eligible(data,material,rule) then
+      if rule.mode==mode and (not options.forms or options.forms[rule.outputs[1].f])
+        and (not options.sources or options.sources[rule.outputs[1].f]==rule.inputs[1].f)
+        and M.eligible(data,material,rule) then
         local function resolve(e,stocked)
           local item
-          if e.f then item=M.resolve(data,material,e.f)
+          if e.f then item=M.resolve(data,material,e.f);item.label=material.name..' '..formLabel(e.f)
           else item=U.clone(U.check(data.items[e.i],'Unknown shared item')) end
           if item.option and options[item.option]==false and not stocked then return nil end
           item.option=nil;item.type='item';item.size=e.n
           U.check(U.integer(item.size) and item.size>0,'Invalid ingredient quantity')
           -- Oracle IDs are normalized to lower case. GT/Minecraft families above
           -- have known spelling; other families still need a registry resolver.
-          if not item.name:match('^gregtech:') and not item.name:match('^minecraft:') and not unresolved[item.name] then
+          local registered;item,registered=registeredItem(data,item)
+          if not stocked and not registered and not unresolved[item.name] then
             unresolved[item.name]=true;manifest.unresolved[#manifest.unresolved+1]=item.name
           end
           return item
         end
         local out=rule.outputs[1]
-        local label=labels[out.f] or out.f or 'item'
-        local kind,size=label:match('^(%a+)(%d+)$')
-        if kind=='wire' or kind=='cable' then label=size..'x '..(kind=='wire' and 'Wire' or 'Cable') end
+        local label=formLabel(out.f)
         local source=rule.inputs[1].f
         local route=mode=='wiremill' and (' / from '..(labels[source] or source)) or ''
-        local recipe={kind='processing',outputForm=out.f,inputs={},outputs={},label=material.name..' / '..label..route,stock={}}
+        local recipe={kind='processing',material=material.name,outputForm=out.f,outputLabel=label,inputs={},outputs={},label=material.name..' / '..label..route,stock={}}
         for _,which in ipairs({'inputs','outputs'}) do
           for _,e in ipairs(rule[which]) do
             local item=resolve(e)

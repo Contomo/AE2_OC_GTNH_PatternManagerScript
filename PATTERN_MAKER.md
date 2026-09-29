@@ -12,7 +12,7 @@ and matrix occupy about 0.5 MB, within the 4 MB cap.
 
 Settings has shared hardware/interfaces and a separate section per program.
 Wire insulator has its destination and PVC/PPS switches; wiremill has separate
-1x wire and fine-wire destinations. Fields save on acceptance or navigation.
+1x wire and fine-wire destinations and independent input-route choices (Ingot by default). Fields save on acceptance or navigation.
 All buffers matching the shared donor name are counted from their actual
 patterns, independently of their capacity. Only the shared editor is local.
 
@@ -28,7 +28,7 @@ and installs it in the planned destination slot. A sorting stage and its small
 progress cursor are durable, so Recover completes an interrupted permutation
 cycle. Imprints reuse the same durable pattern-edit/recovery service as the
 assembly-line renamer. Fresh snapshots reject stale plans before any writes.
-Unverified registry spellings block execution; they remain visible in previews.
+Registry spelling is recovered from registration code and source recipe references. All current selectable wiremill and insulation routes resolve; future unresolved IDs block execution and appear in Details.
 
 Combining and bending have independent settings sections reserved for future
 verified rules. Their preview/execution controls stay disabled until implemented.
@@ -53,10 +53,12 @@ ore dictionary. `tools/compile_matrix.py` emits matrix schema **2**:
   `stick_wireFine`. Registering forms does not grant a machine route.
 - `rules`: material-neutral transformations with required forms and a production
   flag or coating class. The **21 wiremill rules** include one
-  `ingot(material) ?1 ? wire1(material) ?2`, and shared larger-wire/fine-wire routes.
-  The **120 coating variants** serve two shared classes (`standard` and `pps`);
+  `1 ingot(material) -> 2 wire1(material)`, and shared larger-wire/fine-wire routes.
+  The **24 coating rules** serve two shared classes (`standard` and `pps`);
   each class is selected once per material, rather than repeating its recipe list.
-- `items`: **13** shared literal supplies/circuits, including PVC and PPS.
+- `items`: **9** shared literal supplies/circuits, with scraped display names.
+- `registryNames`: shared case-preserving IDs recovered from source declarations.
+  `data/registry-names.json` records the source evidence; this is a desktop import, not a hand-maintained exception list.
 - `source`: recipe provenance, registry version, compatibility evidence and
   unsupported-recipe counts.
 
@@ -64,8 +66,7 @@ The matrix covers **1,159 materials**, including materials without a currently
 implemented production mode. Identical availability and production flags are
 stored once. Only **two explicit recipe exclusions** are needed to reproduce
 unusual source behavior. No material contains numeric foreign keys into recipes. The current modes
-represent 4,398 source recipes; 44 recipes in unsupported output families remain
-excluded and are recorded in provenance.
+select one single-output PVC coating route per material/size, producing 306 patterns. Alternate polymers and four-output batches are deliberately omitted. The 44 recipes with unsupported output forms are recorded by output name in provenance and shown in Details, rather than mixed into the pattern list.
 
 `maker/modes.lua` owns `supports`, `resolve` and `eligible`. Future modes should
 call those services. Nonstandard item IDs are discovered from scraped ore tags;
@@ -81,7 +82,7 @@ noncontiguous variants use explicit form overrides.
 Recipes expand only in memory for the selected mode. Interface names never occur
 in the matrix or recipe templates: the scanner binds the current mode's routing
 from settings. Equivalent solid patterns are deduplicated; different external
-stock alternatives are retained for review. Omitting PVC/PPS moves that requirement
+stock alternatives remain internal recipe evidence and are omitted from the pattern preview. Omitting PVC/PPS moves that requirement
 to external stocking; it does not change what the machine consumes.
 
 ## Source and rebuild
@@ -89,17 +90,20 @@ to external stocking; it does not change what the machine consumes.
 The adjacent `OreDictScript/research/recipes.json.gz` is the recipe evidence.
 Its recorded version is beta 2; the user confirmed these recipes are unchanged
 in beta 3. That remains provenance, not a mismatch warning or preview blocker.
-The registry rules pin GT5 **5.09.54.133**. Normalized non-GT item names whose
-actual registry spelling still needs resolution are marked in the preview.
+The registry rules pin GT5 **5.09.54.133**. The normalized export lowercases IDs. `tools/import_registry_names.py` recovers their case from the pinned GT source archive (registration formulas and `getModItem` references), plus EnderIO registration declarations. It uses the existing scraped material names; no illustrative material examples are compiler overrides.
 
 ```powershell
 python tools/import_catalog.py ..\OreDictScript\research\recipes.json.gz `
   --machine "Cable Coating" --machine "Wiremill" `
   --target-version 2.9.0-beta-3 --out .research\pattern-catalog.json.gz
+python tools/import_registry_names.py .research\gt-5.09.54.133.zip `
+  ..\OreDictScript\data\registry-rules.json .research\pattern-catalog.json.gz `
+  .research\EnderIO-ItemAlloy.java .research\EnderIO-ModObject.java data\registry-names.json
 python tools/compile_matrix.py .research\pattern-catalog.json.gz `
   ..\OreDictScript\data\registry-rules.json data\matrix.lua `
   --resources ..\OreDictScript\research\resource-index.json.gz `
   --ore-resources ..\OreDictScript\data\ores.json.gz `
+  --registry-names data\registry-names.json `
   --compatible-target 2.9.0-beta-3 `
   --compatibility-basis "User confirmed recipes unchanged from beta 2 to beta 3"
 node build.js

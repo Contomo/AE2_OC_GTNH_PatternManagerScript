@@ -14,7 +14,7 @@ try { cli = require.resolve('fengari-node-cli/src/lua-cli.js'); } catch (_) {
 if (!cli) throw Error('Install fengari-node-cli to run tests');
 for (const file of ['assline_app.lua', 'interface_probe.lua', 'maker/planner.lua','maker/modes.lua','install.lua']) {
   const harness = file.startsWith('interface_probe') ? 'tests/probe.lua' : file==='maker/planner.lua' ? 'tests/planner.lua' : file==='maker/modes.lua' ? 'tests/modes.lua' : file==='install.lua' ? 'tests/install.lua' : 'tests/run.lua';
-  const r = spawnSync(process.execPath, [cli, harness, file], {cwd:__dirname, encoding:'utf8'});
+  const r = spawnSync(process.execPath, [cli, harness, file], {cwd:__dirname, encoding:'utf8',maxBuffer:8*1024*1024});
   const output = (r.stdout || '').split('\n').filter(line => {
     const match = /^SNAPSHOT (\w+) (.+)$/.exec(line);
     if (!match) return true;

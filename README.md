@@ -33,6 +33,20 @@ Settings has shared interfaces/hardware and a separate section for each program.
    **36 usable slots each**; the preview states the minimum interface count.
    Verify the interfaces in game, select **Verify 36 slots**, then **Execute preview**.
 
+Wiremill selects one input route per output: both default to **Ingot**. Fine wire
+can instead use Rod or 1x wire. Only recipes present in the scrape are generated.
+The insulator uses one single-cable PVC route for each material and size: **306
+patterns (51 materials ? 6 sizes)**, with PVC and PPS independently included or
+omitted. Alternate fluids, polymers and four-cable batches do not add patterns.
+
+The Patterns tab groups readable ingredients by destination and material, marks
+CREATE/REUSE in color, and prints an interface location once per group. Capacity
+shows space requirements; Details contains buffer discovery, sorting and source
+coverage. Buffer counts come from the terminal and include empty encoded
+processing patterns. Unsupported tagged items are not donor patterns. Existing
+recipes compare actual item IDs, amounts, substitution flags and semantic NBT;
+missing and empty ingredient NBT are equivalent.
+
 Wire combining and bending have their own settings sections, but their recipe
 rules are not implemented yet and their Preview button is disabled.
 
@@ -128,7 +142,7 @@ obsolete slot limits are not carried forward.
 | Shared interfaces | Pattern editor name, new pattern buffer name, terminal/editor/Data Card addresses, energy thresholds |
 | Assembly line renamer | Target interface, item-name template, rename-destination template |
 | Wire insulator | Destination interface name, request PVC, request PPS |
-| Wiremill | 1x wire destination name, fine-wire destination name |
+| Wiremill | 1x wire and fine-wire destination names; separate input routes, default Ingot |
 | Wire combining | Bare-wire destination, insulated-cable destination (future rules) |
 | Bending machine | Plate, foil and sheet-metal destinations (future rules) |
 

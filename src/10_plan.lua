@@ -8,7 +8,7 @@ local function metadata(data,p)
 end
 local function safeDonor(data,p)
   if not processing(p) or not p.tag then return false end
-  local t=nbt(data,p.tag).__value
+  local t=encodedPattern(data,p);if not t then return false end
   for _,k in ipairs({'substitute','beSubstitute'}) do
     if t[k] and truth(t[k].__value) then return false end
   end

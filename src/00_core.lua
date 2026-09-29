@@ -147,7 +147,8 @@ local function tagKey(data,s)
   check(not truth(s.hasTag) or type(s.tag)=='string','NBT is hidden; enable allowItemStackNBTTags in OC config')
   if not s.tag then return '{}' end
   if tagKeys[s.tag] then return tagKeys[s.tag] end
-  local key=canonical(nbt(data,s.tag))
+  local decoded=nbt(data,s.tag)
+  local key=next(decoded.__value) and canonical(decoded) or '{}'
   if tagCount<32 and #s.tag<=2048 and #key<=2048 then
     tagKeys[s.tag]=key;tagCount=tagCount+1
   end
@@ -250,6 +251,12 @@ end
 local function direct(hw,name,slot,...)
   if hw.buffer.side~=6 then return invoke(hw.direct,name,hw.buffer.side,slot+1,...) end
   return invoke(hw.direct,name,slot+1,...)
+end
+local function encodedPattern(data,p)
+  if not exists(p) or not p.tag or p.isCraftable==nil or not p.inputs or not p.outputs then return nil end
+  local root=nbt(data,p.tag).__value
+  if root['in'] and root['in'].__nbt_type=='list' and root.out and root.out.__nbt_type=='list'
+    and root.crafting then return root end
 end
 local function patternFingerprint(hw,p)
   if not exists(p) then return nil end

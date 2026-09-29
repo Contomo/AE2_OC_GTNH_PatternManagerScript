@@ -26,6 +26,10 @@ function M.validate(c)
       local v=values[f.key]
       U.check(type(v)=='string' and #v<=512 and not v:find('[%c]'),'Invalid setting: '..f.label)
       if f.kind=='toggle' then U.check(v=='on' or v=='off',f.label..' must be on or off') end
+      if f.choices then
+        local found=false;for _,option in ipairs(f.choices) do if option[1]==v then found=true end end
+        U.check(found,'Invalid choice: '..f.label)
+      end
     end
   end
   fields(c.shared,M.fields)

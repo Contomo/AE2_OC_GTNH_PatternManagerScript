@@ -96,4 +96,35 @@ test('unavailable forms fail visibly before resolving metadata',function()
   local m={a=1,family='gt',dsf=30}
   assert(not pcall(M.resolve,d,m,'wire16'))
 end)
+test('insulation has exactly one pattern per material and size for every PVC/PPS setting',function()
+  for _,pvc in ipairs({true,false}) do for _,pps in ipairs({true,false}) do
+    local result=M.compile(data,'coating',{pvc=pvc,pps=pps});local outputs={}
+    assert(#result.recipes==306 and #result.unresolved==0)
+    for _,r in ipairs(result.recipes) do
+      assert(r.outputs[1].size==1 and r.inputs[1].size==1)
+      local key=r.outputs[1].name..':'..r.outputs[1].damage
+      assert(not outputs[key]);outputs[key]=true
+      for _,s in ipairs(r.inputs) do
+        assert(s.label and s.damage~=1633 and s.damage~=2633)
+        if not pvc then assert(s.damage~=1649 and s.damage~=2649) end
+        if not pps then assert(s.damage~=29631) end
+      end
+    end
+  end end
+end)
+
+test('wiremill input selection excludes alternative routes and uses recovered registry case',function()
+  for _,source in ipairs({'ingot','stick','wire1'}) do
+    local result=M.compile(data,'wiremill',{forms={wire1=true,wireFine=true},sources={wire1='ingot',wireFine=source}})
+    assert(#result.unresolved==0)
+    local outputs={}
+    for _,r in ipairs(result.recipes) do
+      local key=r.outputs[1].name..':'..r.outputs[1].damage
+      assert(not outputs[key]);outputs[key]=true
+      assert(r.label:find('from '..(r.outputForm=='wire1' and 'Ingot' or ({ingot='Ingot',stick='Rod',wire1='wire1'})[source]),1,true))
+    end
+    if source=='ingot' then assert(#result.recipes==294) end
+  end
+end)
+
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

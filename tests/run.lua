@@ -836,6 +836,109 @@ test('unfinished recipe programs have separate editable settings but cannot exec
   api.runUI()
 end)
 
+test('PVC and PPS repaint and save on every click without leaving settings',function()
+  files[api.paths.config]=ser(cfg)
+  local function toggle(key,row)
+    local before
+    return {function() before=unser(files[api.paths.config]).programs.insulator[key];return 'touch','screen',35,row,0 end,
+      function()
+        local after=unser(files[api.paths.config]).programs.insulator[key]
+        assert(after~=before)
+        assert(frame[row]:sub(34,44)==(after=='on' and '[ On ]     ' or '[ Off ]    '),frame[row]:sub(34,44))
+        return 'key_down','kbd',0,0
+      end}
+  end
+  queue(nav('Settings'),nav('Wire insulator'),toggle('pvc',16),toggle('pvc',16),toggle('pvc',16),
+    toggle('pps',20),toggle('pps',20),quit)
+  api.runUI()
+end)
+
+test('wiremill route choices save independently and default to ingots',function()
+  files[api.paths.config]=ser(cfg)
+  assert(cfg.programs.wiremill.wireSource=='ingot' and cfg.programs.wiremill.fineSource=='ingot')
+  queue(nav('Settings'),nav('Wiremill'),click('[ Rod ]',20),click('[ 1x wire ]',24),
+    nav('Programs'),nav('Settings'),function()
+      local v=unser(files[api.paths.config]).programs.wiremill
+      assert(v.wireSource=='stick' and v.fineSource=='wire1')
+      assert(frame[20]:find('[ * Rod ]',1,true) and frame[24]:find('[ * 1x wire ]',1,true))
+      snapshot('wiremill_settings');return quit()
+    end)
+  api.runUI()
+end)
+
+test('empty encoded processing donors are counted through the terminal and imprinted',function()
+  withMatrix(function()
+    buffer.patterns={[0]=pattern({},{}),[1]=pattern({},{})}
+    buffer.patterns[0].name='ae2fc:encodedPattern'
+    buffer.patterns[1].name='ae2fc:encodedPattern'
+    local preview=insulator()
+    assert(preview.plan.donorBanks==1 and preview.plan.available.processing==2 and #preview.plan.errors==0)
+    api.runner.execute(cfg,preview)
+    assert(api.runner.preview(cfg,'insulator').plan.reused==2)
+  end)
+end)
+
+test('NBT-bearing items without encoded recipe lists are not donors',function()
+  target.patterns={};buffer.patterns={[0]=pattern({},{})}
+  buffer.patterns[0].tag=ser(compound({unrelated=typed('int',5)}))
+  local prof=manifestFor(pattern({item('Input',1,777)}))
+  local p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor})
+  assert(p.available.processing==0 and p.donorBanks==1 and p.donorRejected==1)
+end)
+
+test('existing copper fine wire with empty ingredient tags is reused',function()
+  cfg.programs.wiremill.wire1=cfg.programs.assline.target;cfg.programs.wiremill.wireFine='Fine wires';target.patterns={}
+  local copperIn=item('Copper Ingot',1,11035);local copperOut=item('Fine Copper Wire',8,19035)
+  copperOut.name='gregtech:gt.metaitem.02'
+  for _,v in ipairs({copperIn,copperOut}) do v.tag=ser(compound({}));v.hasTag=false end
+  local existing=pattern({copperIn},{copperOut});existing.name='ae2fc:encodedPattern'
+  iface('Fine wires',50,{[13]=existing})
+  local preview=api.runner.preview(cfg,'wiremill')
+  assert(preview.plan.reused==1)
+  for _,r in ipairs(preview.plan.layout) do
+    for _,recipe in ipairs(preview.manifest.recipes) do
+      if recipe.key==r.key and recipe.material=='Copper' and recipe.outputForm=='wireFine' then assert(r.existing) end
+    end
+  end
+  assert(#preview.manifest.unresolved==0 and mutations==0)
+end)
+
+test('insulator preview uses readable groups and contains no external-stock dump',function()
+  withMatrix(function()
+    package.loaded.assline_data.items[1].label='PVC Pulp'
+    local preview=insulator();local report=preview.report
+    assert(report:find('PVC Pulp',1,true) and not report:find('gregtech:',1,true))
+    assert(not report:find('External',1,true) and not report:find('UNVERIFIED',1,true))
+    local count=0;for _ in report:gmatch('Interface:') do count=count+1 end;assert(count==1)
+    files[api.paths.config]=ser(cfg)
+    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
+      snapshot('insulator_preview');return quit()
+    end)
+    api.runUI()
+  end)
+end)
+
+test('real insulation preview shows named ingredients, capacity and reused cable',function()
+  local saved=package.loaded.assline_data
+  local subset=cp(require('assline_data'));subset.materials={}
+  for _,material in ipairs(saved.materials) do
+    if material.name=='Copper' or material.name=='NiobiumTitanium' then subset.materials[#subset.materials+1]=material end
+  end
+  package.loaded.assline_data=subset
+  cfg.programs.insulator.destination='Wire insulator';target.name='Wire insulator';target.patterns={}
+  for slot=0,11 do buffer.patterns[slot]=pattern({},{}) end
+  local preview=api.runner.preview(cfg,'insulator')
+  assert(#preview.plan.errors==0 and #preview.manifest.recipes==12)
+  local r=preview.manifest.recipes[1]
+  target.patterns[0]=pattern(r.inputs,r.outputs)
+  local report=api.runner.preview(cfg,'insulator');assert(report.plan.reused==1)
+  files[api.paths.config]=ser(cfg)
+  queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
+    snapshot('real_insulator_preview');return quit()
+  end)
+  api.runUI();package.loaded.assline_data=saved
+end)
+
 if artifact=='assline_app.lua' then
   package.loaded.assline_data={};files[api.paths.config]=ser(cfg);events={{'interrupted'}}
   local before=package.path;assert(loadfile(artifact))();assert(package.path==before)

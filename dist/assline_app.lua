@@ -70,6 +70,9 @@ local M={}
 local function field(key,label,help,default,kind)
   return {key=key,label=label,help=help,default=default or '',kind=kind or 'text'}
 end
+local function choice(key,label,choices)
+  local f=field(key,label,'Choose the input used for these patterns.','ingot','choice');f.choices=choices;return f
+end
 M.list={
   {id='assline',name='Assembly line renamer',description='Review duplicate inputs and create their rename patterns.',
     fields={field('target','Assembly line interface','Exact name of the interface containing the patterns to manage.','Advanced Assline (1)'),
@@ -82,7 +85,9 @@ M.list={
   {id='wiremill',name='Wiremill',mode='wiremill',description='Create 1x wire and fine-wire patterns in separate destination banks.',
     outputs={wire1='wire1',wireFine='wireFine'},
     fields={field('wire1','1x wire interface name','All matching interfaces receive recipes producing 1x wire.'),
-      field('wireFine','Fine wire interface name','All matching interfaces receive recipes producing fine wire.')}},
+      field('wireFine','Fine wire interface name','All matching interfaces receive recipes producing fine wire.'),
+      choice('wireSource','1x wire input',{{'ingot','Ingot'},{'stick','Rod'}}),
+      choice('fineSource','Fine wire input',{{'ingot','Ingot'},{'stick','Rod'},{'wire1','1x wire'}})}},
   {id='combining',name='Wire combining',unavailable='Combining recipe rules are not implemented yet.',
     description='Combine wire and cable sizes in a molecular assembler.',
     fields={field('wire','Bare wire interface name','Destination bank for combined bare-wire sizes.'),
@@ -128,6 +133,10 @@ function M.validate(c)
       local v=values[f.key]
       U.check(type(v)=='string' and #v<=512 and not v:find('[%c]'),'Invalid setting: '..f.label)
       if f.kind=='toggle' then U.check(v=='on' or v=='off',f.label..' must be on or off') end
+      if f.choices then
+        local found=false;for _,option in ipairs(f.choices) do if option[1]==v then found=true end end
+        U.check(found,'Invalid choice: '..f.label)
+      end
     end
   end
   fields(c.shared,M.fields)
@@ -346,7 +355,8 @@ local function tagKey(data,s)
   check(not truth(s.hasTag) or type(s.tag)=='string','NBT is hidden; enable allowItemStackNBTTags in OC config')
   if not s.tag then return '{}' end
   if tagKeys[s.tag] then return tagKeys[s.tag] end
-  local key=canonical(nbt(data,s.tag))
+  local decoded=nbt(data,s.tag)
+  local key=next(decoded.__value) and canonical(decoded) or '{}'
   if tagCount<32 and #s.tag<=2048 and #key<=2048 then
     tagKeys[s.tag]=key;tagCount=tagCount+1
   end
@@ -450,6 +460,12 @@ local function direct(hw,name,slot,...)
   if hw.buffer.side~=6 then return invoke(hw.direct,name,hw.buffer.side,slot+1,...) end
   return invoke(hw.direct,name,slot+1,...)
 end
+local function encodedPattern(data,p)
+  if not exists(p) or not p.tag or p.isCraftable==nil or not p.inputs or not p.outputs then return nil end
+  local root=nbt(data,p.tag).__value
+  if root['in'] and root['in'].__nbt_type=='list' and root.out and root.out.__nbt_type=='list'
+    and root.crafting then return root end
+end
 local function patternFingerprint(hw,p)
   if not exists(p) then return nil end
   check(type(p.tag)=='string','Pattern NBT hidden')
@@ -503,7 +519,7 @@ local function metadata(data,p)
 end
 local function safeDonor(data,p)
   if not processing(p) or not p.tag then return false end
-  local t=nbt(data,p.tag).__value
+  local t=encodedPattern(data,p);if not t then return false end
   for _,k in ipairs({'substitute','beSubstitute'}) do
     if t[k] and truth(t[k].__value) then return false end
   end
@@ -871,7 +887,7 @@ function M.plan(request,snapshot,checkpoint)
   need(#request.recipes>0,'Manifest contains no recipes')
   local interfaces=validateSnapshot(snapshot)
   local p={version=1,errors={},layout={},moves={},creates={},preserved={},reused=0,required={crafting=0,processing=0},
-    available={crafting=0,processing=0}}
+    available={crafting=0,processing=0},donorBanks=0,donorOccupied=0,donorRejected=0}
   local problems={}
   local function block(message) if not problems[message] then p.errors[#p.errors+1]=message;problems[message]=true end end
   local groups,donors,workspace,tokens,occupied={},{crafting={},processing={}},nil,{},{}
@@ -890,8 +906,10 @@ function M.plan(request,snapshot,checkpoint)
         end
       end
     elseif i.role=='donor' then
+      p.donorBanks=p.donorBanks+1
       for slot=0,i.capacity-1 do
         local pattern=i.patterns[slot]
+        if pattern then p.donorOccupied=p.donorOccupied+1;if not pattern.donor then p.donorRejected=p.donorRejected+1 end end
         if pattern and pattern.donor and donors[pattern.kind] then
           local list=donors[pattern.kind];list[#list+1]={from=ref(i,slot),fingerprint=pattern.fingerprint}
         end
@@ -925,7 +943,7 @@ function M.plan(request,snapshot,checkpoint)
         if not t.selected and t.pattern.recipeKey==r.key and t.pattern.kind==r.kind then match=t;break end
       end
       local dest=g.slots[n]
-      local entry={key=r.key,kind=r.kind,destination=dest,existing=match~=nil};p.layout[#p.layout+1]=entry
+      local entry={key=r.key,kind=r.kind,group=r.destination,destination=dest,existing=match~=nil};p.layout[#p.layout+1]=entry
       if match then match.selected=true;match.goal=dest;p.reused=p.reused+1
       else p.required[r.kind]=p.required[r.kind]+1 end
     end
@@ -1002,11 +1020,21 @@ local M={}
 local aliases={rod='stick',rodLong='stickLong',gear='gearGt',gearSmall='gearGtSmall',
   casing='itemCasing',springLarge='spring',frameBox='frameGt',boltedCasing='casingBolted',reboltedCasing='casingRebolted'}
 local labels={ingot='Ingot',stick='Rod',dust='Dust',wireFine='Fine wire'}
+local function formLabel(form)
+  local kind,size=form:match('^(%a+)(%d+)$')
+  if kind=='wire' or kind=='cable' then return size..'x '..(kind=='wire' and 'Wire' or 'Cable') end
+  return labels[form] or form
+end
 function M.supports(data,material,form)
   form=aliases[form] or form
   return U.check(data.capabilities[material.a],'Unknown capability set')[form]==true
 end
-function M.resolve(data,material,form)
+local function registeredItem(data,item)
+  local name=(data.registryNames or {})[item.name:lower()]
+  if name then item.name=name end
+  return item,name~=nil or item.name:match('^gregtech:')~=nil or item.name:match('^minecraft:')~=nil
+end
+local function resolveForm(data,material,form)
   form=aliases[form] or form
   U.check(M.supports(data,material,form),'Material does not support '..form)
   local override=(material.overrides or {})[form]
@@ -1033,6 +1061,9 @@ function M.resolve(data,material,form)
   U.check(U.integer(material.dsf),'Material has no metadata suffix')
   return {name=item.name,damage=item.prefix+material.dsf}
 end
+function M.resolve(data,material,form)
+  local item=registeredItem(data,resolveForm(data,material,form));return item
+end
 function M.eligible(data,material,rule)
   if (material.deny or {})[rule.id] then return false end
   if rule.mode=='coating' then
@@ -1045,34 +1076,35 @@ function M.compile(data,mode,options,checkpoint)
   options=options or {}
   U.check(data.version==2,'Unsupported material matrix')
   U.check(mode=='wiremill' or mode=='coating','Mode has no verified recipe rules yet')
-  local manifest={version=1,source=U.clone(data.source),policy={mode=mode,pvc=options.pvc~=false,pps=options.pps~=false},recipes={}}
+  local manifest={version=1,source=U.clone(data.source),policy={mode=mode,pvc=options.pvc~=false,pps=options.pps~=false,sources=U.clone(options.sources)},recipes={}}
   local seen,unresolved={},{}
   manifest.unresolved={}
   for _,material in ipairs(data.materials) do
     if checkpoint then checkpoint() end
     for _,rule in ipairs(data.rules) do
-      if rule.mode==mode and (not options.forms or options.forms[rule.outputs[1].f]) and M.eligible(data,material,rule) then
+      if rule.mode==mode and (not options.forms or options.forms[rule.outputs[1].f])
+        and (not options.sources or options.sources[rule.outputs[1].f]==rule.inputs[1].f)
+        and M.eligible(data,material,rule) then
         local function resolve(e,stocked)
           local item
-          if e.f then item=M.resolve(data,material,e.f)
+          if e.f then item=M.resolve(data,material,e.f);item.label=material.name..' '..formLabel(e.f)
           else item=U.clone(U.check(data.items[e.i],'Unknown shared item')) end
           if item.option and options[item.option]==false and not stocked then return nil end
           item.option=nil;item.type='item';item.size=e.n
           U.check(U.integer(item.size) and item.size>0,'Invalid ingredient quantity')
           -- Oracle IDs are normalized to lower case. GT/Minecraft families above
           -- have known spelling; other families still need a registry resolver.
-          if not item.name:match('^gregtech:') and not item.name:match('^minecraft:') and not unresolved[item.name] then
+          local registered;item,registered=registeredItem(data,item)
+          if not stocked and not registered and not unresolved[item.name] then
             unresolved[item.name]=true;manifest.unresolved[#manifest.unresolved+1]=item.name
           end
           return item
         end
         local out=rule.outputs[1]
-        local label=labels[out.f] or out.f or 'item'
-        local kind,size=label:match('^(%a+)(%d+)$')
-        if kind=='wire' or kind=='cable' then label=size..'x '..(kind=='wire' and 'Wire' or 'Cable') end
+        local label=formLabel(out.f)
         local source=rule.inputs[1].f
         local route=mode=='wiremill' and (' / from '..(labels[source] or source)) or ''
-        local recipe={kind='processing',outputForm=out.f,inputs={},outputs={},label=material.name..' / '..label..route,stock={}}
+        local recipe={kind='processing',material=material.name,outputForm=out.f,outputLabel=label,inputs={},outputs={},label=material.name..' / '..label..route,stock={}}
         for _,which in ipairs({'inputs','outputs'}) do
           for _,e in ipairs(rule[which]) do
             local item=resolve(e)
@@ -1106,6 +1138,15 @@ end)()
 -- Pattern reads are performed one interface at a time; metadata discovery never
 -- converts an entire network's pattern inventories into Lua tables.
 local function discover(hw,name) return lookup(hw,name,true) end
+local function recipeKey(data,recipe)
+  local normalized=clone(recipe)
+  for _,which in ipairs({'inputs','outputs'}) do
+    for _,s in pairs(normalized[which]) do
+      local key=tagKey(data,s);s.tag=key~='{}' and key or nil
+    end
+  end
+  return Planner.recipeKey(normalized)
+end
 local function patternRecipe(data,p)
   check(type(p.tag)=='string','Pattern NBT hidden; enable allowItemStackNBTTags')
   local root=nbt(data,p.tag).__value
@@ -1158,12 +1199,12 @@ local function scanManifest(c,manifest,routing,progress,control,started)
         if exists(p) then
           check(type(p.tag)=='string','Pattern NBT hidden in '..g.name)
           local value={kind='unknown',fingerprint=patternFingerprint(hw,p)}
-          if p.name=='appliedenergistics2:item.ItemEncodedPattern' and p.isCraftable~=nil and p.inputs and p.outputs then
+          if encodedPattern(hw.data,p) then
             local r=patternRecipe(hw.data,p)
             value.kind=r.kind
-            local valid,key=pcall(Planner.recipeKey,r)
+            local valid,key=pcall(recipeKey,hw.data,r)
             if valid then value.recipeKey=key end
-            value.donor=valid and not r.substitute and not r.beSubstitute
+            value.donor=not r.substitute and not r.beSubstitute
           end
           compacted.patterns[slot]=value
         end
@@ -1176,7 +1217,7 @@ local function scanManifest(c,manifest,routing,progress,control,started)
   local request={recipes={},source=clone(manifest.source),policy=clone(manifest.policy or {}),unresolved=clone(manifest.unresolved)}
   local labels={}
   for _,r in ipairs(manifest.recipes) do
-    local key=Planner.recipeKey(r)
+    local key=recipeKey(hw.data,r);r.key=key
     request.recipes[#request.recipes+1]={key=key,kind=r.kind,destination=destination(r),
       stock=clone(r.stock),stockAlternatives=clone(r.stockAlternatives)}
     labels[key]=r.label or r.id or r.outputs[1].name
@@ -1186,48 +1227,48 @@ local function scanManifest(c,manifest,routing,progress,control,started)
   end)
   return plan,snapshot,request,labels
 end
-local function describe(e)
-  if not e then return '(no available slot)' end
-  return U.locationText(e)..' slot '..e.slot
-end
-local function previewReport(plan,manifest,labels)
-  local details={}
+local function previewRows(plan,manifest,labels)
+  local rows,details={},{}
+  local function add(s,tone) rows[#rows+1]={s,tone or 'text'} end
   local function ingredients(list)
     local out={}
-    for _,s in ipairs(list or {}) do
-      out[#out+1]=tostring(s.size or s.n)..'x '..(s.fluid or (s.name..':'..s.damage))
-    end
+    for _,s in ipairs(list) do out[#out+1]=s.size..' x '..(s.label or s.name) end
     return table.concat(out,', ')
   end
-  for _,recipe in ipairs(manifest.recipes) do details[Planner.recipeKey(recipe)]=recipe end
-  local lines={'RECIPE PLAN / PREVIEW','Recipe source: '..manifest.source.recipeVersion..
-    ' | target: '..manifest.source.targetVersion,'Slot numbers below are ZERO based. Destination capacity assumes 36 slots per interface.',
-    'Verify every destination interface has all 36 slots available before executing.'}
-  if manifest.source.excludedRecipes then lines[#lines+1]='Unsupported source recipes excluded: '..manifest.source.excludedRecipes end
-  for _,name in ipairs(manifest.unresolved or {}) do lines[#lines+1]='UNVERIFIED registry spelling: '..name end
-  lines[#lines+1]='Fluids, circuits and omitted PVC/PPS require external stocking; alternatives use the listed primary item.'
-  lines[#lines+1]=string.format('Reuse %d | Create %d processing + %d crafting | Preserve %d unrelated/duplicate patterns',
-    plan.reused,plan.required.processing,plan.required.crafting,#plan.preserved)
-  for _,err in ipairs(plan.errors) do lines[#lines+1]='BLOCKED: '..err end
-  lines[#lines+1]='FINAL LAYOUT (material and rule order)'
+  for _,recipe in ipairs(manifest.recipes) do details[recipe.key or Planner.recipeKey(recipe)]=recipe end
+  add('PATTERN PLAN','blue')
+  add(string.format('%d reuse   |   %d new   |   %d other patterns kept',plan.reused,
+    plan.required.processing+plan.required.crafting,#plan.preserved),'green')
+  add('')
+  local group,bank,material
   for _,r in ipairs(plan.layout) do
-    lines[#lines+1]=(r.existing and 'REUSE ' or 'CREATE ')..labels[r.key]..' -> '..describe(r.destination)
     local recipe=details[r.key]
-    lines[#lines+1]='  '..ingredients(recipe.inputs)..' -> '..ingredients(recipe.outputs)
-    if recipe.stock and #recipe.stock>0 then lines[#lines+1]='  External: '..ingredients(recipe.stock) end
-    if recipe.stockAlternatives then lines[#lines+1]='  Other external-stock alternatives: '..#recipe.stockAlternatives end
+    if group~=r.group then
+      group=r.group;bank=nil;material=nil;add('');add('DESTINATION: '..tostring(group),'blue')
+    end
+    local location=r.destination and where(r.destination)
+    if location and bank~=location then
+      bank=location;add('Interface: '..U.locationText(r.destination),'muted')
+    end
+    if material~=(recipe.material or recipe.label) then
+      material=recipe.material or recipe.label;add('');add(material,'blue')
+    end
+    add((r.existing and 'REUSE   ' or 'CREATE  ')..(recipe.outputLabel or recipe.outputForm or '')..
+      (r.destination and ('   slot '..r.destination.slot) or '   needs space'),r.existing and 'green' or 'yellow')
+    add('  '..ingredients(recipe.inputs))
+    add('  -> '..ingredients(recipe.outputs),'green')
+    add('')
   end
-  lines[#lines+1]='SORT EXISTING PATTERNS FIRST'
-  for _,m in ipairs(plan.moves) do lines[#lines+1]=describe(m.from)..' -> '..describe(m.to) end
-  for _,m in ipairs(plan.preserved) do lines[#lines+1]='PRESERVE '..describe(m.from)..' -> '..describe(m.to) end
-  lines[#lines+1]='THEN IMPRINT AND INSTALL'
-  for _,m in ipairs(plan.creates) do
-    lines[#lines+1]=labels[m.key]..': donor '..describe(m.from)..' via '..describe(m.workspace)..' -> '..describe(m.to)
-  end
+  return rows
+end
+local function previewReport(plan,manifest,labels)
+  local lines={}
+  for _,r in ipairs(previewRows(plan,manifest,labels)) do lines[#lines+1]=r[1] end
+  for _,err in ipairs(plan.errors) do lines[#lines+1]='BLOCKED: '..err end
   return table.concat(lines,'\n')..'\n'
 end
 
-C.maker={planner=Planner,scan=scanManifest,report=previewReport,discover=discover}
+C.maker={planner=Planner,scan=scanManifest,report=previewReport,rows=previewRows,discover=discover}
 local function programRouting(c,id)
   local program=Config.requireProgram(c,id)
   local values=c.programs[id]
@@ -1237,7 +1278,8 @@ local function programRouting(c,id)
     forms={};routing.destinations={}
     for form,key in pairs(program.outputs) do forms[form]=true;routing.destinations[form]=values[key] end
   end
-  return routing,{pvc=values.pvc~='off',pps=values.pps~='off',forms=forms},program
+  return routing,{pvc=values.pvc~='off',pps=values.pps~='off',forms=forms,
+    sources=id=='wiremill' and {wire1=values.wireSource,wireFine=values.fineSource} or nil},program
 end
 function C.maker.preview(c,id,progress,control)
   validate(c);startWork(c,progress,control)
@@ -1312,7 +1354,7 @@ function C.maker.apply(c,id,plan,manifest,progress,control)
     saveOp(hw,op);C.maker.finishSort(hw,op,progress);clearOp()
   end
   local recipes={}
-  for _,recipe in ipairs(manifest.recipes) do recipes[Planner.recipeKey(recipe)]=recipe end
+  for _,recipe in ipairs(manifest.recipes) do recipes[recipe.key or Planner.recipeKey(recipe)]=recipe end
   for _,create in ipairs(plan.creates) do
     local original=check(current(hw,create.from).patterns[create.from.slot],'Donor disappeared')
     check(patternFingerprint(hw,original)==create.fingerprint,'Donor pattern changed')
@@ -1364,8 +1406,8 @@ local function runUI()
     gpu.setForeground(colors[tone or 'text']);gpu.setBackground(colors[bg or 'bg'])
     gpu.set(x,y,s..string.rep(' ',math.max(0,width-unicode.wlen(s))))
   end
-  local function button(x,y,label,callback,enabled)
-    local length=unicode.len(label)+4
+  local function button(x,y,label,callback,enabled,width)
+    local length=width or unicode.len(label)+4
     text(x,y,'[ '..label..' ]',length,enabled==false and 'muted' or 'text','button')
     if enabled~=false then buttons[#buttons+1]={x=x,y=y,w=length,action=callback} end
     return x+length+2
@@ -1448,6 +1490,22 @@ local function runUI()
       add('After interruption, leave patterns in place and Recover; then build a new preview.')
       add('History retains timing and memory reports. Updates preserve configuration and recovery files.')
     elseif not p then add('Choose a program to build a preview.','muted')
+    elseif state.section=='details' and preview.manifest then
+      add('BUFFER DISCOVERY','blue')
+      add('Terminal lookup: "'..cfg.shared.donors..'"')
+      add(p.donorBanks..' matching interfaces; '..p.donorOccupied..' occupied pattern slots.')
+      add(p.available.processing..' usable processing; '..p.available.crafting..' usable crafting; '..p.donorRejected..' rejected.')
+      add('');add('SORTING','blue')
+      add(#p.moves..' moves before creating patterns; '..#p.preserved..' unrelated/duplicate patterns preserved.')
+      for _,move in ipairs(p.moves) do
+        add(U.locationText(move.from)..' slot '..move.from.slot..' -> '..U.locationText(move.to)..' slot '..move.to.slot,'muted')
+      end
+      add('');add('SOURCE COVERAGE','blue')
+      add('Recipes outside the supported material forms (whole imported dataset):','muted')
+      for _,label in ipairs(U.keys(preview.manifest.source.excludedOutputs or {})) do
+        add(label..': '..preview.manifest.source.excludedOutputs[label]..' source recipes')
+      end
+      for _,name in ipairs(preview.manifest.unresolved or {}) do add('Registry spelling still unresolved: '..name,'red') end
     elseif state.section=='capacity' then
       add('DESTINATION SPACE','blue');add('Assuming 36 usable slots per destination interface.','yellow');add('')
       for _,g in ipairs(p.capacities or {}) do
@@ -1457,7 +1515,7 @@ local function runUI()
       add('Existing unrelated patterns count toward required space.','muted')
       for _,err in ipairs(p.errors) do add('BLOCKED: '..err,'red') end
     elseif preview.id~='assline' then
-      for line in (preview.report or ''):gmatch('[^\n]+') do add(line) end
+      for _,row in ipairs(C.maker.rows(p,preview.manifest)) do add(row[1],row[2]) end
     elseif state.section=='recipes' then
       for _,r in ipairs(p.recipes) do
         add((r.existing and 'REUSE  ' or 'CREATE ')..r.name,r.existing and 'green' or 'yellow')
@@ -1482,7 +1540,16 @@ local function runUI()
     if key~=contentKey then
       contentKey=key;contentRows={}
       for _,r in ipairs(lines()) do
-        for pos=1,math.max(1,unicode.len(r[1])),width do contentRows[#contentRows+1]={unicode.sub(r[1],pos,pos+width-1),r[2]} end
+        local remaining=r[1]
+        while unicode.len(remaining)>width do
+          local prefix=unicode.sub(remaining,1,width)
+          local at=prefix:match('^.*()%s')
+          local count=at and unicode.len(prefix:sub(1,at-1)) or width
+          if count==0 then count=width end
+          contentRows[#contentRows+1]={unicode.sub(remaining,1,count),r[2]}
+          remaining=unicode.sub(remaining,count+1):gsub('^%s+','')
+        end
+        contentRows[#contentRows+1]={remaining,r[2]}
       end
     end
     local rows=contentRows
@@ -1519,11 +1586,20 @@ local function runUI()
       text(34,8,'Changes save when you accept a field or navigate away.',124,'muted')
       for n,f in ipairs(fields()) do
         local y=11+(n-1)*4;text(34,y,f.label,124,'blue')
-        if f.kind=='toggle' then
+        if f.choices then
+          local x=34
+          for _,option in ipairs(f.choices) do
+            local key,value=f.key,option[1]
+            x=button(x,y+1,(values()[key]==value and '* ' or '')..option[2],function()
+              commitEdit();local trial=clone(cfg);Config.values(trial,state.settings)[key]=value
+              saveConfig(trial);paintKey=nil;status('Settings saved.','green')
+            end)
+          end
+        elseif f.kind=='toggle' then
           button(34,y+1,values()[f.key]=='on' and 'On' or 'Off',function()
             commitEdit();local trial=clone(cfg);local v=Config.values(trial,state.settings)
             v[f.key]=v[f.key]=='on' and 'off' or 'on';saveConfig(trial);status('Settings saved.','green')
-          end)
+          end,true,9)
         else editorRow(34,y+1,124,f) end
         text(34,y+2,f.help,124,'muted')
       end
@@ -1546,7 +1622,7 @@ local function runUI()
       text(34,7,'PREVIEW / '..(current and Programs.byId[current].name or ''),124,'blue')
       local x=34
       local tabs=preview and preview.id=='assline' and {{'changes','Input changes'},{'recipes','Rename recipes'},{'capacity','Capacity'}}
-        or {{'changes','Plan and sorting'},{'capacity','Capacity'}}
+        or {{'changes','Patterns'},{'capacity','Capacity'},{'details','Details'}}
       for _,tab in ipairs(tabs) do local section=tab[1];x=button(x,9,(state.section==section and '* ' or '')..tab[2],function() state.section=section;state.offset=0 end) end
       scrollRows(34,12,74,31);text(113,12,'WHAT WILL HAPPEN',45,'blue')
       if p then
@@ -1555,8 +1631,10 @@ local function runUI()
           text(113,16,p.newRecipes..' donor patterns needed',45,'yellow');text(113,17,(#p.recipes-p.newRecipes)..' rename recipes reused',45,'green')
           text(113,18,p.available..' processing donors available',45,'muted')
         else
-          text(113,14,p.reused..' existing patterns reused',45,'green');text(113,15,#p.creates..' new patterns to install',45,'yellow')
+          text(113,14,p.reused..' existing patterns reused',45,'green');text(113,15,p.required.processing..' new patterns needed',45,'yellow')
           text(113,16,#p.moves..' sorting moves first',45);text(113,17,p.available.processing..' processing donors available',45,'muted')
+          text(113,18,p.donorBanks..' buffer interfaces found via terminal',45,'muted')
+          text(113,19,p.donorRejected..' occupied buffer slots unusable',45,'muted')
         end
         local y=21;text(113,y,#p.errors==0 and 'No capacity/donor blockers' or 'BLOCKED: '..#p.errors..' issue(s)',45,#p.errors==0 and 'green' or 'red')
         for _,err in ipairs(p.errors) do for pos=1,unicode.len(err),45 do if y<32 then y=y+1;text(113,y,unicode.sub(err,pos,pos+44),45,'red') end end end

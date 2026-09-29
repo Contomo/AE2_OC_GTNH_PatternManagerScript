@@ -3,6 +3,9 @@ local M={}
 local function field(key,label,help,default,kind)
   return {key=key,label=label,help=help,default=default or '',kind=kind or 'text'}
 end
+local function choice(key,label,choices)
+  local f=field(key,label,'Choose the input used for these patterns.','ingot','choice');f.choices=choices;return f
+end
 M.list={
   {id='assline',name='Assembly line renamer',description='Review duplicate inputs and create their rename patterns.',
     fields={field('target','Assembly line interface','Exact name of the interface containing the patterns to manage.','Advanced Assline (1)'),
@@ -15,7 +18,9 @@ M.list={
   {id='wiremill',name='Wiremill',mode='wiremill',description='Create 1x wire and fine-wire patterns in separate destination banks.',
     outputs={wire1='wire1',wireFine='wireFine'},
     fields={field('wire1','1x wire interface name','All matching interfaces receive recipes producing 1x wire.'),
-      field('wireFine','Fine wire interface name','All matching interfaces receive recipes producing fine wire.')}},
+      field('wireFine','Fine wire interface name','All matching interfaces receive recipes producing fine wire.'),
+      choice('wireSource','1x wire input',{{'ingot','Ingot'},{'stick','Rod'}}),
+      choice('fineSource','Fine wire input',{{'ingot','Ingot'},{'stick','Rod'},{'wire1','1x wire'}})}},
   {id='combining',name='Wire combining',unavailable='Combining recipe rules are not implemented yet.',
     description='Combine wire and cable sizes in a molecular assembler.',
     fields={field('wire','Bare wire interface name','Destination bank for combined bare-wire sizes.'),

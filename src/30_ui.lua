@@ -20,8 +20,8 @@ local function runUI()
     gpu.setForeground(colors[tone or 'text']);gpu.setBackground(colors[bg or 'bg'])
     gpu.set(x,y,s..string.rep(' ',math.max(0,width-unicode.wlen(s))))
   end
-  local function button(x,y,label,callback,enabled)
-    local length=unicode.len(label)+4
+  local function button(x,y,label,callback,enabled,width)
+    local length=width or unicode.len(label)+4
     text(x,y,'[ '..label..' ]',length,enabled==false and 'muted' or 'text','button')
     if enabled~=false then buttons[#buttons+1]={x=x,y=y,w=length,action=callback} end
     return x+length+2
@@ -104,6 +104,22 @@ local function runUI()
       add('After interruption, leave patterns in place and Recover; then build a new preview.')
       add('History retains timing and memory reports. Updates preserve configuration and recovery files.')
     elseif not p then add('Choose a program to build a preview.','muted')
+    elseif state.section=='details' and preview.manifest then
+      add('BUFFER DISCOVERY','blue')
+      add('Terminal lookup: "'..cfg.shared.donors..'"')
+      add(p.donorBanks..' matching interfaces; '..p.donorOccupied..' occupied pattern slots.')
+      add(p.available.processing..' usable processing; '..p.available.crafting..' usable crafting; '..p.donorRejected..' rejected.')
+      add('');add('SORTING','blue')
+      add(#p.moves..' moves before creating patterns; '..#p.preserved..' unrelated/duplicate patterns preserved.')
+      for _,move in ipairs(p.moves) do
+        add(U.locationText(move.from)..' slot '..move.from.slot..' -> '..U.locationText(move.to)..' slot '..move.to.slot,'muted')
+      end
+      add('');add('SOURCE COVERAGE','blue')
+      add('Recipes outside the supported material forms (whole imported dataset):','muted')
+      for _,label in ipairs(U.keys(preview.manifest.source.excludedOutputs or {})) do
+        add(label..': '..preview.manifest.source.excludedOutputs[label]..' source recipes')
+      end
+      for _,name in ipairs(preview.manifest.unresolved or {}) do add('Registry spelling still unresolved: '..name,'red') end
     elseif state.section=='capacity' then
       add('DESTINATION SPACE','blue');add('Assuming 36 usable slots per destination interface.','yellow');add('')
       for _,g in ipairs(p.capacities or {}) do
@@ -113,7 +129,7 @@ local function runUI()
       add('Existing unrelated patterns count toward required space.','muted')
       for _,err in ipairs(p.errors) do add('BLOCKED: '..err,'red') end
     elseif preview.id~='assline' then
-      for line in (preview.report or ''):gmatch('[^\n]+') do add(line) end
+      for _,row in ipairs(C.maker.rows(p,preview.manifest)) do add(row[1],row[2]) end
     elseif state.section=='recipes' then
       for _,r in ipairs(p.recipes) do
         add((r.existing and 'REUSE  ' or 'CREATE ')..r.name,r.existing and 'green' or 'yellow')
@@ -138,7 +154,16 @@ local function runUI()
     if key~=contentKey then
       contentKey=key;contentRows={}
       for _,r in ipairs(lines()) do
-        for pos=1,math.max(1,unicode.len(r[1])),width do contentRows[#contentRows+1]={unicode.sub(r[1],pos,pos+width-1),r[2]} end
+        local remaining=r[1]
+        while unicode.len(remaining)>width do
+          local prefix=unicode.sub(remaining,1,width)
+          local at=prefix:match('^.*()%s')
+          local count=at and unicode.len(prefix:sub(1,at-1)) or width
+          if count==0 then count=width end
+          contentRows[#contentRows+1]={unicode.sub(remaining,1,count),r[2]}
+          remaining=unicode.sub(remaining,count+1):gsub('^%s+','')
+        end
+        contentRows[#contentRows+1]={remaining,r[2]}
       end
     end
     local rows=contentRows
@@ -175,11 +200,20 @@ local function runUI()
       text(34,8,'Changes save when you accept a field or navigate away.',124,'muted')
       for n,f in ipairs(fields()) do
         local y=11+(n-1)*4;text(34,y,f.label,124,'blue')
-        if f.kind=='toggle' then
+        if f.choices then
+          local x=34
+          for _,option in ipairs(f.choices) do
+            local key,value=f.key,option[1]
+            x=button(x,y+1,(values()[key]==value and '* ' or '')..option[2],function()
+              commitEdit();local trial=clone(cfg);Config.values(trial,state.settings)[key]=value
+              saveConfig(trial);paintKey=nil;status('Settings saved.','green')
+            end)
+          end
+        elseif f.kind=='toggle' then
           button(34,y+1,values()[f.key]=='on' and 'On' or 'Off',function()
             commitEdit();local trial=clone(cfg);local v=Config.values(trial,state.settings)
             v[f.key]=v[f.key]=='on' and 'off' or 'on';saveConfig(trial);status('Settings saved.','green')
-          end)
+          end,true,9)
         else editorRow(34,y+1,124,f) end
         text(34,y+2,f.help,124,'muted')
       end
@@ -202,7 +236,7 @@ local function runUI()
       text(34,7,'PREVIEW / '..(current and Programs.byId[current].name or ''),124,'blue')
       local x=34
       local tabs=preview and preview.id=='assline' and {{'changes','Input changes'},{'recipes','Rename recipes'},{'capacity','Capacity'}}
-        or {{'changes','Plan and sorting'},{'capacity','Capacity'}}
+        or {{'changes','Patterns'},{'capacity','Capacity'},{'details','Details'}}
       for _,tab in ipairs(tabs) do local section=tab[1];x=button(x,9,(state.section==section and '* ' or '')..tab[2],function() state.section=section;state.offset=0 end) end
       scrollRows(34,12,74,31);text(113,12,'WHAT WILL HAPPEN',45,'blue')
       if p then
@@ -211,8 +245,10 @@ local function runUI()
           text(113,16,p.newRecipes..' donor patterns needed',45,'yellow');text(113,17,(#p.recipes-p.newRecipes)..' rename recipes reused',45,'green')
           text(113,18,p.available..' processing donors available',45,'muted')
         else
-          text(113,14,p.reused..' existing patterns reused',45,'green');text(113,15,#p.creates..' new patterns to install',45,'yellow')
+          text(113,14,p.reused..' existing patterns reused',45,'green');text(113,15,p.required.processing..' new patterns needed',45,'yellow')
           text(113,16,#p.moves..' sorting moves first',45);text(113,17,p.available.processing..' processing donors available',45,'muted')
+          text(113,18,p.donorBanks..' buffer interfaces found via terminal',45,'muted')
+          text(113,19,p.donorRejected..' occupied buffer slots unusable',45,'muted')
         end
         local y=21;text(113,y,#p.errors==0 and 'No capacity/donor blockers' or 'BLOCKED: '..#p.errors..' issue(s)',45,#p.errors==0 and 'green' or 'red')
         for _,err in ipairs(p.errors) do for pos=1,unicode.len(err),45 do if y<32 then y=y+1;text(113,y,unicode.sub(err,pos,pos+44),45,'red') end end end
