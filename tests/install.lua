@@ -6,6 +6,7 @@ local fixture=require('assline_install_fixtures')
 local installerSource, launcherSource = fixture.installer, fixture.launcher
 local actualManifest = fixture.manifest
 local files, dirs, responses, requested, closed, renameFailure, freeBytes, interrupted
+local handles, flushFailure, closeFailure
 local root, url = '/home/assline', 'https://updates.invalid/dist'
 local function parent(path) return path:match('^(.*)/[^/]+$') end
 local function mkdir(path)
@@ -65,8 +66,8 @@ io.open=function(path,mode)
   if not dirs[parent(path)] then return nil,'missing parent' end
   if not writing and files[path]==nil then return nil,'missing file' end
   if writing then files[path]='' end
-  local position=1
-  return {
+  local position,pending=1,''
+  local handle={closed=false,path=path,
     read=function(_,length)
       local content=files[path]
       if position>#content then return nil end
@@ -78,8 +79,21 @@ io.open=function(path,mode)
       else value=content:sub(position,position+length-1);position=position+#value end
       return value
     end,
-    write=function(self,value) files[path]=files[path]..value;return self end,
-    close=function() return true end}
+    write=function(self,value) pending=pending..value;return self end,
+    flush=function(self)
+      local chunk=pending;pending=''
+      if flushFailure==path then flushFailure=nil;return nil,'disk write failed' end
+      if writing then files[path]=files[path]..chunk end
+      return self
+    end,
+    close=function(self)
+      -- OpenOS close flushes but ignores the flush result, then returns no value.
+      if writing then self:flush() end
+      self.closed=true
+      if closeFailure==path then closeFailure=nil;error('disk close failed') end
+    end}
+  handles[#handles+1]=handle
+  return handle
 end
 loadfile=function(path,...)
   if path:sub(1,6)=='/home/' then return load(files[path] or '', '@'..path, 't', _G) end
@@ -106,6 +120,7 @@ local count=0
 local function reset()
   files,dirs,responses,requested,closed={},{},{},{},0
   renameFailure,interrupted,freeBytes=nil,false,4*1024*1024
+  handles,flushFailure,closeFailure={},nil,nil
   mkdir('/home')
   for _,name in ipairs({'assline.cfg','assline.pending','assline.last','assline-perf.log'}) do files['/home/'..name]='preserve '..name end
 end
@@ -130,7 +145,9 @@ end
 local savedPrint=print
 print=function() end
 local function test(name,f)
-  reset();f();count=count+1;savedPrint('PASS '..name)
+  reset();f()
+  for _,handle in ipairs(handles) do assert(handle.closed,'File handle left open: '..handle.path) end
+  count=count+1;savedPrint('PASS '..name)
 end
 local function failure(f,part)
   local ok,why=pcall(f);assert(not ok and tostring(why):find(part,1,true),tostring(why))
@@ -186,6 +203,30 @@ test('a mid-download connection loss closes the stream and preserves the active 
   failure(function() M.install(root) end,'connection lost')
   assert(M.active(root)=='aaaaaaaaaaaaaaaa' and closed==#requested)
   assert(not dirs[root..'/stage-bbbbbbbbbbbbbbbb'])
+end)
+
+test('buffered download write failure closes the file and preserves the active release',function()
+  local boot=oldRelease();release('bbbbbbbbbbbbbbbb')
+  flushFailure=root..'/stage-bbbbbbbbbbbbbbbb/assline.lua'
+  failure(function() M.install(root) end,'Flush failed: disk write failed')
+  assert(M.active(root)=='aaaaaaaaaaaaaaaa' and files[root..'.lua']==boot)
+  assert(not dirs[root..'/stage-bbbbbbbbbbbbbbbb'] and closed==#requested)
+end)
+
+test('buffered activation write failure preserves the previous pointer',function()
+  local boot=oldRelease();release('bbbbbbbbbbbbbbbb')
+  flushFailure=root..'/active.new'
+  failure(function() M.install(root) end,'Cannot finish write '..root..'/active.new: Flush failed: disk write failed')
+  assert(M.active(root)=='aaaaaaaaaaaaaaaa' and files[root..'.lua']==boot)
+  assert(files[root..'/active']=='aaaaaaaaaaaaaaaa\n')
+end)
+
+test('download close exceptions are reported without leaking the stream',function()
+  local boot=oldRelease();release('bbbbbbbbbbbbbbbb')
+  closeFailure=root..'/stage-bbbbbbbbbbbbbbbb/assline.lua'
+  failure(function() M.install(root) end,'disk close failed')
+  assert(M.active(root)=='aaaaaaaaaaaaaaaa' and files[root..'.lua']==boot)
+  assert(not dirs[root..'/stage-bbbbbbbbbbbbbbbb'] and closed==#requested)
 end)
 test('Lua syntax is checked before activation even with a valid checksum',function()
   oldRelease();release('bbbbbbbbbbbbbbbb','this is invalid Lua')

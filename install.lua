@@ -17,12 +17,30 @@ local function read(path)
   return value
 end
 
+local function finishWrite(file)
+  -- OpenOS close returns no value and ignores buffered flush failures.
+  -- Flush explicitly, then always close, including after a failed flush.
+  local flushed, reason = pcall(function()
+    local ok, why = file:flush()
+    check(ok, 'Flush failed: '..tostring(why or 'unknown error'))
+  end)
+  local closed, result, why = pcall(function() return file:close() end)
+  if not flushed then return nil, reason end
+  if not closed then return nil, result end
+  if result==false or why then return nil, why or 'Close failed' end
+  return true
+end
+
 local function write(path, value)
   local file, reason = io.open(path, 'wb')
   check(file, 'Cannot write '..path..': '..tostring(reason))
-  local ok, why = file:write(value)
-  local closed, closeReason = file:close()
-  check(ok and closed, 'Write failed: '..tostring(why or closeReason))
+  local ok, why = pcall(function()
+    local written, reason = file:write(value)
+    check(written, 'Write failed: '..tostring(reason or 'unknown error'))
+  end)
+  local finished, finishReason = finishWrite(file)
+  check(ok, 'Cannot write '..path..': '..tostring(why))
+  check(finished, 'Cannot finish write '..path..': '..tostring(finishReason))
 end
 
 local function move(from, to)
@@ -128,7 +146,9 @@ local function download(url, path, maximum)
     for chunk in response do
       size=size+#chunk
       check(size<=maximum, 'Download exceeds expected size: '..url)
-      if file then check(file:write(chunk), 'Download write failed')
+      if file then
+        local written, why = file:write(chunk)
+        check(written, 'Download write failed: '..tostring(why or 'unknown error'))
       else parts[#parts+1]=chunk end
       a,b=checksum(a,b,chunk)
     end
@@ -138,11 +158,11 @@ local function download(url, path, maximum)
     end
   end)
   if file then
-    local closed, why = file:close()
-    if not closed then ok,reason=false,why end
+    local finished, why = finishWrite(file)
+    if ok and not finished then ok,reason=false,why end
   end
   pcall(function() response.close() end)
-  check(ok, 'Download failed: '..tostring(reason))
+  check(ok, 'Download failed: '..tostring(reason)..' ('..url..')')
   return size, string.format('%04x%04x',b,a), table.concat(parts)
 end
 
