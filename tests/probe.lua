@@ -13,6 +13,7 @@ local function entry(name,x)
   return {name=name,location={x=x,y=64,z=0,dimId=0},side=3,patterns={[0]={name='pattern'}}}
 end
 local grids={one={entry('OC Buffer',1)},two={entry('Advanced Assline (1)',2),entry('OC Buffer',3)}}
+local config={target='Advanced Assline (1)',buffer='OC Buffer',terminalAddress='one'}
 local function proxy(address)
   local entries=grids[address]
   return {
@@ -29,7 +30,7 @@ package.preload.component=function() return {
   proxy=proxy
 } end
 package.preload.serialization=function() return {
-  unserialize=function() return {target='Advanced Assline (1)',buffer='OC Buffer',terminalAddress='one'} end,
+  unserialize=function() return config end,
   serialize=function(t) return '{x='..t.x..'}' end
 } end
 local realOpen=io.open
@@ -45,10 +46,23 @@ assert(s:find('EXACT "Advanced Assline (1)": 0 match(es)',1,true))
 assert(s:find('EXACT "Advanced Assline (1)": 1 match(es)',1,true))
 assert(s:find('TERMINAL one',1,true) and s:find('TERMINAL two',1,true))
 assert(s:find('"Advanced Assline (1)" {x=2} side=3',1,true))
+-- Diagnostics use the same shared and per-program names as the application.
+config={version=2,shared={editor='Named editor',donors='Named donors',terminalAddress='two'},
+  programs={assline={target='Named target'}}}
+grids.two={entry('Named target',2),entry('Named editor',3),entry('Named donors',4),entry('Named donors',5)}
+assert(loadfile(artifact))()
+s=files['/home/interface_probe.txt']
+assert(s:find('Target: "Named target"',1,true))
+assert(s:find('Pattern editor: "Named editor"',1,true))
+assert(s:find('New pattern buffers: "Named donors"',1,true))
+assert(s:find('Configured terminal prefix: "two"',1,true))
+assert(s:find('EXACT "Named target": 1 match(es)',1,true))
+assert(s:find('EXACT "Named editor": 1 match(es)',1,true))
+assert(s:find('EXACT "Named donors": 2 match(es)',1,true))
 -- A failing terminal must be reported while another terminal is still examined.
 grids.one=nil
 assert(loadfile(artifact))('Missing target')
 s=files['/home/interface_probe.txt']
 assert(s:find('TERMINAL ERROR',1,true) and s:find('TERMINAL two',1,true))
 assert(s:find('EXACT "Missing target": 0 match(es)',1,true))
-savedPrint('SUCCESS: 2 tests ('..artifact..')')
+savedPrint('SUCCESS: 3 tests ('..artifact..')')

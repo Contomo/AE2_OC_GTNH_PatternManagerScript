@@ -17,10 +17,9 @@ end
 local function token(t, label, n)
   return (t:gsub('{label}', function() return label end):gsub('{n}', tostring(n)))
 end
-local defaults = {target='Advanced Assline (1)', buffer='OC Buffer', itemName='NAME_{n}',
-  renameName='Rename NAME_{n}', terminalAddress='', bufferAddress='', dataAddress='', bufferSlots='9', renameSlots='9',
-  energyPause='25',energyResume='75',makerDestination='',makerDonors='',makerWorkspace='',
-  makerSlots='9',makerDonorSlots='9',makerWorkspaceSlots='9',makerMode='wiremill',makerPVC='on',makerPPS='on'}
+local Programs=require('assline_programs')
+local Config=require('assline_config')
+local defaults=Config.defaults
 local cfg = clone(defaults)
 local work={pause=0.25,resume=0.75}
 local perf
@@ -94,12 +93,12 @@ local function gate()
   end
 end
 local function startWork(c,progress,control)
-  work={pause=tonumber(c.energyPause)/100,resume=tonumber(c.energyResume)/100,progress=progress,control=control}
+  work={pause=tonumber(c.shared.energyPause)/100,resume=tonumber(c.shared.energyResume)/100,progress=progress,control=control}
   local e,m=sampleEnergy()
   perf={started=computer.uptime(),startPct=e/m,memory=computer.freeMemory(),samples=0,sampleTime=0,pauses=0,yields=0,wait=0,calls={}}
   tagKeys,renameTags,tagCount,renameCount={},{},0,0
 end
-local paths = {config='/home/assline.cfg', pending='/home/assline.pending', backup='/home/assline.last'}
+local paths = {config='/home/assline.cfg', pending='/home/assline.pending', cursor='/home/assline.pending.step', backup='/home/assline.last'}
 local function readRaw(path)
   if not fs.exists(path) then return nil end
   check(fs.size(path)<=400000, 'File too large: '..path)
@@ -123,23 +122,7 @@ local function writeFile(path,t)
   if fs.exists(path) then check(fs.remove(path),'Cannot replace '..path) end
   check(fs.rename(temp,path),'Cannot finish saving '..path)
 end
-local function validate(c)
-  for k in pairs(defaults) do check(type(c[k])=='string' and #c[k]<=512,'Invalid setting: '..k) end
-  check(c.target~='' and c.buffer~='' and c.renameName~='','Interface names cannot be empty')
-  check(c.target~=c.buffer,'Target and buffer must differ')
-  check(c.itemName:find('{n}',1,true),'Item name template needs {n}')
-  for _,k in ipairs({'itemName','renameName'}) do
-    check(not c[k]:gsub('{label}',''):gsub('{n}',''):find('[{}]'),'Unknown template token: '..k)
-  end
-  for _,k in ipairs({'bufferSlots','renameSlots','makerSlots','makerDonorSlots','makerWorkspaceSlots'}) do
-    local n=tonumber(c[k]); check(n and n>=1 and n<=512 and n==math.floor(n),k..' must be 1..512')
-  end
-  check(c.makerMode=='wiremill' or c.makerMode=='coating','Unknown maker mode')
-  for _,k in ipairs({'makerPVC','makerPPS'}) do check(c[k]=='on' or c[k]=='off',k..' must be on or off') end
-  local pause,resume=tonumber(c.energyPause),tonumber(c.energyResume)
-  check(pause and resume and pause>=10 and pause<=80 and resume>=pause+10 and resume<=95,
-    'Energy pause must be 10..80%; resume at least 10% higher, up to 95%')
-end
+local validate=Config.validate
 local function selectDevice(kind, prefix)
   local matches={}
   for addr,tp in component.list(kind,true) do
@@ -268,15 +251,44 @@ local function direct(hw,name,slot,...)
   if hw.buffer.side~=6 then return invoke(hw.direct,name,hw.buffer.side,slot+1,...) end
   return invoke(hw.direct,name,slot+1,...)
 end
+local function patternFingerprint(hw,p)
+  if not exists(p) then return nil end
+  check(type(p.tag)=='string','Pattern NBT hidden')
+  return canonical({p.name,p.damage,p.size,invoke(hw.data,'sha256',p.tag)})
+end
+local function editorCapacity(hw)
+  local function valid(n)
+    local ok,reason=pcall(direct,hw,'getInterfacePattern',n-1)
+    if ok then return true end
+    check(tostring(reason):find('invalid slot',1,true),reason)
+    return false
+  end
+  check(valid(1),'Pattern editor has no slots')
+  local low,high=1,2
+  while high<=512 and valid(high) do low=high;high=high*2 end
+  if high>512 then check(not valid(513),'Pattern editor exceeds the supported 512 slots');high=513 end
+  while high-low>1 do
+    local mid=math.floor((low+high)/2)
+    if valid(mid) then low=mid else high=mid end
+  end
+  return low
+end
+local function capacity(i)
+  -- The terminal does not expose capacity. User-approved assumption; the UI
+  -- requires verification of fully expanded destination interfaces before Apply.
+  return Config.destinationSlots
+end
 local function connect(c,progress,control)
   validate(c)
   startWork(c,progress,control)
-  local hw={terminal=selectDevice('me_interface_terminal',c.terminalAddress),
-    direct=selectDevice('me_interface',c.bufferAddress),data=selectDevice('data',c.dataAddress)}
-  hw.buffer=endpoint(unique(hw,c.buffer))
+  local shared=c.shared
+  local hw={terminal=selectDevice('me_interface_terminal',shared.terminalAddress),
+    direct=selectDevice('me_interface',shared.editorAddress),data=selectDevice('data',shared.dataAddress)}
+  hw.buffer=endpoint(unique(hw,shared.editor))
   nbt(hw.data,invoke(hw.data,'encodeNBT',{__nbt_type='compound',__value={}}))
   return hw
 end
 C.defaults=defaults
+C.config=Config;C.programs=Programs;C.capacity=capacity
 C.perfReport=perfReport
 C.releaseWork=releaseWork

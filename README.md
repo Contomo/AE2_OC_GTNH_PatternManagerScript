@@ -5,34 +5,36 @@ interface, review duplicate-input changes, then apply them. The first occurrence
 of an item stays unchanged. Subsequent occurrences get unique names, starting
 over for each pattern. Stack quantities and recipe outputs are preserved.
 
-The **History** tab shows recent operation reports. **Maker setup** configures
-pattern-maker modes in this same application: user-selected destinations and
-remote donor banks, capacity checks, reuse and sorting previews. The recipe
-library is a compact material/form/rule matrix, with shared semantic rules and capability sets. See
-[PATTERN_MAKER.md](PATTERN_MAKER.md) for scope and extension contracts.
+One application runs several programs through **Run program**: assembly-line
+renaming, wire insulation, and wiremill patterns for 1x wire and fine wire.
+Navigation is on the left; Scan, Execute, Recover and Quit are in the bottom row.
+Settings has shared interfaces/hardware and a separate section for each program.
+[Program architecture and recipe matrix](PATTERN_MAKER.md).
 
 ## Machine setup
 
-1. Install a **tier 1 or better Data Card**, keyboard, tier 3 GPU/screen and OpenOS.
-   A database upgrade is **not required**. The renamer works with 2 MB RAM;
-   large maker previews use the stated Magical Memory setup. The entire deployed
-   application and matrix occupy about 0.5 MB, below the 4 MB disk cap.
-2. Connect an **ME Interface Terminal** through an adapter. The target, buffer,
-   and rename interfaces must be visible through this terminal on the same AE
-   network. Give the target its exact name, e.g. `Advanced Assline (1)`.
-3. Name a directly adapter-connected interface **`OC Buffer`**. Fill it with
-   disposable **encoded processing patterns**. Their existing recipes are
-   overwritten when creating missing rename recipes. Blank patterns and crafting
-   patterns cannot be converted by this API and are not counted as donors.
-4. Keep the buffer disconnected from machinery that could execute its temporary
-   recipes. Leave one empty pattern slot for editing, or supply enough donors
-   that installing a new rename recipe frees a slot first.
-5. Create the rename interfaces, e.g. `Rename NAME_1`, `Rename NAME_2`, etc., with
-   machines configured to perform the corresponding item renaming. The program
-   writes processing patterns; it does not configure or operate those machines.
-6. Install with the commands below, then run `/home/assline.lua`. Set names in
-   **Settings**, enter the target, and **Scan**. Review **Input changes** and
-   **Rename recipes**, then select **Apply preview**.
+1. Install OpenOS, a tier 3 GPU/screen, keyboard and a tier 1+ Data Card. An
+   Internet Card is needed for installation/updates. Large recipe previews use
+   the user's 16 MB Magical Memory setup. The deployed files occupy about 0.5 MB.
+2. Connect an **ME Interface Terminal** to OC. All editor, donor and destination
+   interfaces must be visible through this terminal on the same AE grid.
+3. Name an adapter-connected interface **`OC Pattern Editor`**. It is the shared
+   editor, and needs an empty pattern slot. Keep it disconnected from machinery
+   that could execute temporary recipes.
+4. Name one or more remote interfaces **`OC Pattern Buffer`**. Fill them with
+   disposable encoded processing patterns. All matching interfaces and all their
+   occupied slots are scanned; no direct connection or slot-count setting is
+   required for these banks. Crafting donors are counted separately.
+5. Configure destination names in **Settings**, under the appropriate program.
+   All destination interfaces with a matching exact name participate. The editor
+   and donor bank must have different names and must not overlap destinations.
+6. **Run program** opens the chooser. Select a program, then **Preview selected**.
+   Review the plan, donor budget and capacity. Destinations are assumed to have
+   **36 usable slots each**; the preview states the minimum interface count.
+   Verify the interfaces in game, select **Verify 36 slots**, then **Execute preview**.
+
+Wire combining and bending have their own settings sections, but their recipe
+rules are not implemented yet and their Preview button is disabled.
 
 ## Install and update with wget
 
@@ -92,7 +94,7 @@ unsupported.
 
 To inspect the installed version's actual behavior, paste
 **[interface_probe.lua](interface_probe.lua)** into `/home/interface_probe.lua`
-and run it. It uses your saved target/buffer names, tests exact lookup, and lists
+and run it. It uses your saved target, editor and donor names, tests exact lookup, and lists
 names and locations seen by **each connected terminal**. It needs no Data Card
 and performs no transfers or edits. Output is saved to
 `/home/interface_probe.txt`; the diagnostic file is replaced on the next run.
@@ -116,38 +118,32 @@ and [OC terminal filtering](https://github.com/GTNewHorizons/OpenComputers/blob/
 
 ## Names and settings
 
-The default names are literal `NAME_1`, `NAME_2`, etc., with a rename interface
-for each suffix. Both templates can be edited in Settings.
+All settings live in `/home/assline.cfg`, schema 2. Accepting an edit with Enter,
+clicking another field, changing page, or clicking Quit saves it. Esc discards
+only the active edit. Old settings migrate into the shared/program sections;
+obsolete slot limits are not carried forward.
 
-| Setting | Default | Meaning |
-| --- | --- | --- |
-| Target (main page) | `Advanced Assline (1)` | Exact, unique interface name |
-| Buffer interface | `OC Buffer` | Exact, unique name of the directly connected buffer |
-| Item name template | `NAME_{n}` | Literal `NAME_1`, `NAME_2`, etc. |
-| Rename interface template | `Rename NAME_{n}` | `Rename NAME_1`, `Rename NAME_2`, etc. |
-| Usable buffer slots | `9` | Pattern slots available in the buffer |
-| Usable rename slots | `9` | Available slots on each rename interface |
-| Component addresses | blank | Automatically use the single component of each type |
-| Pause work below energy % | `25` | Stop component work and wait for recharge |
-| Resume work at energy % | `75` | Continue the same operation after recharging |
+| Section | Fields |
+| --- | --- |
+| Shared interfaces | Pattern editor name, new pattern buffer name, terminal/editor/Data Card addresses, energy thresholds |
+| Assembly line renamer | Target interface, item-name template, rename-destination template |
+| Wire insulator | Destination interface name, request PVC, request PPS |
+| Wiremill | 1x wire destination name, fine-wire destination name |
+| Wire combining | Bare-wire destination, insulated-cable destination (future rules) |
+| Bending machine | Plate, foil and sheet-metal destinations (future rules) |
 
-For item-specific display names, change Item name template to `{label}_{n}`.
-`{label}` expands to the original item's display name; `{n}` is the suffix number.
-For one rename interface per item, use `Rename {label}_{n}`. A constant interface
-name also works for machines that can handle all required rename operations.
-Several rename interfaces can share the same name; free slots are allocated
-across them in deterministic location order.
+Shared default names are `OC Pattern Editor` and `OC Pattern Buffer`. Component
+addresses are optional when only one component of each type is connected.
+Only the editor is directly connected to OC. Donor banks are remote name matches.
+The terminal API does not expose destination capacity: plans use the agreed
+36-slot assumption and require in-game confirmation before execution. Editor
+slots are checked through its direct read API. No dummy moves are used to probe
+capacity, and previews never change patterns.
 
-Set usable slots to **36** only where all four pattern rows are available. The
-default 9 avoids placing recipes into inactive expansion rows. The target scan
-uses all slots exposed by the terminal, including sparse/expanded pattern slots.
-
-If several terminals, directly connected interfaces or Data Cards are present,
-paste the intended component's full address or unique prefix into Settings.
-Multipart buffers automatically use the side reported by the terminal. Keep a
-distinctive pattern in the buffer during setup so its inventory can be matched
-against the direct component; two identical inventories alone cannot prove
-which physical interface an adapter controls.
+The default assembly-line templates are `NAME_{n}` and `Rename NAME_{n}`.
+`{label}` expands to the original item's display name; `{n}` is the duplicate
+number. Constant rename-destination names work too. Multiple matching interfaces
+are ordered by dimension/x/y/z/side; slots begin at zero in the terminal API.
 
 ## Preview and apply
 
@@ -184,7 +180,7 @@ Europium Wire -> 128 NAME_1` in `Rename NAME_1`, and `64 Fine Europium Wire ->
 - Missing interfaces, insufficient donor patterns, and missing free slots appear
   as blockers. Scan does not move or edit any pattern.
 - Apply rescans to check the preview. It installs and verifies missing rename
-  recipes first, then moves each affected target pattern into the buffer, edits
+  recipes first, then moves each affected target pattern into the editor, edits
   only its duplicate inputs, verifies it, and returns it to its original slot.
   Every transfer has an explicit destination slot.
 
@@ -209,7 +205,7 @@ charge and free memory, total time, energy-sample count and time, recharge pause
 `event.pull` yields and wait time, plus call counts and timings by AE/Data Card
 method. `other time` is the remainder, including Lua planning, disk I/O and UI.
 Open **History** for recent reports, newest first, with normal preview scrolling.
-It loads only the last 16 KB when opened and releases those lines when leaving.
+It loads only the last 16 KB when opened.
 Use `edit /home/assline-perf.log` for the full log, which resets above 64 KB.
 An abrupt computer blackout can interrupt a report before it is saved.
 
@@ -234,22 +230,24 @@ references are released and OC performs collection during normal yields.
 
 Before each operation the program writes its intent and the original pattern to
 `/home/assline.pending`, flushes it, and verifies the saved bytes. If interrupted,
-**Recover** finishes that one recorded operation. It checks whether a transfer
+**Recover** finishes that recorded operation. A sorting journal retains the whole
+sorting stage, so recovery completes any cycle that parked a pattern in the editor. It checks whether a transfer
 already completed, accepts only expected partial edits, and stops on unexpected
 pattern changes or an occupied destination. After recovery, **Scan** again to
-continue the remaining work. Hardware and buffer selection must still match the
+continue the remaining work. Hardware and editor selection must still match the
 saved record.
 
-Do not move buffer or destination patterns while recovery is pending. If recovery
+Do not move editor, donor or destination patterns while recovery is pending. If recovery
 reports an unexpected edit, inspect the indicated pattern and the saved record;
 it does not guess which foreign changes to overwrite. The screen shows the full
 error in the scrollable preview.
 
 | File | Purpose |
 | --- | --- |
-| `/home/assline.cfg` | Saved text settings and target |
+| `/home/assline.cfg` | Shared configuration and per-program settings |
 | `/home/assline.pending` | Active operation, retained on failure; removed on completion |
-| `/home/assline.last` | Latest submitted plan, including original affected target/donor patterns |
+| `/home/assline.pending.step` | Verified progress through an active sorting stage |
+| `/home/assline.last` | Latest submitted assembly-line plan or generator operation summary |
 | `/home/assline-perf.log` | Timing/charge summaries; rotates above 64 KB |
 | `*.tmp` | Temporary files used while saving |
 
@@ -287,14 +285,11 @@ Sources: [GTNH interface inventories](https://github.com/GTNewHorizons/Applied-E
 [OC pattern setters](https://github.com/GTNewHorizons/OpenComputers/blob/master/src/main/scala/li/cil/oc/integration/appeng/internal/PatternEnvironment.scala),
 [AE crafting pattern validation](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/src/main/java/appeng/helpers/PatternHelper.java).
 
-Touch fields/buttons or use **S** to scan, **A** to apply the reviewed preview,
-**Q** to quit, **Escape / Cancel work** to cancel an active operation, and mouse wheel / Page Up / Page Down to scroll. Text fields
-support paste, arrows, Home/End, Backspace/Delete, Ctrl+A, Enter and Escape.
-Clicking a field places the cursor at that position without selecting its text;
-click again to reposition or clear a selection. Only Ctrl+A selects everything.
-Settings Save commits all
-settings; Cancel discards the draft. Editing the main target saves it immediately
-when accepted and clears the old preview.
+Touch navigation, program cards, fields and bottom-row actions. **S** rebuilds the
+current preview; **Q** quits; **Escape / Cancel** cancels active work. Mouse wheel
+and Page Up / Page Down scroll the preview and history. Text fields support
+paste, arrows, Home/End, Backspace/Delete, Ctrl+A, Enter and Escape. Clicking a
+field places the cursor; only Ctrl+A selects all its text.
 
 ## Build and tests
 

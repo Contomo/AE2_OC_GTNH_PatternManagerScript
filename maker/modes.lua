@@ -55,7 +55,7 @@ function M.compile(data,mode,options,checkpoint)
   for _,material in ipairs(data.materials) do
     if checkpoint then checkpoint() end
     for _,rule in ipairs(data.rules) do
-      if rule.mode==mode and M.eligible(data,material,rule) then
+      if rule.mode==mode and (not options.forms or options.forms[rule.outputs[1].f]) and M.eligible(data,material,rule) then
         local function resolve(e,stocked)
           local item
           if e.f then item=M.resolve(data,material,e.f)
@@ -76,7 +76,7 @@ function M.compile(data,mode,options,checkpoint)
         if kind=='wire' or kind=='cable' then label=size..'x '..(kind=='wire' and 'Wire' or 'Cable') end
         local source=rule.inputs[1].f
         local route=mode=='wiremill' and (' / from '..(labels[source] or source)) or ''
-        local recipe={kind='processing',inputs={},outputs={},label=material.name..' / '..label..route,stock={}}
+        local recipe={kind='processing',outputForm=out.f,inputs={},outputs={},label=material.name..' / '..label..route,stock={}}
         for _,which in ipairs({'inputs','outputs'}) do
           for _,e in ipairs(rule[which]) do
             local item=resolve(e)

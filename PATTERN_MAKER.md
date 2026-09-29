@@ -1,34 +1,39 @@
 # Pattern maker backbone
 
-Target: GTNH 2.9 beta 3. Maker modes run inside **assline.lua**, using the existing
-UI, hardware calls, energy controls and history. There is no second application
-and no recipe-profile format. The assembly-line Apply/Recover path remains active;
-new maker modes currently produce **read-only plans**.
+Target: GTNH 2.9 beta 3. Programs share one application, configuration, editor,
+remote donor banks, component adapter, energy controls, history and recovery.
+There is no second application or recipe-profile format.
 
 ## Use
 
-Install through the wget bootstrap described in [README.md](README.md#install-and-update-with-wget).
-The installed `/home/assline.lua` launcher supports `--update` and
-`--check-update`. Downloads are staged and verified before release activation.
-The readable application and matrix total about **0.5 MB**, below the 4 MB cap;
-there is no minification or per-paste restriction. The matrix loads only when a
-maker preview needs it. Settings and recovery files survive updates.
+Install using the [wget bootstrap](README.md#install-and-update-with-wget).
+The launcher supports `--update` and `--check-update`. The readable application
+and matrix occupy about 0.5 MB, within the 4 MB cap.
 
-Open **Maker setup**, choose **wiremill** or **coating**, and enter:
+Settings has shared hardware/interfaces and a separate section per program.
+Wire insulator has its destination and PVC/PPS switches; wiremill has separate
+1x wire and fine-wire destinations. Fields save on acceptance or navigation.
+All buffers matching the shared donor name are counted from their actual
+patterns, independently of their capacity. Only the shared editor is local.
 
-- Destination name: exact name of every interface participating in that layout.
-- Donor-bank name: exact name of every remote bank containing disposable encoded
-  patterns. Banks need no local/direct component.
-- Workspace name: a dedicated interface with an empty editing slot.
-- Unlocked slot capacity per interface for each role.
-- Independent **request PVC** and **request PPS** switches (`on`/`off`).
+**Run program** opens the chooser. Select a program and build its preview.
+Review reuse, preserved patterns, sorting, new recipes, donor requirements and
+capacity. Destination interfaces are assumed to have 36 slots; the report states
+the minimum number required, including preserved patterns. Confirm these slots
+are actually available in game before pressing **Execute preview**.
 
-Preview shows recipe ingredients, external supplies, capacity/donor blockers,
-final positions, reuse and proposed sorting moves in the **Pattern maker** tab.
-Scrolling, tab changes and cancellation remain available during work. Maker
-previews perform no setters or transfers. Crafting and processing donors are
-counted independently; unrelated and duplicate destination patterns are preserved.
-A workspace's physical direct connection is not verified until an executor exists.
+The processing-pattern executor sorts existing patterns first, then stages each
+remote donor through the shared editor, imprints and verifies its ingredients,
+and installs it in the planned destination slot. A sorting stage and its small
+progress cursor are durable, so Recover completes an interrupted permutation
+cycle. Imprints reuse the same durable pattern-edit/recovery service as the
+assembly-line renamer. Fresh snapshots reject stale plans before any writes.
+Unverified registry spellings block execution; they remain visible in previews.
+
+Combining and bending have independent settings sections reserved for future
+verified rules. Their preview/execution controls stay disabled until implemented.
+Crafting donors are counted, but the current executable generators use processing
+patterns; crafting-grid execution remains a future capability.
 
 ## Compact data model
 
@@ -108,6 +113,10 @@ output families do not silently inherit rules from similar material names.
 
 ## Shared code and extension points
 
+`lib/programs.lua` owns program definitions and their fields. `lib/config.lua`
+owns schema migration, defaults and validation; UI and execution use those same
+definitions. `C.runner` dispatches the selected program through preview/execute.
+
 `lib/util.lua` owns copying, validation, canonical identities, interface endpoints
 and numeric location order. Both the existing renamer and pure planner use it.
 `src/00_core.lua` owns component calls, discovery, fresh reads, NBT, energy and
@@ -123,16 +132,19 @@ blocked plan. It sorts existing patterns before proposing creations; permutation
 cycles use the empty workspace. Stale fingerprints, capacities, source data,
 external supplies and mode options invalidate a reviewed plan.
 
-Next stages are a verified **LATEX** compiler, verified **combining** rules, and a
-journaled maker executor. Combining can use the requested 2?1, 4?1, 8?1, 4+8 and
+Next stages are additional verified **LATEX**, **combining**, bending and
+fluid-shaping rules. Combining can use the requested 2?1, 4?1, 8?1, 4+8 and
 8+8 routes once their crafting grids/machine recipes are resolved. Later wiremill
 routes, plates, extruder forms and fluid shaping add eligible shared rules and
 resolvers rather than expanded recipe lists. Registering an item form alone
 must never manufacture a machine recipe.
 
-The existing durable renamer journal must not be treated as a complete maker
-executor. New sorting/donor-staging/grid operations need their own versioned
-recovery contract, physical editor binding, pre-write revalidation and readback.
+Sorting and imprints share `/home/assline.pending`. Sorting writes its complete
+move list once and persists a small `/home/assline.pending.step` cursor after each
+verified move. Recovery verifies the hardware binding and pattern fingerprints.
+A missing/corrupt cursor or a foreign edit stops recovery rather than guessing.
+Per-pattern imprints retain the original donor and accept only expected partial
+ingredient changes. New programs should extend these services, not copy them.
 
 ## Validation
 

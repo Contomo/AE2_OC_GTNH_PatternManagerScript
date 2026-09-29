@@ -63,6 +63,139 @@ return {check=check,clone=clone,keys=keys,canonical=canonical,eq=eq,integer=inte
   endpoint=endpoint,where=where,ordered=ordered,locationText=locationText}
 
 end)()
+local Programs=(function()
+-- Source: lib/programs.lua
+-- Program definitions shared by configuration, navigation and execution.
+local M={}
+local function field(key,label,help,default,kind)
+  return {key=key,label=label,help=help,default=default or '',kind=kind or 'text'}
+end
+M.list={
+  {id='assline',name='Assembly line renamer',description='Review duplicate inputs and create their rename patterns.',
+    fields={field('target','Assembly line interface','Exact name of the interface containing the patterns to manage.','Advanced Assline (1)'),
+      field('itemName','Renamed item template','{label} is the original item name; {n} is the duplicate number.','NAME_{n}'),
+      field('renameName','Rename destination template','All interfaces matching the resulting name participate.','Rename NAME_{n}')}},
+  {id='insulator',name='Wire insulator',mode='coating',description='Plan insulation patterns in material and cable-size order.',
+    fields={field('destination','Insulator interface name','All interfaces with this exact name receive insulation patterns.'),
+      field('pvc','Request PVC','Off means PVC must already be stocked in the machine.','on','toggle'),
+      field('pps','Request PPS','Off means PPS must already be stocked in the machine.','on','toggle')}},
+  {id='wiremill',name='Wiremill',mode='wiremill',description='Create 1x wire and fine-wire patterns in separate destination banks.',
+    outputs={wire1='wire1',wireFine='wireFine'},
+    fields={field('wire1','1x wire interface name','All matching interfaces receive recipes producing 1x wire.'),
+      field('wireFine','Fine wire interface name','All matching interfaces receive recipes producing fine wire.')}},
+  {id='combining',name='Wire combining',unavailable='Combining recipe rules are not implemented yet.',
+    description='Combine wire and cable sizes in a molecular assembler.',
+    fields={field('wire','Bare wire interface name','Destination bank for combined bare-wire sizes.'),
+      field('cable','Insulated cable interface name','Destination bank for combined insulated-cable sizes.')}},
+  {id='bender',name='Bending machine',unavailable='Bending recipe rules are not implemented yet.',
+    description='Separate destinations for plates, foil and sheet metal.',
+    fields={field('plate','Plate interface name','Destination bank for plate recipes.'),
+      field('foil','Foil interface name','Destination bank for foil recipes.'),
+      field('sheetMetal','Sheet metal interface name','Destination bank for sheet-metal recipes.')}}
+}
+M.byId={}
+for _,program in ipairs(M.list) do M.byId[program.id]=program end
+return M
+
+end)()
+local Config=(function()
+-- Source: lib/config.lua
+-- One configuration for the application: shared hardware and per-program fields.
+local U=U
+local Programs=Programs
+local M={}
+M.destinationSlots=36
+M.fields={
+  {key='editor',label='Pattern editor interface',help='Exact terminal name of the interface connected directly to the OC adapter.',default='OC Pattern Editor'},
+  {key='donors',label='New pattern buffer name',help='All remote interfaces with this exact name supply disposable encoded patterns.',default='OC Pattern Buffer'},
+  {key='terminalAddress',label='Terminal component address',help='Blank selects the only terminal; otherwise enter its address or unique prefix.',default=''},
+  {key='editorAddress',label='Editor component address',help='Blank selects the only directly connected ME interface.',default=''},
+  {key='dataAddress',label='Data Card address',help='Blank selects the only Data Card.',default=''},
+  {key='energyPause',label='Pause work below energy %',help='Pause component work at this charge level.',default='25'},
+  {key='energyResume',label='Resume work at energy %',help='At least 10 percentage points above the pause level; at most 95%.',default='75'}
+}
+M.defaults={version=2,shared={},programs={}}
+for _,f in ipairs(M.fields) do M.defaults.shared[f.key]=f.default end
+for _,p in ipairs(Programs.list) do
+  local values={};M.defaults.programs[p.id]=values
+  for _,f in ipairs(p.fields) do values[f.key]=f.default end
+end
+function M.validate(c)
+  U.check(type(c)=='table' and c.version==2 and type(c.shared)=='table' and type(c.programs)=='table','Invalid configuration')
+  local function fields(values,definitions)
+    U.check(type(values)=='table','Missing configuration section')
+    for _,f in ipairs(definitions) do
+      local v=values[f.key]
+      U.check(type(v)=='string' and #v<=512 and not v:find('[%c]'),'Invalid setting: '..f.label)
+      if f.kind=='toggle' then U.check(v=='on' or v=='off',f.label..' must be on or off') end
+    end
+  end
+  fields(c.shared,M.fields)
+  for _,p in ipairs(Programs.list) do fields(c.programs[p.id],p.fields) end
+  local pause,resume=tonumber(c.shared.energyPause),tonumber(c.shared.energyResume)
+  U.check(pause and resume and pause>=10 and pause<=80 and resume>=pause+10 and resume<=95,
+    'Energy pause must be 10..80%; resume at least 10% higher, up to 95%')
+  local a=c.programs.assline
+  for _,key in ipairs({'itemName','renameName'}) do
+    U.check(not a[key]:gsub('{label}',''):gsub('{n}',''):find('[{}]'),'Unknown template token: '..key)
+  end
+  U.check(a.itemName:find('{n}',1,true),'Item name template needs {n}')
+  return c
+end
+function M.migrate(old)
+  local c=U.clone(M.defaults)
+  if not old then return c end
+  U.check(type(old)=='table','Invalid saved configuration')
+  U.check(old.version==nil or old.version==2,'Unsupported saved configuration version')
+  if old.version==2 then
+    for _,f in ipairs(M.fields) do if old.shared and old.shared[f.key]~=nil then c.shared[f.key]=old.shared[f.key] end end
+    for _,p in ipairs(Programs.list) do
+      for _,f in ipairs(p.fields) do
+        local values=old.programs and old.programs[p.id]
+        if values and values[f.key]~=nil then c.programs[p.id][f.key]=values[f.key] end
+      end
+    end
+  else
+    -- The old "buffer" was actually the directly connected editor.
+    local shared={editor='buffer',donors='makerDonors',terminalAddress='terminalAddress',
+      editorAddress='bufferAddress',dataAddress='dataAddress',energyPause='energyPause',energyResume='energyResume'}
+    for key,legacy in pairs(shared) do if old[legacy]~=nil and old[legacy]~='' then c.shared[key]=old[legacy] end end
+    if old.makerWorkspace and old.makerWorkspace~='' then c.shared.editor=old.makerWorkspace end
+    for _,key in ipairs({'target','itemName','renameName'}) do if old[key]~=nil then c.programs.assline[key]=old[key] end end
+    if old.makerDestination then
+      if old.makerMode=='coating' then c.programs.insulator.destination=old.makerDestination
+      else c.programs.wiremill.wire1=old.makerDestination;c.programs.wiremill.wireFine=old.makerDestination end
+    end
+    if old.makerPVC then c.programs.insulator.pvc=old.makerPVC end
+    if old.makerPPS then c.programs.insulator.pps=old.makerPPS end
+  end
+  return M.validate(c)
+end
+function M.capacityReport(groups)
+  local result={}
+  for _,name in ipairs(U.keys(groups)) do
+    local n=groups[name]
+    result[#result+1]={name=name,patterns=n,interfaces=math.ceil(n/M.destinationSlots)}
+  end
+  return result
+end
+function M.values(c,section)
+  return section=='shared' and c.shared or U.check(c.programs[section],'Unknown settings section')
+end
+function M.requireProgram(c,id)
+  M.validate(c)
+  local p=U.check(Programs.byId[id],'Unknown program')
+  U.check(not p.unavailable,p.unavailable)
+  for _,key in ipairs({'editor','donors'}) do U.check(c.shared[key]~='','Set '..key..' in Settings > Shared interfaces') end
+  U.check(c.shared.editor~=c.shared.donors,'Pattern editor and new pattern buffer must have different names')
+  for _,f in ipairs(p.fields) do
+    U.check(c.programs[id][f.key]~='','Set '..f.label..' in Settings > '..p.name)
+  end
+  return p
+end
+return M
+
+end)()
 -- Source: src/00_core.lua
 -- GTNH 2.9 / OpenOS. Terminal pattern slots are ZERO based; direct slots ONE based.
 local component = require('component')
@@ -83,10 +216,9 @@ end
 local function token(t, label, n)
   return (t:gsub('{label}', function() return label end):gsub('{n}', tostring(n)))
 end
-local defaults = {target='Advanced Assline (1)', buffer='OC Buffer', itemName='NAME_{n}',
-  renameName='Rename NAME_{n}', terminalAddress='', bufferAddress='', dataAddress='', bufferSlots='9', renameSlots='9',
-  energyPause='25',energyResume='75',makerDestination='',makerDonors='',makerWorkspace='',
-  makerSlots='9',makerDonorSlots='9',makerWorkspaceSlots='9',makerMode='wiremill',makerPVC='on',makerPPS='on'}
+local Programs=Programs
+local Config=Config
+local defaults=Config.defaults
 local cfg = clone(defaults)
 local work={pause=0.25,resume=0.75}
 local perf
@@ -160,12 +292,12 @@ local function gate()
   end
 end
 local function startWork(c,progress,control)
-  work={pause=tonumber(c.energyPause)/100,resume=tonumber(c.energyResume)/100,progress=progress,control=control}
+  work={pause=tonumber(c.shared.energyPause)/100,resume=tonumber(c.shared.energyResume)/100,progress=progress,control=control}
   local e,m=sampleEnergy()
   perf={started=computer.uptime(),startPct=e/m,memory=computer.freeMemory(),samples=0,sampleTime=0,pauses=0,yields=0,wait=0,calls={}}
   tagKeys,renameTags,tagCount,renameCount={},{},0,0
 end
-local paths = {config='/home/assline.cfg', pending='/home/assline.pending', backup='/home/assline.last'}
+local paths = {config='/home/assline.cfg', pending='/home/assline.pending', cursor='/home/assline.pending.step', backup='/home/assline.last'}
 local function readRaw(path)
   if not fs.exists(path) then return nil end
   check(fs.size(path)<=400000, 'File too large: '..path)
@@ -189,23 +321,7 @@ local function writeFile(path,t)
   if fs.exists(path) then check(fs.remove(path),'Cannot replace '..path) end
   check(fs.rename(temp,path),'Cannot finish saving '..path)
 end
-local function validate(c)
-  for k in pairs(defaults) do check(type(c[k])=='string' and #c[k]<=512,'Invalid setting: '..k) end
-  check(c.target~='' and c.buffer~='' and c.renameName~='','Interface names cannot be empty')
-  check(c.target~=c.buffer,'Target and buffer must differ')
-  check(c.itemName:find('{n}',1,true),'Item name template needs {n}')
-  for _,k in ipairs({'itemName','renameName'}) do
-    check(not c[k]:gsub('{label}',''):gsub('{n}',''):find('[{}]'),'Unknown template token: '..k)
-  end
-  for _,k in ipairs({'bufferSlots','renameSlots','makerSlots','makerDonorSlots','makerWorkspaceSlots'}) do
-    local n=tonumber(c[k]); check(n and n>=1 and n<=512 and n==math.floor(n),k..' must be 1..512')
-  end
-  check(c.makerMode=='wiremill' or c.makerMode=='coating','Unknown maker mode')
-  for _,k in ipairs({'makerPVC','makerPPS'}) do check(c[k]=='on' or c[k]=='off',k..' must be on or off') end
-  local pause,resume=tonumber(c.energyPause),tonumber(c.energyResume)
-  check(pause and resume and pause>=10 and pause<=80 and resume>=pause+10 and resume<=95,
-    'Energy pause must be 10..80%; resume at least 10% higher, up to 95%')
-end
+local validate=Config.validate
 local function selectDevice(kind, prefix)
   local matches={}
   for addr,tp in component.list(kind,true) do
@@ -334,16 +450,45 @@ local function direct(hw,name,slot,...)
   if hw.buffer.side~=6 then return invoke(hw.direct,name,hw.buffer.side,slot+1,...) end
   return invoke(hw.direct,name,slot+1,...)
 end
+local function patternFingerprint(hw,p)
+  if not exists(p) then return nil end
+  check(type(p.tag)=='string','Pattern NBT hidden')
+  return canonical({p.name,p.damage,p.size,invoke(hw.data,'sha256',p.tag)})
+end
+local function editorCapacity(hw)
+  local function valid(n)
+    local ok,reason=pcall(direct,hw,'getInterfacePattern',n-1)
+    if ok then return true end
+    check(tostring(reason):find('invalid slot',1,true),reason)
+    return false
+  end
+  check(valid(1),'Pattern editor has no slots')
+  local low,high=1,2
+  while high<=512 and valid(high) do low=high;high=high*2 end
+  if high>512 then check(not valid(513),'Pattern editor exceeds the supported 512 slots');high=513 end
+  while high-low>1 do
+    local mid=math.floor((low+high)/2)
+    if valid(mid) then low=mid else high=mid end
+  end
+  return low
+end
+local function capacity(i)
+  -- The terminal does not expose capacity. User-approved assumption; the UI
+  -- requires verification of fully expanded destination interfaces before Apply.
+  return Config.destinationSlots
+end
 local function connect(c,progress,control)
   validate(c)
   startWork(c,progress,control)
-  local hw={terminal=selectDevice('me_interface_terminal',c.terminalAddress),
-    direct=selectDevice('me_interface',c.bufferAddress),data=selectDevice('data',c.dataAddress)}
-  hw.buffer=endpoint(unique(hw,c.buffer))
+  local shared=c.shared
+  local hw={terminal=selectDevice('me_interface_terminal',shared.terminalAddress),
+    direct=selectDevice('me_interface',shared.editorAddress),data=selectDevice('data',shared.dataAddress)}
+  hw.buffer=endpoint(unique(hw,shared.editor))
   nbt(hw.data,invoke(hw.data,'encodeNBT',{__nbt_type='compound',__value={}}))
   return hw
 end
 C.defaults=defaults
+C.config=Config;C.programs=Programs;C.capacity=capacity
 C.perfReport=perfReport
 C.releaseWork=releaseWork
 
@@ -374,9 +519,11 @@ local function pureRecipe(data,p,r)
     and identity(data,a)==identity(data,r.input) and identity(data,b)==identity(data,r.output)
 end
 local function scan(c,progress,control)
+  Config.requireProgram(c,'assline')
+  local settings=c.programs.assline
   local hw=connect(c,progress,control)
-  local target=unique(hw,c.target)
-  check(where(target)~=where(hw.buffer),'Target is the buffer')
+  local target=unique(hw,settings.target)
+  check(where(target)~=where(hw.buffer),'Target is the pattern editor')
   local buffer=current(hw,hw.buffer)
   local p={target=endpoint(target),buffer=hw.buffer,changes={},recipes={},errors={},scanned=0,skipped=0,donors={},empty={}}
   local function problem(s) p.errors[#p.errors+1]=s end
@@ -398,7 +545,7 @@ local function scan(c,progress,control)
               check(type(s.size)=='number' and s.size>0 and s.size<=2147483647,'Unsupported input amount')
               local output,label
               repeat
-                label=token(c.itemName,s.label or s.name,n)
+                label=token(settings.itemName,s.label or s.name,n)
                 check(unicode.len(label)<=128,'Generated item name is longer than 128 characters')
                 output=renamed(hw.data,s,label)
                 if not occupied[identity(hw.data,output)] then break end
@@ -406,7 +553,7 @@ local function scan(c,progress,control)
               until false
               counts[id]=n+1; occupied[identity(hw.data,output)]=true
               changes[#changes+1]={index=index,before=stack(s),after=output}
-              local destName=token(c.renameName,s.label or s.name,n)
+              local destName=token(settings.renameName,s.label or s.name,n)
               local recipeKey=canonical({destName,id,identity(hw.data,output)})
               if not wanted[recipeKey] then
                 local r={input=stack(s),output=output,name=destName}
@@ -438,34 +585,50 @@ local function scan(c,progress,control)
     if not r.existing then
       for _,i in ipairs(group) do
         local key=where(i); used[key]=used[key] or {}
-        for slot=0,tonumber(c.renameSlots)-1 do
+        local slots=capacity(i)
+        for slot=0,slots-1 do
           if not exists(i.patterns[slot]) and not used[key][slot] then
             used[key][slot]=true; r.destination=endpoint(i,slot); break
           end
         end
         if r.destination then break end
       end
-      if not r.destination then problem('No free slot in "'..r.name..'" (missing, full, or slot limit too low)') end
+      if not r.destination then problem('No verified free slot in "'..r.name..'" (missing, full, or capacity unavailable)') end
     end
     if progress then progress('Checking '..r.name) end
   end
-  local donors={}
-  for slot=0,tonumber(c.bufferSlots)-1 do
+  for slot=0,editorCapacity(hw)-1 do
     local remote=buffer.patterns[slot]
     local live=direct(hw,'getInterfacePattern',slot)
-    check(patternEq(hw.data,remote,live),'Direct buffer does not match "'..c.buffer..'" at slot '..(slot+1))
+    check(patternEq(hw.data,remote,live),'Direct pattern editor does not match "'..c.shared.editor..'" at slot '..(slot+1))
     if not exists(remote) then p.empty[#p.empty+1]=slot
-    elseif safeDonor(hw.data,remote) then donors[#donors+1]={slot=slot,original=compact(remote)} end
+    end
+  end
+  local donors={}
+  for _,bank in ipairs(lookup(hw,c.shared.donors)) do
+    check(where(bank)~=where(target) and where(bank)~=where(hw.buffer),'New pattern buffer overlaps target or editor')
+    for _,slot in ipairs(keys(bank.patterns)) do
+      local pattern=bank.patterns[slot]
+      if safeDonor(hw.data,pattern) then donors[#donors+1]={from=endpoint(bank,slot),slot=slot,original=compact(pattern)} end
+    end
   end
   local n=0
   for _,r in ipairs(p.recipes) do
     if not r.existing then
       n=n+1
-      if donors[n] then r.donor=donors[n] else problem('Need more disposable processing patterns in '..c.buffer) end
+      if donors[n] then r.donor=donors[n] else problem('Need more disposable processing patterns in '..c.shared.donors) end
     end
   end
   p.newRecipes=n; p.available=#donors
-  if #p.changes>0 and #p.empty==0 and n==0 then problem('Leave one empty pattern slot in '..c.buffer..' for editing') end
+  local requirements={}
+  for name,group in pairs(groups) do
+    local needed=0
+    for _,i in ipairs(group) do for _,pattern in pairs(i.patterns) do if exists(pattern) then needed=needed+1 end end end
+    for _,recipe in ipairs(p.recipes) do if recipe.name==name and not recipe.existing then needed=needed+1 end end
+    requirements[name]=needed
+  end
+  p.capacities=Config.capacityReport(requirements)
+  if (#p.changes>0 or n>0) and #p.empty==0 then problem('Leave one empty pattern slot in '..c.shared.editor..' for editing') end
   return p,hw
 end
 C.scan=scan
@@ -481,8 +644,9 @@ local function rawList(data,p,which)
 end
 local function expected(op)
   local p=compact(op.original)
-  if op.kind=='recipe' then
-    p.inputs={[1]=op.input}; p.outputs={[1]=op.output}
+  if op.kind=='recipe' or op.kind=='imprint' then
+    p.inputs=op.recipe and clone(op.recipe.inputs) or {[1]=op.input}
+    p.outputs=op.recipe and clone(op.recipe.outputs) or {[1]=op.output}
   else for _,e in ipairs(op.edits) do p.inputs[e.index]=e.after end end
   return p
 end
@@ -538,14 +702,23 @@ local function finish(hw,op,progress)
     p=direct(hw,'getInterfacePattern',op.slot)
     check(patternEq(hw.data,p,op.original),'Moved pattern failed read-back')
   else check(not exists(delivered),'Destination slot is occupied') end
+  if op.source and not exists(p) then
+    local source=current(hw,op.source).patterns[op.source.slot]
+    check(patternEq(hw.data,source,op.original),'Donor pattern changed')
+    transfer(hw,op.source,endpoint(op.buffer,op.slot))
+    p=direct(hw,'getInterfacePattern',op.slot)
+    check(patternEq(hw.data,p,op.original),'Moved donor failed read-back')
+  end
   allowedPartial(hw,p,op)
-  if op.kind=='recipe' then
+  if op.kind=='recipe' or op.kind=='imprint' then
     -- Clearing removes an NBT list element: ALWAYS clear from the end.
     for _,which in ipairs({'inputs','outputs'}) do
-      local s=which=='inputs' and op.input or op.output
+      local desired=goal[which]
       local entries=rawList(hw.data,p,which)
-      if not stackEq(hw.data,p[which][1],s) then setEntry(hw,op.slot,which,1,s) end
-      for index=largest(entries),2,-1 do
+      for index,s in ipairs(desired) do
+        if not stackEq(hw.data,p[which][index],s) then setEntry(hw,op.slot,which,index,s) end
+      end
+      for index=largest(entries),#desired+1,-1 do
         local entry=entries[index]
         check(entry and entry.__nbt_type=='compound' and type(entry.__value)=='table','Invalid pattern list entry')
         -- AE ignores empty compounds. Do not spend a server tick removing every
@@ -574,7 +747,10 @@ local function saveOp(hw,op)
   op.version=1; op.direct=hw.direct.address; op.terminal=hw.terminal.address; op.data=hw.data.address; op.buffer=clone(hw.buffer)
   writeFile(paths.pending,op)
 end
-local function clearOp() check(fs.remove(paths.pending),'Cannot clear completed recovery record') end
+local function clearOp()
+  check(fs.remove(paths.pending),'Cannot clear completed recovery record')
+  if fs.exists(paths.cursor) then check(fs.remove(paths.cursor),'Cannot clear completed recovery progress') end
+end
 local function apply(c,plan,progress,control)
   check(not fs.exists(paths.pending),'Use Recover before applying another scan')
   check(#plan.errors==0,'Resolve scan blockers first')
@@ -585,10 +761,12 @@ local function apply(c,plan,progress,control)
   local workspace=plan.empty[1]
   for _,r in ipairs(plan.recipes) do
     if not r.existing then
-      local op={kind='recipe',slot=r.donor.slot,original=r.donor.original,destination=r.destination,input=r.input,output=r.output}
+      check(workspace~=nil,'No free pattern editor slot')
+      local op={kind='recipe',slot=workspace,source=r.donor.from,original=r.donor.original,destination=r.destination,input=r.input,output=r.output}
       -- Recheck the exact disposable pattern before writing the intent.
-      check(patternEq(hw.data,direct(hw,'getInterfacePattern',op.slot),op.original),'Buffer pattern changed')
-      saveOp(hw,op); finish(hw,op,progress); clearOp(); workspace=workspace or op.slot
+      check(patternEq(hw.data,current(hw,op.source).patterns[op.source.slot],op.original),'Donor pattern changed')
+      check(not exists(direct(hw,'getInterfacePattern',workspace)),'Pattern editor workspace occupied')
+      saveOp(hw,op); finish(hw,op,progress); clearOp()
     end
   end
   for _,v in ipairs(plan.changes) do
@@ -612,7 +790,13 @@ local function apply(c,plan,progress,control)
 end
 local function recover(c,progress,control)
   local op=check(readFile(paths.pending),'No pending operation')
-  local hw=connect(c,progress,control); finish(hw,op,progress); clearOp()
+  local hw=connect(c,progress,control)
+  if op.kind=='move' or op.kind=='sort' then
+    check(op.direct==hw.direct.address and op.terminal==hw.terminal.address and op.data==hw.data.address
+      and where(op.buffer)==where(hw.buffer),'Recovery hardware differs from saved operation')
+    if op.kind=='sort' then C.maker.finishSort(hw,op,progress) else C.maker.finishMove(hw,op) end
+  else finish(hw,op,progress) end
+  clearOp()
 end
 C.apply=apply; C.recover=recover; C.paths=paths; C.finish=finish
 
@@ -867,7 +1051,7 @@ function M.compile(data,mode,options,checkpoint)
   for _,material in ipairs(data.materials) do
     if checkpoint then checkpoint() end
     for _,rule in ipairs(data.rules) do
-      if rule.mode==mode and M.eligible(data,material,rule) then
+      if rule.mode==mode and (not options.forms or options.forms[rule.outputs[1].f]) and M.eligible(data,material,rule) then
         local function resolve(e,stocked)
           local item
           if e.f then item=M.resolve(data,material,e.f)
@@ -888,7 +1072,7 @@ function M.compile(data,mode,options,checkpoint)
         if kind=='wire' or kind=='cable' then label=size..'x '..(kind=='wire' and 'Wire' or 'Cable') end
         local source=rule.inputs[1].f
         local route=mode=='wiremill' and (' / from '..(labels[source] or source)) or ''
-        local recipe={kind='processing',inputs={},outputs={},label=material.name..' / '..label..route,stock={}}
+        local recipe={kind='processing',outputForm=out.f,inputs={},outputs={},label=material.name..' / '..label..route,stock={}}
         for _,which in ipairs({'inputs','outputs'}) do
           for _,e in ipairs(rule[which]) do
             local item=resolve(e)
@@ -917,7 +1101,8 @@ return M
 
 end)()
 -- Source: maker/scan.lua
--- Read-only OC adapter. Donor banks are discovered by exact terminal name.
+-- Shared named-interface adapter. Planning is read-only; execution uses the
+-- same editor, durable operations and recovery as the assembly-line program.
 -- Pattern reads are performed one interface at a time; metadata discovery never
 -- converts an entire network's pattern inventories into Lua tables.
 local function discover(hw,name) return lookup(hw,name,true) end
@@ -942,30 +1127,37 @@ local function patternRecipe(data,p)
 end
 local function scanManifest(c,manifest,routing,progress,control,started)
   validate(c);if not started then startWork(c,progress,control) end
-  local groups={{name=routing.destination,role='destination',slots=routing.slots},
-    {name=routing.donors,role='donor',slots=routing.donorSlots},
-    {name=routing.workspace,role='workspace',slots=routing.workspaceSlots}}
+  local groups,names={},{}
+  local function group(name,role)
+    check(type(name)=='string' and name~='','Set the '..role..' interface name in Settings')
+    check(not names[name] or names[name]==role,'Interface roles overlap: '..name)
+    if not names[name] then groups[#groups+1]={name=name,role=role};names[name]=role end
+  end
+  local function destination(recipe)
+    return routing.destinations and routing.destinations[recipe.outputForm] or routing.destination
+  end
   check(manifest.version==1 and type(manifest.recipes)=='table','Unsupported manifest schema')
   Planner.sequence(manifest.recipes,'Recipes')
   check(type(manifest.source)=='table' and type(manifest.source.recipeVersion)=='string'
     and type(manifest.source.targetVersion)=='string','Manifest must identify recipe and target versions')
-  local hw={terminal=selectDevice('me_interface_terminal',c.terminalAddress),data=selectDevice('data',c.dataAddress)}
+  for _,recipe in ipairs(manifest.recipes) do group(destination(recipe),'destination') end
+  group(routing.donors,'donor');group(routing.workspace,'workspace')
+  local hw={terminal=selectDevice('me_interface_terminal',c.shared.terminalAddress),data=selectDevice('data',c.shared.dataAddress)}
   local snapshot={terminal=hw.terminal.address,interfaces={}}
-  local names={}
   for _,g in ipairs(groups) do
-    check(type(g.name)=='string' and g.name~='' and not names[g.name],'Configured interface names must be unique')
-    check(g.role=='destination' or g.role=='donor' or g.role=='workspace','Invalid group role')
-    check(type(g.slots)=='number' and g.slots>=1 and g.slots<=512 and g.slots==math.floor(g.slots),'Set usable group slots to 1..512')
-    names[g.name]=true
     local found=discover(hw,g.name)
     for _,entry in ipairs(found) do
       local i=current(hw,endpoint(entry))
       check(i.name==g.name,'Interface renamed while scanning; scan again')
-      local compacted={name=i.name,location=clone(i.location),side=side(i.side),role=g.role,capacity=g.slots,patterns={}}
+      local slots=capacity(i)
+      -- Donor capacity is irrelevant: include every occupied pattern, even when
+      -- the buffer is a larger inventory than a standard destination interface.
+      if g.role=='donor' then slots=math.max(1,largest(i.patterns)+1) end
+      local compacted={name=i.name,location=clone(i.location),side=side(i.side),role=g.role,capacity=slots,patterns={}}
       for slot,p in pairs(i.patterns or {}) do
         if exists(p) then
           check(type(p.tag)=='string','Pattern NBT hidden in '..g.name)
-          local value={kind='unknown',fingerprint=canonical({p.name,p.damage,p.size,invoke(hw.data,'sha256',p.tag)})}
+          local value={kind='unknown',fingerprint=patternFingerprint(hw,p)}
           if p.name=='appliedenergistics2:item.ItemEncodedPattern' and p.isCraftable~=nil and p.inputs and p.outputs then
             local r=patternRecipe(hw.data,p)
             value.kind=r.kind
@@ -985,7 +1177,7 @@ local function scanManifest(c,manifest,routing,progress,control,started)
   local labels={}
   for _,r in ipairs(manifest.recipes) do
     local key=Planner.recipeKey(r)
-    request.recipes[#request.recipes+1]={key=key,kind=r.kind,destination=routing.destination,
+    request.recipes[#request.recipes+1]={key=key,kind=r.kind,destination=destination(r),
       stock=clone(r.stock),stockAlternatives=clone(r.stockAlternatives)}
     labels[key]=r.label or r.id or r.outputs[1].name
   end
@@ -1008,9 +1200,9 @@ local function previewReport(plan,manifest,labels)
     return table.concat(out,', ')
   end
   for _,recipe in ipairs(manifest.recipes) do details[Planner.recipeKey(recipe)]=recipe end
-  local lines={'PATTERN MAKER / PREVIEW','Recipe source: '..manifest.source.recipeVersion..
-    ' | target: '..manifest.source.targetVersion,'Slots below are ZERO based; configured capacities must match unlocked rows.',
-    'Workspace connectivity is not verified by this read-only tool.'}
+  local lines={'RECIPE PLAN / PREVIEW','Recipe source: '..manifest.source.recipeVersion..
+    ' | target: '..manifest.source.targetVersion,'Slot numbers below are ZERO based. Destination capacity assumes 36 slots per interface.',
+    'Verify every destination interface has all 36 slots available before executing.'}
   if manifest.source.excludedRecipes then lines[#lines+1]='Unsupported source recipes excluded: '..manifest.source.excludedRecipes end
   for _,name in ipairs(manifest.unresolved or {}) do lines[#lines+1]='UNVERIFIED registry spelling: '..name end
   lines[#lines+1]='Fluids, circuits and omitted PVC/PPS require external stocking; alternatives use the listed primary item.'
@@ -1028,7 +1220,7 @@ local function previewReport(plan,manifest,labels)
   lines[#lines+1]='SORT EXISTING PATTERNS FIRST'
   for _,m in ipairs(plan.moves) do lines[#lines+1]=describe(m.from)..' -> '..describe(m.to) end
   for _,m in ipairs(plan.preserved) do lines[#lines+1]='PRESERVE '..describe(m.from)..' -> '..describe(m.to) end
-  lines[#lines+1]='THEN IMPRINT AND INSTALL (not executed in this release)'
+  lines[#lines+1]='THEN IMPRINT AND INSTALL'
   for _,m in ipairs(plan.creates) do
     lines[#lines+1]=labels[m.key]..': donor '..describe(m.from)..' via '..describe(m.workspace)..' -> '..describe(m.to)
   end
@@ -1036,249 +1228,189 @@ local function previewReport(plan,manifest,labels)
 end
 
 C.maker={planner=Planner,scan=scanManifest,report=previewReport,discover=discover}
-function C.maker.preview(c,progress,control)
+local function programRouting(c,id)
+  local program=Config.requireProgram(c,id)
+  local values=c.programs[id]
+  local routing={donors=c.shared.donors,workspace=c.shared.editor,destination=values.destination}
+  local forms
+  if program.outputs then
+    forms={};routing.destinations={}
+    for form,key in pairs(program.outputs) do forms[form]=true;routing.destinations[form]=values[key] end
+  end
+  return routing,{pvc=values.pvc~='off',pps=values.pps~='off',forms=forms},program
+end
+function C.maker.preview(c,id,progress,control)
   validate(c);startWork(c,progress,control)
-  check(c.makerDestination~='' and c.makerDonors~='' and c.makerWorkspace~='',
-    'Set destination, donor bank and workspace names in Maker setup')
-  local manifest=Modes.compile(require('assline_data'),c.makerMode,
-    {pvc=c.makerPVC=='on',pps=c.makerPPS=='on'},gate)
-  local plan,_,_,labels=scanManifest(c,manifest,{destination=c.makerDestination,donors=c.makerDonors,
-    workspace=c.makerWorkspace,slots=tonumber(c.makerSlots),donorSlots=tonumber(c.makerDonorSlots),
-    workspaceSlots=tonumber(c.makerWorkspaceSlots)},progress,control,true)
-  return plan,previewReport(plan,manifest,labels)
+  local routing,options,program=programRouting(c,id)
+  local manifest=Modes.compile(require('assline_data'),program.mode,options,gate)
+  local plan,snapshot,_,labels=scanManifest(c,manifest,routing,progress,control,true)
+  local groups={}
+  for _,recipe in ipairs(manifest.recipes) do
+    local name=routing.destinations and routing.destinations[recipe.outputForm] or routing.destination
+    groups[name]=(groups[name] or 0)+1
+  end
+  local banks={}
+  for _,i in ipairs(snapshot.interfaces) do banks[where(i)]=i.name end
+  for _,entry in ipairs(plan.preserved) do
+    local name=banks[where(entry.from)];groups[name]=groups[name]+1
+  end
+  plan.capacities=Config.capacityReport(groups)
+  local report=previewReport(plan,manifest,labels)
+  for _,g in ipairs(plan.capacities) do
+    report=string.format('%s: %d total slots needed; at least %d fully expanded interface(s).\n',g.name,g.patterns,g.interfaces)..report
+  end
+  return plan,report,manifest
+end
+
+function C.maker.finishMove(hw,op)
+  local source=current(hw,op.source).patterns[op.source.slot]
+  local destination=current(hw,op.destination).patterns[op.destination.slot]
+  local function matches(p)
+    return op.fingerprint and patternFingerprint(hw,p)==op.fingerprint or op.original and patternEq(hw.data,p,op.original)
+  end
+  if not exists(source) and matches(destination) then return end
+  check(matches(source),'Sorting source changed; recovery stopped')
+  check(not exists(destination),'Sorting destination is occupied')
+  transfer(hw,op.source,op.destination)
+  check(matches(current(hw,op.destination).patterns[op.destination.slot]),'Sorted pattern read-back failed')
+end
+
+function C.maker.finishSort(hw,op,progress)
+  local cursor=check(readFile(paths.cursor),'Missing sorting recovery progress')
+  check(cursor.id==op.id and U.integer(cursor.index) and cursor.index>=1 and cursor.index<=#op.moves+1,'Invalid sorting recovery progress')
+  for n=cursor.index,#op.moves do
+    local move=op.moves[n]
+    C.maker.finishMove(hw,{source=move.from,destination=move.to,fingerprint=move.fingerprint})
+    writeFile(paths.cursor,{id=op.id,index=n+1})
+    if progress then progress('Sorted pattern '..n..' / '..#op.moves) end
+  end
+end
+
+function C.maker.apply(c,id,plan,manifest,progress,control)
+  check(not fs.exists(paths.pending),'Use Recover before executing another preview')
+  check(#plan.errors==0,'Resolve preview blockers first')
+  check(not manifest.unresolved or #manifest.unresolved==0,'Resolve unverified registry spellings before execution')
+  local routing=programRouting(c,id)
+  local baseline=clone(plan);baseline.capacities=nil
+  local _,snapshot,request=scanManifest(c,manifest,routing,progress,control)
+  Planner.revalidate(request,snapshot,baseline,gate)
+  local hw=connect(c,progress,control)
+  local editor=current(hw,hw.buffer)
+  local slot=plan.creates[1] and plan.creates[1].workspace.slot
+  if slot then
+    check(where(plan.creates[1].workspace)==where(hw.buffer),'Planned workspace is not the shared pattern editor')
+    check(slot<editorCapacity(hw),'Editor workspace slot is unavailable')
+    check(patternEq(hw.data,editor.patterns[slot],direct(hw,'getInterfacePattern',slot)),'Direct pattern editor does not match the terminal')
+    check(not exists(editor.patterns[slot]),'Pattern editor workspace occupied')
+  end
+  writeFile(paths.backup,{config=clone(c),program=id,created=#plan.creates,sorted=#plan.moves})
+  if #plan.moves>0 then
+    -- Keep the whole sorting stage durable. A cycle can temporarily park a
+    -- pattern in the editor; Recover must finish the cycle before a new scan.
+    local op={kind='sort',moves=plan.moves,id=invoke(hw.data,'sha256',canonical(plan.moves))}
+    writeFile(paths.cursor,{id=op.id,index=1})
+    saveOp(hw,op);C.maker.finishSort(hw,op,progress);clearOp()
+  end
+  local recipes={}
+  for _,recipe in ipairs(manifest.recipes) do recipes[Planner.recipeKey(recipe)]=recipe end
+  for _,create in ipairs(plan.creates) do
+    local original=check(current(hw,create.from).patterns[create.from.slot],'Donor disappeared')
+    check(patternFingerprint(hw,original)==create.fingerprint,'Donor pattern changed')
+    check(safeDonor(hw.data,original),'Only disposable processing donors can be imprinted by this executor')
+    local recipe=recipes[create.key]
+    check(recipe and recipe.kind=='processing','Unsupported pattern kind')
+    for _,which in ipairs({'inputs','outputs'}) do for _,s in ipairs(recipe[which]) do check(s.type=='item','Only solid ingredients are supported') end end
+    local op={kind='imprint',source=create.from,slot=create.workspace.slot,destination=create.to,original=compact(original),recipe=recipe}
+    saveOp(hw,op);finish(hw,op,progress);clearOp()
+    if progress then progress('Installed '..recipe.label) end
+  end
+end
+
+C.runner={}
+function C.runner.preview(c,id,progress,control)
+  Config.requireProgram(c,id)
+  local preview={id=id,configKey=canonical(c)}
+  if id=='assline' then preview.plan=scan(c,progress,control)
+  else preview.plan,preview.report,preview.manifest=C.maker.preview(c,id,progress,control) end
+  return preview
+end
+function C.runner.execute(c,preview,progress,control)
+  check(preview and preview.configKey==canonical(c),'Settings changed; build a new preview')
+  Config.requireProgram(c,preview.id)
+  if preview.id=='assline' then apply(c,preview.plan,progress,control)
+  else C.maker.apply(c,preview.id,preview.plan,preview.manifest,progress,control) end
 end
 
 -- Source: src/30_ui.lua
 local function runUI()
-  local gpu=component.gpu; check(gpu,'GPU required')
-  local term=require('term'); local keyboard=require('keyboard')
-  local oldW,oldH=gpu.getResolution(); local oldFG=gpu.getForeground(); local oldBG=gpu.getBackground()
-  local maxW,maxH=gpu.maxResolution(); check(maxW>=160 and maxH>=50,'Use a tier 3 GPU and screen with 160x50 resolution')
-  local w,h=math.min(160,maxW),math.min(50,maxH)
+  local gpu=component.gpu;check(gpu,'GPU required')
+  local term,keyboard=require('term'),require('keyboard')
+  local oldW,oldH=gpu.getResolution();local oldFG,oldBG=gpu.getForeground(),gpu.getBackground()
+  local maxW,maxH=gpu.maxResolution();check(maxW>=160 and maxH>=50,'Use a tier 3 GPU and screen with 160x50 resolution')
+  local w,h=160,50
   local colors={bg=0x101A26,panel=0x1A2A3C,text=0xDCE6EF,muted=0x8297AB,blue=0x5AC8FA,
     green=0x72D69A,yellow=0xFFD277,red=0xFF8585,button=0x27465E}
-  local state={page='main',offset=0,section='changes',status='Enter a target, then Scan to preview changes.',tone='muted',running=true}
-  local fields={
-    {'buffer','Buffer interface name','Exact terminal display name of the directly connected interface.'},
-    {'itemName','Item name template','{label} = original display name; {n} = duplicate number starting at 1.'},
-    {'renameName','Rename interface template','Examples: Rename NAME_{n} or Rename {label}_{n}. Same names can span interfaces.'},
-    {'bufferSlots','Usable buffer slots','Visible/unlocked pattern slots. Default 9; set 36 when all rows are available.'},
-    {'renameSlots','Usable rename slots','Slots to use on each rename interface. Default 9; set 36 with capacity upgrades.'},
-    {'terminalAddress','Terminal component address','Blank selects the only me_interface_terminal; otherwise paste an address/prefix.'},
-    {'bufferAddress','Buffer component address','Blank selects the only me_interface; use an address/prefix if there are several.'},
-    {'dataAddress','Data Card address','Blank selects the only data component. Tier 1 is sufficient.'},
-    {'energyPause','Pause work below energy %','Default 25. Work waits for the resume level before continuing.'},
-    {'energyResume','Resume work at energy % (default 75)','Must be at least 10 percentage points above the pause threshold.'}}
-  local buttons={}; local edit
-  local makerFields={
-    {'makerDestination','Destination name','Exact name; all matching remote interfaces share the layout.'},
-    {'makerDonors','Donor bank name','Exact name; all matching banks supply encoded donors.'},
-    {'makerWorkspace','Editing/workspace name','Dedicated interface with an empty pattern slot.'},
-    {'makerSlots','Destination slots per interface','Configured unlocked capacity, 1..512.'},
-    {'makerDonorSlots','Donor slots per interface','Configured unlocked capacity, 1..512.'},
-    {'makerWorkspaceSlots','Workspace slots per interface','Configured unlocked capacity, 1..512.'},
-    {'makerPVC','Request PVC (on/off)','Consumed PVC only. Fluids and catalysts stay externally stocked.'},
-    {'makerPPS','Request PPS (on/off)','Consumed PPS only; independent of PVC.'}}
-  local paintKey,paintCache=nil,{}
+  local state={page='programs',settings='shared',selected=nil,section='changes',offset=0,
+    status='Choose a program, then Preview selected. Configure shared interfaces in Settings.',tone='muted',running=true}
+  local buttons,paintCache,paintKey,edit={},{},nil,nil
   local contentKey,contentRows
+  local draw,handle,action,commitEdit,navigate
   local function text(x,y,s,width,tone,bg)
-    width=math.min(width or w-x+1,w-x+1); if width<1 then return end
-    s=tostring(s or ''):gsub('\194\167.',''):gsub('[%c]',' ')
-    s=unicode.sub(s,1,width)
+    width=math.min(width or w-x+1,w-x+1);if width<1 then return end
+    s=unicode.sub(tostring(s or ''):gsub('\194\167.',''):gsub('[%c]',' '),1,width)
     local key=x..':'..y..':'..width;local value=s..':'..tostring(tone)..':'..tostring(bg)
     if paintCache[key]==value then return end
     paintCache[key]=value
-    gpu.setForeground(colors[tone or 'text']); gpu.setBackground(colors[bg or 'bg'])
+    gpu.setForeground(colors[tone or 'text']);gpu.setBackground(colors[bg or 'bg'])
     gpu.set(x,y,s..string.rep(' ',math.max(0,width-unicode.wlen(s))))
   end
-  local function button(x,y,label,action,enabled)
+  local function button(x,y,label,callback,enabled)
     local length=unicode.len(label)+4
     text(x,y,'[ '..label..' ]',length,enabled==false and 'muted' or 'text','button')
-    if enabled~=false then buttons[#buttons+1]={x=x,y=y,w=length,action=action} end
+    if enabled~=false then buttons[#buttons+1]={x=x,y=y,w=length,action=callback} end
     return x+length+2
   end
-  local location=U.locationText
-  local function description(s) return tostring(s.size or '?')..' x '..tostring(s.label or s.name) end
-  local function lines()
-    local r={}; local p=state.plan
-    local function add(s,tone) r[#r+1]={s,tone or 'text'} end
-    if state.error then add('LAST ERROR','red');add(state.error,'red');add('') end
-    if state.section=='maker' then
-      if state.makerReport then for line in state.makerReport:gmatch('[^\n]+') do add(line) end
-      else add('Open Maker setup, choose a mode and interface names, then Preview.','muted') end
-    elseif state.section=='history' then
-      add('RECENT OPERATIONS (newest first)','blue')
-      add('/home/assline-perf.log; showing up to 16 KB.','muted');add('')
-      for _,line in ipairs(state.history or {}) do add(line) end
-      if not state.history or #state.history==0 then add('No operations recorded yet.','muted') end
-    elseif state.section=='help' then
-      add('SETUP','blue');add('Tier 3 screen/GPU, keyboard, 2 MB+ RAM, tier 1+ Data Card.')
-      add('Connect the terminal and adapter-connected buffer to the same AE grid.')
-      add('Use disposable encoded PROCESSING donors. Crafting donors are skipped.')
-      add('Keep machines idle and buffer isolated from machinery. Enable allowItemStackNBTTags.')
-      add('');add('WORKFLOW','blue');add('Set exact names and usable slot limits. Scan, review both tabs, then Apply.')
-      add('Rename recipes install first. Edited targets return to their original slots.')
-      add('');add('RECOVERY','yellow');add('After interruption, leave patterns in place and Recover; then Scan again.')
-      add('Recovery stops on foreign edits. Pending: /home/assline.pending; backup: /home/assline.last.')
-      add('History shows recent timing, charge and memory reports from /home/assline-perf.log.')
-    elseif not p then
-      add('Nothing scanned yet. Scan to see exactly what will change.','muted')
-      add('Example: rod, 128 wire, 128 wire, 128 wire','muted')
-      add('Result:  rod, 128 wire, 128 NAME_1, 128 NAME_2','green')
-      add('The first occurrence stays unchanged. Numbering starts over in each pattern.','muted')
-    elseif state.section=='recipes' then
-      for _,v in ipairs(p.recipes) do
-        add((v.existing and 'REUSE  ' or 'CREATE ')..v.name,v.existing and 'green' or 'yellow')
-        add('  '..description(v.input)..' -> '..description(v.output))
-        local e=v.existing or v.destination
-        if e then add('  Slot '..(e.slot+1)..' at '..location(e),'muted') end
-        if v.donor then add('  Consumes buffer pattern slot '..(v.donor.slot+1),'yellow') end
-      end
-      if #p.recipes==0 then add('No rename recipes required.','green') end
-    else
-      for _,v in ipairs(p.changes) do
-        local out=v.original.outputs[1]
-        add('PATTERN '..(v.slot+1)..'  '..(out and description(out) or '(no first output)'),'blue')
-        for _,e in ipairs(v.edits) do
-          add('  Input '..e.index..': '..description(e.before))
-          add('        -> '..description(e.after),'green')
-        end
-      end
-      if #p.changes==0 then add('No duplicate item inputs found.','green') end
-    end
-    return r
+  local function nav(y,label,selected,callback,enabled)
+    text(3,y,(selected and '> ' or '  ')..label,26,selected and 'blue' or 'text',selected and 'panel' or 'bg')
+    if enabled~=false then buttons[#buttons+1]={x=3,y=y,w=26,action=callback} end
   end
-  local draw,action,handle,commitEdit
-  local function startEdit(key,draft,cursor)
-    local values=draft and state.draft or cfg
-    if not edit or edit.key~=key or edit.draft~=draft then
-      edit={key=key,value=values[key],draft=draft}
-    end
-    edit.cursor=math.max(1,math.min(cursor,unicode.len(edit.value)+1));edit.selectAll=false
+  local function status(message,tone) state.status=message;state.tone=tone or 'muted' end
+  local function invalidate() state.preview=nil;state.verified=false end
+  local function saveConfig(value)
+    Config.validate(value);writeFile(paths.config,value);cfg=value;invalidate()
   end
-  local function editorRow(x,y,width,key,draft)
-    local values=draft and state.draft or cfg; local val=values[key]
-    local first,cursor=1,nil
-    if edit and edit.key==key then
+  local function fields() return state.settings=='shared' and Config.fields or Programs.byId[state.settings].fields end
+  local function values() return Config.values(cfg,state.settings) end
+  commitEdit=function()
+    if not edit then return end
+    local trial=clone(cfg);Config.values(trial,edit.section)[edit.key]=trim(edit.value)
+    saveConfig(trial);edit=nil;status('Settings saved. Choose a program to build a new preview.','green')
+  end
+  navigate=function(page,section)
+    commitEdit();state.page=page;state.offset=0
+    if section then state.settings=section end
+    if page=='history' then action('history') end
+  end
+  local function editorRow(x,y,width,f)
+    local value=values()[f.key];local first,cursor=1,nil
+    if edit and edit.key==f.key and edit.section==state.settings then
       first=math.max(1,edit.cursor-width+3);cursor=edit.cursor
-      val=unicode.sub(edit.value,first,edit.cursor-1)..'|'..unicode.sub(edit.value,edit.cursor)
-      text(x,y,val,width,edit.selectAll and 'yellow' or 'blue','panel')
-    else text(x,y,val=='' and (key:match('^maker') and '(required)' or '(automatic)') or val,width,'text','panel') end
+      value=unicode.sub(edit.value,first,edit.cursor-1)..'|'..unicode.sub(edit.value,edit.cursor)
+      text(x,y,value,width,edit.selectAll and 'yellow' or 'blue','panel')
+    else text(x,y,value=='' and '(not configured)' or value,width,'text','panel') end
     if state.busy then return end
-    buttons[#buttons+1]={x=x,y=y,w=width,editKey=key,draft=draft,action=function(clickX)
-      local at=first+clickX-x
-      if cursor and at>cursor then at=at-1 end -- Account for the visible cursor glyph.
-      startEdit(key,draft,at)
+    buttons[#buttons+1]={x=x,y=y,w=width,editKey=f.key,section=state.settings,action=function(clickX)
+      local at=first+clickX-x;if cursor and at>cursor then at=at-1 end
+      if not edit then edit={section=state.settings,key=f.key,value=values()[f.key]} end
+      edit.cursor=math.max(1,math.min(at,unicode.len(edit.value)+1));edit.selectAll=false
     end}
   end
-  draw=function()
-    local key=state.page..state.section..tostring(state.plan)..tostring(state.makerPlan)..tostring(state.busy)..tostring(state.error)..tostring(fs.exists(paths.pending))
-    if key~=paintKey then
-      gpu.setBackground(colors.bg);gpu.fill(1,1,w,h,' ');paintCache={};paintKey=key
-    end
-    buttons={}
-    text(2,2,'ASSEMBLY LINE / PATTERN RENAMER',w-4,'blue')
-    text(2,3,string.format('GTNH 2.9   |   %.0f%% energy   |   %d KB free',
-      energyFraction()*100,math.floor(computer.freeMemory()/1024)),w-4,'muted')
-    if state.page=='maker' then
-      local x=button(2,5,'Preview',function() action('makerScan') end,not fs.exists(paths.pending))
-      x=button(x,5,'Mode: '..state.draft.makerMode,function()
-        commitEdit();state.draft.makerMode=state.draft.makerMode=='wiremill' and 'coating' or 'wiremill'
-      end)
-      button(x,5,'Back',function() state.page='main';edit=nil end)
-      for i,f in ipairs(makerFields) do
-        local y=7+(i-1)*4
-        text(3,y,f[2],w-6,'blue');editorRow(3,y+1,w-6,f[1],true);text(3,y+2,f[3],w-6,'muted')
-      end
-      text(3,42,'Preview only. LATEX, combining and the new mode executor are the next stages.',w-6,'yellow')
-    elseif state.page=='settings' then
-      local x=button(2,5,'Save settings',function() action('save') end)
-      button(x,5,'Cancel',function() state.page='main'; edit=nil end)
-      for i,f in ipairs(fields) do
-        local y=7+(i-1)*4
-        text(3,y,f[2],w-6,'blue'); editorRow(3,y+1,w-6,f[1],true)
-        if y+2<h-2 then text(3,y+2,f[3],w-6,'muted') end
-      end
-    else
-      text(2,5,'Target interface',19,'blue'); editorRow(22,5,w-24,'target',false)
-      local pending=fs.exists(paths.pending)
-      local x=button(2,7,'Scan',function() action('scan') end,not pending and not state.busy)
-      x=button(x,7,'Apply preview',function() action('apply') end,state.section~='maker' and state.plan and #state.plan.errors==0 and #state.plan.changes>0 and not pending and not state.busy)
-      x=button(x,7,'Settings',function() action('settings') end,not state.busy)
-      x=button(x,7,'Recover',function() action('recover') end,pending and not state.busy)
-      x=button(x,7,'Quit',function() state.cancelled=true;state.running=false end)
-      if state.busy then button(x,7,'Cancel work',function() state.cancelled=true end) end
-      if not state.busy then button(x,7,'Maker setup',function() action('makerSettings') end) end
-      x=2
-      for _,tab in ipairs({{'changes','Input changes'},{'recipes','Rename recipes'},{'help','Setup / help'},{'history','History'},{'maker','Pattern maker'}}) do
-        local section=tab[1]
-        x=button(x,9,(state.section==section and '* ' or '')..tab[2],function() action(section) end)
-      end
-      local sideX=math.max(67,w-48); local contentW=sideX-4
-      local rowsKey=state.section..tostring(state.plan)..tostring(state.makerPlan)..tostring(state.history)..tostring(state.error)
-      if rowsKey~=contentKey then
-        contentRows={};contentKey=rowsKey
-        for _,r in ipairs(lines()) do
-          for pos=1,math.max(1,unicode.len(r[1])),contentW do
-            contentRows[#contentRows+1]={unicode.sub(r[1],pos,pos+contentW-1),r[2]}
-          end
-        end
-      end
-      local rows=contentRows
-      local room=h-14
-      state.offset=math.max(0,math.min(state.offset,math.max(0,#rows-room)))
-      for n=1,room do local r=rows[state.offset+n];text(2,11+n,r and r[1] or '',contentW,r and r[2] or 'text') end
-      text(2,h-2,'Rows '..math.min(#rows,state.offset+1)..'-'..math.min(#rows,state.offset+room)..' / '..#rows..'   (wheel / PgUp / PgDn)',contentW,'muted')
-      text(sideX,12,'WHAT WILL HAPPEN',w-sideX-1,'blue')
-      local p=state.plan
-      if state.section=='maker' and state.makerPlan then
-        local m=state.makerPlan
-        text(sideX,14,m.reused..' existing patterns reused',w-sideX-1,'green')
-        text(sideX,15,#m.layout..' ordered recipe positions',w-sideX-1)
-        text(sideX,16,#m.moves..' sorting moves',w-sideX-1)
-        text(sideX,17,(m.required.processing+m.required.crafting)..' donors needed',w-sideX-1,'yellow')
-        text(sideX,19,#m.errors..' capacity/donor blockers',w-sideX-1,#m.errors==0 and 'green' or 'red')
-        text(sideX,21,'Read-only preview; no patterns moved.',w-sideX-1,'yellow')
-      elseif p then
-        text(sideX,14,p.scanned..' patterns scanned',w-sideX-1)
-        text(sideX,15,#p.changes..' patterns to update',w-sideX-1,'green')
-        text(sideX,16,p.newRecipes..' buffer patterns to consume',w-sideX-1,'yellow')
-        text(sideX,17,(#p.recipes-p.newRecipes)..' existing rename recipes reused',w-sideX-1,'green')
-        text(sideX,18,p.skipped..' non-processing patterns skipped',w-sideX-1,'muted')
-        local y=21
-        if #p.errors==0 then text(sideX,y,'Ready to apply after review.',w-sideX-1,'green')
-        else
-          text(sideX,y,'BLOCKED: '..#p.errors..' issue(s)',w-sideX-1,'red'); y=y+2
-          for _,err in ipairs(p.errors) do
-            for pos=1,unicode.len(err),w-sideX-2 do
-              if y<h-5 then text(sideX,y,unicode.sub(err,pos,pos+w-sideX-3),w-sideX-1,'red'); y=y+1 end
-            end
-            y=y+1
-          end
-        end
-      end
-      if pending then
-        text(sideX,h-6,'UNFINISHED OPERATION',w-sideX-1,'red')
-        text(sideX,h-5,'Select Recover before scanning.',w-sideX-1,'yellow')
-      end
-    end
-    text(2,h-1,state.status,w-3,state.tone)
-  end
-  local lastProgress=0
-  local function progress(message)
-    if computer.uptime()-lastProgress>=1 then
-      state.status=message; state.tone='yellow'; text(2,h-1,message,w-3,'yellow'); lastProgress=computer.uptime()
-    end
-    -- Recharge waits are handled before component calls by gate().
-  end
-  local function saveConfig() validate(cfg); writeFile(paths.config,cfg) end
   local function history()
     local f=io.open('/home/assline-perf.log','r');local groups={}
     if f then
       f:seek('set',math.max(0,fs.size('/home/assline-perf.log')-16384))
       local raw=f:read('*a') or '';f:close()
       for block in raw:gmatch('uptime=[^\n]*\n.-\n\n') do groups[#groups+1]=block end
-      -- Include the last report, which has no following blank line.
       if #groups==0 or raw:sub(-2)~='\n\n' then
         local last=raw:match('.*\n(uptime=.*)') or (raw:match('^uptime=') and raw)
         if last then groups[#groups+1]=last end
@@ -1290,90 +1422,216 @@ local function runUI()
       state.history[#state.history+1]=''
     end
   end
-  commitEdit=function()
-    if not edit then return end
-    local value=trim(edit.value)
-    if edit.draft then state.draft[edit.key]=value
+  local function description(s) return tostring(s.size or '?')..' x '..tostring(s.label or s.name) end
+  local function lines()
+    local rows={};local function add(s,tone) rows[#rows+1]={s,tone or 'text'} end
+    local preview=state.preview;local p=preview and preview.plan
+    if state.page=='preview' and state.error then add('LAST ERROR','red');add(state.error,'red');add('') end
+    if state.page=='history' then
+      add('RECENT OPERATIONS (newest first)','blue');add('/home/assline-perf.log; most recent 16 KB.','muted');add('')
+      for _,line in ipairs(state.history or {}) do add(line) end
+      if not state.history or #state.history==0 then add('No operations recorded yet.','muted') end
+    elseif state.page=='help' then
+      add('SHARED SETUP','blue')
+      add('Set the pattern editor and new pattern buffer in Settings > Shared interfaces.')
+      add('The editor is connected directly to OC. Buffer banks are found by exact terminal name.')
+      add('Every matching buffer is included. Use disposable encoded patterns; keep machines idle.')
+      add('Enable allowItemStackNBTTags. Use a tier 1+ Data Card and an Internet Card for updates.')
+      add('');add('RUN A PROGRAM','blue')
+      add('Run program opens the chooser. Select a program and press Preview selected.')
+      add('Review changes, required interfaces, existing-pattern sorting and donors.')
+      add('Verify destination interfaces have all 36 slots available, then Execute preview.')
+      add('Assembly line, insulator and wiremill share settings, editor and recovery.')
+      add('Wire combining and bending have settings reserved for their upcoming recipe rules.')
+      add('');add('SETTINGS AND RECOVERY','blue')
+      add('Fields save when accepted or when you navigate away. Esc cancels only the active edit.')
+      add('After interruption, leave patterns in place and Recover; then build a new preview.')
+      add('History retains timing and memory reports. Updates preserve configuration and recovery files.')
+    elseif not p then add('Choose a program to build a preview.','muted')
+    elseif state.section=='capacity' then
+      add('DESTINATION SPACE','blue');add('Assuming 36 usable slots per destination interface.','yellow');add('')
+      for _,g in ipairs(p.capacities or {}) do
+        add(g.name,'blue');add(g.patterns..' total slots needed; at least '..g.interfaces..' fully expanded interface(s).')
+      end
+      add('');add('Every matching interface is included, ordered by location.','muted')
+      add('Existing unrelated patterns count toward required space.','muted')
+      for _,err in ipairs(p.errors) do add('BLOCKED: '..err,'red') end
+    elseif preview.id~='assline' then
+      for line in (preview.report or ''):gmatch('[^\n]+') do add(line) end
+    elseif state.section=='recipes' then
+      for _,r in ipairs(p.recipes) do
+        add((r.existing and 'REUSE  ' or 'CREATE ')..r.name,r.existing and 'green' or 'yellow')
+        add('  '..description(r.input)..' -> '..description(r.output))
+        local e=r.existing or r.destination
+        if e then add('  Slot '..(e.slot+1)..' at '..U.locationText(e),'muted') end
+        if r.donor then add('  Donor at '..U.locationText(r.donor.from)..' slot '..(r.donor.slot+1),'yellow') end
+      end
+      if #p.recipes==0 then add('No rename recipes required.','green') end
     else
-      check(value~='','Target name cannot be empty')
-      cfg[edit.key]=value; state.plan=nil; saveConfig()
+      for _,v in ipairs(p.changes) do
+        local out=v.original.outputs[1]
+        add('PATTERN '..(v.slot+1)..'  '..(out and description(out) or '(no first output)'),'blue')
+        for _,e in ipairs(v.edits) do add('  Input '..e.index..': '..description(e.before));add('        -> '..description(e.after),'green') end
+      end
+      if #p.changes==0 then add('No duplicate item inputs found.','green') end
     end
-    edit=nil
+    return rows
   end
-  local lastPoll=-math.huge
+  local function scrollRows(x,y,width,room)
+    local key=state.page..state.section..tostring(state.preview)..tostring(state.history)..tostring(state.error)..width
+    if key~=contentKey then
+      contentKey=key;contentRows={}
+      for _,r in ipairs(lines()) do
+        for pos=1,math.max(1,unicode.len(r[1])),width do contentRows[#contentRows+1]={unicode.sub(r[1],pos,pos+width-1),r[2]} end
+      end
+    end
+    local rows=contentRows
+    state.offset=math.max(0,math.min(state.offset,math.max(0,#rows-room)))
+    for n=1,room do local r=rows[state.offset+n];text(x,y+n-1,r and r[1] or '',width,r and r[2] or 'text') end
+    text(x,44,'Rows '..math.min(#rows,state.offset+1)..'-'..math.min(#rows,state.offset+room)..' / '..#rows..'  (wheel / PgUp / PgDn)',width,'muted')
+  end
+  local function executable()
+    local preview=state.preview
+    if not preview or state.busy or fs.exists(paths.pending) or not state.verified then return false end
+    local p=preview.plan
+    if #p.errors>0 or (preview.manifest and #preview.manifest.unresolved>0) then return false end
+    return preview.id=='assline' and #p.changes>0 or preview.id~='assline' and (#p.moves+#p.creates)>0
+  end
+  draw=function()
+    local key=state.page..state.settings..tostring(state.selected)..state.section..tostring(state.preview)..tostring(state.busy)
+      ..tostring(state.verified)..tostring(fs.exists(paths.pending))
+    if key~=paintKey then gpu.setBackground(colors.bg);gpu.fill(1,1,w,h,' ');paintCache={};paintKey=key end
+    buttons={}
+    text(3,2,'AE2 / GTNH PATTERN MANAGER',95,'blue')
+    text(111,2,string.format('%.0f%% energy  |  %d KB free',energyFraction()*100,math.floor(computer.freeMemory()/1024)),47,'muted')
+    text(3,4,string.rep('-',155),155,'muted')
+    nav(7,'Programs',state.page=='programs',function() navigate('programs') end,not state.busy)
+    nav(10,'Settings',state.page=='settings',function() navigate('settings') end,not state.busy)
+    nav(13,'History',state.page=='history',function() navigate('history') end)
+    nav(16,'Help',state.page=='help',function() navigate('help') end)
+    if state.preview then nav(19,'Current preview',state.page=='preview',function() navigate('preview') end) end
+    if state.page=='settings' then
+      text(3,22,'SETTINGS SECTIONS',26,'muted')
+      nav(25,'Shared interfaces',state.settings=='shared',function() navigate('settings','shared') end)
+      for n,p in ipairs(Programs.list) do local id=p.id;nav(25+n*3,p.name,state.settings==id,function() navigate('settings',id) end) end
+      local name=state.settings=='shared' and 'Shared interfaces' or Programs.byId[state.settings].name
+      text(34,7,'SETTINGS / '..name,124,'blue')
+      text(34,8,'Changes save when you accept a field or navigate away.',124,'muted')
+      for n,f in ipairs(fields()) do
+        local y=11+(n-1)*4;text(34,y,f.label,124,'blue')
+        if f.kind=='toggle' then
+          button(34,y+1,values()[f.key]=='on' and 'On' or 'Off',function()
+            commitEdit();local trial=clone(cfg);local v=Config.values(trial,state.settings)
+            v[f.key]=v[f.key]=='on' and 'off' or 'on';saveConfig(trial);status('Settings saved.','green')
+          end)
+        else editorRow(34,y+1,124,f) end
+        text(34,y+2,f.help,124,'muted')
+      end
+      local x=button(34,47,'Save settings',function() action('save') end)
+      button(x,47,'Run program',function() navigate('programs') end)
+    elseif state.page=='programs' then
+      text(34,7,'RUN A PROGRAM',124,'blue')
+      text(34,8,'Select what to do. Preview selected builds a plan without changing patterns.',124,'muted')
+      for n,p in ipairs(Programs.list) do
+        local y=11+(n-1)*6;local id=p.id
+        button(34,y,(state.selected==id and '* ' or '')..p.name,function() commitEdit();state.selected=id end)
+        text(38,y+1,p.description,120,'text');text(38,y+2,p.unavailable or 'Preview and execute',120,p.unavailable and 'muted' or 'green')
+      end
+      local selected=state.selected and Programs.byId[state.selected]
+      local x=button(34,47,'Preview selected',function() action('preview') end,selected~=nil and not selected.unavailable and not fs.exists(paths.pending))
+      button(x,47,'Program settings',function() navigate('settings',state.selected) end,selected~=nil)
+    elseif state.page=='preview' then
+      local preview=state.preview;local p=preview and preview.plan
+      local current=preview and preview.id or state.selected
+      text(34,7,'PREVIEW / '..(current and Programs.byId[current].name or ''),124,'blue')
+      local x=34
+      local tabs=preview and preview.id=='assline' and {{'changes','Input changes'},{'recipes','Rename recipes'},{'capacity','Capacity'}}
+        or {{'changes','Plan and sorting'},{'capacity','Capacity'}}
+      for _,tab in ipairs(tabs) do local section=tab[1];x=button(x,9,(state.section==section and '* ' or '')..tab[2],function() state.section=section;state.offset=0 end) end
+      scrollRows(34,12,74,31);text(113,12,'WHAT WILL HAPPEN',45,'blue')
+      if p then
+        if preview.id=='assline' then
+          text(113,14,p.scanned..' patterns scanned',45);text(113,15,#p.changes..' patterns to update',45,'green')
+          text(113,16,p.newRecipes..' donor patterns needed',45,'yellow');text(113,17,(#p.recipes-p.newRecipes)..' rename recipes reused',45,'green')
+          text(113,18,p.available..' processing donors available',45,'muted')
+        else
+          text(113,14,p.reused..' existing patterns reused',45,'green');text(113,15,#p.creates..' new patterns to install',45,'yellow')
+          text(113,16,#p.moves..' sorting moves first',45);text(113,17,p.available.processing..' processing donors available',45,'muted')
+        end
+        local y=21;text(113,y,#p.errors==0 and 'No capacity/donor blockers' or 'BLOCKED: '..#p.errors..' issue(s)',45,#p.errors==0 and 'green' or 'red')
+        for _,err in ipairs(p.errors) do for pos=1,unicode.len(err),45 do if y<32 then y=y+1;text(113,y,unicode.sub(err,pos,pos+44),45,'red') end end end
+        if preview.manifest and #preview.manifest.unresolved>0 then text(113,34,'Registry names need verification.',45,'red') end
+        text(113,36,'Destination assumption: 36 slots each.',45,'yellow');text(113,37,'Verify expanded interfaces in the game.',45,'muted')
+        button(113,39,state.verified and '36 slots verified' or 'Verify 36 slots',function() state.verified=not state.verified end,not state.busy)
+      end
+      local x=button(34,47,'Scan',function() action('preview') end,not state.busy and not fs.exists(paths.pending))
+      x=button(x,47,'Execute preview',function() action('execute') end,executable())
+      x=button(x,47,'Program settings',function() navigate('settings',preview.id) end,not state.busy and preview~=nil)
+      button(x,47,'Run program',function() navigate('programs') end,not state.busy)
+    else
+      text(34,7,state.page=='history' and 'HISTORY' or 'HELP',124,'blue');scrollRows(34,12,124,31)
+      button(34,47,'Run program',function() navigate('programs') end,not state.busy)
+    end
+    if state.busy then button(113,47,'Cancel',function() state.cancelled=true end)
+    else button(135,47,'Recover',function() action('recover') end,fs.exists(paths.pending)) end
+    button(151,47,'Quit',function() commitEdit();state.cancelled=true;state.running=false end)
+    text(3,46,string.rep('-',155),155,'muted');text(3,49,state.status,155,state.tone)
+    if fs.exists(paths.pending) then text(3,43,'Pending operation: Recover',26,'red') end
+  end
+  local lastProgress,lastPoll=0,-math.huge
+  local function progress(message)
+    if computer.uptime()-lastProgress>=1 then status(message,'yellow');text(3,49,message,155,'yellow');lastProgress=computer.uptime() end
+  end
   local function control(delay)
     local pulled
-    if delay>0 or computer.uptime()-lastPoll>=0.1 then
-      draw()
-      local e={event.pull(delay)}
-      handle(e);lastPoll=computer.uptime();pulled=e
-    end
-    check(not state.cancelled,'Work cancelled. Use Recover if an operation is pending; otherwise scan again.')
+    if delay>0 or computer.uptime()-lastPoll>=0.1 then draw();pulled={event.pull(delay)};handle(pulled);lastPoll=computer.uptime() end
+    check(not state.cancelled,'Work cancelled. Use Recover if an operation is pending; otherwise preview again.')
     return pulled
   end
   action=function(name)
-    commitEdit()
-    state.error=nil
-    state.history=nil
-    local isWork=name=='scan' or name=='apply' or name=='recover' or name=='makerScan'
+    commitEdit();local isWork=name=='preview' or name=='execute' or name=='recover'
     check(not isWork or not state.busy,'Work already running')
-    if isWork then state.busy=true;state.cancelled=false;lastPoll=computer.uptime();state.status='Working: '..name..' (Esc cancels)';state.tone='yellow' end
-    local success,why=pcall(function()
-    if name=='history' then history();state.section=name;state.offset=0
-    elseif name=='changes' or name=='recipes' or name=='help' or name=='maker' then state.section=name;state.offset=0
-    elseif name=='makerSettings' then state.page='maker';state.draft=clone(cfg)
-    elseif name=='makerScan' then
-      validate(state.draft);writeFile(paths.config,state.draft);cfg=state.draft
-      state.page='main';state.section='maker';state.offset=0;state.plan=nil;state.makerPlan=nil;state.makerReport=nil
-      state.makerPlan,state.makerReport=C.maker.preview(cfg,progress,control)
-      state.status='Maker preview complete. Review capacity, sorting and donor requirements.';state.tone='green'
-    elseif name=='scan' then
-      state.plan=nil; state.offset=0; state.plan=scan(cfg,progress,control)
-      state.status='Scan complete. Review Input changes and Rename recipes, then Apply preview.'; state.tone='green'
-    elseif name=='apply' then
-      check(state.plan,'Scan first'); local p=state.plan; state.plan=nil
-      apply(cfg,p,progress,control)
-      state.status='Done. Updated '..#p.changes..' patterns and installed '..p.newRecipes..' rename recipes.'; state.tone='green'
-    elseif name=='recover' then
-      state.plan=nil; recover(cfg,progress,control)
-      state.status='Saved operation completed. Scan again to continue the rest of the batch.';state.tone='green'
-    elseif name=='settings' then state.page='settings';state.draft=clone(cfg)
-    elseif name=='save' then
-      validate(state.draft); writeFile(paths.config,state.draft); cfg=state.draft;state.plan=nil;state.page='main'
-      state.status='Settings saved. Scan to build a new preview.';state.tone='green'
-    end
+    if name=='execute' then check(executable(),'Review and verify the preview first') end
+    if isWork then state.error=nil;state.busy=true;state.cancelled=false;lastPoll=computer.uptime();status('Working: '..name..' (Esc cancels)','yellow') end
+    local ok,why=pcall(function()
+      if name=='history' then history()
+      elseif name=='save' then Config.validate(cfg);writeFile(paths.config,cfg);status('Settings saved.','green')
+      elseif name=='preview' then
+        check(not fs.exists(paths.pending),'Recover the pending operation before previewing')
+        local id=state.page=='preview' and state.preview and state.preview.id or state.selected
+        check(id,'Choose a program first');invalidate();state.page='preview';state.section='changes';state.offset=0
+        state.preview=C.runner.preview(cfg,id,progress,control)
+        status('Preview ready. Review the plan and verify destination capacity before Execute preview.','green')
+      elseif name=='execute' then
+        local preview=state.preview;state.preview=nil;C.runner.execute(cfg,preview,progress,control)
+        status('Program completed. Build a new preview to check the result.','green')
+      elseif name=='recover' then invalidate();recover(cfg,progress,control);status('Saved operation completed. Build a new preview to continue.','green') end
     end)
     if isWork then state.busy=false end
-    check(success,why)
-    if isWork then
-      local ok,why=pcall(perfReport,name..' complete');releaseWork();check(ok,why)
-      if state.section=='history' then history() end
-    end
+    check(ok,why)
+    if isWork then perfReport(name..' complete');releaseWork();if state.page=='history' then history() end end
   end
   local function insert(s)
     s=s:gsub('[\r\n]',' '):gsub('%z','')
     if edit.selectAll then edit.value='';edit.cursor=1;edit.selectAll=false end
-    edit.value=unicode.sub(edit.value,1,edit.cursor-1)..s..unicode.sub(edit.value,edit.cursor)
-    edit.cursor=edit.cursor+unicode.len(s)
+    edit.value=unicode.sub(edit.value,1,edit.cursor-1)..s..unicode.sub(edit.value,edit.cursor);edit.cursor=edit.cursor+unicode.len(s)
   end
   handle=function(e)
     if e[1]=='interrupted' then state.cancelled=true;state.running=false
     elseif e[1]=='touch' then
       for _,b in ipairs(buttons) do
         if e[3]>=b.x and e[3]<b.x+b.w and e[4]==b.y then
-          if edit and (b.editKey~=edit.key or b.draft~=edit.draft) then commitEdit() end
-          b.action(e[3],e[4]); break
+          if edit and (b.editKey~=edit.key or b.section~=edit.section) then commitEdit() end
+          b.action(e[3],e[4]);break
         end
       end
     elseif e[1]=='scroll' and not edit then state.offset=state.offset-e[5]*3
     elseif e[1]=='clipboard' and edit then insert(e[3])
     elseif e[1]=='key_down' then
       local char,key=e[3],e[4]
-      if state.busy and (key==1 or char==113) then
-        state.cancelled=true;if char==113 then state.running=false end
+      if state.busy and (key==1 or char==113) then state.cancelled=true;if char==113 then state.running=false end
       elseif edit then
-        if key==28 then commitEdit()
-        elseif key==1 then edit=nil
+        if key==28 then commitEdit() elseif key==1 then edit=nil
         elseif key==30 and keyboard.isControlDown() then edit.selectAll=true
         elseif key==203 then edit.cursor=math.max(1,edit.cursor-1);edit.selectAll=false
         elseif key==205 then edit.cursor=math.min(unicode.len(edit.value)+1,edit.cursor+1);edit.selectAll=false
@@ -1381,36 +1639,24 @@ local function runUI()
         elseif key==207 then edit.cursor=unicode.len(edit.value)+1;edit.selectAll=false
         elseif key==14 or key==211 then
           if edit.selectAll then edit.value='';edit.cursor=1;edit.selectAll=false
-          else
-            local at=key==14 and edit.cursor-1 or edit.cursor
-            if at>=1 then edit.value=unicode.sub(edit.value,1,at-1)..unicode.sub(edit.value,at+1);edit.cursor=at end
-          end
+          else local at=key==14 and edit.cursor-1 or edit.cursor;if at>=1 then edit.value=unicode.sub(edit.value,1,at-1)..unicode.sub(edit.value,at+1);edit.cursor=at end end
         elseif char and char>=32 and not keyboard.isControlDown() then insert(unicode.char(char)) end
-      elseif key==201 then state.offset=state.offset-(h-14)
-      elseif key==209 then state.offset=state.offset+(h-14)
-      elseif state.page=='main' then
-        if char==115 and not state.busy and not fs.exists(paths.pending) then action('scan')
-        elseif char==97 and state.section~='maker' and not state.busy and state.plan and #state.plan.errors==0 and #state.plan.changes>0 then action('apply')
-        elseif char==113 then state.running=false end
-      end
+      elseif key==201 then state.offset=state.offset-31 elseif key==209 then state.offset=state.offset+31
+      elseif char==113 then state.running=false
+      elseif char==115 and state.page=='preview' and not fs.exists(paths.pending) then action('preview') end
     end
   end
   local ok,err=pcall(function()
-    gpu.setResolution(w,h)
-    local loaded=readFile(paths.config)
-    if loaded then for k in pairs(defaults) do if loaded[k]~=nil then cfg[k]=loaded[k] end end;validate(cfg) end
+    gpu.setResolution(w,h);cfg=Config.migrate(readFile(paths.config))
     while state.running do
-      draw()
-      local e={event.pull(1)}
-      local success,why=pcall(handle,e)
+      draw();local e={event.pull(1)};local success,why=pcall(handle,e)
       if not success then
-        state.status=tostring(why);state.error=state.status;state.offset=0;state.tone='red'
-        pcall(perfReport,'stopped: '..state.status);releaseWork()
-        if state.section=='history' then pcall(history) end
+        status(tostring(why),'red');state.error=state.status;state.busy=false;state.offset=0;pcall(perfReport,'stopped: '..state.status);releaseWork()
+        if state.page=='history' then pcall(history) end
       end
     end
   end)
-  releaseWork();state.plan=nil;state.history=nil;state.draft=nil;state.makerPlan=nil;state.makerReport=nil;buttons={};paintCache={};contentRows=nil;contentKey=nil;edit=nil
+  releaseWork();state.preview=nil;state.history=nil;buttons={};paintCache={};contentRows=nil;edit=nil
   gpu.setResolution(oldW,oldH);gpu.setForeground(oldFG);gpu.setBackground(oldBG);term.clear();term.setCursor(1,1)
   if not ok then error(err,0) end
 end

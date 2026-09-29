@@ -24,9 +24,11 @@ local function pureRecipe(data,p,r)
     and identity(data,a)==identity(data,r.input) and identity(data,b)==identity(data,r.output)
 end
 local function scan(c,progress,control)
+  Config.requireProgram(c,'assline')
+  local settings=c.programs.assline
   local hw=connect(c,progress,control)
-  local target=unique(hw,c.target)
-  check(where(target)~=where(hw.buffer),'Target is the buffer')
+  local target=unique(hw,settings.target)
+  check(where(target)~=where(hw.buffer),'Target is the pattern editor')
   local buffer=current(hw,hw.buffer)
   local p={target=endpoint(target),buffer=hw.buffer,changes={},recipes={},errors={},scanned=0,skipped=0,donors={},empty={}}
   local function problem(s) p.errors[#p.errors+1]=s end
@@ -48,7 +50,7 @@ local function scan(c,progress,control)
               check(type(s.size)=='number' and s.size>0 and s.size<=2147483647,'Unsupported input amount')
               local output,label
               repeat
-                label=token(c.itemName,s.label or s.name,n)
+                label=token(settings.itemName,s.label or s.name,n)
                 check(unicode.len(label)<=128,'Generated item name is longer than 128 characters')
                 output=renamed(hw.data,s,label)
                 if not occupied[identity(hw.data,output)] then break end
@@ -56,7 +58,7 @@ local function scan(c,progress,control)
               until false
               counts[id]=n+1; occupied[identity(hw.data,output)]=true
               changes[#changes+1]={index=index,before=stack(s),after=output}
-              local destName=token(c.renameName,s.label or s.name,n)
+              local destName=token(settings.renameName,s.label or s.name,n)
               local recipeKey=canonical({destName,id,identity(hw.data,output)})
               if not wanted[recipeKey] then
                 local r={input=stack(s),output=output,name=destName}
@@ -88,34 +90,50 @@ local function scan(c,progress,control)
     if not r.existing then
       for _,i in ipairs(group) do
         local key=where(i); used[key]=used[key] or {}
-        for slot=0,tonumber(c.renameSlots)-1 do
+        local slots=capacity(i)
+        for slot=0,slots-1 do
           if not exists(i.patterns[slot]) and not used[key][slot] then
             used[key][slot]=true; r.destination=endpoint(i,slot); break
           end
         end
         if r.destination then break end
       end
-      if not r.destination then problem('No free slot in "'..r.name..'" (missing, full, or slot limit too low)') end
+      if not r.destination then problem('No verified free slot in "'..r.name..'" (missing, full, or capacity unavailable)') end
     end
     if progress then progress('Checking '..r.name) end
   end
-  local donors={}
-  for slot=0,tonumber(c.bufferSlots)-1 do
+  for slot=0,editorCapacity(hw)-1 do
     local remote=buffer.patterns[slot]
     local live=direct(hw,'getInterfacePattern',slot)
-    check(patternEq(hw.data,remote,live),'Direct buffer does not match "'..c.buffer..'" at slot '..(slot+1))
+    check(patternEq(hw.data,remote,live),'Direct pattern editor does not match "'..c.shared.editor..'" at slot '..(slot+1))
     if not exists(remote) then p.empty[#p.empty+1]=slot
-    elseif safeDonor(hw.data,remote) then donors[#donors+1]={slot=slot,original=compact(remote)} end
+    end
+  end
+  local donors={}
+  for _,bank in ipairs(lookup(hw,c.shared.donors)) do
+    check(where(bank)~=where(target) and where(bank)~=where(hw.buffer),'New pattern buffer overlaps target or editor')
+    for _,slot in ipairs(keys(bank.patterns)) do
+      local pattern=bank.patterns[slot]
+      if safeDonor(hw.data,pattern) then donors[#donors+1]={from=endpoint(bank,slot),slot=slot,original=compact(pattern)} end
+    end
   end
   local n=0
   for _,r in ipairs(p.recipes) do
     if not r.existing then
       n=n+1
-      if donors[n] then r.donor=donors[n] else problem('Need more disposable processing patterns in '..c.buffer) end
+      if donors[n] then r.donor=donors[n] else problem('Need more disposable processing patterns in '..c.shared.donors) end
     end
   end
   p.newRecipes=n; p.available=#donors
-  if #p.changes>0 and #p.empty==0 and n==0 then problem('Leave one empty pattern slot in '..c.buffer..' for editing') end
+  local requirements={}
+  for name,group in pairs(groups) do
+    local needed=0
+    for _,i in ipairs(group) do for _,pattern in pairs(i.patterns) do if exists(pattern) then needed=needed+1 end end end
+    for _,recipe in ipairs(p.recipes) do if recipe.name==name and not recipe.existing then needed=needed+1 end end
+    requirements[name]=needed
+  end
+  p.capacities=Config.capacityReport(requirements)
+  if (#p.changes>0 or n>0) and #p.empty==0 then problem('Leave one empty pattern slot in '..c.shared.editor..' for editing') end
   return p,hw
 end
 C.scan=scan

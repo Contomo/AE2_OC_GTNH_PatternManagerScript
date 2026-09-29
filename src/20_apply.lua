@@ -8,8 +8,9 @@ local function rawList(data,p,which)
 end
 local function expected(op)
   local p=compact(op.original)
-  if op.kind=='recipe' then
-    p.inputs={[1]=op.input}; p.outputs={[1]=op.output}
+  if op.kind=='recipe' or op.kind=='imprint' then
+    p.inputs=op.recipe and clone(op.recipe.inputs) or {[1]=op.input}
+    p.outputs=op.recipe and clone(op.recipe.outputs) or {[1]=op.output}
   else for _,e in ipairs(op.edits) do p.inputs[e.index]=e.after end end
   return p
 end
@@ -65,14 +66,23 @@ local function finish(hw,op,progress)
     p=direct(hw,'getInterfacePattern',op.slot)
     check(patternEq(hw.data,p,op.original),'Moved pattern failed read-back')
   else check(not exists(delivered),'Destination slot is occupied') end
+  if op.source and not exists(p) then
+    local source=current(hw,op.source).patterns[op.source.slot]
+    check(patternEq(hw.data,source,op.original),'Donor pattern changed')
+    transfer(hw,op.source,endpoint(op.buffer,op.slot))
+    p=direct(hw,'getInterfacePattern',op.slot)
+    check(patternEq(hw.data,p,op.original),'Moved donor failed read-back')
+  end
   allowedPartial(hw,p,op)
-  if op.kind=='recipe' then
+  if op.kind=='recipe' or op.kind=='imprint' then
     -- Clearing removes an NBT list element: ALWAYS clear from the end.
     for _,which in ipairs({'inputs','outputs'}) do
-      local s=which=='inputs' and op.input or op.output
+      local desired=goal[which]
       local entries=rawList(hw.data,p,which)
-      if not stackEq(hw.data,p[which][1],s) then setEntry(hw,op.slot,which,1,s) end
-      for index=largest(entries),2,-1 do
+      for index,s in ipairs(desired) do
+        if not stackEq(hw.data,p[which][index],s) then setEntry(hw,op.slot,which,index,s) end
+      end
+      for index=largest(entries),#desired+1,-1 do
         local entry=entries[index]
         check(entry and entry.__nbt_type=='compound' and type(entry.__value)=='table','Invalid pattern list entry')
         -- AE ignores empty compounds. Do not spend a server tick removing every
@@ -101,7 +111,10 @@ local function saveOp(hw,op)
   op.version=1; op.direct=hw.direct.address; op.terminal=hw.terminal.address; op.data=hw.data.address; op.buffer=clone(hw.buffer)
   writeFile(paths.pending,op)
 end
-local function clearOp() check(fs.remove(paths.pending),'Cannot clear completed recovery record') end
+local function clearOp()
+  check(fs.remove(paths.pending),'Cannot clear completed recovery record')
+  if fs.exists(paths.cursor) then check(fs.remove(paths.cursor),'Cannot clear completed recovery progress') end
+end
 local function apply(c,plan,progress,control)
   check(not fs.exists(paths.pending),'Use Recover before applying another scan')
   check(#plan.errors==0,'Resolve scan blockers first')
@@ -112,10 +125,12 @@ local function apply(c,plan,progress,control)
   local workspace=plan.empty[1]
   for _,r in ipairs(plan.recipes) do
     if not r.existing then
-      local op={kind='recipe',slot=r.donor.slot,original=r.donor.original,destination=r.destination,input=r.input,output=r.output}
+      check(workspace~=nil,'No free pattern editor slot')
+      local op={kind='recipe',slot=workspace,source=r.donor.from,original=r.donor.original,destination=r.destination,input=r.input,output=r.output}
       -- Recheck the exact disposable pattern before writing the intent.
-      check(patternEq(hw.data,direct(hw,'getInterfacePattern',op.slot),op.original),'Buffer pattern changed')
-      saveOp(hw,op); finish(hw,op,progress); clearOp(); workspace=workspace or op.slot
+      check(patternEq(hw.data,current(hw,op.source).patterns[op.source.slot],op.original),'Donor pattern changed')
+      check(not exists(direct(hw,'getInterfacePattern',workspace)),'Pattern editor workspace occupied')
+      saveOp(hw,op); finish(hw,op,progress); clearOp()
     end
   end
   for _,v in ipairs(plan.changes) do
@@ -139,6 +154,12 @@ local function apply(c,plan,progress,control)
 end
 local function recover(c,progress,control)
   local op=check(readFile(paths.pending),'No pending operation')
-  local hw=connect(c,progress,control); finish(hw,op,progress); clearOp()
+  local hw=connect(c,progress,control)
+  if op.kind=='move' or op.kind=='sort' then
+    check(op.direct==hw.direct.address and op.terminal==hw.terminal.address and op.data==hw.data.address
+      and where(op.buffer)==where(hw.buffer),'Recovery hardware differs from saved operation')
+    if op.kind=='sort' then C.maker.finishSort(hw,op,progress) else C.maker.finishMove(hw,op) end
+  else finish(hw,op,progress) end
+  clearOp()
 end
 C.apply=apply; C.recover=recover; C.paths=paths; C.finish=finish

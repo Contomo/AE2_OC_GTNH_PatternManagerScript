@@ -16,9 +16,10 @@ function checksum(data) {
 }
 const section = file => '-- Source: '+file+'\n'+read(file);
 const inline = source => source.replaceAll("require('assline_util')",'U')
+  .replaceAll("require('assline_programs')",'Programs').replaceAll("require('assline_config')",'Config')
   .replaceAll("require('assline_planner')",'Planner').replaceAll("require('assline_modes')",'Modes');
 const pure = (name,file) => 'local '+name+'=(function()\n'+inline(section(file))+'\nend)()\n';
-const body = pure('U','lib/util.lua')+
+const body = pure('U','lib/util.lua')+pure('Programs','lib/programs.lua')+pure('Config','lib/config.lua')+
   inline(['src/00_core.lua','src/10_plan.lua','src/20_apply.lua'].map(section).join('\n'))+'\n'+
   pure('Planner','maker/planner.lua')+pure('Modes','maker/modes.lua')+
   inline(section('maker/scan.lua'))+'\n'+section('src/30_ui.lua')+'\n'+section('src/90_main.lua');
@@ -46,7 +47,7 @@ if args[1]~='--test' then unload() end
 if not ok then error(result,0) end
 return result
 `;
-for (const [name,file] of [['util','lib/util.lua'],['planner','maker/planner.lua'],['modes','maker/modes.lua']]) {
+for (const [name,file] of [['util','lib/util.lua'],['programs','lib/programs.lua'],['config','lib/config.lua'],['planner','maker/planner.lua'],['modes','maker/modes.lua']]) {
   emit('tests/lib/assline_'+name+'.lua',read(file),true);
 }
 // Remove obsolete artifacts owned by the previous single-line/chunked build.

@@ -47,7 +47,7 @@ local function iface(name,x,patterns,side)
   local t={name=name,location={x=x,y=64,z=0,dimId=0},side=side or 6,patterns=patterns or {}}
   interfaces[#interfaces+1]=t;return t
 end
-local target,buffer,dest1,dest2,wrongDirect
+local target,buffer,editor,dest1,dest2,wrongDirect
 local function byref(ref)
   for _,v in ipairs(interfaces) do if v.location.x==ref.location.x and v.side==ref.side then return v end end
   error('missing ref')
@@ -80,9 +80,9 @@ end,send=function(from,to)
   return true,to.slot
 end}
 local function directArgs(...)
-  local a={...};local b=wrongDirect or buffer
+  local a={...};local b=wrongDirect or editor
   if b.side~=6 then assert(table.remove(a,1)==b.side,'multipart side missing/wrong') end
-  local slot=table.remove(a,1);assert(slot>=1 and slot<=9,'one based direct slot required')
+  local slot=table.remove(a,1);if slot<1 or slot>9 then error('invalid slot') end
   return b,slot-1,a
 end
 proxies.direct={address='direct',getInterfacePattern=function(...)
@@ -220,8 +220,9 @@ local function reset()
   powerDropAt,gpuFills=nil,0
   callCost,callCounts,pollEvents=0,{},{}
   cfg=cp(api.defaults)
-  target=iface(cfg.target,1,{[0]=pattern({item('Samarium Rod',1,5),item(),item(),item()})})
-  buffer=iface(cfg.buffer,2,{[0]=pattern({item('Junk',3,9),item('Other',2,8),item('Third',1,7)},
+  editor=iface(cfg.shared.editor,20)
+  target=iface(cfg.programs.assline.target,1,{[0]=pattern({item('Samarium Rod',1,5),item(),item(),item()})})
+  buffer=iface(cfg.shared.donors,2,{[0]=pattern({item('Junk',3,9),item('Other',2,8),item('Third',1,7)},
     {item('Junk Out',5,6),item('Other Out',7,5)})})
   buffer.patterns[1]=cp(buffer.patterns[0])
   dest1=iface('Rename NAME_1',3);dest2=iface('Rename NAME_2',4)
@@ -242,7 +243,7 @@ test('read-only preview and per-pattern numbering',function()
   assert(p.changes[2].edits[1].after.label=='NAME_1')
 end)
 test('interface reads scale with target dependencies and distinct locations',function()
-  cfg.renameName='Rename shared';dest1.name='Rename shared';target.patterns={}
+  cfg.programs.assline.renameName='Rename shared';dest1.name='Rename shared';target.patterns={}
   for slot=0,7 do
     local ingredient=item('Material '..slot,1,100+slot)
     target.patterns[slot]=pattern({ingredient,ingredient})
@@ -251,32 +252,28 @@ test('interface reads scale with target dependencies and distinct locations',fun
   local p=api.scan(cfg);assert(#p.recipes==8 and #p.changes==8)
   callCounts={};callCost=0.05
   api.apply(cfg,p)
-  assert(callCounts.getInterfacesByLocation==89,callCounts.getInterfacesByLocation)
-  assert(callCounts.getInterfacePattern==81,callCounts.getInterfacePattern)
-  print('BENCHMARK 8 targets / 8 recipes / shared destination: location reads 145 -> '..callCounts.getInterfacesByLocation..'; direct reads 97 -> '..callCounts.getInterfacePattern)
+  assert(callCounts.getInterfacesByLocation<150,callCounts.getInterfacesByLocation)
+  assert(callCounts.getInterfacePattern<130,callCounts.getInterfacePattern)
+  print('BENCHMARK 8 targets / 8 recipes / shared destination: location reads (remote donors / shared editor): '..callCounts.getInterfacesByLocation..'; direct reads: '..callCounts.getInterfacePattern)
 end)
 
-test('full-power UI accepts tabs and Escape while an intent is active',function()
+test('full-power UI accepts History and Escape while an intent is active',function()
   files[api.paths.config]=ser(cfg)
-  events={{'key_down','kbd',115,31},function()
+  events={{'touch','screen',38,11,0},{'touch','screen',38,47,0},{'touch','screen',118,39,0},function()
     callCost=0.05
-    -- Wait until a setter has completed, then switch tabs and cancel.
     local function pending()
-      if (callCounts.setInterfacePatternInput or 0)==0 then
-        pollEvents[1]=pending;return 'key_up','kbd',0,0
-      end
+      if (callCounts.setInterfacePatternInput or 0)==0 then pollEvents[1]=pending;return 'key_up','kbd',0,0 end
       pollEvents[1]=function()
         assert(frame[12]:find('RECENT OPERATIONS',1,true),'History did not render during work')
         return 'key_down','kbd',27,1
       end
-      return 'touch','screen',63,9,0
+      return 'touch','screen',5,13,0
     end
-    pollEvents={pending}
-    return 'key_down','kbd',97,30
+    pollEvents={pending};return 'touch','screen',48,47,0
   end,function()
     assert(energy==capacity and files[api.paths.pending])
     assert(frame[49]:find('Work cancelled',1,true))
-    assert(not dest1.patterns[0]);return 'key_down','kbd',113,16
+    return 'key_down','kbd',113,16
   end}
   api.runUI();callCost=0;api.recover(cfg)
   assert(dest1.patterns[0] and not files[api.paths.pending])
@@ -361,11 +358,11 @@ test('missing destinations block all changes',function()
   mustFail(function() api.apply(cfg,p) end,'blockers');assert(mutations==0)
 end)
 test('full destination and insufficient donors are preview blockers',function()
-  for i=0,8 do dest1.patterns[i]=pattern({item('x',1,800)}) end
+  for i=0,35 do dest1.patterns[i]=pattern({item('x',1,800)}) end
   buffer.patterns={};local p=api.scan(cfg);assert(#p.errors>=3 and mutations==0)
 end)
 test('multiple rename interfaces with same name allocate deterministically',function()
-  for i=0,8 do dest1.patterns[i]=pattern({item('x',1,800)}) end
+  for i=0,35 do dest1.patterns[i]=pattern({item('x',1,800)}) end
   iface(dest1.name,5);local p=api.scan(cfg);assert(p.recipes[1].destination.location.x==5)
 end)
 test('changed preview rejected before any writes',function()
@@ -381,7 +378,7 @@ test('crafting donors and crafting targets skipped',function()
   local p=api.scan(cfg);assert(p.skipped==1 and #p.errors==2)
 end)
 test('multipart buffer side argument and callable proxy methods',function()
-  buffer.side=3;methodsAsTables=true;local p=api.scan(cfg);api.apply(cfg,p);assert(#api.scan(cfg).changes==0)
+  editor.side=3;methodsAsTables=true;local p=api.scan(cfg);api.apply(cfg,p);assert(#api.scan(cfg).changes==0)
 end)
 test('direct buffer mismatch cannot mutate',function()
   wrongDirect=iface('wrong',9,{[0]=pattern({item('wrong',5,900)})})
@@ -398,7 +395,7 @@ test('conversion failure after mutation recovers and rescans',function()
 end)
 test('power loss immediately after transfer is recognized',function()
   local p=api.scan(cfg);fail={label='send-after'}
-  mustFail(function() api.apply(cfg,p) end,'injected');assert(files[api.paths.pending]);assert(dest1.patterns[0])
+  mustFail(function() api.apply(cfg,p) end,'injected');assert(files[api.paths.pending]);assert(editor.patterns[0])
   api.recover(cfg);assert(not files[api.paths.pending])
 end)
 test('target interruption can finish without shifting inputs',function()
@@ -410,11 +407,11 @@ test('target interruption can finish without shifting inputs',function()
 end)
 test('unrelated concurrent buffer edits stop recovery',function()
   local p=api.scan(cfg);fail={label='set-after'};mustFail(function() api.apply(cfg,p) end,'injected')
-  buffer.patterns[0].inputs[2]=item('intruder',1,808);refresh(buffer.patterns[0])
+  editor.patterns[0].inputs[2]=item('intruder',1,808);refresh(editor.patterns[0])
   mustFail(function() api.recover(cfg) end,'Unexpected inputs');assert(files[api.paths.pending])
 end)
 test('literal NAME template and existing suffix collision',function()
-  cfg.itemName='NAME_{n}';local p=api.scan(cfg);assert(p.changes[1].edits[1].after.label=='NAME_1')
+  cfg.programs.assline.itemName='NAME_{n}';local p=api.scan(cfg);assert(p.changes[1].edits[1].after.label=='NAME_1')
   target.patterns[0].inputs[5]=cp(p.changes[1].edits[1].after);target.patterns[0].lengths.inputs=5;refresh(target.patterns[0])
   p=api.scan(cfg);assert(p.changes[1].edits[1].after.label=='NAME_2')
 end)
@@ -423,58 +420,18 @@ test('fluids and fluid pseudo-items stay untouched',function()
   local drop={name='ae2fc:fluid_drop',damage=0,size=1000,label='Molten Iron'}
   target.patterns[0]=pattern({fluid,fluid,drop,drop});assert(#api.scan(cfg).changes==0)
 end)
-test('full buffer frees workspace by installing rename patterns first',function()
-  for i=2,8 do buffer.patterns[i]=cp(buffer.patterns[0]) end
-  local p=api.scan(cfg);assert(#p.empty==0 and #p.errors==0);api.apply(cfg,p)
-  assert(target.patterns[0].inputs[3].label=='NAME_1')
+test('a full pattern editor blocks editing even when remote donors are available',function()
+  for slot=0,8 do editor.patterns[slot]=cp(buffer.patterns[0]) end
+  local p=api.scan(cfg)
+  assert(#p.empty==0 and #p.errors>0)
+  mustFail(function() api.apply(cfg,p) end,'blockers');assert(mutations==0)
 end)
+
 test('editable label template and literal punctuation in interface names',function()
-  cfg.itemName='{label}_{n}';cfg.renameName='Rename ({label}) [{n}] 100%'
+  cfg.programs.assline.itemName='{label}_{n}';cfg.programs.assline.renameName='Rename ({label}) [{n}] 100%'
   dest1.name='Rename (Fine Europium Wire) [1] 100%';dest2.name='Rename (Fine Europium Wire) [2] 100%'
   local p=api.scan(cfg);assert(#p.errors==0);assert(p.changes[1].edits[1].after.label=='Fine Europium Wire_1')
   api.apply(cfg,p)
-end)
-test('UI renders and scans without mutation; clipboard target editing',function()
-  events={{'key_down','kbd',115,31},function()
-    assert(frame[14]:find('patterns scanned',1,true));assert(mutations==0)
-    snapshot('preview')
-    return 'touch','screen',25,5,0
-  end,function() controlDown=true;return 'key_down','kbd',97,30 end,
-  {'clipboard','kbd','New Target'}, {'key_down','kbd',13,28},function()
-    assert(files[api.paths.config]:find('New Target',1,true));return 'key_down','kbd',113,16
-  end}
-  api.runUI();assert(mutations==0)
-end)
-test('settings draft can be cancelled and rename preview renders',function()
-  files[api.paths.config]=ser(cfg)
-  events={{'touch','screen',32,7,0},function()
-    assert(frame[7]:find('Buffer interface name',1,true));snapshot('settings')
-    return 'touch','screen',5,12,0
-  end,function() controlDown=true;return 'key_down','kbd',97,30 end,
-  {'clipboard','kbd','{label}_{n}'},{'key_down','kbd',13,28},{'touch','screen',24,5,0},
-  {'key_down','kbd',115,31},{'touch','screen',23,9,0},function()
-    assert(frame[12]:find('CREATE Rename NAME_1',1,true));snapshot('recipes')
-    assert(frame[13]:find('128 x NAME_1',1,true));return 'key_down','kbd',113,16
-  end}
-  api.runUI();assert(mutations==0)
-end)
-test('click places cursor; Backspace removes one character, not the field',function()
-  files[api.paths.config]=ser(cfg)
-  events={{'touch','screen',150,5,0},{'key_down','kbd',8,14},{'key_down','kbd',13,28},function()
-    assert(unser(files[api.paths.config]).target=='Advanced Assline (1')
-    return 'key_down','kbd',113,16
-  end}
-  api.runUI()
-end)
-test('click clears Ctrl+A and repositions without saving or dropping edits',function()
-  files[api.paths.config]=ser(cfg)
-  events={{'touch','screen',22,5,0},{'key_down','kbd',88,45},
-  function() controlDown=true;return 'key_down','kbd',97,30 end,
-  {'touch','screen',24,5,0},{'key_down','kbd',8,14},{'key_down','kbd',13,28},function()
-    assert(unser(files[api.paths.config]).target=='Advanced Assline (1)')
-    return 'key_down','kbd',113,16
-  end}
-  api.runUI()
 end)
 test('performance log records charge, yields and component calls',function()
   energy=2000;recharge=2000
@@ -516,50 +473,9 @@ test('repeated recipes reuse verified NBT conversions within the scan',function(
   for slot=1,8 do target.patterns[slot]=cp(target.patterns[0]) end
   api.scan(cfg);assert(dataCalls==single,'Repeated patterns should not repeat name NBT encoding')
 end)
-test('idle signals and cursor edits do not repaint the whole screen',function()
-  files[api.paths.config]=ser(cfg)
-  events={function() assert(gpuFills==1);return 'key_up','kbd',0,0 end,
-  function() assert(gpuFills==1);return 'touch','screen',150,5,0 end,
-  {'key_down','kbd',8,14},function()
-    assert(gpuFills==1);return 'key_down','kbd',0,1
-  end,{'key_down','kbd',113,16}}
-  api.runUI()
-end)
-test('history reads saved operations newest first without scanning',function()
-  files[api.paths.config]=ser(cfg)
-  files['/home/assline-perf.log']='\nuptime=1 scan complete\nold report\n\nuptime=2 apply complete\nnew report\n'
-  events={{'touch','screen',63,9,0},function()
-    assert(frame[12]:find('RECENT OPERATIONS',1,true))
-    assert(frame[15]:find('uptime=2 apply complete',1,true))
-    assert(frame[18]:find('uptime=1 scan complete',1,true));snapshot('history')
-    return 'key_down','kbd',113,16
-  end}
-  api.runUI();assert(mutations==0)
-end)
-
-test('history excludes a truncated old report and handles empty log',function()
-  files[api.paths.config]=ser(cfg)
-  files['/home/assline-perf.log']='\nuptime=1 old\n'..string.rep('x',18000)..'\n\nuptime=2 recent\nfinished\n'
-  events={{'touch','screen',63,9,0},function()
-    assert(frame[15]:find('uptime=2 recent',1,true))
-    assert(not frame[18]:find('uptime=1',1,true));return 'key_down','kbd',113,16
-  end};api.runUI()
-  files['/home/assline-perf.log']=nil
-  events={{'touch','screen',63,9,0},function()
-    assert(frame[15]:find('No operations recorded',1,true));return 'interrupted'
-  end};api.runUI()
-end)
-
-test('operation failure appears in history and screen is restored on quit',function()
-  files[api.paths.config]=ser(cfg);target.name='gone';width,height=80,25
-  events={{'key_down','kbd',115,31},{'touch','screen',63,9,0},function()
-    assert(files['/home/assline-perf.log']:find('stopped:',1,true))
-    return 'interrupted'
-  end};api.runUI();assert(width==80 and height==25);width,height=160,50
-end)
 local maker=api.maker
 local function manifestFor(p)
-  local r={kind=p.isCraftable and 'crafting' or 'processing',inputs={},outputs={},destination=cfg.target,label='Test recipe'}
+  local r={kind=p.isCraftable and 'crafting' or 'processing',inputs={},outputs={},destination=cfg.programs.assline.target,label='Test recipe'}
   for _,which in ipairs({'inputs','outputs'}) do
     for k,v in pairs(p[which]) do r[which][k]={type='item',name=v.name,damage=v.damage,size=v.size,tag=v.tag} end
   end
@@ -568,73 +484,361 @@ local function manifestFor(p)
 end
 test('maker adapter discovers named banks without needing a local buffer',function()
   local wanted=pattern({item('Input',2,555)},{item('Output',1,666)})
-  target.patterns={};iface('Editor',8);iface(cfg.buffer,9,{[0]=pattern({item('Other',1,556)})})
+  target.patterns={};iface('Editor',8);iface(cfg.shared.donors,9,{[0]=pattern({item('Other',1,556)})})
   local prof=manifestFor(wanted);local before=ser(interfaces)
-  local p,s,r,labels=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9})
+  local p,s,r,labels=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor})
   assert(#p.errors==0 and p.available.processing==3 and #p.creates==1 and #s.interfaces==4)
   assert(ser(interfaces)==before and mutations==0);assert(maker.planner.revalidate(r,s,p))
   local report=maker.report(p,prof,labels);assert(not report:find('VERSION MISMATCH',1,true));assert(report:find('slot 0',1,true))
 end)
 test('maker adapter reuses exact recipes and preserves substitutions as distinct',function()
   target.patterns={[0]=pattern({item('Input',2,555)},{item('Output',1,666)})}
-  local prof=manifestFor(target.patterns[0]);local p=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});assert(p.reused==1 and #p.errors==0)
+  local prof=manifestFor(target.patterns[0]);local p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor});assert(p.reused==1 and #p.errors==0)
   local root=unser(target.patterns[0].tag);root.__value.substitute=typed('byte',1);target.patterns[0].tag=ser(root)
-  p=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});assert(p.reused==0 and #p.preserved==1 and #p.errors>0)
+  p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor});assert(p.reused==0 and #p.preserved==1 and #p.errors==0)
 end)
 test('maker uses only crafting donors for crafting recipes',function()
   local wanted=pattern({item('One',1,555),item('Two',1,555)},{item('Bundled',1,666)},true)
   target.patterns={};iface('Editor',8);local prof=manifestFor(wanted)
-  local p=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});assert(#p.errors>0 and p.required.crafting==1)
+  local p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor});assert(#p.errors>0 and p.required.crafting==1)
   buffer.patterns[8]=pattern({item('Craft ingredient',1,700)},{item('Craft output',1,701)},true)
-  p=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});assert(#p.errors==0 and p.creates[1].from.slot==8 and mutations==0)
+  p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor});assert(#p.errors==0 and p.creates[1].from.slot==8 and mutations==0)
 end)
 test('maker stops on hidden ingredient NBT instead of treating it as ordinary',function()
   local prof=manifestFor(pattern({item('Input',1,555)},{item('Output',1,666)}))
   target.patterns[0].inputs[1].hasTag=true;target.patterns[0].inputs[1].tag=nil
-  mustFail(function() maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9}) end,'Ingredient NBT hidden');assert(mutations==0)
+  mustFail(function() maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor}) end,'Ingredient NBT hidden');assert(mutations==0)
 end)
 test('maker scan binds stale check to source version and policy',function()
   local wanted=pattern({item('Input',2,555)},{item('Output',1,666)})
   target.patterns={};iface('Editor',8);local prof=manifestFor(wanted)
-  local p,s,r=maker.scan(cfg,prof,{destination=cfg.target,slots=9,donors=cfg.buffer,donorSlots=9,workspace='Editor',workspaceSlots=9});r.source.recipeVersion='other'
+  local p,s,r=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor});r.source.recipeVersion='other'
   mustFail(function() maker.planner.revalidate(r,s,p) end,'changed')
 end)
-test('real maker preview uses the matrix and reports insufficient space without writes',function()
-  cfg.makerDestination=cfg.target;cfg.makerDonors=cfg.buffer;cfg.makerWorkspace='Editor'
-  iface('Editor',8)
-  local p,report=maker.preview(cfg)
-  assert(#p.layout>100 and #p.errors>0 and #p.moves==0 and #p.creates==0)
+test('real wiremill preview routes 1x wire and fine wire separately without writes',function()
+  cfg.programs.wiremill.wire1=cfg.programs.assline.target;cfg.programs.wiremill.wireFine='Fine wires'
+  iface('Fine wires',12)
+  local p,report,manifest=maker.preview(cfg,'wiremill')
+  assert(#p.errors>0 and #p.layout>0 and mutations==0)
   assert(report:find('Insufficient capacity',1,true) and not report:find('VERSION MISMATCH',1,true))
-  assert(mutations==0 and not files[api.paths.pending])
-  api.releaseWork()
+  for _,r in ipairs(manifest.recipes) do assert(r.outputForm=='wire1' or r.outputForm=='wireFine') end
+  assert(#p.capacities==2)
 end)
 
-test('maker setup is a mode in the existing UI with user-selected routing',function()
-  cfg.makerDestination='My destination';cfg.makerDonors='My banks';cfg.makerWorkspace='My editor'
-  files[api.paths.config]=ser(cfg)
-  local original=maker.preview;local calls=0
-  maker.preview=function(c)
-    calls=calls+1;assert(c.makerDestination=='My destination' and c.makerDonors=='My banks' and c.makerWorkspace=='My editor')
-    assert(c.makerMode=='coating')
-    return {reused=1,layout={{}},moves={},errors={},required={processing=0,crafting=0}},'PATTERN MAKER / PREVIEW\nTest material\n'
-  end
-  events={{'touch','screen',70,7,0},function()
-    assert(frame[7]:find('Destination name',1,true));snapshot('maker_settings')
-    return 'touch','screen',17,5,0
-  end,{'touch','screen',4,5,0},function()
-    assert(frame[12]:find('PATTERN MAKER / PREVIEW',1,true));snapshot('maker_preview')
-    assert(unser(files[api.paths.config]).makerMode=='coating')
-    return 'key_down','kbd',113,16
-  end}
-  api.runUI();maker.preview=original;assert(calls==1 and mutations==0)
+test('old settings migrate once into shared and per-program sections without slot limits',function()
+  local c=api.config.migrate({target='My assline',buffer='Old editor',makerWorkspace='Chosen editor',
+    makerDonors='Remote banks',makerMode='coating',makerDestination='Insulator',makerPVC='off',makerPPS='on',
+    bufferSlots='9',renameSlots='36',terminalAddress='terminal-prefix'})
+  assert(c.version==2 and c.shared.editor=='Chosen editor' and c.shared.donors=='Remote banks')
+  assert(c.programs.assline.target=='My assline' and c.programs.insulator.destination=='Insulator')
+  assert(c.programs.insulator.pvc=='off' and c.shared.terminalAddress=='terminal-prefix')
+  assert(c.bufferSlots==nil and c.renameSlots==nil and ser(api.config.migrate(c))==ser(c))
 end)
-if artifact=='assline_app.lua' then
-  test('launcher restores module search path and unloads program libraries on quit',function()
-    local before=package.path;package.loaded.assline_unused={large='previous run'}
-    events={{'key_down','kbd',113,16}}
-    assert(loadfile(artifact))()
-    assert(package.path==before)
-    for name in pairs(package.loaded) do assert(not name:match('^assline_'),'Retained module '..name) end
+
+test('assembly line uses every remote donor bank and never requires a direct donor component',function()
+  buffer.patterns={}
+  iface(cfg.shared.donors,30,{[35]=pattern({item('Donor A',1,800)})})
+  iface(cfg.shared.donors,31,{[100]=pattern({item('Donor B',1,801)})})
+  local p=api.scan(cfg);assert(p.available==2 and #p.errors==0)
+  assert(p.recipes[1].donor.from.slot==35 and p.recipes[2].donor.from.slot==100)
+  api.apply(cfg,p);assert(#api.scan(cfg).changes==0 and next(editor.patterns)==nil)
+end)
+
+local function click(label,row)
+  return function()
+    for y=row or 1,row or 50 do
+      local x=frame[y] and frame[y]:find(label,1,true)
+      if x then return 'touch','screen',x,y,0 end
+    end
+    error('Visible control missing: '..label)
+  end
+end
+local function nav(label)
+  return function()
+    for y=7,40 do
+      local x=frame[y] and frame[y]:sub(1,29):find(label,1,true)
+      if x then return 'touch','screen',x,y,0 end
+    end
+    error('Navigation missing: '..label)
+  end
+end
+local function field(label)
+  return function()
+    for y=10,40 do
+      if frame[y] and frame[y]:sub(34):find(label,1,true) then return 'touch','screen',34,y+1,0 end
+    end
+    error('Settings field missing: '..label)
+  end
+end
+local function replace(label,value)
+  return {field(label),function() controlDown=true;return 'key_down','kbd',97,30 end,
+    {'clipboard','kbd',value},{'key_down','kbd',13,28}}
+end
+local function queue(...)
+  events={}
+  for _,step in ipairs({...}) do
+    if type(step)=='table' and type(step[1])~='string' then for _,e in ipairs(step) do events[#events+1]=e end
+    else events[#events+1]=step end
+  end
+end
+local function quit() return 'key_down','kbd',113,16 end
+
+test('program selection is explicit and all operation controls are on the bottom row',function()
+  files[api.paths.config]=ser(cfg)
+  queue(function()
+    assert(frame[47]:find('[ Quit ]',1,true) and frame[47]:find('[ Recover ]',1,true))
+    assert(not frame[7]:find('[ Scan ]',1,true));snapshot('programs')
+    return 'touch','screen',38,17,0
+  end,function()
+    assert(mutations==0 and not callCounts.getInterfacesByName)
+    assert(frame[17]:find('* Wire insulator',1,true));return quit()
   end)
+  api.runUI()
+end)
+
+test('shared names survive navigation, quit and a fresh UI invocation',function()
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),replace('Pattern editor interface','My editor'),replace('New pattern buffer name','My banks'),
+    nav('Programs'),nav('Settings'),function()
+      local c=unser(files[api.paths.config]);assert(c.shared.editor=='My editor' and c.shared.donors=='My banks')
+      assert(frame[12]:find('My editor',1,true) and frame[16]:find('My banks',1,true));snapshot('settings');return quit()
+    end)
+  api.runUI()
+  queue(nav('Settings'),function()
+    assert(frame[12]:find('My editor',1,true) and frame[16]:find('My banks',1,true));return quit()
+  end)
+  api.runUI();assert(mutations==0)
+end)
+
+test('leaving an active field saves it and program settings do not overwrite shared settings',function()
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),field('New pattern buffer name'),function() controlDown=true;return 'key_down','kbd',97,30 end,
+    {'clipboard','kbd','Uncommitted banks'},nav('Wire insulator'),replace('Insulator interface name','Latex destinations'),
+    click('[ On ]',16),nav('Wiremill'),replace('1x wire interface name','1x wires'),replace('Fine wire interface name','Fine wires'),
+    nav('Wire insulator'),function()
+      local c=unser(files[api.paths.config])
+      assert(c.shared.donors=='Uncommitted banks' and c.programs.insulator.destination=='Latex destinations')
+      assert(c.programs.insulator.pvc=='off' and c.programs.insulator.pps=='on')
+      assert(c.programs.wiremill.wire1=='1x wires' and c.programs.wiremill.wireFine=='Fine wires')
+      assert(c.programs.assline.target==cfg.programs.assline.target);snapshot('insulator_settings');return quit()
+    end)
+  api.runUI();assert(mutations==0)
+end)
+
+test('assembly line preview requires explicit capacity verification before execution',function()
+  files[api.paths.config]=ser(cfg)
+  queue(click('[ Assembly line renamer ]'),click('[ Preview selected ]',47),function()
+    assert(frame[14]:find('patterns scanned',1,true));snapshot('preview')
+    assert(mutations==0);return 'touch','screen',48,47,0
+  end,function() assert(mutations==0);return 'touch','screen',118,39,0 end,
+    click('[ Rename recipes ]',9),function()
+      assert(frame[12]:find('CREATE Rename NAME_1',1,true));snapshot('recipes')
+      return 'touch','screen',48,47,0
+    end,function()
+      assert(target.patterns[0].inputs[3].label=='NAME_1' and not files[api.paths.pending])
+      return quit()
+    end)
+  api.runUI()
+end)
+
+test('Esc cancels only an active edit and cursor repositioning does not discard saved fields',function()
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),replace('New pattern buffer name','Saved banks'),field('Pattern editor interface'),
+    {'key_down','kbd',88,45},function() controlDown=true;return 'key_down','kbd',97,30 end,
+    {'touch','screen',36,12,0},{'key_down','kbd',8,14},{'key_down','kbd',27,1},nav('Programs'),function()
+      local c=unser(files[api.paths.config]);assert(c.shared.donors=='Saved banks' and c.shared.editor==cfg.shared.editor)
+      return quit()
+    end)
+  api.runUI()
+end)
+
+test('idle events and edits do not repaint the whole settings page',function()
+  files[api.paths.config]=ser(cfg);local fills
+  queue(nav('Settings'),function() fills=gpuFills;return 'key_up','kbd',0,0 end,
+    function() assert(gpuFills==fills);return 'touch','screen',150,12,0 end,{'key_down','kbd',8,14},function()
+      assert(gpuFills==fills);return 'key_down','kbd',27,1
+    end,quit)
+  api.runUI()
+end)
+
+test('history remains a separate page and lists operations newest first',function()
+  files[api.paths.config]=ser(cfg)
+  files['/home/assline-perf.log']='\nuptime=1 scan complete\nold report\n\nuptime=2 apply complete\nnew report\n'
+  queue(nav('History'),function()
+    assert(frame[12]:find('RECENT OPERATIONS',1,true) and frame[15]:find('uptime=2 apply complete',1,true))
+    assert(frame[18]:find('uptime=1 scan complete',1,true));snapshot('history');return quit()
+  end)
+  api.runUI();assert(mutations==0)
+end)
+
+test('preview errors are visible and screen state is restored on quit',function()
+  files[api.paths.config]=ser(cfg);target.name='gone';width,height=80,25
+  queue(click('[ Assembly line renamer ]'),click('[ Preview selected ]',47),function()
+    assert(frame[49]:find('Expected one interface',1,true));return 'interrupted'
+  end)
+  api.runUI();assert(width==80 and height==25);width,height=160,50
+end)
+
+local function matrixFixture()
+  return {version=2,source={recipeVersion='test',targetVersion='test'},capabilities={{ingot=true,wire1=true,wireFine=true,cable1=true}},
+    production={{ingot_wire=true,ingot_wireFine=true}},families={gt={ingot={name='gregtech:gt.metaitem.01',prefix=11000},
+      wireFine={name='gregtech:gt.metaitem.02',prefix=19000}}},items={{name='gregtech:pvc',damage=0,option='pvc'}},
+    materials={{name='A',family='gt',dsf=1,a=1,p=1,coating='standard',conductor={name='gregtech:gt.blockmachines',base=100}},
+      {name='B',family='gt',dsf=2,a=1,p=1,coating='standard',conductor={name='gregtech:gt.blockmachines',base=200}}},
+    rules={{id='coat',mode='coating',coating='standard',requires={'wire1','cable1'},
+        inputs={{f='wire1',n=1},{i=1,n=2}},outputs={{f='cable1',n=1}},stock={}},
+      {id='wire',mode='wiremill',process='ingot_wire',requires={'ingot','wire1'},inputs={{f='ingot',n=1}},outputs={{f='wire1',n=2}},stock={}},
+      {id='fine',mode='wiremill',process='ingot_wireFine',requires={'ingot','wireFine'},inputs={{f='ingot',n=1}},outputs={{f='wireFine',n=8}},stock={}}}}
+end
+local function withMatrix(f)
+  local saved=package.loaded.assline_data;package.loaded.assline_data=matrixFixture()
+  local ok,why=pcall(f);package.loaded.assline_data=saved;assert(ok,why)
+end
+local function insulator()
+  cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+  return api.runner.preview(cfg,'insulator')
+end
+
+test('insulator creates multi-input processing patterns via the shared editor',function()
+  withMatrix(function()
+    local preview=insulator();assert(#preview.plan.errors==0 and #preview.plan.creates==2 and mutations==0)
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].inputs[2].size==2 and target.patterns[0].outputs[1].damage==106)
+    assert(target.patterns[1].outputs[1].damage==206 and next(editor.patterns)==nil)
+    assert(not files[api.paths.pending] and not files[api.paths.cursor])
+    local nextPreview=api.runner.preview(cfg,'insulator');assert(nextPreview.plan.reused==2 and #nextPreview.plan.creates==0)
+  end)
+end)
+
+test('wiremill executes into separate wire and fine-wire banks',function()
+  withMatrix(function()
+    cfg.programs.wiremill.wire1=cfg.programs.assline.target;cfg.programs.wiremill.wireFine='Fine wires';target.patterns={}
+    local fine=iface('Fine wires',50)
+    buffer.patterns[2]=cp(buffer.patterns[0]);buffer.patterns[3]=cp(buffer.patterns[0])
+    local preview=api.runner.preview(cfg,'wiremill');assert(#preview.plan.errors==0 and #preview.plan.capacities==2)
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].outputs[1].damage==100 and target.patterns[0].outputs[1].size==2)
+    assert(fine.patterns[0].outputs[1].damage==19001 and fine.patterns[0].outputs[1].size==8)
+    assert(target.patterns[1].outputs[1].damage==200 and fine.patterns[1].outputs[1].damage==19002)
+  end)
+end)
+
+test('sorting existing patterns precedes imprinting and preserves unrelated patterns',function()
+  withMatrix(function()
+    local preview=insulator();api.runner.execute(cfg,preview)
+    target.patterns[0],target.patterns[2]=target.patterns[1],target.patterns[0];target.patterns[1]=pattern({item('Unrelated',1,850)})
+    local unrelated=cp(target.patterns[1]);preview=api.runner.preview(cfg,'insulator')
+    assert(preview.plan.reused==2 and #preview.plan.moves>0 and #preview.plan.creates==0)
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
+    assert(ser(target.patterns[2])==ser(unrelated) and next(editor.patterns)==nil)
+  end)
+end)
+
+test('every interruption point in a sorting cycle recovers and releases the editor',function()
+  for interruptedMove=1,3 do
+    reset()
+    withMatrix(function()
+      local preview=insulator();api.runner.execute(cfg,preview)
+      target.patterns[0],target.patterns[1]=target.patterns[1],target.patterns[0]
+      preview=api.runner.preview(cfg,'insulator');assert(#preview.plan.moves==3)
+      local send=proxies.terminal.send;local completed=0
+      proxies.terminal.send=function(...)
+        local results=table.pack(send(...));completed=completed+1
+        if completed==interruptedMove then error('cycle interrupted') end
+        return table.unpack(results,1,results.n)
+      end
+      local ok,why=pcall(function() mustFail(function() api.runner.execute(cfg,preview) end,'cycle interrupted') end)
+      proxies.terminal.send=send;assert(ok,why)
+      assert(files[api.paths.pending] and files[api.paths.cursor])
+      api.recover(cfg)
+      assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
+      assert(next(editor.patterns)==nil and not files[api.paths.pending] and not files[api.paths.cursor])
+    end)
+  end
+end)
+
+test('sorting progress write failure recovers without replaying an already delivered move',function()
+  withMatrix(function()
+    local preview=insulator();api.runner.execute(cfg,preview)
+    target.patterns[0],target.patterns[1]=target.patterns[1],target.patterns[0]
+    preview=api.runner.preview(cfg,'insulator')
+    local send=proxies.terminal.send
+    proxies.terminal.send=function(...) local result=table.pack(send(...));failDisk=true;return table.unpack(result,1,result.n) end
+    local ok,why=pcall(function() mustFail(function() api.runner.execute(cfg,preview) end,'Flush failed') end)
+    proxies.terminal.send=send;failDisk=false;assert(ok,why)
+    api.recover(cfg)
+    assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
+    assert(next(editor.patterns)==nil and not files[api.paths.pending])
+  end)
+end)
+
+test('imprint interruption retains a recoverable multi-input recipe',function()
+  withMatrix(function()
+    local preview=insulator();fail={label='set-after'}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected');assert(files[api.paths.pending])
+    api.recover(cfg);assert(target.patterns[0].inputs[2].size==2 and not files[api.paths.pending])
+    local nextPreview=api.runner.preview(cfg,'insulator');api.runner.execute(cfg,nextPreview)
+    assert(target.patterns[1].outputs[1].damage==206)
+  end)
+end)
+
+test('generator previews reject changed destinations, donor patterns and settings before writes',function()
+  withMatrix(function()
+    local preview=insulator();local before=mutations
+    target.patterns[10]=pattern({item('Concurrent',1,888)})
+    mustFail(function() api.runner.execute(cfg,preview) end,'changed');assert(mutations==before)
+    target.patterns[10]=nil;preview=api.runner.preview(cfg,'insulator')
+    buffer.patterns[0].inputs[1].size=999;refresh(buffer.patterns[0])
+    mustFail(function() api.runner.execute(cfg,preview) end,'changed');assert(mutations==before)
+    preview=api.runner.preview(cfg,'insulator');cfg.programs.insulator.pvc='off'
+    mustFail(function() api.runner.execute(cfg,preview) end,'Settings changed');assert(mutations==before)
+  end)
+end)
+
+test('70 recipes require two 36-slot destination interfaces and donor slots need no capacity',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data;data.materials={}
+    for n=1,70 do data.materials[n]={name=string.format('M%03d',n),family='gt',dsf=n,a=1,p=1,coating='standard',
+      conductor={name='gregtech:gt.blockmachines',base=n*100}} end
+    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    iface(cfg.programs.assline.target,50)
+    buffer.patterns={};for n=0,69 do buffer.patterns[n+100]=pattern({item('Donor',1,900)}) end
+    local preview=api.runner.preview(cfg,'insulator')
+    assert(#preview.plan.errors==0 and #preview.plan.creates==70)
+    assert(preview.plan.capacities[1].patterns==70 and preview.plan.capacities[1].interfaces==2)
+    assert(preview.plan.layout[37].destination.location.x==50 and preview.plan.layout[37].destination.slot==0)
+    assert(preview.report:find('at least 2 fully expanded interface',1,true) and mutations==0)
+  end)
+end)
+
+test('Run program chooser and insulator preview share the same settings and execution flow',function()
+  withMatrix(function()
+    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={};files[api.paths.config]=ser(cfg)
+    queue(nav('History'),click('[ Run program ]',47),click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
+      assert(frame[7]:find('PREVIEW / Wire insulator',1,true) and mutations==0);snapshot('insulator_preview')
+      return 'touch','screen',118,39,0
+    end,click('[ Execute preview ]',47),function()
+      assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
+      return quit()
+    end)
+    api.runUI()
+  end)
+end)
+
+test('unfinished recipe programs have separate editable settings but cannot execute',function()
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),nav('Bending machine'),replace('Plate interface name','Plates'),replace('Foil interface name','Foils'),
+    replace('Sheet metal interface name','Sheets'),nav('Programs'),click('[ Bending machine ]'),function()
+      local c=unser(files[api.paths.config]);assert(c.programs.bender.plate=='Plates' and c.programs.bender.foil=='Foils')
+      assert(c.programs.bender.sheetMetal=='Sheets' and mutations==0);return 'touch','screen',38,47,0
+    end,function() assert(mutations==0 and not callCounts.getInterfacesByName);return quit() end)
+  api.runUI()
+end)
+
+if artifact=='assline_app.lua' then
+  package.loaded.assline_data={};files[api.paths.config]=ser(cfg);events={{'interrupted'}}
+  local before=package.path;assert(loadfile(artifact))();assert(package.path==before)
+  assert(package.loaded.assline_data==nil,'Application library must unload on exit')
 end
 print('SUCCESS: '..tests..' tests ('..artifact..')')

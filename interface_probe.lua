@@ -9,8 +9,11 @@ if f then
   local ok,value=pcall(serialization.unserialize,raw or '')
   if ok and type(value)=='table' then config=value end
 end
-local target=args[1] or config.target or 'Advanced Assline (1)'
-local buffer=config.buffer or 'OC Buffer'
+local shared=config.shared or {}
+local assline=config.programs and config.programs.assline or {}
+local target=args[1] or assline.target or config.target or 'Advanced Assline (1)'
+local editor=shared.editor or config.makerWorkspace or config.buffer or 'OC Pattern Editor'
+local buffer=shared.donors or config.makerDonors or 'OC Pattern Buffer'
 local out=assert(io.open('/home/interface_probe.txt','w'))
 local function log(s)
   s=tostring(s); assert(out:write(s..'\n')); print(s)
@@ -45,8 +48,9 @@ local function exact(p,name)
 end
 log('AE INTERFACE VISIBILITY PROBE v2 (metadata only; read only)')
 log('Target: '..quote(target))
-log('Buffer: '..quote(buffer))
-log('Configured terminal prefix: '..quote(config.terminalAddress or ''))
+log('Pattern editor: '..quote(editor))
+log('New pattern buffers: '..quote(buffer))
+log('Configured terminal prefix: '..quote(shared.terminalAddress or config.terminalAddress or ''))
 local count=0
 for address,kind in component.list('me_interface_terminal',true) do
   if kind=='me_interface_terminal' then
@@ -54,7 +58,7 @@ for address,kind in component.list('me_interface_terminal',true) do
     local ok,err=pcall(function()
       local p=component.proxy(address)
       log('\nTERMINAL '..address)
-      exact(p,target); exact(p,buffer)
+      exact(p,target);exact(p,editor);if buffer~=editor then exact(p,buffer) end
       log('ALL API-VISIBLE INTERFACES (exact names, no pattern NBT):')
       local total=0
       local result=p.getInterfaces()
