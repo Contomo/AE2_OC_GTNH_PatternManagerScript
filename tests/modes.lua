@@ -154,4 +154,23 @@ test('all five polymer choices use scraped batch sizes and retain one pattern pe
   end end
 end)
 
+test('multipliers scale every encoded ingredient without changing recipe eligibility or proportions',function()
+  for _,mode in ipairs({'wiremill','coating'}) do
+    local options={polymer='pvc',multiplier=1,sources=mode=='wiremill' and {wire1='ingot',wireFine='ingot'} or nil}
+    local base=M.compile(data,mode,options);options.multiplier=256
+    local scaled=M.compile(data,mode,options)
+    assert(#base.recipes==#scaled.recipes and scaled.policy.multiplier==256)
+    for n,r in ipairs(base.recipes) do
+      assert(P.recipeKey(r)==P.recipeKey(scaled.recipes[n]))
+      for _,which in ipairs({'inputs','outputs'}) do
+        for index,s in ipairs(r[which]) do assert(scaled.recipes[n][which][index].size==s.size*256) end
+      end
+    end
+  end
+  for _,value in ipairs({0,-1,1.5,2147483647}) do
+    local ok=pcall(M.compile,data,'coating',{polymer='pvc',multiplier=value})
+    assert(not ok,'invalid/overflowing multiplier accepted')
+  end
+end)
+
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

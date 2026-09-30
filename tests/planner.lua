@@ -23,9 +23,11 @@ local function simulate(p,s)
   -- Sorting must already have vacated every reserved position before imprinting.
   for _,c in ipairs(p.creates) do assert(not state[addr(c.to)],'creation slot not freed before imprinting') end
   for _,c in ipairs(p.creates) do
-    local d=assert(state[addr(c.from)]);assert(d.kind==c.kind and d.donor and d.fingerprint==c.fingerprint)
+    local source
+    for key,d in pairs(state) do if d.kind==c.kind and d.donor then source=key;break end end
+    assert(source,'simulation needs a matching donor')
     assert(not state[addr(c.workspace)]);assert(not state[addr(c.to)])
-    state[addr(c.from)]=nil;state[addr(c.to)]=pat(c.key,c.kind)
+    state[source]=nil;state[addr(c.to)]=pat(c.key,c.kind)
   end
   for _,l in ipairs(p.layout) do assert(state[addr(l.destination)].recipeKey==l.key,'wrong final layout') end
   for _,u in ipairs(p.preserved) do assert(state[addr(u.to)].fingerprint==u.fingerprint,'foreign pattern lost') end
@@ -75,12 +77,23 @@ test('twenty remote donor banks count processing and crafting separately',functi
   local r={recipes={}};for i=1,15 do r.recipes[#r.recipes+1]=recipe('p'..i);r.recipes[#r.recipes+1]=recipe('c'..i,'crafting') end
   local p=P.plan(r,s);assert(p.available.crafting==20 and p.available.processing==20 and #p.creates==30);simulate(p,s)
 end)
-test('wrong donor kind, non-disposable patterns and full workspace block',function()
+test('wrong donor kind warns; a full workspace still blocks',function()
   local s=fixture({},3);s.interfaces[2].patterns[0].donor=false
   local r={recipes={recipe('A')}};local p=P.plan(r,s)
-  assert(#p.errors>0 and #p.moves==0 and #p.creates==0)
+  assert(#p.errors==0 and #p.warnings==1 and #p.creates==1)
   s.interfaces[2].patterns[0].donor=true;s.interfaces[3].patterns[0]=pat('busy')
   p=P.plan(r,s);assert(#p.errors>0 and #p.creates==0)
+end)
+
+test('donor refills and replacement banks do not invalidate destinations',function()
+  local s=fixture({},3)
+  local r={recipes={recipe('A')}}
+  s.interfaces[2].patterns={}
+  local p=P.plan(r,s)
+  assert(#p.errors==0 and #p.warnings==1)
+  s.interfaces[2]=inv('OC Buffer',40,'donor',36,{[5]=pat('new','processing',true)})
+  local fresh=P.revalidate(r,s,p)
+  assert(#fresh.warnings==0 and fresh.available.processing==1)
 end)
 test('unrelated and duplicate patterns consume capacity',function()
   local s=fixture({[0]=pat('A'),[1]=pat('A'),[2]=pat('foreign')},3)
@@ -114,6 +127,33 @@ test('recipe identity retains grid positions, quantities, NBT and flags',functio
   r.inputs={[1]=a};a.tag='custom';assert(P.recipeKey(r)~=grid);a.tag=nil;r.substitute=true;assert(P.recipeKey(r)~=grid)
   r.inputs[1].size=2;fails(function() P.recipeKey(r) end,'individual items')
 end)
+test('processing proportions include every input and output, merge duplicates and preserve metadata',function()
+  local r={kind='processing',inputs={{type='item',name='wire',damage=0,size=4},{type='item',name='pvc',damage=0,size=1}},
+    outputs={{type='item',name='cable',damage=0,size=4},{type='item',name='byproduct',damage=0,size=2}}}
+  local key,batch=P.recipeKey(r)
+  for _,which in ipairs({'inputs','outputs'}) do for _,s in ipairs(r[which]) do s.size=s.size*256 end end
+  local scaled,divisor=P.recipeKey(r)
+  assert(scaled==key and batch==1 and divisor==256)
+  r.inputs[1].size=512;r.inputs[3]=cp(r.inputs[1]);assert(P.recipeKey(r)==key)
+  r.inputs[2].size=255;assert(P.recipeKey(r)~=key);r.inputs[2].size=256
+  r.outputs[2].size=511;assert(P.recipeKey(r)~=key);r.outputs[2].size=512
+  r.inputs[1].tag='custom';assert(P.recipeKey(r)~=key);r.inputs[1].tag=nil
+  r.substitute=true;assert(P.recipeKey(r)~=key)
+end)
+
+test('resizing requires editor space but no donor, and prefers exact batches among duplicates',function()
+  local s=fixture({[0]=pat('A','processing',true)},2)
+  s.interfaces[1].patterns[0].scale=256
+  s.interfaces[2].patterns={}
+  local r={recipes={{key='A',scale=1,kind='processing',destination='Target'}}}
+  local p=P.plan(r,s)
+  assert(p.reused==1 and p.resizeCount==1 and #p.resizes==1 and #p.creates==0 and #p.warnings==0)
+  s.interfaces[3].patterns[0]=pat('busy');assert(#P.plan(r,s).errors==1)
+  s.interfaces[3].patterns={}
+  s.interfaces[1].patterns[1]=pat('A','processing',true);s.interfaces[1].patterns[1].scale=1
+  p=P.plan(r,s);assert(p.resizeCount==0 and #p.preserved==1 and p.preserved[1].from.slot==0)
+end)
+
 test('malformed sparse manifests and cancellation cannot return partial operations',function()
   local s=fixture({},3)
   fails(function() P.plan({recipes={[1]=recipe('A'),[3]=recipe('B')}},s) end,'contiguous')

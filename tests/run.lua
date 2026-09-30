@@ -357,9 +357,9 @@ test('missing destinations block all changes',function()
   dest1.name='unrelated';local p=api.scan(cfg);assert(#p.errors>0)
   mustFail(function() api.apply(cfg,p) end,'blockers');assert(mutations==0)
 end)
-test('full destination and insufficient donors are preview blockers',function()
+test('full destination blocks; insufficient donors only warn',function()
   for i=0,35 do dest1.patterns[i]=pattern({item('x',1,800)}) end
-  buffer.patterns={};local p=api.scan(cfg);assert(#p.errors>=3 and mutations==0)
+  buffer.patterns={};local p=api.scan(cfg);assert(#p.errors>0 and #p.warnings==1 and mutations==0)
 end)
 test('multiple rename interfaces with same name allocate deterministically',function()
   for i=0,35 do dest1.patterns[i]=pattern({item('x',1,800)}) end
@@ -375,7 +375,7 @@ end)
 test('crafting donors and crafting targets skipped',function()
   buffer.patterns[0].isCraftable=true;buffer.patterns[1].isCraftable=true
   target.patterns[2]=pattern({item(),item()},nil,true)
-  local p=api.scan(cfg);assert(p.skipped==1 and #p.errors==2)
+  local p=api.scan(cfg);assert(p.skipped==1 and #p.errors==0 and #p.warnings==1)
 end)
 test('multipart buffer side argument and callable proxy methods',function()
   editor.side=3;methodsAsTables=true;local p=api.scan(cfg);api.apply(cfg,p);assert(#api.scan(cfg).changes==0)
@@ -500,9 +500,9 @@ end)
 test('maker uses only crafting donors for crafting recipes',function()
   local wanted=pattern({item('One',1,555),item('Two',1,555)},{item('Bundled',1,666)},true)
   target.patterns={};iface('Editor',8);local prof=manifestFor(wanted)
-  local p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor});assert(#p.errors>0 and p.required.crafting==1)
+  local p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor});assert(#p.errors==0 and #p.warnings==1 and p.required.crafting==1)
   buffer.patterns[8]=pattern({item('Craft ingredient',1,700)},{item('Craft output',1,701)},true)
-  p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor});assert(#p.errors==0 and p.creates[1].from.slot==8 and mutations==0)
+  p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,donors=cfg.shared.donors,workspace=cfg.shared.editor});assert(#p.errors==0 and p.available.crafting==1 and #p.warnings==0 and mutations==0)
 end)
 test('maker stops on hidden ingredient NBT instead of treating it as ordinary',function()
   local prof=manifestFor(pattern({item('Input',1,555)},{item('Output',1,666)}))
@@ -540,7 +540,7 @@ test('assembly line uses every remote donor bank and never requires a direct don
   iface(cfg.shared.donors,30,{[35]=pattern({item('Donor A',1,800)})})
   iface(cfg.shared.donors,31,{[100]=pattern({item('Donor B',1,801)})})
   local p=api.scan(cfg);assert(p.available==2 and #p.errors==0)
-  assert(p.recipes[1].donor.from.slot==35 and p.recipes[2].donor.from.slot==100)
+  assert(p.available==2)
   api.apply(cfg,p);assert(#api.scan(cfg).changes==0 and next(editor.patterns)==nil)
 end)
 
@@ -699,6 +699,94 @@ local function insulator()
   return api.runner.preview(cfg,'insulator')
 end
 
+test('generator starts short, waits between patterns and discovers a newly filled remote bank',function()
+  withMatrix(function()
+    buffer.patterns[1]=nil
+    local preview=insulator()
+    assert(#preview.plan.errors==0 and #preview.plan.warnings==1)
+    local waits=0
+    api.runner.execute(cfg,preview,function(message)
+      if message:find('Waiting for processing donors',1,true) then
+        waits=waits+1
+        assert(target.patterns[0] and not target.patterns[1])
+        assert(not files[api.paths.pending] and next(editor.patterns)==nil)
+        pollEvents[1]=function()
+          iface(cfg.shared.donors,91,{[100]=pattern({item('Refill',1,800)})})
+        end
+      end
+    end)
+    assert(waits==1 and sleeps>0 and target.patterns[1])
+    assert(api.runner.preview(cfg,'insulator').plan.reused==2)
+  end)
+end)
+
+test('donors can be replaced after preview without replanning destinations',function()
+  withMatrix(function()
+    buffer.patterns={}
+    local preview=insulator()
+    assert(#preview.plan.errors==0 and preview.plan.available.processing==0)
+    buffer.patterns[5]=pattern({item('New A',1,800)})
+    buffer.patterns[9]=pattern({item('New B',1,801)})
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0] and target.patterns[1] and next(buffer.patterns)==nil)
+  end)
+end)
+
+test('Escape while waiting leaves completed patterns installed and no pending operation',function()
+  withMatrix(function()
+    buffer.patterns[1]=nil
+    local preview=insulator()
+    mustFail(function()
+      api.runner.execute(cfg,preview,function(message)
+        if message:find('Waiting for processing donors',1,true) then
+          waitEvent={'key_down','kbd',27,1}
+        end
+      end)
+    end,'cancelled')
+    assert(target.patterns[0] and not target.patterns[1])
+    assert(not files[api.paths.pending] and next(editor.patterns)==nil)
+    preview=api.runner.preview(cfg,'insulator')
+    assert(preview.plan.reused==1 and #preview.plan.creates==1)
+  end)
+end)
+
+test('assembly line shares refill waiting and ignores crafting refills',function()
+  buffer.patterns={}
+  local plan=api.scan(cfg)
+  assert(#plan.errors==0 and #plan.warnings==1)
+  local waits=0
+  api.apply(cfg,plan,function(message)
+    if message:find('Waiting for processing donors',1,true) then
+      waits=waits+1
+      assert(not files[api.paths.pending])
+      pollEvents[1]=function()
+        if waits==1 then buffer.patterns[8]=pattern({item('Crafting',1,800)},nil,true)
+        else buffer.patterns[0]=pattern({item('Processing',1,801)}) end
+      end
+    end
+  end)
+  assert(waits==3 and buffer.patterns[8].isCraftable)
+  assert(#api.scan(cfg).changes==0 and next(editor.patterns)==nil)
+end)
+
+test('destination filled during refill wait is never overwritten',function()
+  withMatrix(function()
+    buffer.patterns={}
+    local preview=insulator()
+    mustFail(function()
+      api.runner.execute(cfg,preview,function(message)
+        if message:find('Waiting for processing donors',1,true) then
+          pollEvents[1]=function()
+            target.patterns[0]=pattern({item('Concurrent',1,900)})
+            buffer.patterns[0]=pattern({item('Refill',1,800)})
+          end
+        end
+      end)
+    end,'Destination slot is occupied')
+    assert(mutations==0 and target.patterns[0].inputs[1].damage==900)
+  end)
+end)
+
 test('insulator creates multi-input processing patterns via the shared editor',function()
   withMatrix(function()
     local preview=insulator();assert(#preview.plan.errors==0 and #preview.plan.creates==2 and mutations==0)
@@ -783,14 +871,12 @@ test('imprint interruption retains a recoverable multi-input recipe',function()
   end)
 end)
 
-test('generator previews reject changed destinations, donor patterns and settings before writes',function()
+test('generator previews reject changed destinations and settings before writes',function()
   withMatrix(function()
     local preview=insulator();local before=mutations
     target.patterns[10]=pattern({item('Concurrent',1,888)})
     mustFail(function() api.runner.execute(cfg,preview) end,'changed');assert(mutations==before)
     target.patterns[10]=nil;preview=api.runner.preview(cfg,'insulator')
-    buffer.patterns[0].inputs[1].size=999;refresh(buffer.patterns[0])
-    mustFail(function() api.runner.execute(cfg,preview) end,'changed');assert(mutations==before)
     preview=api.runner.preview(cfg,'insulator');cfg.programs.insulator.polymer='none'
     mustFail(function() api.runner.execute(cfg,preview) end,'Settings changed');assert(mutations==before)
   end)
@@ -820,6 +906,123 @@ test('Run program chooser and insulator preview share the same settings and exec
       return 'touch','screen',118,39,0
     end,click('[ Execute preview ]',47),function()
       assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
+      return quit()
+    end)
+    api.runUI()
+  end)
+end)
+
+test('wiremill reuses 256 to 512 patterns, sorts and resizes them without disposable donors',function()
+  withMatrix(function()
+    cfg.programs.wiremill.wire1=cfg.programs.assline.target;cfg.programs.wiremill.wireFine='Fine wires'
+    cfg.programs.wiremill.multiplier='256';target.patterns={}
+    local fine=iface('Fine wires',50)
+    buffer.patterns[2]=cp(buffer.patterns[0]);buffer.patterns[3]=cp(buffer.patterns[0])
+    api.runner.execute(cfg,api.runner.preview(cfg,'wiremill'))
+    assert(target.patterns[0].inputs[1].size==256 and target.patterns[0].outputs[1].size==512)
+    assert(fine.patterns[0].outputs[1].size==2048 and next(buffer.patterns)==nil)
+    cfg.programs.wiremill.multiplier='1'
+    target.patterns[0],target.patterns[1]=target.patterns[1],target.patterns[0]
+    local preview=api.runner.preview(cfg,'wiremill')
+    assert(preview.plan.reused==4 and preview.plan.resizeCount==4 and #preview.plan.creates==0)
+    assert(#preview.plan.moves==3 and #preview.plan.errors==0 and #preview.plan.warnings==0)
+    assert(preview.report:find('RESIZE',1,true) and preview.report:find('1 / 256',1,true))
+    files[api.paths.config]=ser(cfg)
+    queue(nav('Programs'),click('[ Wiremill ]'),click('[ Preview selected ]',47),function()
+      snapshot('maker_resize_preview');return quit()
+    end)
+    api.runUI()
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].inputs[1].size==1 and target.patterns[0].outputs[1].size==2)
+    assert(fine.patterns[0].outputs[1].size==8 and next(buffer.patterns)==nil)
+    preview=api.runner.preview(cfg,'wiremill')
+    assert(preview.plan.reused==4 and preview.plan.resizeCount==0 and #preview.plan.creates==0)
+  end)
+end)
+
+test('insulator resizes all inputs including polymer and PPS to the configured multiplier',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    data.items[2]={name='gregtech:pps',damage=0,option='pps'}
+    data.rules[1].inputs[3]={i=2,n=3}
+    api.runner.execute(cfg,insulator());buffer.patterns={}
+    cfg.programs.insulator.multiplier='7'
+    local preview=api.runner.preview(cfg,'insulator')
+    assert(preview.plan.reused==2 and preview.plan.resizeCount==2 and #preview.plan.creates==0)
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].inputs[1].size==7 and target.patterns[0].inputs[2].size==14)
+    assert(target.patterns[1].inputs[3].size==21 and target.patterns[1].outputs[1].size==7)
+    assert(api.runner.preview(cfg,'insulator').plan.resizeCount==0)
+    target.patterns[1].inputs[3].size=20;refresh(target.patterns[1])
+    preview=api.runner.preview(cfg,'insulator')
+    assert(preview.plan.reused==1 and #preview.plan.creates==1 and #preview.plan.preserved==1)
+  end)
+end)
+
+test('interrupted resizing recovers the same ultimate pattern and a fresh preview resumes remaining work',function()
+  for _,stage in ipairs({'send-after','set-after'}) do
+    reset()
+    withMatrix(function()
+      api.runner.execute(cfg,insulator());buffer.patterns={}
+      local p=target.patterns[0]
+      p.name='appliedenergistics2:item.ItemEncodedUltimatePattern'
+      local root=unser(p.tag);root.__value.crafting=nil;p.tag=ser(root)
+      cfg.programs.insulator.multiplier='9'
+      local preview=api.runner.preview(cfg,'insulator');fail={label=stage}
+      mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+      assert(files[api.paths.pending]);api.recover(cfg)
+      assert(target.patterns[0].name=='appliedenergistics2:item.ItemEncodedUltimatePattern')
+      assert(target.patterns[0].outputs[1].size==9 and not files[api.paths.pending])
+      assert(unser(target.patterns[0].tag).__value.preserved.__value==42)
+      preview=api.runner.preview(cfg,'insulator')
+      assert(preview.plan.reused==2 and preview.plan.resizeCount==1)
+      api.runner.execute(cfg,preview);assert(target.patterns[1].outputs[1].size==9)
+    end)
+  end
+end)
+
+test('multiplier settings default on migration, reject fractions and stay separate per program',function()
+  local old=cp(cfg);old.programs.wiremill.multiplier=nil;old.programs.insulator.multiplier=nil
+  local migrated=api.config.migrate(old)
+  assert(migrated.programs.wiremill.multiplier=='1' and migrated.programs.insulator.multiplier=='1')
+  migrated.programs.wiremill.multiplier='0.5'
+  mustFail(function() api.config.validate(migrated) end,'positive whole number')
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),nav('Wiremill'),replace('Pattern multiplier','256'),nav('Wire insulator'),
+    replace('Pattern multiplier','4'),function()
+      local c=unser(files[api.paths.config])
+      assert(c.programs.wiremill.multiplier=='256' and c.programs.insulator.multiplier=='4')
+      snapshot('maker_multiplier_settings');return quit()
+    end)
+  api.runUI()
+end)
+
+test('shortage preview allows Execute and the UI Cancel button stops refill waiting',function()
+  withMatrix(function()
+    cfg.programs.insulator.destination=cfg.programs.assline.target
+    target.patterns={};buffer.patterns={};files[api.paths.config]=ser(cfg)
+    queue(nav('Programs'),click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
+      assert(((frame[22] or '')..(frame[23] or '')..(frame[24] or '')):find('wait for refills.',1,true))
+      snapshot('maker_refill_preview')
+      return 'touch','screen',118,39,0
+    end,function()
+      local polls=0
+      local function cancelWhenWaiting()
+        polls=polls+1
+        assert(polls<20,'refill wait never became visible')
+        if not (frame[49] or ''):find('Waiting for processing donors',1,true) then
+          pollEvents[1]=cancelWhenWaiting
+          return
+        end
+        assert(not files[api.paths.pending] and mutations==0)
+        snapshot('maker_refill_wait')
+        return click('[ Cancel ]',47)()
+      end
+      pollEvents={cancelWhenWaiting}
+      return click('[ Execute preview ]',47)()
+    end,function()
+      assert((frame[49] or ''):find('Work cancelled',1,true))
+      assert(not files[api.paths.pending] and mutations==0)
       return quit()
     end)
     api.runUI()

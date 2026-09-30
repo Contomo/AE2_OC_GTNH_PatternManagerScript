@@ -1,2 +1,4 @@
-if ...=='--test' then return C end
+if ... == '--test' then
+  return C
+end
 runUI()

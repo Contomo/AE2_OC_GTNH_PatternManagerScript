@@ -137,10 +137,15 @@ The build embeds each service once; pure tests load the same sources as modules.
 The scanner supplies compact pattern fingerprints and recipe identities. The
 planner orders interfaces by dimension/x/y/z/side, then slots from zero. It reuses
 matching patterns, reserves foreign/duplicate patterns after the requested layout,
-checks the entire capacity and donor budget, and returns no operations on a
-blocked plan. It sorts existing patterns before proposing creations; permutation
+checks the entire capacity and reports the donor budget. Capacity errors block
+execution; donor shortages warn and execution waits for refills as needed.
+It returns no operations on a blocked plan. It sorts existing patterns before proposing creations; permutation
 cycles use the empty workspace. Stale fingerprints, capacities, source data,
 external supplies and mode options invalidate a reviewed plan.
+Donor contents are live supply and can change after preview. Both executors use
+the shared donor pool in `src/20_apply.lua`; refill waits use the existing
+cooperative event handling. See [SOURCE_MAP.md](SOURCE_MAP.md) for source/output
+ownership and the limits of the simulated tests.
 
 Next stages are additional verified **LATEX**, **combining**, bending and
 fluid-shaping rules. Combining can use the requested 2?1, 4?1, 8?1, 4+8 and

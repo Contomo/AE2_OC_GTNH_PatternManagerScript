@@ -10,6 +10,7 @@ renaming, wire insulation, and wiremill patterns for 1x wire and fine wire.
 Navigation is on the left; Scan, Execute, Recover and Quit are in the bottom row.
 Settings has shared interfaces/hardware and a separate section for each program.
 [Program architecture and recipe matrix](PATTERN_MAKER.md).
+[Source files, generated outputs and shared services](SOURCE_MAP.md).
 
 ## Machine setup
 
@@ -25,6 +26,10 @@ Settings has shared interfaces/hardware and a separate section for each program.
    disposable encoded processing patterns. All matching interfaces and all their
    occupied slots are scanned; no direct connection or slot-count setting is
    required for these banks. Crafting donors are counted separately.
+   A donor shortage is a warning: execution starts with the available processing
+   patterns, then waits for refills. Refill any matching terminal-visible buffer;
+   newly added matching banks are discovered too. Cancel/Escape stops the wait.
+   Completed work is retained and reused by the next preview.
 5. Configure destination names in **Settings**, under the appropriate program.
    All destination interfaces with a matching exact name participate. The editor
    and donor bank must have different names and must not overlap destinations.
@@ -35,6 +40,10 @@ Settings has shared interfaces/hardware and a separate section for each program.
 
 Wiremill selects one input route per output: both default to **Ingot**. Fine wire
 can instead use Rod or 1x wire. Only recipes present in the scrape are generated.
+Wiremill and the insulator each have a **Pattern multiplier** setting, default
+`1`. Enter a positive whole number: `256` makes a 1-ingot → 2-wire recipe request
+256 ingots and produce 512 wires. The multiplier applies to every encoded input
+and output in the selected recipe, including requested polymer/PPS.
 The insulator selects PVC pulp, small PVC pulp, PDMS pulp, small PDMS pulp, or
 nothing. PPS sheets have a separate toggle. Normal piles use the scraped
 four-cable batches; small piles and nothing use single-cable batches. Every
@@ -50,8 +59,15 @@ coverage. Buffer counts come from the terminal and include empty encoded
 processing patterns. Ultimate processing patterns are recognized even without a `crafting` NBT tag.
 Details explains rejected donors, including substitution or invalid-pattern flags.
 Unsupported tagged items are not donor patterns. Existing
-recipes compare actual item IDs, amounts, substitution flags and semantic NBT;
+processing recipes compare actual item IDs, input/output proportions, substitution flags and semantic NBT;
 missing and empty ingredient NBT are equivalent.
+Thus an existing 256 → 512 pattern matches a requested 1 → 2 recipe. It appears
+as **RESIZE** when its batch differs from the configured multiplier, and its
+existing pattern item is edited through the shared editor without using a donor.
+Patterns already at the requested batch appear as **REUSE**. A different yield,
+ingredient, ingredient NBT or substitution policy is still a different recipe.
+Normal PVC's base batch is 4 wires + 1 pulp → 4 cables; multiplier `2` gives
+8 wires + 2 pulp → 8 cables. The multiplier does not change the selected polymer.
 
 Wire combining and bending have their own settings sections, but their recipe
 rules are not implemented yet and their Preview button is disabled.
