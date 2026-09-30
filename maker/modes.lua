@@ -14,7 +14,19 @@ local aliases = {
   boltedCasing = 'casingBolted',
   reboltedCasing = 'casingRebolted',
 }
-local labels = { ingot = 'Ingot', stick = 'Rod', dust = 'Dust', wireFine = 'Fine wire' }
+local labels = {
+  ingot = 'Ingot',
+  stick = 'Rod',
+  dust = 'Dust',
+  wireFine = 'Fine wire',
+  plate = '1x Plate',
+  plateDouble = '2x Plate',
+  plateTriple = '3x Plate',
+  plateQuadruple = '4x Plate',
+  plateQuintuple = '5x Plate',
+  plateDense = 'Dense Plate',
+  foil = 'Foil',
+}
 local function formLabel(form)
   local kind, size = form:match('^(%a+)(%d+)$')
   if kind == 'wire' or kind == 'cable' then
@@ -111,7 +123,10 @@ function M.compile(data, mode, options, checkpoint)
     options.pdms = polymer ~= 'none'
   end
   U.check(data.version == 2, 'Unsupported material matrix')
-  U.check(mode == 'wiremill' or mode == 'coating', 'Mode has no verified recipe rules yet')
+  U.check(
+    mode == 'wiremill' or mode == 'coating' or mode == 'bender',
+    'Mode has no verified recipe rules yet'
+  )
   local manifest = {
     version = 1,
     source = U.clone(data.source),

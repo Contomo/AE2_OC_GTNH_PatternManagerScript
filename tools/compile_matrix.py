@@ -47,12 +47,55 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             key, _ = reverse[recipe['outputs'][0]['id']]
             if not any(e['id'] == 'gregtech:gt.metaitem.01@29631' for e in recipe['inputs']):
                 coating_standard.add(key)
+    bender_forms = {'plate', 'plateDouble', 'plateTriple', 'plateQuadruple',
+                    'plateQuintuple', 'plateDense', 'foil'}
+    def bender_route(recipe):
+        if recipe['machineType'] != 'Bending Machine':
+            return None
+        inputs = recipe['inputs']
+        consumed = [e for e in inputs if e.get('consumed', True)]
+        catalysts = [e for e in inputs if not e.get('consumed', True)]
+        if (len(recipe['outputs']) != 1 or len(inputs) != 2 or
+                len(consumed) != 1 or len(catalysts) != 1 or
+                consumed[0].get('kind') != 'item' or
+                catalysts[0].get('kind') != 'item' or
+                catalysts[0]['id'].split('@')[0] != 'gregtech:gt.integrated_circuit' or
+                catalysts[0]['amount'] != 1 or
+                recipe['outputs'][0].get('kind') != 'item'):
+            return None
+        source = reverse.get(consumed[0]['id'])
+        destination = reverse.get(recipe['outputs'][0]['id'])
+        if (not source or not destination or source[0] != destination[0] or
+                source[1] != 'ingot' or destination[1] not in bender_forms):
+            return None
+        return source[0], destination[1], consumed[0]['id']
+
+    # If both a canonical ingot and an alternate item are listed for the same
+    # material/output, keep the canonical route. If only the alternate exists,
+    # retain its actual descriptor as a resolver override.
+    bender_inputs = {}
+    for recipe in catalog['recipes']:
+        route = bender_route(recipe)
+        if route:
+            bender_inputs.setdefault(route[:2], set()).add(route[2])
     excluded = 0
     excluded_outputs = {}
     for recipe in sorted(catalog['recipes'], key=lambda r: r['id']):
-        mode = {'Wiremill': 'wiremill', 'Cable Coating': 'coating'}.get(recipe['machineType'])
+        mode = {'Wiremill': 'wiremill', 'Cable Coating': 'coating',
+                'Bending Machine': 'bender'}.get(recipe['machineType'])
         if not mode:
             continue
+        if mode == 'bender':
+            # The selected stage is ingot -> product with a stocked circuit.
+            # Other real bender recipes (plate -> multi-plate, springs, etc.)
+            # remain outside this mode rather than becoming inferred routes.
+            route = bender_route(recipe)
+            if not route:
+                continue
+            canonical_ingot = rows[route[0]]['_forms'].get('ingot')
+            alternatives = bender_inputs[route[:2]]
+            if canonical_ingot in alternatives and route[2] != canonical_ingot:
+                continue
         output = reverse.get(recipe['outputs'][0]['id'])
         if not output:
             excluded += 1
@@ -127,7 +170,11 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
     def rule_order(rule):
         form = rule['outputs'][0].get('f', '')
         match = re.fullmatch(r'(wire|cable)(1|2|4|8|12|16)', form)
-        return (0, int(match[2]), match[1], rule['id']) if match else (1, 0, form, rule['id'])
+        if match:
+            return (0, int(match[2]), match[1], rule['id'])
+        bender_order = ['plate', 'plateDouble', 'plateTriple', 'plateQuadruple',
+                        'plateQuintuple', 'plateDense', 'foil']
+        return (1, bender_order.index(form) if form in bender_order else 99, form, rule['id'])
     rules = sorted(rules.values(), key=rule_order)
     capabilities, cap_index, production, production_index = [], {}, [], {}
     for key, row in rows.items():

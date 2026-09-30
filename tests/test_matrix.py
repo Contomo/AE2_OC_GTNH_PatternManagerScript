@@ -39,6 +39,36 @@ class MatrixTests(unittest.TestCase):
         data = compile_matrix(catalog, registry)
         self.assertEqual([row['dsf'] for row in data['materials']], [30])
 
+    def test_bender_imports_only_ingot_routes_and_preserves_stocked_circuits(self):
+        catalog, registry = self.fixture()
+        catalog['recipes'] = []
+        prefixes = ['null'] * 30
+        for index, form in [(11, 'ingot'), (17, 'plate'), (18, 'plateDouble')]:
+            prefixes[index] = form
+        registry['prefixes']['gregtech:gt.metaitem.01'] = prefixes
+        def item(rid, amount=1, consumed=True):
+            return {'kind':'item','id':rid,'amount':amount,'consumed':consumed}
+        def recipe(name, suffix, input_form, input_amount, output_form, circuit):
+            indexes={'ingot':11000,'plate':17000,'plateDouble':18000}
+            return {'id':name,'machineType':'Bending Machine','inputs':[
+                item(f'gregtech:gt.metaitem.01@{indexes[input_form]+suffix}',input_amount),
+                item(f'gregtech:gt.integrated_circuit@{circuit}',consumed=False)],
+                'outputs':[item(f'gregtech:gt.metaitem.01@{indexes[output_form]+suffix}')]}
+        catalog['recipes'] = [
+            recipe('chrome-plate',30,'ingot',1,'plate',1),
+            recipe('chrome-double',30,'ingot',2,'plateDouble',2),
+            recipe('chrome-plate-derived',30,'plate',2,'plateDouble',2),
+            recipe('niobium-plate',360,'ingot',1,'plate',1)]
+        data=compile_matrix(catalog,registry)
+        rules=[r for r in data['rules'] if r['mode']=='bender']
+        self.assertEqual(len(rules),2)
+        self.assertEqual({r['process'] for r in rules},{'ingot_plate','ingot_plateDouble'})
+        self.assertTrue(all(r['inputs'][0]['f']=='ingot' and len(r['inputs'])==1 for r in rules))
+        circuits={r['outputs'][0]['f']:data['items'][r['stock'][0]['i']-1]['damage'] for r in rules}
+        self.assertEqual(circuits,{'plate':1,'plateDouble':2})
+        niobium=next(m for m in data['materials'] if m['name']=='NiobiumTitanium')
+        self.assertNotIn('ingot_plateDouble',data['production'][niobium['p']-1])
+
     def test_external_form_ids_are_scraped_for_arbitrary_materials(self):
         catalog, registry = self.fixture()
         registry['materials'] = {'30': 'Quorlium', '360': 'Vexium'}

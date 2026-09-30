@@ -8,11 +8,13 @@ There is no second application or recipe-profile format.
 
 Install using the [wget bootstrap](README.md#install-and-update-with-wget).
 The launcher supports `--update` and `--check-update`. The readable application
-and matrix occupy about 0.5 MB, within the 4 MB cap.
+and matrix occupy about 0.6 MB, within the 4 MB cap.
 
 Settings has shared hardware/interfaces and a separate section per program.
 Wire insulator has its destination, five-way polymer selector and independent PPS switch; wiremill has separate
-1x wire and fine-wire destinations and independent input-route choices (Ingot by default). Fields save on acceptance or navigation.
+1x wire and fine-wire destinations and independent input-route choices (Ingot by default).
+Bending has separate plate/foil destinations, seven independent output switches
+and a batch multiplier. Fields save on acceptance or navigation.
 All buffers matching the shared donor name are counted from their actual
 patterns, independently of their capacity. Only the shared editor is local.
 
@@ -28,10 +30,18 @@ and installs it in the planned destination slot. A sorting stage and its small
 progress cursor are durable, so Recover completes an interrupted permutation
 cycle. Imprints reuse the same durable pattern-edit/recovery service as the
 assembly-line renamer. Fresh snapshots reject stale plans before any writes.
-Registry spelling is recovered from registration code and source recipe references. All current selectable wiremill and insulation routes resolve; future unresolved IDs block execution and appear in Details.
+Registry spelling is recovered from registration code, source recipe references
+and GTNH's NEI item configuration. All current selectable modes resolve;
+future unresolved IDs block execution and appear in Details.
 
-Combining and bending have independent settings sections reserved for future
-verified rules. Their preview/execution controls stay disabled until implemented.
+The bending mode selects only scrape-backed, directly ingot-fed plate/foil rules.
+It uses circuits 1, 2, 3, 4, 5, 9 and 10 as external machine selectors; the
+circuits are not requested in processing patterns. Existing matching recipes
+are reused or resized by ratio. Turning off a form preserves existing patterns
+as unrelated entries after the selected layout; it does not destroy them.
+Combining has a settings section reserved for future verified rules and its
+preview/execution controls remain disabled. Bending sheet metal also remains
+reserved until a plate-input route is implemented.
 Crafting donors are counted, but the current executable generators use processing
 patterns; crafting-grid execution remains a future capability.
 
@@ -56,7 +66,9 @@ ore dictionary. `tools/compile_matrix.py` emits matrix schema **2**:
   `1 ingot(material) -> 2 wire1(material)`, and shared larger-wire/fine-wire routes.
   The **96 coating rules** serve two shared classes (`standard` and `pps`);
   each class is selected once per material, rather than repeating its recipe list.
-- `items`: **12** shared literal supplies/circuits, with scraped display names.
+- The **7 bending rules** select ingot → 1x/2x/3x/4x/5x/dense plate or foil.
+  They share material production flags rather than per-material recipe lists.
+- `items`: **15** shared literal supplies/circuits, with scraped display names.
 - `registryNames`: shared case-preserving IDs recovered from source declarations.
   `data/registry-names.json` records the source evidence; this is a desktop import, not a hand-maintained exception list.
 - `source`: recipe provenance, registry version, compatibility evidence and
@@ -97,14 +109,23 @@ The adjacent `OreDictScript/research/recipes.json.gz` is the recipe evidence.
 Its recorded version is beta 2; the user confirmed these recipes are unchanged
 in beta 3. That remains provenance, not a mismatch warning or preview blocker.
 The registry rules pin GT5 **5.09.54.133**. The normalized export lowercases IDs. `tools/import_registry_names.py` recovers their case from the pinned GT source archive (registration formulas and `getModItem` references), plus EnderIO registration declarations. It uses the existing scraped material names; no illustrative material examples are compiler overrides.
+The optional `.research/hiddenitems.cfg` is downloaded from
+[GTNH's NEI item configuration at commit 9ad74ce](https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/blob/9ad74cedbe761bbd442451786eff7a14a644c3d5/config/NEI/hiddenitems.cfg).
+It supplies remaining case-sensitive Forge IDs, including `IC2:itemDensePlates`.
+The importer records its SHA-256 beside the recovered IDs. Direct registration
+declarations take precedence if the configuration spells an ID differently.
 
 ```powershell
+Invoke-WebRequest `
+  https://raw.githubusercontent.com/GTNewHorizons/GT-New-Horizons-Modpack/9ad74cedbe761bbd442451786eff7a14a644c3d5/config/NEI/hiddenitems.cfg `
+  -OutFile .research\hiddenitems.cfg
 python tools/import_catalog.py ..\OreDictScript\research\recipes.json.gz `
-  --machine "Cable Coating" --machine "Wiremill" `
+  --machine "Cable Coating" --machine "Wiremill" --machine "Bending Machine" `
   --target-version 2.9.0-beta-3 --out .research\pattern-catalog.json.gz
 python tools/import_registry_names.py .research\gt-5.09.54.133.zip `
   ..\OreDictScript\data\registry-rules.json .research\pattern-catalog.json.gz `
-  .research\EnderIO-ItemAlloy.java .research\EnderIO-ModObject.java data\registry-names.json
+  .research\EnderIO-ItemAlloy.java .research\EnderIO-ModObject.java data\registry-names.json `
+  --item-registry .research\hiddenitems.cfg
 python tools/compile_matrix.py .research\pattern-catalog.json.gz `
   ..\OreDictScript\data\registry-rules.json data\matrix.lua `
   --resources ..\OreDictScript\research\resource-index.json.gz `
@@ -147,8 +168,8 @@ the shared donor pool in `src/20_apply.lua`; refill waits use the existing
 cooperative event handling. See [SOURCE_MAP.md](SOURCE_MAP.md) for source/output
 ownership and the limits of the simulated tests.
 
-Next stages are additional verified **LATEX**, **combining**, bending and
-fluid-shaping rules. Combining can use the requested 2?1, 4?1, 8?1, 4+8 and
+Next stages are additional verified **LATEX**, **combining**, plate-input
+bending and fluid-shaping rules. Combining can use the requested 2→1, 4→1, 8→1, 4+8 and
 8+8 routes once their crafting grids/machine recipes are resolved. Later wiremill
 routes, plates, extruder forms and fluid shaping add eligible shared rules and
 resolvers rather than expanded recipe lists. Registering an item form alone

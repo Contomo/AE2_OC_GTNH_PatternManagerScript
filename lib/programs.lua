@@ -1,7 +1,14 @@
 -- Program definitions shared by configuration, navigation and execution.
 local M = {}
-local function field(key, label, help, default, kind)
-  return { key = key, label = label, help = help, default = default or '', kind = kind or 'text' }
+local function field(key, label, help, default, kind, optional)
+  return {
+    key = key,
+    label = label,
+    help = help,
+    default = default or '',
+    kind = kind or 'text',
+    optional = optional,
+  }
 end
 local function choice(key, label, choices, default, help)
   local f = field(
@@ -22,6 +29,30 @@ local function multiplier()
     '1',
     'positiveInteger'
   )
+end
+local benderForms = {
+  { 'plate', '1x' },
+  { 'plateDouble', '2x' },
+  { 'plateTriple', '3x' },
+  { 'plateQuadruple', '4x' },
+  { 'plateQuintuple', '5x' },
+  { 'plateDense', 'Dense (9x)' },
+  { 'foil', 'Foil (1 to 4)' },
+}
+local function formSwitches()
+  local names = {}
+  for _, option in ipairs(benderForms) do
+    names[#names + 1] = option[1]
+  end
+  local f = field(
+    'forms',
+    'Enabled ingot routes',
+    'Each switch independently includes an ingot-input recipe when that material has one.',
+    table.concat(names, ','),
+    'multiToggle'
+  )
+  f.choices = benderForms
+  return f
 end
 M.list = {
   {
@@ -126,16 +157,46 @@ M.list = {
   {
     id = 'bender',
     name = 'Bending machine',
-    unavailable = 'Bending recipe rules are not implemented yet.',
-    description = 'Separate destinations for plates, foil and sheet metal.',
+    mode = 'bender',
+    description = 'Ingot-input plates and foil, with independent output switches.',
+    formChoices = benderForms,
+    formSwitch = 'forms',
+    outputs = {
+      plate = 'plate',
+      plateDouble = 'plate',
+      plateTriple = 'plate',
+      plateQuadruple = 'plate',
+      plateQuintuple = 'plate',
+      plateDense = 'plate',
+      foil = 'foil',
+    },
     fields = {
-      field('plate', 'Plate interface name', 'Destination bank for plate recipes.'),
-      field('foil', 'Foil interface name', 'Destination bank for foil recipes.'),
+      field(
+        'plate',
+        'Plate interface name',
+        'All enabled plate sizes share this destination.',
+        '',
+        'text',
+        true
+      ),
+      field(
+        'foil',
+        'Foil interface name',
+        'Destination bank for ingot to foil patterns.',
+        '',
+        'text',
+        true
+      ),
       field(
         'sheetMetal',
         'Sheet metal interface name',
-        'Destination bank for sheet-metal recipes.'
+        'Reserved for a later plate-input mode: no ingot to sheet metal recipe was found in the scrape.',
+        '',
+        'text',
+        true
       ),
+      formSwitches(),
+      multiplier(),
     },
   },
 }

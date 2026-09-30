@@ -912,6 +912,72 @@ test('Run program chooser and insulator preview share the same settings and exec
   end)
 end)
 
+test('bender imprints ingot routes, stores circuits externally and switches 1x plates off',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    data.capabilities[1].plate=true;data.capabilities[1].plateDouble=true
+    data.production[1].ingot_plate=true;data.production[1].ingot_plateDouble=true
+    data.families.gt.plate={name='gregtech:gt.metaitem.01',prefix=17000}
+    data.families.gt.plateDouble={name='gregtech:gt.metaitem.01',prefix=18000}
+    data.items[2]={name='gregtech:gt.integrated_circuit',damage=1,label='Programmed Circuit'}
+    data.items[3]={name='gregtech:gt.integrated_circuit',damage=2,label='Programmed Circuit'}
+    data.rules[#data.rules+1]={id='bend-1',mode='bender',process='ingot_plate',
+      requires={'ingot','plate'},inputs={{f='ingot',n=1}},outputs={{f='plate',n=1}},stock={{i=2,n=1}}}
+    data.rules[#data.rules+1]={id='bend-2',mode='bender',process='ingot_plateDouble',
+      requires={'ingot','plateDouble'},inputs={{f='ingot',n=2}},outputs={{f='plateDouble',n=1}},stock={{i=3,n=1}}}
+    cfg.programs.bender.plate=cfg.programs.assline.target
+    cfg.programs.bender.foil='';cfg.programs.bender.forms='plate,plateDouble'
+    target.patterns={}
+    buffer.patterns[2]=cp(buffer.patterns[0]);buffer.patterns[3]=cp(buffer.patterns[0])
+    local preview=api.runner.preview(cfg,'bender')
+    assert(#preview.plan.errors==0 and #preview.plan.creates==4 and #preview.manifest.recipes==4)
+    assert(preview.manifest.recipes[1].stock[1].damage==1)
+    assert(#preview.manifest.recipes[1].inputs==1 and preview.manifest.recipes[1].inputs[1].name=='gregtech:gt.metaitem.01')
+    files[api.paths.config]=ser(cfg)
+    queue(nav('Programs'),click('[ Bending machine ]'),click('[ Preview selected ]',47),function()
+      assert(frame[7]:find('PREVIEW / Bending machine',1,true))
+      snapshot('bender_preview')
+      return click('[ Details ]',9)()
+    end,function()
+      assert(table.concat({frame[13] or '',frame[14] or '',frame[15] or ''},' '):find('circuit 1',1,true))
+      snapshot('bender_circuits')
+      return quit()
+    end)
+    api.runUI()
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].inputs[1].size==1 and target.patterns[0].outputs[1].damage==17001)
+    assert(target.patterns[1].inputs[1].size==2 and target.patterns[1].outputs[1].damage==18001)
+    for _,p in pairs(target.patterns) do
+      assert(#p.inputs==1 and p.inputs[1].name~='gregtech:gt.integrated_circuit')
+    end
+    cfg.programs.bender.forms='plateDouble'
+    preview=api.runner.preview(cfg,'bender')
+    assert(preview.plan.reused==2 and #preview.plan.creates==0 and #preview.plan.preserved==2)
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].outputs[1].damage==18001 and target.patterns[1].outputs[1].damage==18002)
+    assert(target.patterns[2].outputs[1].damage==17001 and target.patterns[3].outputs[1].damage==17002)
+  end)
+end)
+
+test('bender output switches toggle independently and migrate into the unified settings',function()
+  local old=cp(cfg);old.programs.bender.forms=nil
+  local migrated=api.config.migrate(old)
+  assert(migrated.programs.bender.forms:find('plateDouble',1,true))
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),nav('Bending machine'),function()
+    assert(frame[24]:find('[ 1x ]',1,true) and frame[24]:find('[ 2x ]',1,true))
+    return click('[ 1x ]',24)()
+  end,function()
+    local c=unser(files[api.paths.config])
+    local choices=api.programs.byId.bender.formChoices
+    local selected=api.config.selected(c.programs.bender.forms,choices)
+    assert(not selected.plate and selected.plateDouble and selected.foil)
+    snapshot('bender_switches')
+    return quit()
+  end)
+  api.runUI()
+end)
+
 test('wiremill reuses 256 to 512 patterns, sorts and resizes them without disposable donors',function()
   withMatrix(function()
     cfg.programs.wiremill.wire1=cfg.programs.assline.target;cfg.programs.wiremill.wireFine='Fine wires'
@@ -1029,13 +1095,17 @@ test('shortage preview allows Execute and the UI Cancel button stops refill wait
   end)
 end)
 
-test('unfinished recipe programs have separate editable settings but cannot execute',function()
+test('bender settings are editable and wire combining remains unavailable',function()
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Bending machine'),replace('Plate interface name','Plates'),replace('Foil interface name','Foils'),
-    replace('Sheet metal interface name','Sheets'),nav('Programs'),click('[ Bending machine ]'),function()
+    replace('Sheet metal interface name','Sheets'),function()
       local c=unser(files[api.paths.config]);assert(c.programs.bender.plate=='Plates' and c.programs.bender.foil=='Foils')
-      assert(c.programs.bender.sheetMetal=='Sheets' and mutations==0);return 'touch','screen',38,47,0
-    end,function() assert(mutations==0 and not callCounts.getInterfacesByName);return quit() end)
+      assert(c.programs.bender.sheetMetal=='Sheets' and mutations==0)
+      snapshot('bender_settings')
+      return nav('Programs')()
+    end,click('[ Wire combining ]'),function()
+      assert(mutations==0 and not callCounts.getInterfacesByName);return quit()
+    end)
   api.runUI()
 end)
 

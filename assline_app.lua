@@ -170,8 +170,15 @@ local Programs=(function()
 -- Source: lib/programs.lua
 -- Program definitions shared by configuration, navigation and execution.
 local M = {}
-local function field(key, label, help, default, kind)
-  return { key = key, label = label, help = help, default = default or '', kind = kind or 'text' }
+local function field(key, label, help, default, kind, optional)
+  return {
+    key = key,
+    label = label,
+    help = help,
+    default = default or '',
+    kind = kind or 'text',
+    optional = optional,
+  }
 end
 local function choice(key, label, choices, default, help)
   local f = field(
@@ -192,6 +199,30 @@ local function multiplier()
     '1',
     'positiveInteger'
   )
+end
+local benderForms = {
+  { 'plate', '1x' },
+  { 'plateDouble', '2x' },
+  { 'plateTriple', '3x' },
+  { 'plateQuadruple', '4x' },
+  { 'plateQuintuple', '5x' },
+  { 'plateDense', 'Dense (9x)' },
+  { 'foil', 'Foil (1 to 4)' },
+}
+local function formSwitches()
+  local names = {}
+  for _, option in ipairs(benderForms) do
+    names[#names + 1] = option[1]
+  end
+  local f = field(
+    'forms',
+    'Enabled ingot routes',
+    'Each switch independently includes an ingot-input recipe when that material has one.',
+    table.concat(names, ','),
+    'multiToggle'
+  )
+  f.choices = benderForms
+  return f
 end
 M.list = {
   {
@@ -296,16 +327,46 @@ M.list = {
   {
     id = 'bender',
     name = 'Bending machine',
-    unavailable = 'Bending recipe rules are not implemented yet.',
-    description = 'Separate destinations for plates, foil and sheet metal.',
+    mode = 'bender',
+    description = 'Ingot-input plates and foil, with independent output switches.',
+    formChoices = benderForms,
+    formSwitch = 'forms',
+    outputs = {
+      plate = 'plate',
+      plateDouble = 'plate',
+      plateTriple = 'plate',
+      plateQuadruple = 'plate',
+      plateQuintuple = 'plate',
+      plateDense = 'plate',
+      foil = 'foil',
+    },
     fields = {
-      field('plate', 'Plate interface name', 'Destination bank for plate recipes.'),
-      field('foil', 'Foil interface name', 'Destination bank for foil recipes.'),
+      field(
+        'plate',
+        'Plate interface name',
+        'All enabled plate sizes share this destination.',
+        '',
+        'text',
+        true
+      ),
+      field(
+        'foil',
+        'Foil interface name',
+        'Destination bank for ingot to foil patterns.',
+        '',
+        'text',
+        true
+      ),
       field(
         'sheetMetal',
         'Sheet metal interface name',
-        'Destination bank for sheet-metal recipes.'
+        'Reserved for a later plate-input mode: no ingot to sheet metal recipe was found in the scrape.',
+        '',
+        'text',
+        true
       ),
+      formSwitches(),
+      multiplier(),
     },
   },
 }
@@ -323,6 +384,33 @@ local U = U
 local Programs = Programs
 local M = {}
 M.destinationSlots = 36
+function M.selected(value, choices)
+  U.check(type(value) == 'string', 'Missing multi-choice setting')
+  local allowed, seen, tokens = {}, {}, {}
+  for _, entry in ipairs(choices) do
+    allowed[entry[1]] = true
+  end
+  if value ~= '' then
+    for key in value:gmatch('[^,]+') do
+      U.check(allowed[key] and not seen[key], 'Invalid or duplicate output switch: ' .. key)
+      seen[key] = true
+      tokens[#tokens + 1] = key
+    end
+    U.check(table.concat(tokens, ',') == value, 'Invalid output switch list')
+  end
+  return seen
+end
+function M.toggleSelected(value, choices, key)
+  local selected = M.selected(value, choices)
+  selected[key] = not selected[key]
+  local result = {}
+  for _, entry in ipairs(choices) do
+    if selected[entry[1]] then
+      result[#result + 1] = entry[1]
+    end
+  end
+  return table.concat(result, ',')
+end
 M.fields = {
   {
     key = 'editor',
@@ -404,13 +492,17 @@ function M.validate(c)
         )
       end
       if f.choices then
-        local found = false
-        for _, option in ipairs(f.choices) do
-          if option[1] == v then
-            found = true
+        if f.kind == 'multiToggle' then
+          M.selected(v, f.choices)
+        else
+          local found = false
+          for _, option in ipairs(f.choices) do
+            if option[1] == v then
+              found = true
+            end
           end
+          U.check(found, 'Invalid choice: ' .. f.label)
         end
-        U.check(found, 'Invalid choice: ' .. f.label)
       end
     end
   end
@@ -524,7 +616,10 @@ function M.requireProgram(c, id)
     'Pattern editor and new pattern buffer must have different names'
   )
   for _, f in ipairs(p.fields) do
-    U.check(c.programs[id][f.key] ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
+    U.check(
+      f.optional or c.programs[id][f.key] ~= '',
+      'Set ' .. f.label .. ' in Settings > ' .. p.name
+    )
   end
   return p
 end
@@ -2098,7 +2193,19 @@ local aliases = {
   boltedCasing = 'casingBolted',
   reboltedCasing = 'casingRebolted',
 }
-local labels = { ingot = 'Ingot', stick = 'Rod', dust = 'Dust', wireFine = 'Fine wire' }
+local labels = {
+  ingot = 'Ingot',
+  stick = 'Rod',
+  dust = 'Dust',
+  wireFine = 'Fine wire',
+  plate = '1x Plate',
+  plateDouble = '2x Plate',
+  plateTriple = '3x Plate',
+  plateQuadruple = '4x Plate',
+  plateQuintuple = '5x Plate',
+  plateDense = 'Dense Plate',
+  foil = 'Foil',
+}
 local function formLabel(form)
   local kind, size = form:match('^(%a+)(%d+)$')
   if kind == 'wire' or kind == 'cable' then
@@ -2195,7 +2302,10 @@ function M.compile(data, mode, options, checkpoint)
     options.pdms = polymer ~= 'none'
   end
   U.check(data.version == 2, 'Unsupported material matrix')
-  U.check(mode == 'wiremill' or mode == 'coating', 'Mode has no verified recipe rules yet')
+  U.check(
+    mode == 'wiremill' or mode == 'coating' or mode == 'bender',
+    'Mode has no verified recipe rules yet'
+  )
   local manifest = {
     version = 1,
     source = U.clone(data.source),
@@ -2552,6 +2662,12 @@ local function programRouting(c, id)
     for form, key in pairs(program.outputs) do
       forms[form] = true
       routing.destinations[form] = values[key]
+    end
+    if program.formSwitch then
+      local selected = Config.selected(values[program.formSwitch], program.formChoices)
+      for form in pairs(forms) do
+        forms[form] = selected[form] == true
+      end
     end
   end
   return routing,
@@ -2988,8 +3104,10 @@ local function runUI()
       add('Run program opens the chooser. Select a program and press Preview selected.')
       add('Review changes, required interfaces, existing-pattern sorting and donors.')
       add('Verify destination interfaces have all 36 slots available, then Execute preview.')
-      add('Assembly line, insulator and wiremill share settings, editor and recovery.')
-      add('Wire combining and bending have settings reserved for their upcoming recipe rules.')
+      add(
+        'Assembly line, insulator, wiremill and ingot-input bender share settings, editor and recovery.'
+      )
+      add('Wire combining remains unavailable until its recipes have been verified.')
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
       add('Fields save when accepted or when you navigate away. Esc cancels only the active edit.')
@@ -3004,6 +3122,26 @@ local function runUI()
         'muted'
       )
     elseif state.section == 'details' and preview.manifest then
+      if preview.id == 'bender' then
+        add('BENDER CIRCUITS', 'blue')
+        add('Keep these circuits stocked in the machine; patterns request ingots only.')
+        local circuits, labels = {}, {}
+        for _, recipe in ipairs(preview.manifest.recipes) do
+          for _, stock in ipairs(recipe.stock or {}) do
+            if stock.name == 'gregtech:gt.integrated_circuit' then
+              circuits[recipe.outputForm] = stock.damage
+              labels[recipe.outputForm] = recipe.outputLabel
+            end
+          end
+        end
+        for _, entry in ipairs(Programs.byId.bender.formChoices) do
+          local circuit = circuits[entry[1]]
+          if circuit then
+            add((labels[entry[1]] or entry[2]) .. ': circuit ' .. circuit)
+          end
+        end
+        add('')
+      end
       add('BUFFER DISCOVERY', 'blue')
       add('Terminal lookup: "' .. cfg.shared.donors .. '"')
       add(p.donorBanks .. ' matching interfaces; ' .. p.donorOccupied .. ' occupied pattern slots.')
@@ -3164,7 +3302,7 @@ local function runUI()
       return false
     end
     return preview.id == 'assline' and #p.changes > 0
-      or preview.id ~= 'assline' and (#p.moves + #p.creates) > 0
+      or preview.id ~= 'assline' and (#p.moves + #p.creates + #p.resizes) > 0
   end
   draw = function()
     local key = state.page
@@ -3232,7 +3370,21 @@ local function runUI()
       for n, f in ipairs(fields()) do
         local y = 11 + (n - 1) * 4
         text(34, y, f.label, 124, 'blue')
-        if f.choices then
+        if f.kind == 'multiToggle' then
+          local x = 34
+          local selected = Config.selected(values()[f.key], f.choices)
+          for _, option in ipairs(f.choices) do
+            local key, choice = f.key, option[1]
+            x = button(x, y + 1, option[2], function()
+              commitEdit()
+              local trial = U.clone(cfg)
+              local v = Config.values(trial, state.settings)
+              v[key] = Config.toggleSelected(v[key], f.choices, choice)
+              saveConfig(trial)
+              status('Settings saved.', 'green')
+            end, true, selected[choice])
+          end
+        elseif f.choices then
           local x = 34
           for _, option in ipairs(f.choices) do
             local key, value = f.key, option[1]

@@ -12,7 +12,7 @@ import zipfile
 from pathlib import Path
 
 
-def recover(archive, registry, catalog, enderio_item, enderio_objects):
+def recover(archive, registry, catalog, enderio_item, enderio_objects, item_registry=None):
     names, evidence = {}, {}
     wanted = {e['id'].split('@')[0] for r in catalog['recipes']
               for e in r['inputs'] + r['outputs'] if e['kind'] == 'item'}
@@ -64,19 +64,32 @@ def recover(archive, registry, catalog, enderio_item, enderio_objects):
     for name in re.findall(r'registerItem\(this, ModObject\.(\w+)\.unlocalisedName\)', item_text):
         assert re.search(r'\b' + re.escape(name) + r'\s*[,;]', objects)
         add('EnderIO:' + name, 'EnderIO/material/ItemAlloy.java + ModObject.java')
-    return {'names': dict(sorted(names.items())), 'evidence': dict(sorted(evidence.items())),
+    if item_registry:
+        # NEI's item list uses the actual case-sensitive Forge IDs. Ignore
+        # comments and metadata; only recover IDs present in the recipe export.
+        for line in Path(item_registry).read_text().splitlines():
+            line = line.split('#', 1)[0].strip()
+            match = re.match(r'^([A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+)(?:\s|$)', line)
+            if match and match.group(1).lower() not in names:
+                add(match.group(1), 'GTNH config/NEI/hiddenitems.cfg')
+    result = {'names': dict(sorted(names.items())), 'evidence': dict(sorted(evidence.items())),
             'gtArchiveSha256': hashlib.sha256(Path(archive).read_bytes()).hexdigest(),
             'gtVersion': registry['gtVersion'],
             'enderioItemSha256': hashlib.sha256(Path(enderio_item).read_bytes()).hexdigest(),
             'enderioObjectsSha256': hashlib.sha256(Path(enderio_objects).read_bytes()).hexdigest()}
+    if item_registry:
+        result['itemRegistrySha256'] = hashlib.sha256(Path(item_registry).read_bytes()).hexdigest()
+    return result
 
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     for key in ('archive', 'registry', 'catalog', 'enderio_item', 'enderio_objects', 'output'):
         p.add_argument(key)
+    p.add_argument('--item-registry', help='GTNH NEI item configuration with case-preserving Forge IDs')
     a = p.parse_args()
     result = recover(a.archive, json.loads(Path(a.registry).read_text()),
-                     json.load(gzip.open(a.catalog, 'rt')), a.enderio_item, a.enderio_objects)
+                     json.load(gzip.open(a.catalog, 'rt')), a.enderio_item, a.enderio_objects,
+                     a.item_registry)
     Path(a.output).write_text(json.dumps(result, indent=2) + '\n')
     print(len(result['names']), 'case-preserving registry IDs recovered')

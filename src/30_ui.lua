@@ -219,8 +219,10 @@ local function runUI()
       add('Run program opens the chooser. Select a program and press Preview selected.')
       add('Review changes, required interfaces, existing-pattern sorting and donors.')
       add('Verify destination interfaces have all 36 slots available, then Execute preview.')
-      add('Assembly line, insulator and wiremill share settings, editor and recovery.')
-      add('Wire combining and bending have settings reserved for their upcoming recipe rules.')
+      add(
+        'Assembly line, insulator, wiremill and ingot-input bender share settings, editor and recovery.'
+      )
+      add('Wire combining remains unavailable until its recipes have been verified.')
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
       add('Fields save when accepted or when you navigate away. Esc cancels only the active edit.')
@@ -235,6 +237,26 @@ local function runUI()
         'muted'
       )
     elseif state.section == 'details' and preview.manifest then
+      if preview.id == 'bender' then
+        add('BENDER CIRCUITS', 'blue')
+        add('Keep these circuits stocked in the machine; patterns request ingots only.')
+        local circuits, labels = {}, {}
+        for _, recipe in ipairs(preview.manifest.recipes) do
+          for _, stock in ipairs(recipe.stock or {}) do
+            if stock.name == 'gregtech:gt.integrated_circuit' then
+              circuits[recipe.outputForm] = stock.damage
+              labels[recipe.outputForm] = recipe.outputLabel
+            end
+          end
+        end
+        for _, entry in ipairs(Programs.byId.bender.formChoices) do
+          local circuit = circuits[entry[1]]
+          if circuit then
+            add((labels[entry[1]] or entry[2]) .. ': circuit ' .. circuit)
+          end
+        end
+        add('')
+      end
       add('BUFFER DISCOVERY', 'blue')
       add('Terminal lookup: "' .. cfg.shared.donors .. '"')
       add(p.donorBanks .. ' matching interfaces; ' .. p.donorOccupied .. ' occupied pattern slots.')
@@ -395,7 +417,7 @@ local function runUI()
       return false
     end
     return preview.id == 'assline' and #p.changes > 0
-      or preview.id ~= 'assline' and (#p.moves + #p.creates) > 0
+      or preview.id ~= 'assline' and (#p.moves + #p.creates + #p.resizes) > 0
   end
   draw = function()
     local key = state.page
@@ -463,7 +485,21 @@ local function runUI()
       for n, f in ipairs(fields()) do
         local y = 11 + (n - 1) * 4
         text(34, y, f.label, 124, 'blue')
-        if f.choices then
+        if f.kind == 'multiToggle' then
+          local x = 34
+          local selected = Config.selected(values()[f.key], f.choices)
+          for _, option in ipairs(f.choices) do
+            local key, choice = f.key, option[1]
+            x = button(x, y + 1, option[2], function()
+              commitEdit()
+              local trial = U.clone(cfg)
+              local v = Config.values(trial, state.settings)
+              v[key] = Config.toggleSelected(v[key], f.choices, choice)
+              saveConfig(trial)
+              status('Settings saved.', 'green')
+            end, true, selected[choice])
+          end
+        elseif f.choices then
           local x = 34
           for _, option in ipairs(f.choices) do
             local key, value = f.key, option[1]

@@ -173,4 +173,28 @@ test('multipliers scale every encoded ingredient without changing recipe eligibi
   end
 end)
 
+test('bender compiles only scraped ingot routes, with source circuit selectors stocked',function()
+  local forms={'plate','plateDouble','plateTriple','plateQuadruple','plateQuintuple','plateDense','foil'}
+  local expected={plate={1,1,1},plateDouble={2,1,2},plateTriple={3,1,3},
+    plateQuadruple={4,1,4},plateQuintuple={5,1,5},plateDense={9,1,9},foil={1,4,10}}
+  local enabled={};for _,form in ipairs(forms) do enabled[form]=true end
+  local manifest=M.compile(data,'bender',{forms=enabled,multiplier=1})
+  local counts={};local seen={}
+  for _,r in ipairs(manifest.recipes) do
+    local form=r.outputForm;local tuple=assert(expected[form]);counts[form]=(counts[form] or 0)+1
+    assert(#r.inputs==1 and r.inputs[1].size==tuple[1] and r.outputs[1].size==tuple[2])
+    assert(#r.stock==1 and r.stock[1].name=='gregtech:gt.integrated_circuit')
+    assert(r.stock[1].damage==tuple[3] and r.stock[1].size==1)
+    assert(r.inputs[1].name~='gregtech:gt.integrated_circuit')
+    local identity=r.material..':'..form;assert(not seen[identity]);seen[identity]=true
+  end
+  assert(#manifest.unresolved==0 and #manifest.recipes>1000,'unresolved='..#manifest.unresolved..' recipes='..#manifest.recipes..' first='..tostring(manifest.unresolved[1] and manifest.unresolved[1].reason or manifest.unresolved[1]))
+  for _,form in ipairs(forms) do assert(counts[form]>0) end
+  local onlyFoil=M.compile(data,'bender',{forms={foil=true}})
+  assert(#onlyFoil.recipes==counts.foil)
+  for _,r in ipairs(onlyFoil.recipes) do assert(r.outputForm=='foil') end
+  local noSingles=M.compile(data,'bender',{forms={plateDouble=true}})
+  assert(#noSingles.recipes==counts.plateDouble)
+end)
+
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

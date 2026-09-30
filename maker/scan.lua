@@ -254,6 +254,12 @@ local function programRouting(c, id)
       forms[form] = true
       routing.destinations[form] = values[key]
     end
+    if program.formSwitch then
+      local selected = Config.selected(values[program.formSwitch], program.formChoices)
+      for form in pairs(forms) do
+        forms[form] = selected[form] == true
+      end
+    end
   end
   return routing,
     {

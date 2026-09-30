@@ -6,7 +6,8 @@ of an item stays unchanged. Subsequent occurrences get unique names, starting
 over for each pattern. Stack quantities and recipe outputs are preserved.
 
 One application runs several programs through **Run program**: assembly-line
-renaming, wire insulation, and wiremill patterns for 1x wire and fine wire.
+renaming, wire insulation, wiremill patterns for 1x wire and fine wire, and
+ingot-fed bending-machine patterns.
 Navigation is on the left; Scan, Execute, Recover and Quit are in the bottom row.
 Settings has shared interfaces/hardware and a separate section for each program.
 [Program architecture and recipe matrix](PATTERN_MAKER.md).
@@ -16,7 +17,7 @@ Settings has shared interfaces/hardware and a separate section for each program.
 
 1. Install OpenOS, a tier 3 GPU/screen, keyboard and a tier 1+ Data Card. An
    Internet Card is needed for installation/updates. Large recipe previews use
-   the user's 16 MB Magical Memory setup. The deployed files occupy about 0.5 MB.
+   the user's 16 MB Magical Memory setup. The deployed files occupy about 0.6 MB.
 2. Connect an **ME Interface Terminal** to OC. All editor, donor and destination
    interfaces must be visible through this terminal on the same AE grid.
 3. Name an adapter-connected interface **`OC Pattern Editor`**. It is the shared
@@ -40,7 +41,7 @@ Settings has shared interfaces/hardware and a separate section for each program.
 
 Wiremill selects one input route per output: both default to **Ingot**. Fine wire
 can instead use Rod or 1x wire. Only recipes present in the scrape are generated.
-Wiremill and the insulator each have a **Pattern multiplier** setting, default
+Wiremill, the insulator and the bending machine each have a **Pattern multiplier** setting, default
 `1`. Enter a positive whole number: `256` makes a 1-ingot → 2-wire recipe request
 256 ingots and produce 512 wires. The multiplier applies to every encoded input
 and output in the selected recipe, including requested polymer/PPS.
@@ -69,8 +70,17 @@ ingredient, ingredient NBT or substitution policy is still a different recipe.
 Normal PVC's base batch is 4 wires + 1 pulp → 4 cables; multiplier `2` gives
 8 wires + 2 pulp → 8 cables. The multiplier does not change the selected polymer.
 
-Wire combining and bending have their own settings sections, but their recipe
-rules are not implemented yet and their Preview button is disabled.
+The bending machine has seven independent output switches, all initially on:
+1x, 2x, 3x, 4x, 5x and dense plates, plus foil. Each selected route must exist in
+the scrape for that material and must consume ingots directly. For example,
+2 ingots → 1 double plate uses circuit 2; 1 ingot → 4 foil uses circuit 10.
+Circuits 1, 2, 3, 4, 5, 9 and 10 are **externally stocked** machine selectors,
+not requested by the AE pattern. Plate-to-plate assembly routes are excluded.
+Turning off 1x plates removes them from the desired plan without deleting existing
+patterns, so another program can take over that route later. Plate and foil
+destinations can each be left blank when their corresponding switches are off.
+The sheet-metal destination is reserved for a future plate-input mode because
+the source has no ingot → sheet-metal route. Wire combining remains unavailable.
 
 ## Install and update with wget
 
@@ -166,7 +176,7 @@ obsolete slot limits are not carried forward.
 | Wire insulator | Destination interface name, five-way polymer selector, request PPS |
 | Wiremill | 1x wire and fine-wire destination names; separate input routes, default Ingot |
 | Wire combining | Bare-wire destination, insulated-cable destination (future rules) |
-| Bending machine | Plate, foil and sheet-metal destinations (future rules) |
+| Bending machine | Plate and foil destinations, seven independent ingot-output switches, pattern multiplier; sheet-metal destination reserved for future rules |
 
 Shared default names are `OC Pattern Editor` and `OC Pattern Buffer`. Component
 addresses are optional when only one component of each type is connected.

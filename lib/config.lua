@@ -3,6 +3,33 @@ local U = require('assline_util')
 local Programs = require('assline_programs')
 local M = {}
 M.destinationSlots = 36
+function M.selected(value, choices)
+  U.check(type(value) == 'string', 'Missing multi-choice setting')
+  local allowed, seen, tokens = {}, {}, {}
+  for _, entry in ipairs(choices) do
+    allowed[entry[1]] = true
+  end
+  if value ~= '' then
+    for key in value:gmatch('[^,]+') do
+      U.check(allowed[key] and not seen[key], 'Invalid or duplicate output switch: ' .. key)
+      seen[key] = true
+      tokens[#tokens + 1] = key
+    end
+    U.check(table.concat(tokens, ',') == value, 'Invalid output switch list')
+  end
+  return seen
+end
+function M.toggleSelected(value, choices, key)
+  local selected = M.selected(value, choices)
+  selected[key] = not selected[key]
+  local result = {}
+  for _, entry in ipairs(choices) do
+    if selected[entry[1]] then
+      result[#result + 1] = entry[1]
+    end
+  end
+  return table.concat(result, ',')
+end
 M.fields = {
   {
     key = 'editor',
@@ -84,13 +111,17 @@ function M.validate(c)
         )
       end
       if f.choices then
-        local found = false
-        for _, option in ipairs(f.choices) do
-          if option[1] == v then
-            found = true
+        if f.kind == 'multiToggle' then
+          M.selected(v, f.choices)
+        else
+          local found = false
+          for _, option in ipairs(f.choices) do
+            if option[1] == v then
+              found = true
+            end
           end
+          U.check(found, 'Invalid choice: ' .. f.label)
         end
-        U.check(found, 'Invalid choice: ' .. f.label)
       end
     end
   end
@@ -204,7 +235,10 @@ function M.requireProgram(c, id)
     'Pattern editor and new pattern buffer must have different names'
   )
   for _, f in ipairs(p.fields) do
-    U.check(c.programs[id][f.key] ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
+    U.check(
+      f.optional or c.programs[id][f.key] ~= '',
+      'Set ' .. f.label .. ' in Settings > ' .. p.name
+    )
   end
   return p
 end
