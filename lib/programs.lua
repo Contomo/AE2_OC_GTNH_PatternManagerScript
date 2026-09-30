@@ -3,8 +3,8 @@ local M={}
 local function field(key,label,help,default,kind)
   return {key=key,label=label,help=help,default=default or '',kind=kind or 'text'}
 end
-local function choice(key,label,choices)
-  local f=field(key,label,'Choose the input used for these patterns.','ingot','choice');f.choices=choices;return f
+local function choice(key,label,choices,default,help)
+  local f=field(key,label,help or 'Choose the input used for these patterns.',default or 'ingot','choice');f.choices=choices;return f
 end
 M.list={
   {id='assline',name='Assembly line renamer',description='Review duplicate inputs and create their rename patterns.',
@@ -13,7 +13,9 @@ M.list={
       field('renameName','Rename destination template','All interfaces matching the resulting name participate.','Rename NAME_{n}')}},
   {id='insulator',name='Wire insulator',mode='coating',description='Plan insulation patterns in material and cable-size order.',
     fields={field('destination','Insulator interface name','All interfaces with this exact name receive insulation patterns.'),
-      field('pvc','Request PVC','Off means PVC must already be stocked in the machine.','on','toggle'),
+      choice('polymer','Insulation polymer',{{'pvc','PVC pulp'},{'pvcSmall','Small PVC pulp'},
+        {'pdms','PDMS pulp'},{'pdmsSmall','Small PDMS pulp'},{'none','Nothing'}},'pvc',
+        'Normal piles: batches of 4 cables. Small piles / nothing: 1 cable. PDMS = polydimethylsiloxane.'),
       field('pps','Request PPS','Off means PPS must already be stocked in the machine.','on','toggle')}},
   {id='wiremill',name='Wiremill',mode='wiremill',description='Create 1x wire and fine-wire patterns in separate destination banks.',
     outputs={wire1='wire1',wireFine='wireFine'},

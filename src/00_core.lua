@@ -255,8 +255,17 @@ end
 local function encodedPattern(data,p)
   if not exists(p) or not p.tag or p.isCraftable==nil or not p.inputs or not p.outputs then return nil end
   local root=nbt(data,p.tag).__value
-  if root['in'] and root['in'].__nbt_type=='list' and root.out and root.out.__nbt_type=='list'
-    and root.crafting then return root end
+  -- Ultimate processing patterns omit crafting; OC reads the missing flag as false.
+  if root['in'] and root['in'].__nbt_type=='list' and root.out and root.out.__nbt_type=='list' then return root end
+end
+local function donorIssue(data,p)
+  local root=encodedPattern(data,p)
+  if not root then return 'Missing encoded input/output lists' end
+  for _,entry in ipairs({{'substitute','Input substitution enabled'},{'beSubstitute','Output substitution enabled'},
+    {'tunnel','Input-only tunnel pattern'},{'InvalidPattern','Pattern marked invalid by AE'}}) do
+    if root[entry[1]] and truth(root[entry[1]].__value) then return entry[2],root end
+  end
+  return nil,root
 end
 local function patternFingerprint(hw,p)
   if not exists(p) then return nil end

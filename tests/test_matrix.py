@@ -148,16 +148,17 @@ class MatrixTests(unittest.TestCase):
             value = key(mode, inputs, outputs, stock)
             expected.add(value)
             if value not in actual:
-                # Alternate insulation polymers and four-output batches are
-                # deliberately outside the selected single-cable PVC route.
-                alternative = mode == 'coating' and (recipe['outputs'][0]['amount'] != 1 or not any(
-                    e['id'] == 'gregtech:gt.metaitem.01@1649' for e in recipe['inputs']))
+                # Recipes without either selectable polymer are alternatives,
+                # not a fifth consumed-solid route.
+                polymer_ids = {'gregtech:gt.metaitem.01@1649', 'gregtech:gt.metaitem.01@2649',
+                               'gregtech:gt.metaitem.01@1633', 'gregtech:gt.metaitem.01@2633'}
+                alternative = mode == 'coating' and not any(e['id'] in polymer_ids for e in recipe['inputs'])
                 if not alternative:
                     missing += 1
         excluded_nonselected = sum(1 for recipe in catalog['recipes'] if
             recipe['outputs'][0].get('displayName') in data['source']['excludedOutputs'] and
-            recipe['machineType'] == 'Cable Coating' and (recipe['outputs'][0]['amount'] != 1 or not any(
-                e['id'] == 'gregtech:gt.metaitem.01@1649' for e in recipe['inputs'])))
+            recipe['machineType'] == 'Cable Coating' and not any(
+                e['id'] in polymer_ids for e in recipe['inputs']))
         self.assertEqual(missing, data['source']['excludedRecipes'] - excluded_nonselected)
         self.assertFalse(actual - expected, 'Rules generated recipes absent from the evidence')
         self.assertEqual(sum(r['mode']=='wiremill' for r in data['rules']), 21)

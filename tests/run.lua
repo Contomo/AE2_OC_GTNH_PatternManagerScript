@@ -531,7 +531,7 @@ test('old settings migrate once into shared and per-program sections without slo
     bufferSlots='9',renameSlots='36',terminalAddress='terminal-prefix'})
   assert(c.version==2 and c.shared.editor=='Chosen editor' and c.shared.donors=='Remote banks')
   assert(c.programs.assline.target=='My assline' and c.programs.insulator.destination=='Insulator')
-  assert(c.programs.insulator.pvc=='off' and c.shared.terminalAddress=='terminal-prefix')
+  assert(c.programs.insulator.polymer=='none' and c.shared.terminalAddress=='terminal-prefix')
   assert(c.bufferSlots==nil and c.renameSlots==nil and ser(api.config.migrate(c))==ser(c))
 end)
 
@@ -614,11 +614,11 @@ test('leaving an active field saves it and program settings do not overwrite sha
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),field('New pattern buffer name'),function() controlDown=true;return 'key_down','kbd',97,30 end,
     {'clipboard','kbd','Uncommitted banks'},nav('Wire insulator'),replace('Insulator interface name','Latex destinations'),
-    click('[ On ]',16),nav('Wiremill'),replace('1x wire interface name','1x wires'),replace('Fine wire interface name','Fine wires'),
+    click('[ Nothing ]',16),nav('Wiremill'),replace('1x wire interface name','1x wires'),replace('Fine wire interface name','Fine wires'),
     nav('Wire insulator'),function()
       local c=unser(files[api.paths.config])
       assert(c.shared.donors=='Uncommitted banks' and c.programs.insulator.destination=='Latex destinations')
-      assert(c.programs.insulator.pvc=='off' and c.programs.insulator.pps=='on')
+      assert(c.programs.insulator.polymer=='none' and c.programs.insulator.pps=='on')
       assert(c.programs.wiremill.wire1=='1x wires' and c.programs.wiremill.wireFine=='Fine wires')
       assert(c.programs.assline.target==cfg.programs.assline.target);snapshot('insulator_settings');return quit()
     end)
@@ -791,7 +791,7 @@ test('generator previews reject changed destinations, donor patterns and setting
     target.patterns[10]=nil;preview=api.runner.preview(cfg,'insulator')
     buffer.patterns[0].inputs[1].size=999;refresh(buffer.patterns[0])
     mustFail(function() api.runner.execute(cfg,preview) end,'changed');assert(mutations==before)
-    preview=api.runner.preview(cfg,'insulator');cfg.programs.insulator.pvc='off'
+    preview=api.runner.preview(cfg,'insulator');cfg.programs.insulator.polymer='none'
     mustFail(function() api.runner.execute(cfg,preview) end,'Settings changed');assert(mutations==before)
   end)
 end)
@@ -836,20 +836,22 @@ test('unfinished recipe programs have separate editable settings but cannot exec
   api.runUI()
 end)
 
-test('PVC and PPS repaint and save on every click without leaving settings',function()
+test('PPS button derives its paint, hitbox and color from each current state',function()
   files[api.paths.config]=ser(cfg)
-  local function toggle(key,row)
+  local function toggle()
     local before
-    return {function() before=unser(files[api.paths.config]).programs.insulator[key];return 'touch','screen',35,row,0 end,
+    return {function() before=unser(files[api.paths.config]).programs.insulator.pps;return 'touch','screen',35,20,0 end,
       function()
-        local after=unser(files[api.paths.config]).programs.insulator[key]
+        local after=unser(files[api.paths.config]).programs.insulator.pps
         assert(after~=before)
-        assert(frame[row]:sub(34,44)==(after=='on' and '[ On ]     ' or '[ Off ]    '),frame[row]:sub(34,44))
-        return 'key_down','kbd',0,0
-      end}
+        local label=after=='on' and '[ On ]' or '[ Off ]'
+        assert(frame[20]:sub(34,33+#label)==label)
+        for x=34,33+#label do assert(background[20][x]==(after=='on' and 0x246B47 or 0x27465E)) end
+        assert(background[20][34+#label]==0x101A26 and frame[20]:sub(34+#label,34+#label)==' ')
+        return 'touch','screen',34+#label,20,0
+      end,function() assert(unser(files[api.paths.config]).programs.insulator.pps~=before);return 'key_up','kbd',0,0 end}
   end
-  queue(nav('Settings'),nav('Wire insulator'),toggle('pvc',16),toggle('pvc',16),toggle('pvc',16),
-    toggle('pps',20),toggle('pps',20),quit)
+  queue(nav('Settings'),nav('Wire insulator'),toggle(),toggle(),toggle(),toggle(),quit)
   api.runUI()
 end)
 
@@ -860,7 +862,8 @@ test('wiremill route choices save independently and default to ingots',function(
     nav('Programs'),nav('Settings'),function()
       local v=unser(files[api.paths.config]).programs.wiremill
       assert(v.wireSource=='stick' and v.fineSource=='wire1')
-      assert(frame[20]:find('[ * Rod ]',1,true) and frame[24]:find('[ * 1x wire ]',1,true))
+      assert(background[20][frame[20]:find('[ Rod ]',1,true)]==0x246B47)
+      assert(background[24][frame[24]:find('[ 1x wire ]',1,true)]==0x246B47)
       snapshot('wiremill_settings');return quit()
     end)
   api.runUI()
@@ -937,6 +940,77 @@ test('real insulation preview shows named ingredients, capacity and reused cable
     snapshot('real_insulator_preview');return quit()
   end)
   api.runUI();package.loaded.assline_data=saved
+end)
+
+test('five polymer choices save immediately with one highlighted choice and independent PPS',function()
+  files[api.paths.config]=ser(cfg)
+  local choices={{'PVC pulp','pvc'},{'Small PVC pulp','pvcSmall'},{'PDMS pulp','pdms'},{'Small PDMS pulp','pdmsSmall'},{'Nothing','none'}}
+  local steps={nav('Settings'),nav('Wire insulator')}
+  for _,option in ipairs(choices) do
+    local label,value=option[1],option[2]
+    steps[#steps+1]=click('[ '..label..' ]',16)
+    steps[#steps+1]=function()
+      assert(unser(files[api.paths.config]).programs.insulator.polymer==value)
+      assert(unser(files[api.paths.config]).programs.insulator.pps=='on')
+      for _,other in ipairs(choices) do
+        local x=assert(frame[16]:find('[ '..other[1]..' ]',1,true))
+        assert(background[16][x]==(other[2]==value and 0x246B47 or 0x27465E))
+      end
+      return 'key_up','kbd',0,0
+    end
+  end
+  steps[#steps+1]=function() snapshot('insulator_settings');return quit() end
+  queue(table.unpack(steps));api.runUI()
+  local old=cp(cfg);old.programs.insulator.polymer=nil;old.programs.insulator.pvc='on'
+  assert(api.config.migrate(old).programs.insulator.polymer=='pvcSmall')
+  old.programs.insulator.pvc='off';assert(api.config.migrate(old).programs.insulator.polymer=='none')
+end)
+
+test('native touch drag drop scrolls, clamps and releases the scrollbar without stealing other drags',function()
+  local log={'uptime=1 history fixture'};for i=1,110 do log[#log+1]='History line '..i end
+  files['/home/assline-perf.log']=table.concat(log,'\n')..'\n\n';files[api.paths.config]=ser(cfg)
+  local function position() return tonumber(frame[44]:match('Rows (%d+)')) end
+  local bottom
+  queue(nav('History'),function() assert(position()==1);return 'drag','screen',159,42,0,'Player' end,
+    function() assert(position()==1);return 'touch','screen',159,12,0,'Player' end,
+    {'drag','other-screen',159,100,0,'Player'},function() assert(position()==1);return 'drag','screen',159,100,0,'Other' end,
+    function() assert(position()==1);return 'drag','screen',159,100,0,'Player' end,
+    function() bottom=position();assert(bottom>70);snapshot('history_scrollbar');return 'drop','screen',159,100,0,'Player' end,
+    {'drag','screen',159,12,0,'Player'},function() assert(position()==bottom);return 'touch','screen',159,42,0,'Player' end,
+    {'drag','screen',159,-50,0,'Player'},function() assert(position()==1);return 'drop','screen',159,12,0,'Player' end,
+    {'touch','screen',50,20,0,'Player'},{'drag','screen',159,42,0,'Player'},function() assert(position()==1);return quit() end)
+  api.runUI()
+end)
+
+test('ultimate processing donors without crafting tags are recognized across eight terminal banks and remain recoverable',function()
+  withMatrix(function()
+    local function ultimate()
+      local p=pattern({item('Disposable',1,333)})
+      p.name='appliedenergistics2:item.ItemEncodedUltimatePattern'
+      local root=unser(p.tag);root.__value.crafting=nil;p.tag=ser(root);return p
+    end
+    buffer.patterns={}
+    for bank=1,8 do
+      local b=bank==1 and buffer or iface(cfg.shared.donors,80+bank)
+      for slot=0,35 do b.patterns[slot]=bank<=6 and ultimate() or pattern({item('Craft',1,222)},nil,true) end
+    end
+    local preview=insulator()
+    assert(preview.plan.donorBanks==8 and preview.plan.donorOccupied==288)
+    assert(preview.plan.available.processing==216 and preview.plan.available.crafting==72 and preview.plan.donorRejected==0)
+    fail={label='set-after'};mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    api.recover(cfg)
+    assert(target.patterns[0].name=='appliedenergistics2:item.ItemEncodedUltimatePattern')
+    assert(unser(target.patterns[0].tag).__value.crafting==nil)
+    assert(api.runner.preview(cfg,'insulator').plan.reused==1)
+  end)
+end)
+
+test('rejected donors explain the preserved flags that prevent imprinting',function()
+  withMatrix(function()
+    local root=unser(buffer.patterns[0].tag);root.__value.substitute=typed('byte',1);buffer.patterns[0].tag=ser(root)
+    local p=insulator().plan
+    assert(p.donorRejected==1 and p.donorReasons['Input substitution enabled']==1)
+  end)
 end)
 
 if artifact=='assline_app.lua' then

@@ -68,9 +68,11 @@ function M.migrate(old)
       if old.makerMode=='coating' then c.programs.insulator.destination=old.makerDestination
       else c.programs.wiremill.wire1=old.makerDestination;c.programs.wiremill.wireFine=old.makerDestination end
     end
-    if old.makerPVC then c.programs.insulator.pvc=old.makerPVC end
+    if old.makerPVC then c.programs.insulator.polymer=old.makerPVC=='off' and 'none' or 'pvcSmall' end
     if old.makerPPS then c.programs.insulator.pps=old.makerPPS end
   end
+  local prior=old.programs and old.programs.insulator
+  if prior and not prior.polymer and prior.pvc then c.programs.insulator.polymer=prior.pvc=='off' and 'none' or 'pvcSmall' end
   return M.validate(c)
 end
 function M.capacityReport(groups)

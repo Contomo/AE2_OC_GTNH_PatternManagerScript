@@ -6544,8 +6544,11 @@ return {
     {["ingot_wireFine"] = true}
   },
   ["items"] = {
-    {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 1649, ["label"] = "Small Pile of Polyvinyl Chloride (PVC) Pulp", ["option"] = "pvc"},
+    {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 1633, ["label"] = "Small Pile of Polydimethylsiloxane Pulp", ["option"] = "pdms"},
     {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 29631, ["label"] = "Thin Polyphenylene Sulfide (PPS) Sheet", ["option"] = "pps"},
+    {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 2649, ["label"] = "Polyvinyl Chloride (PVC) Pulp", ["option"] = "pvc"},
+    {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 2633, ["label"] = "Polydimethylsiloxane Pulp", ["option"] = "pdms"},
+    {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 1649, ["label"] = "Small Pile of Polyvinyl Chloride (PVC) Pulp", ["option"] = "pvc"},
     {["name"] = "gregtech:gt.integrated_circuit", ["damage"] = 3, ["label"] = "Programmed Circuit"},
     {["name"] = "gregtech:gt.integrated_circuit", ["damage"] = 8, ["label"] = "Programmed Circuit"},
     {["name"] = "gregtech:gt.integrated_circuit", ["damage"] = 4, ["label"] = "Programmed Circuit"},
@@ -6558,19 +6561,38 @@ return {
     {
       ["mode"] = "coating",
       ["inputs"] = {
-        {["f"] = "wire1", ["n"] = 1},
-        {["i"] = 1, ["n"] = 1},
-        {["i"] = 2, ["n"] = 1}
+        {["f"] = "wire1", ["n"] = 4},
+        {["i"] = 4, ["n"] = 1},
+        {["i"] = 2, ["n"] = 4}
       },
       ["outputs"] = {
-        {["f"] = "cable1", ["n"] = 1}
+        {["f"] = "cable1", ["n"] = 4}
       },
       ["stock"] = {
-        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 36}
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
       },
       ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.2646a02d31"
+      ["id"] = "coating.pps.cable1.39310b3665"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 4},
+        {["i"] = 4, ["n"] = 1},
+        {["i"] = 2, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable1.5874a677c2"
     },
     {
       ["mode"] = "coating",
@@ -6586,8 +6608,99 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 36}
       },
       ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.765bd8244b"
+      ["id"] = "coating.pps.cable1.595a7b2e83"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 1},
+        {["i"] = 1, ["n"] = 1},
+        {["i"] = 2, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 36}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pdmsSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable1.5a201cd1cd"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 4},
+        {["i"] = 3, ["n"] = 1},
+        {["i"] = 2, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable1.6dae05367c"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 4},
+        {["i"] = 3, ["n"] = 1},
+        {["i"] = 2, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable1.8fec097474"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 1},
+        {["i"] = 5, ["n"] = 1},
+        {["i"] = 2, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 36}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable1.98430bcdb8"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 1},
+        {["i"] = 5, ["n"] = 1},
+        {["i"] = 2, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 36}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable1.ce51c5e07d"
     },
     {
       ["mode"] = "coating",
@@ -6602,8 +6715,43 @@ return {
         {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 36}
       },
       ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.5ea14504f5"
+      ["id"] = "coating.standard.cable1.0baafbd231"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 4},
+        {["i"] = 3, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable1.439ddcf478"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 4},
+        {["i"] = 4, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable1.451f9c94af"
     },
     {
       ["mode"] = "coating",
@@ -6618,8 +6766,77 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 36}
       },
       ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.a006f4a4d7"
+      ["id"] = "coating.standard.cable1.4bbe7a9569"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 1},
+        {["i"] = 5, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 36}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable1.53a5cf7396"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 4},
+        {["i"] = 3, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable1.93baddb1d2"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 1},
+        {["i"] = 5, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 36}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable1.a7bdfe1f28"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire1", ["n"] = 4},
+        {["i"] = 4, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable1", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable1", "wire1"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable1.dddf4bbae4"
     },
     {
       ["mode"] = "wiremill",
@@ -6630,11 +6847,11 @@ return {
         {["f"] = "wire1", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 6, ["n"] = 1}
+        {["i"] = 9, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire1"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire1.8c21369270"
+      ["id"] = "wiremill.dust_wire.wire1.9d5726ee9c"
     },
     {
       ["mode"] = "wiremill",
@@ -6645,11 +6862,11 @@ return {
         {["f"] = "wire1", ["n"] = 2}
       },
       ["stock"] = {
-        {["i"] = 6, ["n"] = 1}
+        {["i"] = 9, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire1"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire1.9be329a698"
+      ["id"] = "wiremill.ingot_wire.wire1.d29de9c137"
     },
     {
       ["mode"] = "wiremill",
@@ -6660,11 +6877,29 @@ return {
         {["f"] = "wire1", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 6, ["n"] = 1}
+        {["i"] = 9, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire1"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire1.ea5b465262"
+      ["id"] = "wiremill.stick_wire.wire1.c9291f207f"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 4},
+        {["i"] = 3, ["n"] = 1},
+        {["i"] = 2, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable2.08c1b141b5"
     },
     {
       ["mode"] = "coating",
@@ -6680,8 +6915,9 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 36}
       },
       ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.0fe29da4c8"
+      ["id"] = "coating.pps.cable2.191dd00b13"
     },
     {
       ["mode"] = "coating",
@@ -6697,14 +6933,70 @@ return {
         {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 36}
       },
       ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.a75809a916"
+      ["id"] = "coating.pps.cable2.1e6c28780e"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 4},
+        {["i"] = 3, ["n"] = 1},
+        {["i"] = 2, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable2.32bd6e3c10"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 4},
+        {["i"] = 4, ["n"] = 1},
+        {["i"] = 2, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable2.4398c7487b"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 4},
+        {["i"] = 4, ["n"] = 1},
+        {["i"] = 2, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable2.7e5776ed42"
     },
     {
       ["mode"] = "coating",
       ["inputs"] = {
         {["f"] = "wire2", ["n"] = 1},
-        {["i"] = 1, ["n"] = 1}
+        {["i"] = 5, ["n"] = 1},
+        {["i"] = 2, ["n"] = 1}
       },
       ["outputs"] = {
         {["f"] = "cable2", ["n"] = 1}
@@ -6713,8 +7005,95 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 36}
       },
       ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable2.a30d85c951"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 1},
+        {["i"] = 5, ["n"] = 1},
+        {["i"] = 2, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 36}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable2.af705753ae"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 4},
+        {["i"] = 3, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.22d39b5d2e"
+      ["id"] = "coating.standard.cable2.3b8c1dd8d3"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 4},
+        {["i"] = 4, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable2.3d03f2fda5"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 1},
+        {["i"] = 5, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 36}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable2.825d952605"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 4},
+        {["i"] = 4, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable2.841c028fb7"
     },
     {
       ["mode"] = "coating",
@@ -6729,8 +7108,60 @@ return {
         {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 36}
       },
       ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.b0031237d0"
+      ["id"] = "coating.standard.cable2.c925aa66f3"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 1},
+        {["i"] = 5, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 36}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable2.cce7c3f54a"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 4},
+        {["i"] = 3, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable2.d180f5ed0e"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire2", ["n"] = 1},
+        {["i"] = 1, ["n"] = 1}
+      },
+      ["outputs"] = {
+        {["f"] = "cable2", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 36}
+      },
+      ["requires"] = {"cable2", "wire2"},
+      ["polymer"] = "pdmsSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable2.e42232393a"
     },
     {
       ["mode"] = "wiremill",
@@ -6741,11 +7172,11 @@ return {
         {["f"] = "wire2", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 7, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire2"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire2.86e1ef917b"
+      ["id"] = "wiremill.dust_wire.wire2.6d536e0ab1"
     },
     {
       ["mode"] = "wiremill",
@@ -6756,11 +7187,11 @@ return {
         {["f"] = "wire2", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 7, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire2"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire2.fca69de1e9"
+      ["id"] = "wiremill.ingot_wire.wire2.81055b4d02"
     },
     {
       ["mode"] = "wiremill",
@@ -6771,28 +7202,29 @@ return {
         {["f"] = "wire2", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 7, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire2"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire2.ae0864b244"
+      ["id"] = "wiremill.stick_wire.wire2.6429dd3183"
     },
     {
       ["mode"] = "coating",
       ["inputs"] = {
-        {["f"] = "wire4", ["n"] = 1},
-        {["i"] = 1, ["n"] = 2},
-        {["i"] = 2, ["n"] = 2}
+        {["f"] = "wire4", ["n"] = 4},
+        {["i"] = 3, ["n"] = 2},
+        {["i"] = 2, ["n"] = 8}
       },
       ["outputs"] = {
-        {["f"] = "cable4", ["n"] = 1}
+        {["f"] = "cable4", ["n"] = 4}
       },
       ["stock"] = {
-        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 72}
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 288}
       },
       ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.a53271d096"
+      ["id"] = "coating.pps.cable4.1972a76863"
     },
     {
       ["mode"] = "coating",
@@ -6808,14 +7240,34 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 72}
       },
       ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.f23d4fe3d1"
+      ["id"] = "coating.pps.cable4.3de4ba620d"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 4},
+        {["i"] = 3, ["n"] = 2},
+        {["i"] = 2, ["n"] = 8}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 288}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable4.40d22838bb"
     },
     {
       ["mode"] = "coating",
       ["inputs"] = {
         {["f"] = "wire4", ["n"] = 1},
-        {["i"] = 1, ["n"] = 2}
+        {["i"] = 1, ["n"] = 2},
+        {["i"] = 2, ["n"] = 2}
       },
       ["outputs"] = {
         {["f"] = "cable4", ["n"] = 1}
@@ -6824,8 +7276,115 @@ return {
         {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 72}
       },
       ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pdmsSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable4.4fd9b722aa"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 4},
+        {["i"] = 4, ["n"] = 2},
+        {["i"] = 2, ["n"] = 8}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 288}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable4.7b890c094a"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 1},
+        {["i"] = 5, ["n"] = 2},
+        {["i"] = 2, ["n"] = 2}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 72}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable4.832bf0d734"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 4},
+        {["i"] = 4, ["n"] = 2},
+        {["i"] = 2, ["n"] = 8}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 288}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable4.87e90dc063"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 1},
+        {["i"] = 5, ["n"] = 2},
+        {["i"] = 2, ["n"] = 2}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 72}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable4.fc0a11581f"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 4},
+        {["i"] = 3, ["n"] = 2}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 288}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.cf8f621750"
+      ["id"] = "coating.standard.cable4.1556303ce4"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 1},
+        {["i"] = 5, ["n"] = 2}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 72}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable4.7552e5f730"
     },
     {
       ["mode"] = "coating",
@@ -6840,8 +7399,94 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 72}
       },
       ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.da5ef24cf9"
+      ["id"] = "coating.standard.cable4.7ba6360686"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 4},
+        {["i"] = 4, ["n"] = 2}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 288}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable4.9bf4f6a660"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 4},
+        {["i"] = 3, ["n"] = 2}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 288}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable4.ac00914022"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 1},
+        {["i"] = 1, ["n"] = 2}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 72}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pdmsSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable4.ad9a5b4f82"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 1},
+        {["i"] = 5, ["n"] = 2}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 72}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable4.b8e0f8113c"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire4", ["n"] = 4},
+        {["i"] = 4, ["n"] = 2}
+      },
+      ["outputs"] = {
+        {["f"] = "cable4", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 288}
+      },
+      ["requires"] = {"cable4", "wire4"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable4.c849d6ca05"
     },
     {
       ["mode"] = "wiremill",
@@ -6852,11 +7497,11 @@ return {
         {["f"] = "wire4", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 5, ["n"] = 1}
+        {["i"] = 8, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire4"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire4.d574debe33"
+      ["id"] = "wiremill.dust_wire.wire4.f9580c3285"
     },
     {
       ["mode"] = "wiremill",
@@ -6867,11 +7512,11 @@ return {
         {["f"] = "wire4", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 5, ["n"] = 1}
+        {["i"] = 8, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire4"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire4.a4c54a8e17"
+      ["id"] = "wiremill.ingot_wire.wire4.05e0685038"
     },
     {
       ["mode"] = "wiremill",
@@ -6882,28 +7527,29 @@ return {
         {["f"] = "wire4", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 5, ["n"] = 1}
+        {["i"] = 8, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire4"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire4.631fbe36a8"
+      ["id"] = "wiremill.stick_wire.wire4.a4ba86aeff"
     },
     {
       ["mode"] = "coating",
       ["inputs"] = {
-        {["f"] = "wire8", ["n"] = 1},
-        {["i"] = 1, ["n"] = 3},
-        {["i"] = 2, ["n"] = 3}
+        {["f"] = "wire8", ["n"] = 4},
+        {["i"] = 4, ["n"] = 3},
+        {["i"] = 2, ["n"] = 12}
       },
       ["outputs"] = {
-        {["f"] = "cable8", ["n"] = 1}
+        {["f"] = "cable8", ["n"] = 4}
       },
       ["stock"] = {
-        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 108}
+        {["fluid"] = "molten.silicone", ["n"] = 432}
       },
       ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.16918a89f4"
+      ["id"] = "coating.pps.cable8.302a6d44ff"
     },
     {
       ["mode"] = "coating",
@@ -6919,14 +7565,52 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 108}
       },
       ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.38f56a83f9"
+      ["id"] = "coating.pps.cable8.4ee6532f5d"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 4},
+        {["i"] = 4, ["n"] = 3},
+        {["i"] = 2, ["n"] = 12}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 432}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable8.5c9c661df8"
     },
     {
       ["mode"] = "coating",
       ["inputs"] = {
         {["f"] = "wire8", ["n"] = 1},
-        {["i"] = 1, ["n"] = 3}
+        {["i"] = 5, ["n"] = 3},
+        {["i"] = 2, ["n"] = 3}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 108}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable8.9ee584fdd2"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 1},
+        {["i"] = 5, ["n"] = 3},
+        {["i"] = 2, ["n"] = 3}
       },
       ["outputs"] = {
         {["f"] = "cable8", ["n"] = 1}
@@ -6935,8 +7619,97 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 108}
       },
       ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable8.b2592a410c"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 1},
+        {["i"] = 1, ["n"] = 3},
+        {["i"] = 2, ["n"] = 3}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 108}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pdmsSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable8.c8a1cc0ed3"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 4},
+        {["i"] = 3, ["n"] = 3},
+        {["i"] = 2, ["n"] = 12}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 432}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable8.e303c18133"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 4},
+        {["i"] = 3, ["n"] = 3},
+        {["i"] = 2, ["n"] = 12}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 432}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable8.e5ff5636eb"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 1},
+        {["i"] = 5, ["n"] = 3}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 108}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.540c06a425"
+      ["id"] = "coating.standard.cable8.0683108ceb"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 4},
+        {["i"] = 3, ["n"] = 3}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 432}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable8.6e447c3b6d"
     },
     {
       ["mode"] = "coating",
@@ -6951,8 +7724,94 @@ return {
         {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 108}
       },
       ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.c1bc7f9a98"
+      ["id"] = "coating.standard.cable8.75926c3ade"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 4},
+        {["i"] = 4, ["n"] = 3}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 432}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable8.8eb226d54f"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 1},
+        {["i"] = 1, ["n"] = 3}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 108}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pdmsSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable8.b7999e47d8"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 1},
+        {["i"] = 5, ["n"] = 3}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 108}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable8.dacb2297e4"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 4},
+        {["i"] = 3, ["n"] = 3}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 432}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable8.ef491e6112"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire8", ["n"] = 4},
+        {["i"] = 4, ["n"] = 3}
+      },
+      ["outputs"] = {
+        {["f"] = "cable8", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 432}
+      },
+      ["requires"] = {"cable8", "wire8"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable8.f0515c086e"
     },
     {
       ["mode"] = "wiremill",
@@ -6963,11 +7822,11 @@ return {
         {["f"] = "wire8", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 4, ["n"] = 1}
+        {["i"] = 7, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire8"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire8.60497e9c73"
+      ["id"] = "wiremill.dust_wire.wire8.33a10f0040"
     },
     {
       ["mode"] = "wiremill",
@@ -6978,11 +7837,11 @@ return {
         {["f"] = "wire8", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 4, ["n"] = 1}
+        {["i"] = 7, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire8"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire8.eaa94299c3"
+      ["id"] = "wiremill.ingot_wire.wire8.a1775116ce"
     },
     {
       ["mode"] = "wiremill",
@@ -6993,11 +7852,101 @@ return {
         {["f"] = "wire8", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 4, ["n"] = 1}
+        {["i"] = 7, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire8"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire8.910555d83b"
+      ["id"] = "wiremill.stick_wire.wire8.be08a039fe"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 4},
+        {["i"] = 3, ["n"] = 4},
+        {["i"] = 2, ["n"] = 16}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 576}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable12.4397770550"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 4},
+        {["i"] = 3, ["n"] = 4},
+        {["i"] = 2, ["n"] = 16}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 576}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable12.562e752ba1"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 4},
+        {["i"] = 4, ["n"] = 4},
+        {["i"] = 2, ["n"] = 16}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 576}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable12.6e7782130e"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 1},
+        {["i"] = 5, ["n"] = 4},
+        {["i"] = 2, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable12.6f393da980"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 1},
+        {["i"] = 5, ["n"] = 4},
+        {["i"] = 2, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable12.a6627abc32"
     },
     {
       ["mode"] = "coating",
@@ -7013,8 +7962,27 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 144}
       },
       ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.747fd66f67"
+      ["id"] = "coating.pps.cable12.c4cd03a36d"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 4},
+        {["i"] = 4, ["n"] = 4},
+        {["i"] = 2, ["n"] = 16}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 576}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable12.e398090aad"
     },
     {
       ["mode"] = "coating",
@@ -7030,14 +7998,32 @@ return {
         {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
       },
       ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.99c25fa05c"
+      ["id"] = "coating.pps.cable12.ef4cf9544e"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 4},
+        {["i"] = 4, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 576}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable12.057835494d"
     },
     {
       ["mode"] = "coating",
       ["inputs"] = {
         {["f"] = "wire12", ["n"] = 1},
-        {["i"] = 1, ["n"] = 4}
+        {["i"] = 5, ["n"] = 4}
       },
       ["outputs"] = {
         {["f"] = "cable12", ["n"] = 1}
@@ -7046,8 +8032,26 @@ return {
         {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
       },
       ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.37c9580fb6"
+      ["id"] = "coating.standard.cable12.1ada4dd15e"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 1},
+        {["i"] = 5, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 144}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable12.39a7bab580"
     },
     {
       ["mode"] = "coating",
@@ -7062,8 +8066,77 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 144}
       },
       ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.5af92869bb"
+      ["id"] = "coating.standard.cable12.514643af2e"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 1},
+        {["i"] = 1, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 144}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pdmsSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable12.68a5d158fd"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 4},
+        {["i"] = 3, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 576}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable12.cfdc8a7eea"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 4},
+        {["i"] = 4, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 576}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable12.cfe0ee7b52"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire12", ["n"] = 4},
+        {["i"] = 3, ["n"] = 4}
+      },
+      ["outputs"] = {
+        {["f"] = "cable12", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 576}
+      },
+      ["requires"] = {"cable12", "wire12"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable12.fdf3186251"
     },
     {
       ["mode"] = "wiremill",
@@ -7074,11 +8147,11 @@ return {
         {["f"] = "wire12", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 9, ["n"] = 1}
+        {["i"] = 12, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire12"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire12.e985216ad3"
+      ["id"] = "wiremill.dust_wire.wire12.682d6e2e6d"
     },
     {
       ["mode"] = "wiremill",
@@ -7089,11 +8162,11 @@ return {
         {["f"] = "wire12", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 9, ["n"] = 1}
+        {["i"] = 12, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire12"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire12.42f8c37584"
+      ["id"] = "wiremill.ingot_wire.wire12.b17579d214"
     },
     {
       ["mode"] = "wiremill",
@@ -7104,28 +8177,29 @@ return {
         {["f"] = "wire12", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 9, ["n"] = 1}
+        {["i"] = 12, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire12"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire12.ed3dbe4497"
+      ["id"] = "wiremill.stick_wire.wire12.582bd90b19"
     },
     {
       ["mode"] = "coating",
       ["inputs"] = {
-        {["f"] = "wire16", ["n"] = 1},
-        {["i"] = 1, ["n"] = 5},
-        {["i"] = 2, ["n"] = 5}
+        {["f"] = "wire16", ["n"] = 4},
+        {["i"] = 3, ["n"] = 5},
+        {["i"] = 2, ["n"] = 20}
       },
       ["outputs"] = {
-        {["f"] = "cable16", ["n"] = 1}
+        {["f"] = "cable16", ["n"] = 4}
       },
       ["stock"] = {
-        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 180}
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 720}
       },
       ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.2614a23d00"
+      ["id"] = "coating.pps.cable16.516b2796dd"
     },
     {
       ["mode"] = "coating",
@@ -7141,8 +8215,134 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 180}
       },
       ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.69cba6c9af"
+      ["id"] = "coating.pps.cable16.6251100a87"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 1},
+        {["i"] = 5, ["n"] = 5},
+        {["i"] = 2, ["n"] = 5}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 180}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable16.6e4d6d22a8"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 4},
+        {["i"] = 3, ["n"] = 5},
+        {["i"] = 2, ["n"] = 20}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 720}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pvc",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable16.9e0efc8508"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 1},
+        {["i"] = 1, ["n"] = 5},
+        {["i"] = 2, ["n"] = 5}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 180}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pdmsSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable16.a1316634fb"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 4},
+        {["i"] = 4, ["n"] = 5},
+        {["i"] = 2, ["n"] = 20}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 720}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable16.a269e66c80"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 4},
+        {["i"] = 4, ["n"] = 5},
+        {["i"] = 2, ["n"] = 20}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 720}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pdms",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable16.a5498ab241"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 1},
+        {["i"] = 5, ["n"] = 5},
+        {["i"] = 2, ["n"] = 5}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 180}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "pps",
+      ["id"] = "coating.pps.cable16.f2fcdabd5e"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 1},
+        {["i"] = 5, ["n"] = 5}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 180}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable16.2539f48420"
     },
     {
       ["mode"] = "coating",
@@ -7157,8 +8357,26 @@ return {
         {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 180}
       },
       ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.4e20a7ee80"
+      ["id"] = "coating.standard.cable16.4115128c15"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 4},
+        {["i"] = 4, ["n"] = 5}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 720}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable16.78fb30ac82"
     },
     {
       ["mode"] = "coating",
@@ -7173,8 +8391,77 @@ return {
         {["fluid"] = "molten.silicone", ["n"] = 180}
       },
       ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.a2f00f75d3"
+      ["id"] = "coating.standard.cable16.9efe8d5550"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 4},
+        {["i"] = 3, ["n"] = 5}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.silicone", ["n"] = 720}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable16.c135f2ea77"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 4},
+        {["i"] = 3, ["n"] = 5}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 720}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pvc",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable16.deae378e5e"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 1},
+        {["i"] = 5, ["n"] = 5}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 180}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pvcSmall",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable16.f512b7978b"
+    },
+    {
+      ["mode"] = "coating",
+      ["inputs"] = {
+        {["f"] = "wire16", ["n"] = 4},
+        {["i"] = 4, ["n"] = 5}
+      },
+      ["outputs"] = {
+        {["f"] = "cable16", ["n"] = 4}
+      },
+      ["stock"] = {
+        {["fluid"] = "molten.styrenebutadienerubber", ["n"] = 720}
+      },
+      ["requires"] = {"cable16", "wire16"},
+      ["polymer"] = "pdms",
+      ["coating"] = "standard",
+      ["id"] = "coating.standard.cable16.fd140272f5"
     },
     {
       ["mode"] = "wiremill",
@@ -7185,11 +8472,11 @@ return {
         {["f"] = "wire16", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 11, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire16"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire16.c6bddbbf71"
+      ["id"] = "wiremill.dust_wire.wire16.572d61f3a6"
     },
     {
       ["mode"] = "wiremill",
@@ -7200,11 +8487,11 @@ return {
         {["f"] = "wire16", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 11, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire16"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire16.505e2a66db"
+      ["id"] = "wiremill.ingot_wire.wire16.890715772c"
     },
     {
       ["mode"] = "wiremill",
@@ -7215,11 +8502,11 @@ return {
         {["f"] = "wire16", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 11, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire16"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire16.8f2b0689e0"
+      ["id"] = "wiremill.stick_wire.wire16.0b1752fabd"
     },
     {
       ["mode"] = "wiremill",
@@ -7230,11 +8517,11 @@ return {
         {["f"] = "wireFine", ["n"] = 8}
       },
       ["stock"] = {
-        {["i"] = 3, ["n"] = 1}
+        {["i"] = 6, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wireFine"},
       ["process"] = "ingot_wireFine",
-      ["id"] = "wiremill.ingot_wireFine.wireFine.67a102a16b"
+      ["id"] = "wiremill.ingot_wireFine.wireFine.2812059c06"
     },
     {
       ["mode"] = "wiremill",
@@ -7245,11 +8532,11 @@ return {
         {["f"] = "wireFine", ["n"] = 4}
       },
       ["stock"] = {
-        {["i"] = 3, ["n"] = 1}
+        {["i"] = 6, ["n"] = 1}
       },
       ["requires"] = {"stick", "wireFine"},
       ["process"] = "stick_wireFine",
-      ["id"] = "wiremill.stick_wireFine.wireFine.cd6f6b74d4"
+      ["id"] = "wiremill.stick_wireFine.wireFine.ecfbb3989d"
     },
     {
       ["mode"] = "wiremill",
@@ -7260,11 +8547,11 @@ return {
         {["f"] = "wireFine", ["n"] = 4}
       },
       ["stock"] = {
-        {["i"] = 6, ["n"] = 1}
+        {["i"] = 9, ["n"] = 1}
       },
       ["requires"] = {"wire1", "wireFine"},
       ["process"] = "wire1_wireFine",
-      ["id"] = "wiremill.wire1_wireFine.wireFine.7eaf05f187"
+      ["id"] = "wiremill.wire1_wireFine.wireFine.3e4fa58421"
     }
   },
   ["registryNames"] = {
@@ -9233,7 +10520,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 32737},
       ["coating"] = "pps",
       ["a"] = 181,
-      ["deny"] = {["wiremill.stick_wire.wire16.8f2b0689e0"] = true},
+      ["deny"] = {["wiremill.stick_wire.wire16.0b1752fabd"] = true},
       ["p"] = 2
     },
     {["name"] = "LumipodExtract", ["family"] = "gt", ["dsf"] = 165, ["a"] = 3},
@@ -10335,7 +11622,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 32749},
       ["coating"] = "pps",
       ["a"] = 181,
-      ["deny"] = {["wiremill.stick_wire.wire16.8f2b0689e0"] = true},
+      ["deny"] = {["wiremill.stick_wire.wire16.0b1752fabd"] = true},
       ["p"] = 2
     },
     {["name"] = "Silane", ["family"] = "gt", ["dsf"] = 798, ["a"] = 3},

@@ -70,8 +70,8 @@ local M={}
 local function field(key,label,help,default,kind)
   return {key=key,label=label,help=help,default=default or '',kind=kind or 'text'}
 end
-local function choice(key,label,choices)
-  local f=field(key,label,'Choose the input used for these patterns.','ingot','choice');f.choices=choices;return f
+local function choice(key,label,choices,default,help)
+  local f=field(key,label,help or 'Choose the input used for these patterns.',default or 'ingot','choice');f.choices=choices;return f
 end
 M.list={
   {id='assline',name='Assembly line renamer',description='Review duplicate inputs and create their rename patterns.',
@@ -80,7 +80,9 @@ M.list={
       field('renameName','Rename destination template','All interfaces matching the resulting name participate.','Rename NAME_{n}')}},
   {id='insulator',name='Wire insulator',mode='coating',description='Plan insulation patterns in material and cable-size order.',
     fields={field('destination','Insulator interface name','All interfaces with this exact name receive insulation patterns.'),
-      field('pvc','Request PVC','Off means PVC must already be stocked in the machine.','on','toggle'),
+      choice('polymer','Insulation polymer',{{'pvc','PVC pulp'},{'pvcSmall','Small PVC pulp'},
+        {'pdms','PDMS pulp'},{'pdmsSmall','Small PDMS pulp'},{'none','Nothing'}},'pvc',
+        'Normal piles: batches of 4 cables. Small piles / nothing: 1 cable. PDMS = polydimethylsiloxane.'),
       field('pps','Request PPS','Off means PPS must already be stocked in the machine.','on','toggle')}},
   {id='wiremill',name='Wiremill',mode='wiremill',description='Create 1x wire and fine-wire patterns in separate destination banks.',
     outputs={wire1='wire1',wireFine='wireFine'},
@@ -175,9 +177,11 @@ function M.migrate(old)
       if old.makerMode=='coating' then c.programs.insulator.destination=old.makerDestination
       else c.programs.wiremill.wire1=old.makerDestination;c.programs.wiremill.wireFine=old.makerDestination end
     end
-    if old.makerPVC then c.programs.insulator.pvc=old.makerPVC end
+    if old.makerPVC then c.programs.insulator.polymer=old.makerPVC=='off' and 'none' or 'pvcSmall' end
     if old.makerPPS then c.programs.insulator.pps=old.makerPPS end
   end
+  local prior=old.programs and old.programs.insulator
+  if prior and not prior.polymer and prior.pvc then c.programs.insulator.polymer=prior.pvc=='off' and 'none' or 'pvcSmall' end
   return M.validate(c)
 end
 function M.capacityReport(groups)
@@ -463,8 +467,17 @@ end
 local function encodedPattern(data,p)
   if not exists(p) or not p.tag or p.isCraftable==nil or not p.inputs or not p.outputs then return nil end
   local root=nbt(data,p.tag).__value
-  if root['in'] and root['in'].__nbt_type=='list' and root.out and root.out.__nbt_type=='list'
-    and root.crafting then return root end
+  -- Ultimate processing patterns omit crafting; OC reads the missing flag as false.
+  if root['in'] and root['in'].__nbt_type=='list' and root.out and root.out.__nbt_type=='list' then return root end
+end
+local function donorIssue(data,p)
+  local root=encodedPattern(data,p)
+  if not root then return 'Missing encoded input/output lists' end
+  for _,entry in ipairs({{'substitute','Input substitution enabled'},{'beSubstitute','Output substitution enabled'},
+    {'tunnel','Input-only tunnel pattern'},{'InvalidPattern','Pattern marked invalid by AE'}}) do
+    if root[entry[1]] and truth(root[entry[1]].__value) then return entry[2],root end
+  end
+  return nil,root
 end
 local function patternFingerprint(hw,p)
   if not exists(p) then return nil end
@@ -519,11 +532,7 @@ local function metadata(data,p)
 end
 local function safeDonor(data,p)
   if not processing(p) or not p.tag then return false end
-  local t=encodedPattern(data,p);if not t then return false end
-  for _,k in ipairs({'substitute','beSubstitute'}) do
-    if t[k] and truth(t[k].__value) then return false end
-  end
-  return true
+  return donorIssue(data,p)==nil
 end
 local function pureRecipe(data,p,r)
   if not safeDonor(data,p) then return false end
@@ -887,7 +896,7 @@ function M.plan(request,snapshot,checkpoint)
   need(#request.recipes>0,'Manifest contains no recipes')
   local interfaces=validateSnapshot(snapshot)
   local p={version=1,errors={},layout={},moves={},creates={},preserved={},reused=0,required={crafting=0,processing=0},
-    available={crafting=0,processing=0},donorBanks=0,donorOccupied=0,donorRejected=0}
+    available={crafting=0,processing=0},donorBanks=0,donorOccupied=0,donorRejected=0,donorReasons={}}
   local problems={}
   local function block(message) if not problems[message] then p.errors[#p.errors+1]=message;problems[message]=true end end
   local groups,donors,workspace,tokens,occupied={},{crafting={},processing={}},nil,{},{}
@@ -909,7 +918,14 @@ function M.plan(request,snapshot,checkpoint)
       p.donorBanks=p.donorBanks+1
       for slot=0,i.capacity-1 do
         local pattern=i.patterns[slot]
-        if pattern then p.donorOccupied=p.donorOccupied+1;if not pattern.donor then p.donorRejected=p.donorRejected+1 end end
+        if pattern then
+          p.donorOccupied=p.donorOccupied+1
+          if not pattern.donor then
+            p.donorRejected=p.donorRejected+1
+            local reason=pattern.reason or 'Unsupported pattern'
+            p.donorReasons[reason]=(p.donorReasons[reason] or 0)+1
+          end
+        end
         if pattern and pattern.donor and donors[pattern.kind] then
           local list=donors[pattern.kind];list[#list+1]={from=ref(i,slot),fingerprint=pattern.fingerprint}
         end
@@ -1073,16 +1089,20 @@ function M.eligible(data,material,rule)
   return true
 end
 function M.compile(data,mode,options,checkpoint)
-  options=options or {}
+  options=U.clone(options or {})
+  local polymer=options.polymer or (options.pvc==false and 'none' or 'pvcSmall')
+  U.check(({pvc=true,pvcSmall=true,pdms=true,pdmsSmall=true,none=true})[polymer],'Invalid insulation polymer')
+  if mode=='coating' then options.pvc=polymer~='none';options.pdms=polymer~='none' end
   U.check(data.version==2,'Unsupported material matrix')
   U.check(mode=='wiremill' or mode=='coating','Mode has no verified recipe rules yet')
-  local manifest={version=1,source=U.clone(data.source),policy={mode=mode,pvc=options.pvc~=false,pps=options.pps~=false,sources=U.clone(options.sources)},recipes={}}
+  local manifest={version=1,source=U.clone(data.source),policy={mode=mode,polymer=polymer,pps=options.pps~=false,sources=U.clone(options.sources)},recipes={}}
   local seen,unresolved={},{}
   manifest.unresolved={}
   for _,material in ipairs(data.materials) do
     if checkpoint then checkpoint() end
     for _,rule in ipairs(data.rules) do
       if rule.mode==mode and (not options.forms or options.forms[rule.outputs[1].f])
+        and (not rule.polymer or rule.polymer==(polymer=='none' and 'pvcSmall' or polymer))
         and (not options.sources or options.sources[rule.outputs[1].f]==rule.inputs[1].f)
         and M.eligible(data,material,rule) then
         local function resolve(e,stocked)
@@ -1147,9 +1167,8 @@ local function recipeKey(data,recipe)
   end
   return Planner.recipeKey(normalized)
 end
-local function patternRecipe(data,p)
+local function patternRecipe(p,root)
   check(type(p.tag)=='string','Pattern NBT hidden; enable allowItemStackNBTTags')
-  local root=nbt(data,p.tag).__value
   local crafting=truth(p.isCraftable)
   check(p.isCraftable~=nil and p.inputs and p.outputs,'Unsupported encoded pattern')
   local r={kind=crafting and 'crafting' or 'processing',inputs={},outputs={},
@@ -1198,13 +1217,14 @@ local function scanManifest(c,manifest,routing,progress,control,started)
       for slot,p in pairs(i.patterns or {}) do
         if exists(p) then
           check(type(p.tag)=='string','Pattern NBT hidden in '..g.name)
-          local value={kind='unknown',fingerprint=patternFingerprint(hw,p)}
-          if encodedPattern(hw.data,p) then
-            local r=patternRecipe(hw.data,p)
+          local reason,root=donorIssue(hw.data,p)
+          local value={kind='unknown',fingerprint=patternFingerprint(hw,p),reason=reason}
+          if root then
+            local r=patternRecipe(p,root)
             value.kind=r.kind
             local valid,key=pcall(recipeKey,hw.data,r)
             if valid then value.recipeKey=key end
-            value.donor=not r.substitute and not r.beSubstitute
+            value.donor=value.reason==nil
           end
           compacted.patterns[slot]=value
         end
@@ -1278,7 +1298,7 @@ local function programRouting(c,id)
     forms={};routing.destinations={}
     for form,key in pairs(program.outputs) do forms[form]=true;routing.destinations[form]=values[key] end
   end
-  return routing,{pvc=values.pvc~='off',pps=values.pps~='off',forms=forms,
+  return routing,{polymer=values.polymer,pps=values.pps~='off',forms=forms,
     sources=id=='wiremill' and {wire1=values.wireSource,wireFine=values.fineSource} or nil},program
 end
 function C.maker.preview(c,id,progress,control)
@@ -1391,24 +1411,29 @@ local function runUI()
   local maxW,maxH=gpu.maxResolution();check(maxW>=160 and maxH>=50,'Use a tier 3 GPU and screen with 160x50 resolution')
   local w,h=160,50
   local colors={bg=0x101A26,panel=0x1A2A3C,text=0xDCE6EF,muted=0x8297AB,blue=0x5AC8FA,
-    green=0x72D69A,yellow=0xFFD277,red=0xFF8585,button=0x27465E}
+    green=0x72D69A,yellow=0xFFD277,red=0xFF8585,button=0x27465E,selected=0x246B47}
   local state={page='programs',settings='shared',selected=nil,section='changes',offset=0,
     status='Choose a program, then Preview selected. Configure shared interfaces in Settings.',tone='muted',running=true}
   local buttons,paintCache,paintKey,edit={},{},nil,nil
+  local buttonWidths,scrollbar={},nil
   local contentKey,contentRows
   local draw,handle,action,commitEdit,navigate
   local function text(x,y,s,width,tone,bg)
     width=math.min(width or w-x+1,w-x+1);if width<1 then return end
     s=unicode.sub(tostring(s or ''):gsub('\194\167.',''):gsub('[%c]',' '),1,width)
-    local key=x..':'..y..':'..width;local value=s..':'..tostring(tone)..':'..tostring(bg)
+    local key=x..':'..y;local value=width..':'..s..':'..tostring(tone)..':'..tostring(bg)
     if paintCache[key]==value then return end
     paintCache[key]=value
     gpu.setForeground(colors[tone or 'text']);gpu.setBackground(colors[bg or 'bg'])
     gpu.set(x,y,s..string.rep(' ',math.max(0,width-unicode.wlen(s))))
   end
-  local function button(x,y,label,callback,enabled,width)
-    local length=width or unicode.len(label)+4
-    text(x,y,'[ '..label..' ]',length,enabled==false and 'muted' or 'text','button')
+  local function button(x,y,label,callback,enabled,selected)
+    local content='[ '..label..' ]'
+    local length=unicode.wlen(content)
+    local key=x..':'..y;local previous=buttonWidths[key]
+    if previous and previous~=length then text(x,y,'',math.max(previous,length)) end
+    buttonWidths[key]=length
+    text(x,y,content,length,enabled==false and 'muted' or 'text',selected and enabled~=false and 'selected' or 'button')
     if enabled~=false then buttons[#buttons+1]={x=x,y=y,w=length,action=callback} end
     return x+length+2
   end
@@ -1429,7 +1454,7 @@ local function runUI()
     saveConfig(trial);edit=nil;status('Settings saved. Choose a program to build a new preview.','green')
   end
   navigate=function(page,section)
-    commitEdit();state.page=page;state.offset=0
+    commitEdit();state.page=page;state.offset=0;state.scrollDrag=nil
     if section then state.settings=section end
     if page=='history' then action('history') end
   end
@@ -1495,6 +1520,7 @@ local function runUI()
       add('Terminal lookup: "'..cfg.shared.donors..'"')
       add(p.donorBanks..' matching interfaces; '..p.donorOccupied..' occupied pattern slots.')
       add(p.available.processing..' usable processing; '..p.available.crafting..' usable crafting; '..p.donorRejected..' rejected.')
+      for _,reason in ipairs(U.keys(p.donorReasons or {})) do add(p.donorReasons[reason]..': '..reason,'yellow') end
       add('');add('SORTING','blue')
       add(#p.moves..' moves before creating patterns; '..#p.preserved..' unrelated/duplicate patterns preserved.')
       for _,move in ipairs(p.moves) do
@@ -1555,6 +1581,13 @@ local function runUI()
     local rows=contentRows
     state.offset=math.max(0,math.min(state.offset,math.max(0,#rows-room)))
     for n=1,room do local r=rows[state.offset+n];text(x,y+n-1,r and r[1] or '',width,r and r[2] or 'text') end
+    local maximum=math.max(0,#rows-room)
+    local thumb=maximum==0 and room or math.max(1,math.floor(room*room/#rows))
+    local top=y+(maximum==0 and 0 or math.floor(state.offset/maximum*(room-thumb)+0.5))
+    scrollbar={x=x+width+1,y=y,room=room,maximum=maximum,thumb=thumb,top=top}
+    for row=y,y+room-1 do
+      text(scrollbar.x,row,'',2,'text',row>=top and row<top+thumb and 'blue' or 'panel')
+    end
     text(x,44,'Rows '..math.min(#rows,state.offset+1)..'-'..math.min(#rows,state.offset+room)..' / '..#rows..'  (wheel / PgUp / PgDn)',width,'muted')
   end
   local function executable()
@@ -1567,8 +1600,8 @@ local function runUI()
   draw=function()
     local key=state.page..state.settings..tostring(state.selected)..state.section..tostring(state.preview)..tostring(state.busy)
       ..tostring(state.verified)..tostring(fs.exists(paths.pending))
-    if key~=paintKey then gpu.setBackground(colors.bg);gpu.fill(1,1,w,h,' ');paintCache={};paintKey=key end
-    buttons={}
+    if key~=paintKey then gpu.setBackground(colors.bg);gpu.fill(1,1,w,h,' ');paintCache={};buttonWidths={};paintKey=key end
+    buttons={};scrollbar=nil
     text(3,2,'AE2 / GTNH PATTERN MANAGER',95,'blue')
     text(111,2,string.format('%.0f%% energy  |  %d KB free',energyFraction()*100,math.floor(computer.freeMemory()/1024)),47,'muted')
     text(3,4,string.rep('-',155),155,'muted')
@@ -1590,16 +1623,16 @@ local function runUI()
           local x=34
           for _,option in ipairs(f.choices) do
             local key,value=f.key,option[1]
-            x=button(x,y+1,(values()[key]==value and '* ' or '')..option[2],function()
+            x=button(x,y+1,option[2],function()
               commitEdit();local trial=clone(cfg);Config.values(trial,state.settings)[key]=value
-              saveConfig(trial);paintKey=nil;status('Settings saved.','green')
-            end)
+              saveConfig(trial);status('Settings saved.','green')
+            end,true,values()[key]==value)
           end
         elseif f.kind=='toggle' then
           button(34,y+1,values()[f.key]=='on' and 'On' or 'Off',function()
             commitEdit();local trial=clone(cfg);local v=Config.values(trial,state.settings)
             v[f.key]=v[f.key]=='on' and 'off' or 'on';saveConfig(trial);status('Settings saved.','green')
-          end,true,9)
+          end,true,values()[f.key]=='on')
         else editorRow(34,y+1,124,f) end
         text(34,y+2,f.help,124,'muted')
       end
@@ -1694,16 +1727,40 @@ local function runUI()
     if edit.selectAll then edit.value='';edit.cursor=1;edit.selectAll=false end
     edit.value=unicode.sub(edit.value,1,edit.cursor-1)..s..unicode.sub(edit.value,edit.cursor);edit.cursor=edit.cursor+unicode.len(s)
   end
+  local function scrollTo(y)
+    local drag=state.scrollDrag
+    if not drag or not scrollbar then return end
+    local travel=scrollbar.room-scrollbar.thumb
+    if travel>0 then
+      state.offset=math.floor(math.max(0,math.min(1,(y-scrollbar.y-drag.grab)/travel))*scrollbar.maximum+0.5)
+    end
+  end
+  local function ownsDrag(e)
+    local d=state.scrollDrag
+    return d and d.screen==e[2] and d.button==e[5] and d.player==e[6]
+      and d.page==state.page and d.section==state.section
+  end
   handle=function(e)
     if e[1]=='interrupted' then state.cancelled=true;state.running=false
     elseif e[1]=='touch' then
+      state.scrollDrag=nil
+      if scrollbar and scrollbar.maximum>0 and e[5]==0 and e[3]>=scrollbar.x and e[3]<scrollbar.x+2
+        and e[4]>=scrollbar.y and e[4]<scrollbar.y+scrollbar.room then
+        local onThumb=e[4]>=scrollbar.top and e[4]<scrollbar.top+scrollbar.thumb
+        state.scrollDrag={screen=e[2],button=e[5],player=e[6],page=state.page,section=state.section,
+          grab=onThumb and e[4]-scrollbar.top or math.floor(scrollbar.thumb/2)}
+        if not onThumb then scrollTo(e[4]) end
+        return
+      end
       for _,b in ipairs(buttons) do
         if e[3]>=b.x and e[3]<b.x+b.w and e[4]==b.y then
           if edit and (b.editKey~=edit.key or b.section~=edit.section) then commitEdit() end
           b.action(e[3],e[4]);break
         end
       end
-    elseif e[1]=='scroll' and not edit then state.offset=state.offset-e[5]*3
+    elseif e[1]=='drag' then if ownsDrag(e) then scrollTo(e[4]) end
+    elseif e[1]=='drop' then if ownsDrag(e) then state.scrollDrag=nil end
+    elseif e[1]=='scroll' and not edit then state.scrollDrag=nil;state.offset=state.offset-e[5]*3
     elseif e[1]=='clipboard' and edit then insert(e[3])
     elseif e[1]=='key_down' then
       local char,key=e[3],e[4]

@@ -11,7 +11,7 @@ The launcher supports `--update` and `--check-update`. The readable application
 and matrix occupy about 0.5 MB, within the 4 MB cap.
 
 Settings has shared hardware/interfaces and a separate section per program.
-Wire insulator has its destination and PVC/PPS switches; wiremill has separate
+Wire insulator has its destination, five-way polymer selector and independent PPS switch; wiremill has separate
 1x wire and fine-wire destinations and independent input-route choices (Ingot by default). Fields save on acceptance or navigation.
 All buffers matching the shared donor name are counted from their actual
 patterns, independently of their capacity. Only the shared editor is local.
@@ -54,9 +54,9 @@ ore dictionary. `tools/compile_matrix.py` emits matrix schema **2**:
 - `rules`: material-neutral transformations with required forms and a production
   flag or coating class. The **21 wiremill rules** include one
   `1 ingot(material) -> 2 wire1(material)`, and shared larger-wire/fine-wire routes.
-  The **24 coating rules** serve two shared classes (`standard` and `pps`);
+  The **96 coating rules** serve two shared classes (`standard` and `pps`);
   each class is selected once per material, rather than repeating its recipe list.
-- `items`: **9** shared literal supplies/circuits, with scraped display names.
+- `items`: **12** shared literal supplies/circuits, with scraped display names.
 - `registryNames`: shared case-preserving IDs recovered from source declarations.
   `data/registry-names.json` records the source evidence; this is a desktop import, not a hand-maintained exception list.
 - `source`: recipe provenance, registry version, compatibility evidence and
@@ -66,7 +66,13 @@ The matrix covers **1,159 materials**, including materials without a currently
 implemented production mode. Identical availability and production flags are
 stored once. Only **two explicit recipe exclusions** are needed to reproduce
 unusual source behavior. No material contains numeric foreign keys into recipes. The current modes
-select one single-output PVC coating route per material/size, producing 306 patterns. Alternate polymers and four-output batches are deliberately omitted. The 44 recipes with unsupported output forms are recorded by output name in provenance and shown in Details, rather than mixed into the pattern list.
+select one polymer route per material/size, producing 306 patterns. The four
+scraped consumed-polymer routes are normal/small PVC and normal/small PDMS.
+Normal piles use four-output batches; small piles use one-output batches.
+Nothing uses the small-PVC route with that polymer omitted from the pattern;
+PPS can independently be requested or omitted. Batch quantities, including PPS,
+come from the source recipes. The 44 recipes with unsupported output forms are
+recorded by output name in provenance and shown in Details.
 
 `maker/modes.lua` owns `supports`, `resolve` and `eligible`. Future modes should
 call those services. Nonstandard item IDs are discovered from scraped ore tags;
@@ -82,7 +88,7 @@ noncontiguous variants use explicit form overrides.
 Recipes expand only in memory for the selected mode. Interface names never occur
 in the matrix or recipe templates: the scanner binds the current mode's routing
 from settings. Equivalent solid patterns are deduplicated; different external
-stock alternatives remain internal recipe evidence and are omitted from the pattern preview. Omitting PVC/PPS moves that requirement
+stock alternatives remain internal recipe evidence and are omitted from the pattern preview. Omitting polymer/PPS moves that requirement
 to external stocking; it does not change what the machine consumes.
 
 ## Source and rebuild
@@ -163,3 +169,21 @@ generic rules generate no recipes missing from the evidence.
 Invented-material tests cover unfamiliar item IDs, misleading display names,
 multiple registered candidates and changing the source recipe's primary item.
 These are desktop contract tests; actual in-world timings still need measurement.
+
+
+## UI controls and ultimate patterns
+
+Buttons derive painted width and hitbox from the same label. Selected choices
+and On toggles share one selected background; shrinking a label clears its old
+bounds. Scrollbars consume the screen's native touch/drag/drop signals and map
+the dragged thumb position to the viewport offset. The originating screen,
+button and player identify the active drag; releasing it ends scrolling.
+
+Ultimate processing patterns may omit the `crafting` tag. OC reads its absent
+boolean as false. Donor validation therefore checks the encoded input/output
+lists and preserved behavior flags without requiring that tag. The same
+validation feeds both program families, and Details counts rejection reasons.
+
+Sources: [OC screen signals](https://ocdoc.cil.li/component:signals),
+[UltimatePatternHelper](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/src/main/java/appeng/helpers/UltimatePatternHelper.java),
+[OC pattern converter](https://github.com/GTNewHorizons/OpenComputers/blob/master/src/main/scala/li/cil/oc/integration/appeng/ConverterPattern.scala).

@@ -59,16 +59,20 @@ function M.eligible(data,material,rule)
   return true
 end
 function M.compile(data,mode,options,checkpoint)
-  options=options or {}
+  options=U.clone(options or {})
+  local polymer=options.polymer or (options.pvc==false and 'none' or 'pvcSmall')
+  U.check(({pvc=true,pvcSmall=true,pdms=true,pdmsSmall=true,none=true})[polymer],'Invalid insulation polymer')
+  if mode=='coating' then options.pvc=polymer~='none';options.pdms=polymer~='none' end
   U.check(data.version==2,'Unsupported material matrix')
   U.check(mode=='wiremill' or mode=='coating','Mode has no verified recipe rules yet')
-  local manifest={version=1,source=U.clone(data.source),policy={mode=mode,pvc=options.pvc~=false,pps=options.pps~=false,sources=U.clone(options.sources)},recipes={}}
+  local manifest={version=1,source=U.clone(data.source),policy={mode=mode,polymer=polymer,pps=options.pps~=false,sources=U.clone(options.sources)},recipes={}}
   local seen,unresolved={},{}
   manifest.unresolved={}
   for _,material in ipairs(data.materials) do
     if checkpoint then checkpoint() end
     for _,rule in ipairs(data.rules) do
       if rule.mode==mode and (not options.forms or options.forms[rule.outputs[1].f])
+        and (not rule.polymer or rule.polymer==(polymer=='none' and 'pvcSmall' or polymer))
         and (not options.sources or options.sources[rule.outputs[1].f]==rule.inputs[1].f)
         and M.eligible(data,material,rule) then
         local function resolve(e,stocked)

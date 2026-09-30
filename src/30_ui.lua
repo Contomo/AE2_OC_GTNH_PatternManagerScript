@@ -5,24 +5,29 @@ local function runUI()
   local maxW,maxH=gpu.maxResolution();check(maxW>=160 and maxH>=50,'Use a tier 3 GPU and screen with 160x50 resolution')
   local w,h=160,50
   local colors={bg=0x101A26,panel=0x1A2A3C,text=0xDCE6EF,muted=0x8297AB,blue=0x5AC8FA,
-    green=0x72D69A,yellow=0xFFD277,red=0xFF8585,button=0x27465E}
+    green=0x72D69A,yellow=0xFFD277,red=0xFF8585,button=0x27465E,selected=0x246B47}
   local state={page='programs',settings='shared',selected=nil,section='changes',offset=0,
     status='Choose a program, then Preview selected. Configure shared interfaces in Settings.',tone='muted',running=true}
   local buttons,paintCache,paintKey,edit={},{},nil,nil
+  local buttonWidths,scrollbar={},nil
   local contentKey,contentRows
   local draw,handle,action,commitEdit,navigate
   local function text(x,y,s,width,tone,bg)
     width=math.min(width or w-x+1,w-x+1);if width<1 then return end
     s=unicode.sub(tostring(s or ''):gsub('\194\167.',''):gsub('[%c]',' '),1,width)
-    local key=x..':'..y..':'..width;local value=s..':'..tostring(tone)..':'..tostring(bg)
+    local key=x..':'..y;local value=width..':'..s..':'..tostring(tone)..':'..tostring(bg)
     if paintCache[key]==value then return end
     paintCache[key]=value
     gpu.setForeground(colors[tone or 'text']);gpu.setBackground(colors[bg or 'bg'])
     gpu.set(x,y,s..string.rep(' ',math.max(0,width-unicode.wlen(s))))
   end
-  local function button(x,y,label,callback,enabled,width)
-    local length=width or unicode.len(label)+4
-    text(x,y,'[ '..label..' ]',length,enabled==false and 'muted' or 'text','button')
+  local function button(x,y,label,callback,enabled,selected)
+    local content='[ '..label..' ]'
+    local length=unicode.wlen(content)
+    local key=x..':'..y;local previous=buttonWidths[key]
+    if previous and previous~=length then text(x,y,'',math.max(previous,length)) end
+    buttonWidths[key]=length
+    text(x,y,content,length,enabled==false and 'muted' or 'text',selected and enabled~=false and 'selected' or 'button')
     if enabled~=false then buttons[#buttons+1]={x=x,y=y,w=length,action=callback} end
     return x+length+2
   end
@@ -43,7 +48,7 @@ local function runUI()
     saveConfig(trial);edit=nil;status('Settings saved. Choose a program to build a new preview.','green')
   end
   navigate=function(page,section)
-    commitEdit();state.page=page;state.offset=0
+    commitEdit();state.page=page;state.offset=0;state.scrollDrag=nil
     if section then state.settings=section end
     if page=='history' then action('history') end
   end
@@ -109,6 +114,7 @@ local function runUI()
       add('Terminal lookup: "'..cfg.shared.donors..'"')
       add(p.donorBanks..' matching interfaces; '..p.donorOccupied..' occupied pattern slots.')
       add(p.available.processing..' usable processing; '..p.available.crafting..' usable crafting; '..p.donorRejected..' rejected.')
+      for _,reason in ipairs(U.keys(p.donorReasons or {})) do add(p.donorReasons[reason]..': '..reason,'yellow') end
       add('');add('SORTING','blue')
       add(#p.moves..' moves before creating patterns; '..#p.preserved..' unrelated/duplicate patterns preserved.')
       for _,move in ipairs(p.moves) do
@@ -169,6 +175,13 @@ local function runUI()
     local rows=contentRows
     state.offset=math.max(0,math.min(state.offset,math.max(0,#rows-room)))
     for n=1,room do local r=rows[state.offset+n];text(x,y+n-1,r and r[1] or '',width,r and r[2] or 'text') end
+    local maximum=math.max(0,#rows-room)
+    local thumb=maximum==0 and room or math.max(1,math.floor(room*room/#rows))
+    local top=y+(maximum==0 and 0 or math.floor(state.offset/maximum*(room-thumb)+0.5))
+    scrollbar={x=x+width+1,y=y,room=room,maximum=maximum,thumb=thumb,top=top}
+    for row=y,y+room-1 do
+      text(scrollbar.x,row,'',2,'text',row>=top and row<top+thumb and 'blue' or 'panel')
+    end
     text(x,44,'Rows '..math.min(#rows,state.offset+1)..'-'..math.min(#rows,state.offset+room)..' / '..#rows..'  (wheel / PgUp / PgDn)',width,'muted')
   end
   local function executable()
@@ -181,8 +194,8 @@ local function runUI()
   draw=function()
     local key=state.page..state.settings..tostring(state.selected)..state.section..tostring(state.preview)..tostring(state.busy)
       ..tostring(state.verified)..tostring(fs.exists(paths.pending))
-    if key~=paintKey then gpu.setBackground(colors.bg);gpu.fill(1,1,w,h,' ');paintCache={};paintKey=key end
-    buttons={}
+    if key~=paintKey then gpu.setBackground(colors.bg);gpu.fill(1,1,w,h,' ');paintCache={};buttonWidths={};paintKey=key end
+    buttons={};scrollbar=nil
     text(3,2,'AE2 / GTNH PATTERN MANAGER',95,'blue')
     text(111,2,string.format('%.0f%% energy  |  %d KB free',energyFraction()*100,math.floor(computer.freeMemory()/1024)),47,'muted')
     text(3,4,string.rep('-',155),155,'muted')
@@ -204,16 +217,16 @@ local function runUI()
           local x=34
           for _,option in ipairs(f.choices) do
             local key,value=f.key,option[1]
-            x=button(x,y+1,(values()[key]==value and '* ' or '')..option[2],function()
+            x=button(x,y+1,option[2],function()
               commitEdit();local trial=clone(cfg);Config.values(trial,state.settings)[key]=value
-              saveConfig(trial);paintKey=nil;status('Settings saved.','green')
-            end)
+              saveConfig(trial);status('Settings saved.','green')
+            end,true,values()[key]==value)
           end
         elseif f.kind=='toggle' then
           button(34,y+1,values()[f.key]=='on' and 'On' or 'Off',function()
             commitEdit();local trial=clone(cfg);local v=Config.values(trial,state.settings)
             v[f.key]=v[f.key]=='on' and 'off' or 'on';saveConfig(trial);status('Settings saved.','green')
-          end,true,9)
+          end,true,values()[f.key]=='on')
         else editorRow(34,y+1,124,f) end
         text(34,y+2,f.help,124,'muted')
       end
@@ -308,16 +321,40 @@ local function runUI()
     if edit.selectAll then edit.value='';edit.cursor=1;edit.selectAll=false end
     edit.value=unicode.sub(edit.value,1,edit.cursor-1)..s..unicode.sub(edit.value,edit.cursor);edit.cursor=edit.cursor+unicode.len(s)
   end
+  local function scrollTo(y)
+    local drag=state.scrollDrag
+    if not drag or not scrollbar then return end
+    local travel=scrollbar.room-scrollbar.thumb
+    if travel>0 then
+      state.offset=math.floor(math.max(0,math.min(1,(y-scrollbar.y-drag.grab)/travel))*scrollbar.maximum+0.5)
+    end
+  end
+  local function ownsDrag(e)
+    local d=state.scrollDrag
+    return d and d.screen==e[2] and d.button==e[5] and d.player==e[6]
+      and d.page==state.page and d.section==state.section
+  end
   handle=function(e)
     if e[1]=='interrupted' then state.cancelled=true;state.running=false
     elseif e[1]=='touch' then
+      state.scrollDrag=nil
+      if scrollbar and scrollbar.maximum>0 and e[5]==0 and e[3]>=scrollbar.x and e[3]<scrollbar.x+2
+        and e[4]>=scrollbar.y and e[4]<scrollbar.y+scrollbar.room then
+        local onThumb=e[4]>=scrollbar.top and e[4]<scrollbar.top+scrollbar.thumb
+        state.scrollDrag={screen=e[2],button=e[5],player=e[6],page=state.page,section=state.section,
+          grab=onThumb and e[4]-scrollbar.top or math.floor(scrollbar.thumb/2)}
+        if not onThumb then scrollTo(e[4]) end
+        return
+      end
       for _,b in ipairs(buttons) do
         if e[3]>=b.x and e[3]<b.x+b.w and e[4]==b.y then
           if edit and (b.editKey~=edit.key or b.section~=edit.section) then commitEdit() end
           b.action(e[3],e[4]);break
         end
       end
-    elseif e[1]=='scroll' and not edit then state.offset=state.offset-e[5]*3
+    elseif e[1]=='drag' then if ownsDrag(e) then scrollTo(e[4]) end
+    elseif e[1]=='drop' then if ownsDrag(e) then state.scrollDrag=nil end
+    elseif e[1]=='scroll' and not edit then state.scrollDrag=nil;state.offset=state.offset-e[5]*3
     elseif e[1]=='clipboard' and edit then insert(e[3])
     elseif e[1]=='key_down' then
       local char,key=e[3],e[4]

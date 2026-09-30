@@ -127,4 +127,31 @@ test('wiremill input selection excludes alternative routes and uses recovered re
   end
 end)
 
+test('all five polymer choices use scraped batch sizes and retain one pattern per cable size',function()
+  local ids={pvc=2649,pvcSmall=1649,pdms=2633,pdmsSmall=1633}
+  for _,polymer in ipairs({'pvc','pvcSmall','pdms','pdmsSmall','none'}) do for _,pps in ipairs({true,false}) do
+    local manifest=M.compile(data,'coating',{polymer=polymer,pps=pps});local seen={}
+    assert(#manifest.recipes==306 and #manifest.unresolved==0)
+    local batch=(polymer=='pvc' or polymer=='pdms') and 4 or 1
+    local annealed=false
+    for _,r in ipairs(manifest.recipes) do
+      assert(r.inputs[1].size==batch and r.outputs[1].size==batch)
+      local id=r.outputs[1].name..':'..r.outputs[1].damage;assert(not seen[id]);seen[id]=true
+      local polymerCount=0
+      for _,item in ipairs(r.inputs) do
+        if item.name=='gregtech:gt.metaitem.01' then
+          if item.damage==29631 then assert(pps)
+          else assert(item.damage==ids[polymer]);polymerCount=polymerCount+1 end
+        end
+      end
+      assert(polymerCount==(polymer=='none' and 0 or 1))
+      if r.material=='AnnealedCopper' and r.outputForm=='cable1' then
+        annealed=true
+        if polymer=='pvc' then assert(r.inputs[2].damage==2649 and r.inputs[2].size==1 and r.outputs[1].size==4) end
+      end
+    end
+    assert(annealed)
+  end end
+end)
+
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

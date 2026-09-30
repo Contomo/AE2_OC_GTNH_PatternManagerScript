@@ -32,6 +32,8 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
                 item['label'] = resources[rid]['displayName']
             if name == 'gregtech:gt.metaitem.01' and damage in (1649, 2649):
                 item['option'] = 'pvc'
+            if name == 'gregtech:gt.metaitem.01' and damage in (1633, 2633):
+                item['option'] = 'pdms'
             if name == 'gregtech:gt.metaitem.01' and damage == 29631:
                 item['option'] = 'pps'
             item_index[rid] = len(items) + 1
@@ -57,11 +59,16 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             label = recipe['outputs'][0].get('displayName', recipe['outputs'][0]['id'])
             excluded_outputs[label] = excluded_outputs.get(label, 0) + 1
             continue
-        # One insulation route per cable: single-output PVC recipes. Other
-        # polymers and four-output batches are alternatives, not extra patterns.
-        if mode == 'coating' and (recipe['outputs'][0]['amount'] != 1 or not any(
-                e['id'] == 'gregtech:gt.metaitem.01@1649' for e in recipe['inputs'])):
-            continue
+        polymer = None
+        if mode == 'coating':
+            polymers = {'gregtech:gt.metaitem.01@1649': 'pvcSmall', 'gregtech:gt.metaitem.01@2649': 'pvc',
+                        'gregtech:gt.metaitem.01@1633': 'pdmsSmall', 'gregtech:gt.metaitem.01@2633': 'pdms'}
+            found = {polymers[e['id']] for e in recipe['inputs'] if e['id'] in polymers}
+            if not found:
+                continue
+            if len(found) != 1:
+                raise ValueError('Ambiguous insulation polymer: ' + recipe['id'])
+            polymer = found.pop()
         key, output_form = output
         row = rows[key]
 
@@ -101,6 +108,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
                     rule[side].append(entry(e))
         rule['requires'] = sorted({e['f'] for side in ('inputs', 'outputs', 'stock') for e in rule[side] if 'f' in e})
         if mode == 'coating':
+            rule['polymer'] = polymer
             rule['coating'] = 'standard' if key in coating_standard else 'pps'
             row['coating'] = rule['coating']
         else:

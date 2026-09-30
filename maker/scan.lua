@@ -12,9 +12,8 @@ local function recipeKey(data,recipe)
   end
   return Planner.recipeKey(normalized)
 end
-local function patternRecipe(data,p)
+local function patternRecipe(p,root)
   check(type(p.tag)=='string','Pattern NBT hidden; enable allowItemStackNBTTags')
-  local root=nbt(data,p.tag).__value
   local crafting=truth(p.isCraftable)
   check(p.isCraftable~=nil and p.inputs and p.outputs,'Unsupported encoded pattern')
   local r={kind=crafting and 'crafting' or 'processing',inputs={},outputs={},
@@ -63,13 +62,14 @@ local function scanManifest(c,manifest,routing,progress,control,started)
       for slot,p in pairs(i.patterns or {}) do
         if exists(p) then
           check(type(p.tag)=='string','Pattern NBT hidden in '..g.name)
-          local value={kind='unknown',fingerprint=patternFingerprint(hw,p)}
-          if encodedPattern(hw.data,p) then
-            local r=patternRecipe(hw.data,p)
+          local reason,root=donorIssue(hw.data,p)
+          local value={kind='unknown',fingerprint=patternFingerprint(hw,p),reason=reason}
+          if root then
+            local r=patternRecipe(p,root)
             value.kind=r.kind
             local valid,key=pcall(recipeKey,hw.data,r)
             if valid then value.recipeKey=key end
-            value.donor=not r.substitute and not r.beSubstitute
+            value.donor=value.reason==nil
           end
           compacted.patterns[slot]=value
         end
@@ -143,7 +143,7 @@ local function programRouting(c,id)
     forms={};routing.destinations={}
     for form,key in pairs(program.outputs) do forms[form]=true;routing.destinations[form]=values[key] end
   end
-  return routing,{pvc=values.pvc~='off',pps=values.pps~='off',forms=forms,
+  return routing,{polymer=values.polymer,pps=values.pps~='off',forms=forms,
     sources=id=='wiremill' and {wire1=values.wireSource,wireFine=values.fineSource} or nil},program
 end
 function C.maker.preview(c,id,progress,control)
