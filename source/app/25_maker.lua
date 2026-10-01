@@ -35,7 +35,7 @@ local function patternRecipe(p, root)
           return nil, 'Encoded ' .. which .. ' slot ' .. index .. ' has no readable count'
         end
         r[which][index] = {
-          type = 'item',
+          type = s.damage == nil and 'fluid' or 'item',
           name = s.name,
           damage = s.damage,
           size = count,
@@ -450,7 +450,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     U.check(recipe and recipe.kind == 'processing', 'Unsupported pattern kind')
     for _, which in ipairs({ 'inputs', 'outputs' }) do
       for _, s in ipairs(recipe[which]) do
-        U.check(s.type == 'item', 'Only solid ingredients are supported')
+        U.check(s.type == 'item' or s.type == 'fluid', 'Unsupported ingredient type')
       end
     end
     local source, original

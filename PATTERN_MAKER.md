@@ -8,7 +8,7 @@ There is no second application or recipe-profile format.
 
 Install using the [wget bootstrap](README.md#install-and-update-with-wget).
 The launcher supports `--update` and `--check-update`. The readable application
-and matrix occupy about 0.6 MB, within the 4 MB cap.
+and matrix occupy under 1 MB, within the 4 MB cap.
 
 Settings has shared hardware/interfaces and a separate section per program.
 Wire insulator has its destination, five-way polymer selector and independent PPS switch; wiremill has separate
@@ -17,6 +17,9 @@ Bending has separate plate, foil, sheet-metal and spring destinations, ten
 independent output switches, a larger-plate/foil input choice, a small-spring
 input choice and a batch multiplier. Fields save on acceptance or navigation;
 there is no separate Save button. Keypad digits and keypad Enter work in edits.
+Fluid Shaper has separate plate and turbine-blade interface fields, each with
+an enable button beside it. Patterns request molten fluid; the reusable mold
+stays stocked in the machine.
 All buffers matching the shared donor name are counted from their actual
 patterns, independently of their capacity. Only the shared editor is local.
 
@@ -53,6 +56,9 @@ are reused or resized by ratio. Turning off a form preserves existing patterns
 as unrelated entries after the selected layout; it does not destroy them.
 Combining has a settings section reserved for future verified rules and its
 preview/execution controls remain disabled.
+Fluid Shaper uses the scraped Fluid Solidifier recipe map. The Extruder's
+ingot-to-part recipes are a separate future program, even when both routes
+make the same output.
 Crafting donors are counted, but the current executable generators use processing
 patterns; crafting-grid execution remains a future capability.
 
@@ -62,7 +68,8 @@ patterns; crafting-grid execution remains a future capability.
 ore dictionary. `source/tools/compile_matrix.py` emits matrix schema **2**:
 
 - `materials`: name, resolver family/suffix, shared capability-set index (`a`),
-  shared production-flag set (`p`), optional conductor/pipe bases, coating class,
+  shared production-flag set (`p`), verified molten-fluid ID where applicable,
+  optional conductor/pipe bases, coating class,
   and form overrides or rare rule exclusions. There are **no recipe lists** here.
 - `capabilities`: deduplicated sets of registered semantic forms. These cover gears,
   rods, rings, bolts, screws, rotors, springs, casings, all registered plate variants,
@@ -83,7 +90,9 @@ ore dictionary. `source/tools/compile_matrix.py` emits matrix schema **2**:
 - The **18 bending rules** cover the selected ingot/plate outputs and spring
   routes. They share material production flags rather than per-material recipe
   lists. Two different rod → small-spring yields have separate semantic flags.
-- `items`: **16** shared literal supplies/circuits, with scraped display names.
+- The **2 Fluid Solidifier rules** request verified molten fluid and produce a
+  plate or turbine blade. Each uses a shared stocked mold.
+- `items`: **18** shared literal supplies/circuits/molds, with scraped display names.
 - `registryNames`: shared case-preserving IDs recovered from source declarations.
   `data/registry-names.json` records the source evidence; this is a desktop import, not a hand-maintained exception list.
 - `source`: recipe provenance, registry version, compatibility evidence and
@@ -115,12 +124,12 @@ noncontiguous variants use explicit form overrides.
 
 Recipes expand only in memory for the selected mode. Interface names never occur
 in the matrix or recipe templates: the scanner binds the current mode's routing
-from settings. Equivalent solid patterns are deduplicated; different external
+from settings. Equivalent processing patterns are deduplicated; different external
 stock alternatives remain internal recipe evidence and are omitted from the pattern preview. Omitting polymer/PPS moves that requirement
 to external stocking; it does not change what the machine consumes.
 
-The desktop usage index scans **all** exported recipes, not just the three
-currently implemented machines. It follows exact item IDs through conversions
+The desktop usage index scans **all** exported recipes, not just the currently
+implemented machines. It follows exact item IDs through conversions
 between forms of the same material. A form qualifies only when that chain
 eventually feeds a non-recycling product. Listed input alternatives count.
 Macerating, fluid extraction, recycling, essentia smelting, and conversion
@@ -152,16 +161,17 @@ Invoke-WebRequest `
   -OutFile .research\hiddenitems.cfg
 python source/tools/import_catalog.py ..\OreDictScript\research\recipes.json.gz `
   --machine "Cable Coating" --machine "Wiremill" --machine "Bending Machine" `
-  --target-version 2.9.0-beta-3 --out .research\pattern-catalog-with-bender.json.gz
+  --machine "Fluid Solidifier" `
+  --target-version 2.9.0-beta-3 --out .research\pattern-catalog-with-shaper.json.gz
 python source/tools/import_registry_names.py .research\gt-5.09.54.133.zip `
-  ..\OreDictScript\data\registry-rules.json .research\pattern-catalog-with-bender.json.gz `
+  ..\OreDictScript\data\registry-rules.json .research\pattern-catalog-with-shaper.json.gz `
   .research\EnderIO-ItemAlloy.java .research\EnderIO-ModObject.java data\registry-names.json `
   --item-registry .research\hiddenitems.cfg
 python source/tools/build_usage.py ..\OreDictScript\research\recipes.json.gz `
   ..\OreDictScript\data\registry-rules.json `
   ..\OreDictScript\research\resource-index.json.gz `
   ..\OreDictScript\data\ores.json.gz .research\usage.json
-python source/tools/compile_matrix.py .research\pattern-catalog-with-bender.json.gz `
+python source/tools/compile_matrix.py .research\pattern-catalog-with-shaper.json.gz `
   ..\OreDictScript\data\registry-rules.json data\matrix.lua `
   --resources ..\OreDictScript\research\resource-index.json.gz `
   --ore-resources ..\OreDictScript\data\ores.json.gz `
@@ -205,10 +215,10 @@ the shared donor pool in `source/app/20_apply.lua`; refill waits use the existin
 cooperative event handling. See [SOURCE_MAP.md](SOURCE_MAP.md) for source/output
 ownership and the limits of the simulated tests.
 
-Next stages are additional verified **LATEX**, **combining** and fluid-shaping
-rules. Combining can use the requested 2→1, 4→1, 8→1, 4+8 and
+Next stages are additional verified **LATEX**, **combining** and Fluid Shaper
+forms. Combining can use the requested 2→1, 4→1, 8→1, 4+8 and
 8+8 routes once their crafting grids/machine recipes are resolved. Later wiremill
-routes, plates, extruder forms and fluid shaping add eligible shared rules and
+routes, extruder forms and further fluid shaping add eligible shared rules and
 resolvers rather than expanded recipe lists. Registering an item form alone
 must never manufacture a machine recipe.
 

@@ -141,7 +141,8 @@ function M.ingredientSummary(list)
   local out = {}
   for _, item in ipairs(list or {}) do
     out[#out + 1] = tostring(item.size or item.amount or 1)
-      .. ' x ' .. tostring(item.label or item.name)
+      .. (item.type == 'fluid' and ' mB ' or ' x ')
+      .. tostring(item.label or item.name)
   end
   return table.concat(out, ', ')
 end

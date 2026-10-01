@@ -117,6 +117,14 @@ present in the scrape. Distinct small-spring yields have distinct flags.
 by wiremill. A disabled output leaves any existing pattern untouched as a
 foreign pattern in the destination layout.
 
+Fluid Shaper uses the same planner and durable editor. Its compiler imports
+only Fluid Solidifier recipes with one molten input, one reusable mold and a
+plate or turbine-blade output. Each material stores the molten-fluid ID observed
+in those recipes, while two shared rules describe the output shapes. The OC
+pattern setter receives a fluid stack for the requested input; the mold remains
+external stock. Its plate and blade interface fields each have an adjacent
+enable switch. Extruder ingot recipes remain a separate route.
+
 ## Donor refills and safety boundaries
 
 Preview fixes destinations, recipe identities and sorting operations. Donor

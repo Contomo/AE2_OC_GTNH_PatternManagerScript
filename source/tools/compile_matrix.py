@@ -89,6 +89,22 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
                 recipe['outputs'][0]['id'], consumed[0]['amount'],
                 recipe['outputs'][0]['amount'], catalysts[0]['id'])
 
+    def solidifier_route(recipe):
+        if recipe['machineType'] != 'Fluid Solidifier':
+            return None
+        consumed = [e for e in recipe['inputs'] if e.get('consumed', True)]
+        catalysts = [e for e in recipe['inputs'] if e.get('consumed') is False]
+        outputs = recipe['outputs']
+        if (len(consumed) != 1 or len(catalysts) != 1 or len(outputs) != 1 or
+                consumed[0].get('kind') != 'fluid' or
+                catalysts[0].get('kind') != 'item' or
+                outputs[0].get('kind') != 'item'):
+            return None
+        destination = reverse.get(outputs[0]['id'])
+        if not destination or destination[1] not in ('plate', 'turbineBlade'):
+            return None
+        return destination[0], destination[1], consumed[0]['id']
+
     # Some routes offer alternate registered inputs or outputs for the same
     # material. Prefer the canonical output, then the canonical input. The
     # remaining selected item becomes a resolver override when needed.
@@ -106,7 +122,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
     excluded_outputs = {}
     for recipe in sorted(catalog['recipes'], key=lambda r: r['id']):
         mode = {'Wiremill': 'wiremill', 'Cable Coating': 'coating',
-                'Bending Machine': 'bender'}.get(recipe['machineType'])
+                'Bending Machine': 'bender', 'Fluid Solidifier': 'solidifier'}.get(recipe['machineType'])
         if not mode:
             continue
         if mode == 'bender':
@@ -118,6 +134,8 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             key = route[:3] + route[5:]
             if route[3:5] != bender_variants[key][1:]:
                 continue
+        if mode == 'solidifier' and not solidifier_route(recipe):
+            continue
         output = reverse.get(recipe['outputs'][0]['id'])
         if not output:
             excluded += 1
@@ -136,6 +154,11 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             polymer = found.pop()
         key, output_form = output
         row = rows[key]
+        if mode == 'solidifier':
+            fluid = solidifier_route(recipe)[2]
+            if row.get('molten') and row['molten'] != fluid:
+                raise ValueError('Conflicting molten fluids for ' + row['name'])
+            row['molten'] = fluid
 
         def entry(e):
             rid, n = e['id'], e['amount']
@@ -164,7 +187,10 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
                 if e['kind'] == 'fluid':
                     if side == 'outputs':
                         raise ValueError('Fluid output requires a fluid mode')
-                    rule['stock'].append({'fluid': e['id'], 'n': e['amount']})
+                    if mode == 'solidifier':
+                        rule['inputs'].append({'fluid': 'material', 'n': e['amount']})
+                    else:
+                        rule['stock'].append({'fluid': e['id'], 'n': e['amount']})
                 elif e.get('consumed') is False:
                     if side != 'inputs':
                         raise ValueError('Unexpected unconsumed output')
@@ -177,7 +203,8 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             rule['coating'] = 'standard' if key in coating_standard else 'pps'
             row['coating'] = rule['coating']
         else:
-            source = next((e['f'] for e in rule['inputs'] if 'f' in e), 'special')
+            source = next((e['f'] for e in rule['inputs'] if 'f' in e),
+                          'molten' if mode == 'solidifier' else 'special')
             target = 'wire' if re.fullmatch(r'wire(1|2|4|8|12|16)', output_form) else output_form
             rule['process'] = source + '_' + target
             if mode == 'bender' and source == 'stick' and target == 'springSmall':

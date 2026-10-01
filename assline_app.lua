@@ -160,7 +160,8 @@ function M.ingredientSummary(list)
   local out = {}
   for _, item in ipairs(list or {}) do
     out[#out + 1] = tostring(item.size or item.amount or 1)
-      .. ' x ' .. tostring(item.label or item.name)
+      .. (item.type == 'fluid' and ' mB ' or ' x ')
+      .. tostring(item.label or item.name)
   end
   return table.concat(out, ', ')
 end
@@ -239,19 +240,29 @@ local benderForms = {
   { 'springSmall', 'Small spring' },
   { 'spring', 'Spring' },
 }
-local function formSwitches()
+local shaperForms = {
+  { 'plate', '1x Plate' },
+  { 'turbineBlade', 'Turbine blade' },
+}
+local function formSwitches(choices, label, help, hidden)
   local names = {}
-  for _, option in ipairs(benderForms) do
+  for _, option in ipairs(choices) do
     names[#names + 1] = option[1]
   end
   local f = field(
     'forms',
-    'Enabled bending outputs',
-    'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.',
+    label,
+    help,
     table.concat(names, ','),
     'multiToggle'
   )
-  f.choices = benderForms
+  f.choices = choices
+  f.hidden = hidden
+  return f
+end
+local function enabledDestination(form, label, help)
+  local f = field(form, label, help, '', 'text', true)
+  f.enableForm = form
   return f
 end
 M.list = {
@@ -411,7 +422,8 @@ M.list = {
         'text',
         true
       ),
-      formSwitches(),
+      formSwitches(benderForms, 'Enabled bending outputs',
+        'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.'),
       field(
         'spring',
         'Spring interface name',
@@ -434,6 +446,24 @@ M.list = {
         'stick',
         'Large springs always use long rods; sheet metal always uses 1x plates.'
       ),
+      multiplier(),
+    },
+  },
+  {
+    id = 'fluidShaper',
+    name = 'Fluid Shaper',
+    mode = 'solidifier',
+    description = 'Cast plates and turbine blades from molten fluid with stocked molds.',
+    formChoices = shaperForms,
+    formSwitch = 'forms',
+    outputs = { plate = 'plate', turbineBlade = 'turbineBlade' },
+    fields = {
+      enabledDestination('plate', 'Plate interface name',
+        'Destination for molten-fluid to 1x-plate patterns.'),
+      enabledDestination('turbineBlade', 'Turbine blade interface name',
+        'Destination for molten-fluid to turbine-blade patterns.'),
+      formSwitches(shaperForms, 'Enabled Fluid Shaper outputs',
+        'Only verified Fluid Solidifier routes are included. The reusable mold stays in the machine.', true),
       multiplier(),
     },
   },
@@ -1599,14 +1629,17 @@ end
 local function setEntry(hw, slot, which, index, s)
   local method = which == 'inputs' and 'setInterfacePatternInput' or 'setInterfacePatternOutput'
   if s then
+    local detail = s.type == 'fluid'
+      and { name = s.name, amount = s.size, size = s.size }
+      or { name = s.name, damage = s.damage, size = s.size, tag = s.tag }
     U.check(
       direct(
         hw,
         method,
         slot,
         index,
-        { name = s.name, damage = s.damage, size = s.size, tag = s.tag },
-        'item'
+        detail,
+        s.type or 'item'
       ) == true,
       'Pattern setter returned failure'
     )
@@ -2323,6 +2356,7 @@ local labels = {
   spring = 'Spring',
   stickLong = 'Long rod',
   wire1 = '1x wire',
+  turbineBlade = 'Turbine blade',
 }
 local function formLabel(form)
   local kind, size = form:match('^(%a+)(%d+)$')
@@ -2426,7 +2460,7 @@ function M.compile(data, mode, options, checkpoint)
   end
   U.check(data.version == 2, 'Unsupported material matrix')
   U.check(
-    mode == 'wiremill' or mode == 'coating' or mode == 'bender',
+    mode == 'wiremill' or mode == 'coating' or mode == 'bender' or mode == 'solidifier',
     'Mode has no verified recipe rules yet'
   )
   local manifest = {
@@ -2475,6 +2509,14 @@ function M.compile(data, mode, options, checkpoint)
         end
         if eligible then
           local function resolve(e, stocked)
+            if e.fluid == 'material' then
+              local fluid = U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
+              local size = e.n * (stocked and 1 or multiplier)
+              U.check(U.integer(size) and size > 0,
+                'Pattern multiplier exceeds the supported fluid quantity')
+              return { type = 'fluid', name = fluid, label = 'Molten ' .. material.name,
+                size = size }
+            end
             local item
             if e.f then
               item = M.resolve(data, material, e.f)
@@ -2531,7 +2573,7 @@ function M.compile(data, mode, options, checkpoint)
           for _, e in ipairs(rule.stock or {}) do
             recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
           end
-          U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no consumed solids')
+          U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
           local key = Planner.recipeKey(recipe)
           if not seen[key] then
             manifest.recipes[#manifest.recipes + 1] = recipe
@@ -2770,7 +2812,7 @@ local function patternRecipe(p, root)
           return nil, 'Encoded ' .. which .. ' slot ' .. index .. ' has no readable count'
         end
         r[which][index] = {
-          type = 'item',
+          type = s.damage == nil and 'fluid' or 'item',
           name = s.name,
           damage = s.damage,
           size = count,
@@ -3185,7 +3227,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     U.check(recipe and recipe.kind == 'processing', 'Unsupported pattern kind')
     for _, which in ipairs({ 'inputs', 'outputs' }) do
       for _, s in ipairs(recipe[which]) do
-        U.check(s.type == 'item', 'Only solid ingredients are supported')
+        U.check(s.type == 'item' or s.type == 'fluid', 'Unsupported ingredient type')
       end
     end
     local source, original
@@ -3375,7 +3417,13 @@ local function runUI()
     invalidate()
   end
   local function fields()
-    return state.settings == 'shared' and Config.fields or Programs.byId[state.settings].fields
+    local definitions = state.settings == 'shared' and Config.fields
+      or Programs.byId[state.settings].fields
+    local visible = {}
+    for _, f in ipairs(definitions) do
+      if not f.hidden then visible[#visible + 1] = f end
+    end
+    return visible
   end
   local function values()
     return Config.values(cfg, state.settings)
@@ -3389,6 +3437,14 @@ local function runUI()
     saveConfig(trial)
     edit = nil
     status('Settings saved. Choose a program to build a new preview.', 'green')
+  end
+  local function toggleForm(key, choices, choice)
+    commitEdit()
+    local trial = U.clone(cfg)
+    local v = Config.values(trial, state.settings)
+    v[key] = Config.toggleSelected(v[key], choices, choice)
+    saveConfig(trial)
+    status('Settings saved.', 'green')
   end
   navigate = function(page, section)
     commitEdit()
@@ -3495,7 +3551,7 @@ local function runUI()
       add('Run program opens the chooser. Select a program and press Preview selected.')
       add('Review changes, required interfaces, existing-pattern sorting and donors.')
       add('Verify destination interfaces have all 36 slots available, then Execute preview.')
-      add('Assembly line, insulator, wiremill and bender share settings, editor and recovery.')
+      add('Assembly line, insulator, wiremill, bender and Fluid Shaper share the editor and recovery.')
       add('Wire combining remains unavailable until its recipes have been verified.')
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
@@ -3515,24 +3571,25 @@ local function runUI()
         add(row[1], row[2], row[3], row[4])
       end
     elseif state.section == 'details' and preview.manifest then
-      if preview.id == 'bender' then
-        add('BENDER CIRCUITS', 'blue')
-        add(
-          'Keep these circuits stocked in the machine; patterns request the selected solids only.'
-        )
-        local circuits, labels = {}, {}
+      if preview.id == 'bender' or preview.id == 'fluidShaper' then
+        add('STOCKED IN MACHINE', 'blue')
+        add('These reusable items stay in the machine and are omitted from patterns.')
+        local stocked = {}
         for _, recipe in ipairs(preview.manifest.recipes) do
-          for _, stock in ipairs(recipe.stock or {}) do
-            if stock.name == 'gregtech:gt.integrated_circuit' then
-              circuits[recipe.outputForm] = stock.damage
-              labels[recipe.outputForm] = recipe.outputLabel
-            end
-          end
+          stocked[recipe.outputForm] = stocked[recipe.outputForm] or {
+            label = recipe.outputLabel, items = recipe.stock or {}
+          }
         end
-        for _, entry in ipairs(Programs.byId.bender.formChoices) do
-          local circuit = circuits[entry[1]]
-          if circuit then
-            add((labels[entry[1]] or entry[2]) .. ': circuit ' .. circuit)
+        for _, entry in ipairs(Programs.byId[preview.id].formChoices) do
+          local group = stocked[entry[1]]
+          if group and #group.items > 0 then
+            local names = {}
+            for _, item in ipairs(group.items) do
+              names[#names + 1] = item.name == 'gregtech:gt.integrated_circuit'
+                and ('circuit ' .. item.damage)
+                or tostring(item.label or item.name)
+            end
+            add((group.label or entry[2]) .. ': ' .. table.concat(names, ', '))
           end
         end
         add('')
@@ -3754,15 +3811,18 @@ local function runUI()
               x, row = 34, row + 1
             end
             x = button(x, row, option[2], function()
-              commitEdit()
-              local trial = U.clone(cfg)
-              local v = Config.values(trial, state.settings)
-              v[key] = Config.toggleSelected(v[key], f.choices, choice)
-              saveConfig(trial)
-              status('Settings saved.', 'green')
+              toggleForm(key, f.choices, choice)
             end, true, selected[choice])
           end
           helpY, height = row + 1, row - y + 4
+        elseif f.enableForm then
+          local program = Programs.byId[state.settings]
+          local choice = f.enableForm
+          local selected = Config.selected(values()[program.formSwitch], program.formChoices)
+          button(34, y + 1, selected[choice] and 'X' or ' ', function()
+            toggleForm(program.formSwitch, program.formChoices, choice)
+          end, true, selected[choice])
+          editorRow(42, y + 1, 116, f)
         elseif f.choices then
           local x = 34
           for _, option in ipairs(f.choices) do

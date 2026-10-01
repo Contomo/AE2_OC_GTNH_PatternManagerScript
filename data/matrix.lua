@@ -6543,6 +6543,7 @@ return {
   },
   ["production"] = {
     {
+      ["molten_plate"] = true,
       ["plate_foil"] = true,
       ["stickLong_spring"] = true,
       ["plate_sheetmetal"] = true,
@@ -6555,6 +6556,8 @@ return {
       ["ingot_foil"] = true
     },
     {
+      ["molten_turbineBlade"] = true,
+      ["molten_plate"] = true,
       ["ingot_plateDense"] = true,
       ["plate_plateDouble"] = true,
       ["plate_sheetmetal"] = true,
@@ -6580,6 +6583,7 @@ return {
       ["stickLong_spring"] = true
     },
     {
+      ["molten_plate"] = true,
       ["ingot_plateQuintuple"] = true,
       ["ingot_plateQuadruple"] = true,
       ["ingot_plateTriple"] = true,
@@ -6600,6 +6604,8 @@ return {
       ["stick_wireFine"] = true
     },
     {
+      ["molten_turbineBlade"] = true,
+      ["molten_plate"] = true,
       ["ingot_plateDouble"] = true,
       ["plate_sheetmetal"] = true,
       ["plate_plateTriple"] = true,
@@ -6623,8 +6629,49 @@ return {
       ["stick_wireFine"] = true,
       ["wire1_wireFine"] = true
     },
-    {["ingot_foil"] = true, ["ingot_plate"] = true, ["plate_foil"] = true},
     {
+      ["molten_plate"] = true,
+      ["stickLong_spring"] = true,
+      ["ingot_foil"] = true,
+      ["ingot_plateDense"] = true,
+      ["ingot_plate"] = true,
+      ["plate_sheetmetal"] = true,
+      ["plate_plateDouble"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["ingot_plateDouble"] = true,
+      ["plate_foil"] = true,
+      ["plate_plateDense"] = true,
+      ["ingot_wireFine"] = true,
+      ["stick_wireFine"] = true
+    },
+    {["molten_plate"] = true, ["ingot_foil"] = true, ["ingot_plate"] = true, ["plate_foil"] = true},
+    {
+      ["molten_plate"] = true,
+      ["ingot_foil"] = true,
+      ["wire1_springSmall"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["ingot_plateDense"] = true,
+      ["ingot_plateTriple"] = true,
+      ["plate_foil"] = true,
+      ["plate_plateDense"] = true,
+      ["stickLong_spring"] = true,
+      ["plate_plateQuadruple"] = true,
+      ["ingot_plateQuintuple"] = true,
+      ["plate_plateDouble"] = true,
+      ["ingot_plate"] = true,
+      ["plate_plateTriple"] = true,
+      ["ingot_plateDouble"] = true,
+      ["ingot_plateQuadruple"] = true,
+      ["plate_plateQuintuple"] = true,
+      ["plate_sheetmetal"] = true,
+      ["stick_wire"] = true,
+      ["ingot_wire"] = true,
+      ["ingot_wireFine"] = true,
+      ["stick_wireFine"] = true,
+      ["wire1_wireFine"] = true
+    },
+    {
+      ["molten_plate"] = true,
       ["wire1_springSmall"] = true,
       ["stickLong_spring"] = true,
       ["ingot_plate"] = true,
@@ -6643,6 +6690,30 @@ return {
       ["ingot_wireFine"] = true
     },
     {
+      ["molten_plate"] = true,
+      ["molten_turbineBlade"] = true,
+      ["plate_plateTriple"] = true,
+      ["plate_plateQuintuple"] = true,
+      ["ingot_plateQuintuple"] = true,
+      ["ingot_foil"] = true,
+      ["ingot_plateDense"] = true,
+      ["ingot_plateDouble"] = true,
+      ["plate_plateDouble"] = true,
+      ["stickLong_spring"] = true,
+      ["plate_plateDense"] = true,
+      ["ingot_plate"] = true,
+      ["plate_sheetmetal"] = true,
+      ["plate_plateQuadruple"] = true,
+      ["plate_foil"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["ingot_plateQuadruple"] = true,
+      ["ingot_plateTriple"] = true,
+      ["stick_wireFine"] = true,
+      ["ingot_wireFine"] = true
+    },
+    {
+      ["molten_plate"] = true,
+      ["molten_turbineBlade"] = true,
       ["plate_plateDouble"] = true,
       ["ingot_foil"] = true,
       ["plate_plateDense"] = true,
@@ -6655,8 +6726,89 @@ return {
       ["ingot_wireFine"] = true,
       ["stick_wireFine"] = true
     },
+    {
+      ["molten_plate"] = true,
+      ["molten_turbineBlade"] = true,
+      ["plate_plateDouble"] = true,
+      ["ingot_plateDouble"] = true,
+      ["plate_sheetmetal"] = true,
+      ["ingot_foil"] = true,
+      ["ingot_plate"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["stickLong_spring"] = true,
+      ["plate_foil"] = true,
+      ["plate_plateDense"] = true,
+      ["ingot_plateDense"] = true
+    },
+    {
+      ["molten_plate"] = true,
+      ["molten_turbineBlade"] = true,
+      ["ingot_foil"] = true,
+      ["plate_plateDense"] = true,
+      ["plate_plateDouble"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["plate_foil"] = true,
+      ["ingot_plateDense"] = true,
+      ["stickLong_spring"] = true,
+      ["ingot_plate"] = true,
+      ["ingot_plateDouble"] = true
+    },
     {["plate_foil"] = true},
     {
+      ["molten_turbineBlade"] = true,
+      ["molten_plate"] = true,
+      ["stickLong_spring"] = true,
+      ["plate_plateDouble"] = true,
+      ["plate_foil"] = true,
+      ["plate_sheetmetal"] = true,
+      ["ingot_plateDense"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["wire1_springSmall"] = true,
+      ["ingot_foil"] = true,
+      ["ingot_plateDouble"] = true,
+      ["ingot_plate"] = true,
+      ["plate_plateDense"] = true,
+      ["stick_wireFine"] = true,
+      ["stick_wire"] = true,
+      ["wire1_wireFine"] = true,
+      ["ingot_wireFine"] = true,
+      ["ingot_wire"] = true
+    },
+    {
+      ["ingot_plateDouble"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["stickLong_spring"] = true,
+      ["plate_plateDense"] = true,
+      ["plate_foil"] = true,
+      ["plate_sheetmetal"] = true,
+      ["ingot_foil"] = true,
+      ["ingot_plateDense"] = true,
+      ["ingot_plate"] = true,
+      ["plate_plateDouble"] = true,
+      ["stick_wireFine"] = true,
+      ["ingot_wireFine"] = true
+    },
+    {
+      ["plate_foil"] = true,
+      ["ingot_plate"] = true,
+      ["ingot_foil"] = true,
+      ["stickLong_spring"] = true,
+      ["plate_sheetmetal"] = true,
+      ["ingot_plateDense"] = true,
+      ["plate_plateDense"] = true,
+      ["wire1_springSmall"] = true,
+      ["ingot_plateDouble"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["plate_plateDouble"] = true,
+      ["stick_wire"] = true,
+      ["stick_wireFine"] = true,
+      ["ingot_wire"] = true,
+      ["ingot_wireFine"] = true,
+      ["wire1_wireFine"] = true
+    },
+    {
+      ["molten_plate"] = true,
+      ["molten_turbineBlade"] = true,
       ["ingot_plate"] = true,
       ["ingot_foil"] = true,
       ["ingot_plateDouble"] = true,
@@ -6674,6 +6826,8 @@ return {
       ["wire1_wireFine"] = true
     },
     {
+      ["molten_turbineBlade"] = true,
+      ["molten_plate"] = true,
       ["plate_sheetmetal"] = true,
       ["ingot_plateDense"] = true,
       ["plate_plateQuadruple"] = true,
@@ -6692,6 +6846,26 @@ return {
       ["plate_plateDouble"] = true
     },
     {
+      ["molten_plate"] = true,
+      ["stickLong_spring"] = true,
+      ["plate_plateDouble"] = true,
+      ["plate_foil"] = true,
+      ["ingot_plateDense"] = true,
+      ["ingot_plateDouble"] = true,
+      ["ingot_plate"] = true,
+      ["wire1_springSmall"] = true,
+      ["ingot_foil"] = true,
+      ["plate_plateDense"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["stick_wire"] = true,
+      ["ingot_wire"] = true,
+      ["ingot_wireFine"] = true,
+      ["stick_wireFine"] = true,
+      ["wire1_wireFine"] = true
+    },
+    {
+      ["molten_plate"] = true,
+      ["molten_turbineBlade"] = true,
       ["ingot_foil"] = true,
       ["ingot_plateDouble"] = true,
       ["ingot_plateQuintuple"] = true,
@@ -6711,6 +6885,7 @@ return {
       ["ingot_wireFine"] = true
     },
     {
+      ["molten_plate"] = true,
       ["ingot_plate"] = true,
       ["plate_plateDense"] = true,
       ["plate_plateDouble"] = true,
@@ -6720,6 +6895,8 @@ return {
       ["ingot_foil"] = true
     },
     {
+      ["molten_turbineBlade"] = true,
+      ["molten_plate"] = true,
       ["ingot_plateQuadruple"] = true,
       ["ingot_plateTriple"] = true,
       ["plate_plateQuadruple"] = true,
@@ -6737,6 +6914,7 @@ return {
       ["plate_plateTriple"] = true
     },
     {
+      ["molten_plate"] = true,
       ["ingot_plateQuadruple"] = true,
       ["ingot_plateDouble"] = true,
       ["ingot_plateDense"] = true,
@@ -6754,6 +6932,8 @@ return {
     {["stick_wire"] = true},
     {["plate_plateDense"] = true},
     {
+      ["molten_plate"] = true,
+      ["molten_turbineBlade"] = true,
       ["ingot_foil"] = true,
       ["ingot_plate"] = true,
       ["stick_springSmall_yield2"] = true,
@@ -6768,10 +6948,38 @@ return {
       ["stick_wire"] = true,
       ["ingot_wire"] = true
     },
-    {["ingot_plate"] = true, ["plate_plateDense"] = true, ["ingot_plateDense"] = true, ["plate_foil"] = true},
+    {["molten_plate"] = true, ["plate_foil"] = true},
+    {
+      ["molten_plate"] = true,
+      ["ingot_plate"] = true,
+      ["plate_plateDense"] = true,
+      ["ingot_plateDense"] = true,
+      ["plate_foil"] = true
+    },
     {["plate_plateDouble"] = true},
+    {["molten_plate"] = true},
     {["dust_wire"] = true},
     {
+      ["molten_plate"] = true,
+      ["plate_sheetmetal"] = true,
+      ["stick_springSmall_yield2"] = true,
+      ["plate_plateDense"] = true,
+      ["plate_plateDouble"] = true,
+      ["ingot_plateDouble"] = true,
+      ["ingot_plateDense"] = true,
+      ["stickLong_spring"] = true,
+      ["plate_plateQuintuple"] = true,
+      ["ingot_plate"] = true,
+      ["ingot_foil"] = true,
+      ["ingot_plateQuadruple"] = true,
+      ["plate_plateTriple"] = true,
+      ["ingot_plateTriple"] = true,
+      ["plate_foil"] = true,
+      ["ingot_plateQuintuple"] = true,
+      ["plate_plateQuadruple"] = true
+    },
+    {
+      ["molten_plate"] = true,
       ["plate_plateDouble"] = true,
       ["stickLong_spring"] = true,
       ["ingot_plate"] = true,
@@ -6788,7 +6996,9 @@ return {
       ["ingot_wireFine"] = true,
       ["stick_wireFine"] = true
     },
+    {["ingot_plate"] = true, ["plate_foil"] = true, ["ingot_foil"] = true},
     {
+      ["molten_plate"] = true,
       ["plate_foil"] = true,
       ["stickLong_spring"] = true,
       ["plate_sheetmetal"] = true,
@@ -6799,6 +7009,8 @@ return {
       ["stick_wireFine"] = true
     },
     {
+      ["molten_turbineBlade"] = true,
+      ["molten_plate"] = true,
       ["plate_plateDense"] = true,
       ["ingot_plate"] = true,
       ["plate_foil"] = true,
@@ -6815,6 +7027,7 @@ return {
     {["stick_springSmall_yield1"] = true, ["stickLong_spring"] = true, ["plate_sheetmetal"] = true},
     {["ingot_foil"] = true, ["ingot_plate"] = true},
     {
+      ["molten_plate"] = true,
       ["ingot_foil"] = true,
       ["stick_springSmall_yield1"] = true,
       ["plate_foil"] = true,
@@ -6829,6 +7042,8 @@ return {
       ["wire1_wireFine"] = true
     },
     {
+      ["molten_plate"] = true,
+      ["molten_turbineBlade"] = true,
       ["plate_sheetmetal"] = true,
       ["plate_plateTriple"] = true,
       ["ingot_plateDense"] = true,
@@ -6845,6 +7060,21 @@ return {
       ["ingot_wireFine"] = true
     },
     {
+      ["plate_plateDouble"] = true,
+      ["ingot_foil"] = true,
+      ["plate_sheetmetal"] = true,
+      ["ingot_plateDense"] = true,
+      ["ingot_plateDouble"] = true,
+      ["stick_springSmall_yield1"] = true,
+      ["stickLong_spring"] = true,
+      ["plate_foil"] = true,
+      ["plate_plateDense"] = true,
+      ["ingot_plate"] = true,
+      ["ingot_wireFine"] = true,
+      ["stick_wireFine"] = true
+    },
+    {
+      ["molten_plate"] = true,
       ["plate_plateDense"] = true,
       ["plate_plateDouble"] = true,
       ["ingot_plateDouble"] = true,
@@ -6852,14 +7082,16 @@ return {
       ["ingot_plate"] = true
     },
     {
+      ["molten_plate"] = true,
       ["ingot_plate"] = true,
       ["ingot_foil"] = true,
       ["ingot_plateDouble"] = true,
       ["plate_plateDouble"] = true,
       ["plate_foil"] = true
     },
-    {["ingot_plateDouble"] = true, ["ingot_plate"] = true, ["plate_plateDouble"] = true},
+    {["molten_plate"] = true, ["ingot_plateDouble"] = true, ["ingot_plate"] = true, ["plate_plateDouble"] = true},
     {
+      ["molten_plate"] = true,
       ["plate_plateDouble"] = true,
       ["plate_plateDense"] = true,
       ["ingot_plate"] = true,
@@ -6871,6 +7103,7 @@ return {
       ["ingot_wireFine"] = true
     },
     {
+      ["molten_plate"] = true,
       ["plate_plateDouble"] = true,
       ["ingot_plateDense"] = true,
       ["ingot_plateDouble"] = true,
@@ -6879,8 +7112,15 @@ return {
       ["stick_wireFine"] = true,
       ["ingot_wireFine"] = true
     },
-    {["ingot_plateDouble"] = true, ["ingot_plate"] = true, ["plate_plateDouble"] = true, ["ingot_wireFine"] = true},
     {
+      ["molten_plate"] = true,
+      ["ingot_plateDouble"] = true,
+      ["ingot_plate"] = true,
+      ["plate_plateDouble"] = true,
+      ["ingot_wireFine"] = true
+    },
+    {
+      ["molten_plate"] = true,
       ["plate_foil"] = true,
       ["ingot_plateDense"] = true,
       ["ingot_plate"] = true,
@@ -6895,6 +7135,7 @@ return {
       ["ingot_wireFine"] = true
     },
     {
+      ["molten_plate"] = true,
       ["ingot_foil"] = true,
       ["ingot_plateDouble"] = true,
       ["plate_plateDouble"] = true,
@@ -6902,7 +7143,7 @@ return {
       ["plate_foil"] = true,
       ["ingot_wireFine"] = true
     },
-    {["ingot_plate"] = true}
+    {["molten_plate"] = true, ["ingot_plate"] = true}
   },
   ["items"] = {
     {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 1633, ["label"] = "Small Pile of Polydimethylsiloxane Pulp", ["option"] = "pdms"},
@@ -6910,6 +7151,8 @@ return {
     {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 2649, ["label"] = "Polyvinyl Chloride (PVC) Pulp", ["option"] = "pvc"},
     {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 2633, ["label"] = "Polydimethylsiloxane Pulp", ["option"] = "pdms"},
     {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 1649, ["label"] = "Small Pile of Polyvinyl Chloride (PVC) Pulp", ["option"] = "pvc"},
+    {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 32301, ["label"] = "Mold (Plate)"},
+    {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 32325, ["label"] = "Mold (Turbine Blade)"},
     {["name"] = "gregtech:gt.integrated_circuit", ["damage"] = 11, ["label"] = "Programmed Circuit"},
     {["name"] = "gregtech:gt.integrated_circuit", ["damage"] = 10, ["label"] = "Programmed Circuit"},
     {["name"] = "gregtech:gt.integrated_circuit", ["damage"] = 1, ["label"] = "Programmed Circuit"},
@@ -7212,11 +7455,11 @@ return {
         {["f"] = "wire1", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire1"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire1.39c62127a8"
+      ["id"] = "wiremill.dust_wire.wire1.8636f3c578"
     },
     {
       ["mode"] = "wiremill",
@@ -7227,11 +7470,11 @@ return {
         {["f"] = "wire1", ["n"] = 2}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire1"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire1.ba0e3e4e49"
+      ["id"] = "wiremill.ingot_wire.wire1.b8261f878c"
     },
     {
       ["mode"] = "wiremill",
@@ -7242,11 +7485,11 @@ return {
         {["f"] = "wire1", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire1"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire1.af589f2b2b"
+      ["id"] = "wiremill.stick_wire.wire1.902a18a497"
     },
     {
       ["mode"] = "coating",
@@ -7537,11 +7780,11 @@ return {
         {["f"] = "wire2", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 9, ["n"] = 1}
+        {["i"] = 11, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire2"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire2.5d936e2ec4"
+      ["id"] = "wiremill.dust_wire.wire2.e79aff7800"
     },
     {
       ["mode"] = "wiremill",
@@ -7552,11 +7795,11 @@ return {
         {["f"] = "wire2", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 9, ["n"] = 1}
+        {["i"] = 11, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire2"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire2.0006ef4887"
+      ["id"] = "wiremill.ingot_wire.wire2.1f260dbbf5"
     },
     {
       ["mode"] = "wiremill",
@@ -7567,11 +7810,11 @@ return {
         {["f"] = "wire2", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 9, ["n"] = 1}
+        {["i"] = 11, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire2"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire2.f2665263e3"
+      ["id"] = "wiremill.stick_wire.wire2.c79f46ee82"
     },
     {
       ["mode"] = "coating",
@@ -7862,11 +8105,11 @@ return {
         {["f"] = "wire4", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 12, ["n"] = 1}
+        {["i"] = 14, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire4"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire4.72ce9a61f1"
+      ["id"] = "wiremill.dust_wire.wire4.7dcc9e1a98"
     },
     {
       ["mode"] = "wiremill",
@@ -7877,11 +8120,11 @@ return {
         {["f"] = "wire4", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 12, ["n"] = 1}
+        {["i"] = 14, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire4"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire4.ef963c52de"
+      ["id"] = "wiremill.ingot_wire.wire4.18ceee4883"
     },
     {
       ["mode"] = "wiremill",
@@ -7892,11 +8135,11 @@ return {
         {["f"] = "wire4", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 12, ["n"] = 1}
+        {["i"] = 14, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire4"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire4.a2446caf9d"
+      ["id"] = "wiremill.stick_wire.wire4.f0550f2110"
     },
     {
       ["mode"] = "coating",
@@ -8187,11 +8430,11 @@ return {
         {["f"] = "wire8", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 14, ["n"] = 1}
+        {["i"] = 16, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire8"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire8.ed4a0ffa22"
+      ["id"] = "wiremill.dust_wire.wire8.30bc43016e"
     },
     {
       ["mode"] = "wiremill",
@@ -8202,11 +8445,11 @@ return {
         {["f"] = "wire8", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 14, ["n"] = 1}
+        {["i"] = 16, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire8"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire8.1faa2df8e8"
+      ["id"] = "wiremill.ingot_wire.wire8.9198de108f"
     },
     {
       ["mode"] = "wiremill",
@@ -8217,11 +8460,11 @@ return {
         {["f"] = "wire8", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 14, ["n"] = 1}
+        {["i"] = 16, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire8"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire8.eaeba79b14"
+      ["id"] = "wiremill.stick_wire.wire8.caee0671d2"
     },
     {
       ["mode"] = "coating",
@@ -8512,11 +8755,11 @@ return {
         {["f"] = "wire12", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 16, ["n"] = 1}
+        {["i"] = 18, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire12"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire12.29dce47241"
+      ["id"] = "wiremill.dust_wire.wire12.07ca12f6e3"
     },
     {
       ["mode"] = "wiremill",
@@ -8527,11 +8770,11 @@ return {
         {["f"] = "wire12", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 16, ["n"] = 1}
+        {["i"] = 18, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire12"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire12.fbffdd0ffb"
+      ["id"] = "wiremill.ingot_wire.wire12.9ab08a6805"
     },
     {
       ["mode"] = "wiremill",
@@ -8542,11 +8785,11 @@ return {
         {["f"] = "wire12", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 16, ["n"] = 1}
+        {["i"] = 18, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire12"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire12.430a079323"
+      ["id"] = "wiremill.stick_wire.wire12.04ab8ec7f2"
     },
     {
       ["mode"] = "coating",
@@ -8837,11 +9080,11 @@ return {
         {["f"] = "wire16", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 15, ["n"] = 1}
+        {["i"] = 17, ["n"] = 1}
       },
       ["requires"] = {"dust", "wire16"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire16.71e1bf218b"
+      ["id"] = "wiremill.dust_wire.wire16.efd3ed8623"
     },
     {
       ["mode"] = "wiremill",
@@ -8852,11 +9095,11 @@ return {
         {["f"] = "wire16", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 15, ["n"] = 1}
+        {["i"] = 17, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wire16"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire16.4e857f5bf8"
+      ["id"] = "wiremill.ingot_wire.wire16.d03bbd79f7"
     },
     {
       ["mode"] = "wiremill",
@@ -8867,11 +9110,11 @@ return {
         {["f"] = "wire16", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 15, ["n"] = 1}
+        {["i"] = 17, ["n"] = 1}
       },
       ["requires"] = {"stick", "wire16"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire16.a7f9c66ea9"
+      ["id"] = "wiremill.stick_wire.wire16.2f1ce2daf3"
     },
     {
       ["mode"] = "bender",
@@ -8882,11 +9125,26 @@ return {
         {["f"] = "plate", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"ingot", "plate"},
       ["process"] = "ingot_plate",
-      ["id"] = "bender.ingot_plate.plate.c65789f108"
+      ["id"] = "bender.ingot_plate.plate.14fe1bd8ef"
+    },
+    {
+      ["mode"] = "solidifier",
+      ["inputs"] = {
+        {["fluid"] = "material", ["n"] = 144}
+      },
+      ["outputs"] = {
+        {["f"] = "plate", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["i"] = 6, ["n"] = 1}
+      },
+      ["requires"] = {"plate"},
+      ["process"] = "molten_plate",
+      ["id"] = "solidifier.molten_plate.plate.a86d220fc6"
     },
     {
       ["mode"] = "bender",
@@ -8897,11 +9155,11 @@ return {
         {["f"] = "plateDouble", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 9, ["n"] = 1}
+        {["i"] = 11, ["n"] = 1}
       },
       ["requires"] = {"ingot", "plateDouble"},
       ["process"] = "ingot_plateDouble",
-      ["id"] = "bender.ingot_plateDouble.plateDouble.351b2568a8"
+      ["id"] = "bender.ingot_plateDouble.plateDouble.215bcf9590"
     },
     {
       ["mode"] = "bender",
@@ -8912,11 +9170,11 @@ return {
         {["f"] = "plateDouble", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 9, ["n"] = 1}
+        {["i"] = 11, ["n"] = 1}
       },
       ["requires"] = {"plate", "plateDouble"},
       ["process"] = "plate_plateDouble",
-      ["id"] = "bender.plate_plateDouble.plateDouble.0fd9c5c5a9"
+      ["id"] = "bender.plate_plateDouble.plateDouble.abbcb0e6d6"
     },
     {
       ["mode"] = "bender",
@@ -8927,11 +9185,11 @@ return {
         {["f"] = "plateTriple", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 13, ["n"] = 1}
+        {["i"] = 15, ["n"] = 1}
       },
       ["requires"] = {"ingot", "plateTriple"},
       ["process"] = "ingot_plateTriple",
-      ["id"] = "bender.ingot_plateTriple.plateTriple.4d37360121"
+      ["id"] = "bender.ingot_plateTriple.plateTriple.6a80383b3e"
     },
     {
       ["mode"] = "bender",
@@ -8942,11 +9200,11 @@ return {
         {["f"] = "plateTriple", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 13, ["n"] = 1}
+        {["i"] = 15, ["n"] = 1}
       },
       ["requires"] = {"plate", "plateTriple"},
       ["process"] = "plate_plateTriple",
-      ["id"] = "bender.plate_plateTriple.plateTriple.e6800dc35e"
+      ["id"] = "bender.plate_plateTriple.plateTriple.4d8211594b"
     },
     {
       ["mode"] = "bender",
@@ -8957,11 +9215,11 @@ return {
         {["f"] = "plateQuadruple", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 12, ["n"] = 1}
+        {["i"] = 14, ["n"] = 1}
       },
       ["requires"] = {"ingot", "plateQuadruple"},
       ["process"] = "ingot_plateQuadruple",
-      ["id"] = "bender.ingot_plateQuadruple.plateQuadruple.e033f2e95e"
+      ["id"] = "bender.ingot_plateQuadruple.plateQuadruple.b90aeb6421"
     },
     {
       ["mode"] = "bender",
@@ -8972,11 +9230,11 @@ return {
         {["f"] = "plateQuadruple", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 12, ["n"] = 1}
+        {["i"] = 14, ["n"] = 1}
       },
       ["requires"] = {"plate", "plateQuadruple"},
       ["process"] = "plate_plateQuadruple",
-      ["id"] = "bender.plate_plateQuadruple.plateQuadruple.2148185c79"
+      ["id"] = "bender.plate_plateQuadruple.plateQuadruple.01ca271026"
     },
     {
       ["mode"] = "bender",
@@ -8987,11 +9245,11 @@ return {
         {["f"] = "plateQuintuple", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 11, ["n"] = 1}
+        {["i"] = 13, ["n"] = 1}
       },
       ["requires"] = {"ingot", "plateQuintuple"},
       ["process"] = "ingot_plateQuintuple",
-      ["id"] = "bender.ingot_plateQuintuple.plateQuintuple.0c224bbfcf"
+      ["id"] = "bender.ingot_plateQuintuple.plateQuintuple.0bf7f25fa8"
     },
     {
       ["mode"] = "bender",
@@ -9002,11 +9260,11 @@ return {
         {["f"] = "plateQuintuple", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 11, ["n"] = 1}
+        {["i"] = 13, ["n"] = 1}
       },
       ["requires"] = {"plate", "plateQuintuple"},
       ["process"] = "plate_plateQuintuple",
-      ["id"] = "bender.plate_plateQuintuple.plateQuintuple.dadf5eeae3"
+      ["id"] = "bender.plate_plateQuintuple.plateQuintuple.4c3eee643c"
     },
     {
       ["mode"] = "bender",
@@ -9017,11 +9275,11 @@ return {
         {["f"] = "plateDense", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 10, ["n"] = 1}
+        {["i"] = 12, ["n"] = 1}
       },
       ["requires"] = {"ingot", "plateDense"},
       ["process"] = "ingot_plateDense",
-      ["id"] = "bender.ingot_plateDense.plateDense.90abd72002"
+      ["id"] = "bender.ingot_plateDense.plateDense.d764995acb"
     },
     {
       ["mode"] = "bender",
@@ -9032,11 +9290,11 @@ return {
         {["f"] = "plateDense", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 10, ["n"] = 1}
+        {["i"] = 12, ["n"] = 1}
       },
       ["requires"] = {"plate", "plateDense"},
       ["process"] = "plate_plateDense",
-      ["id"] = "bender.plate_plateDense.plateDense.3e71629012"
+      ["id"] = "bender.plate_plateDense.plateDense.e55f933b7c"
     },
     {
       ["mode"] = "bender",
@@ -9047,11 +9305,11 @@ return {
         {["f"] = "foil", ["n"] = 4}
       },
       ["stock"] = {
-        {["i"] = 7, ["n"] = 1}
+        {["i"] = 9, ["n"] = 1}
       },
       ["requires"] = {"foil", "ingot"},
       ["process"] = "ingot_foil",
-      ["id"] = "bender.ingot_foil.foil.dd57ccca56"
+      ["id"] = "bender.ingot_foil.foil.7f961cd82a"
     },
     {
       ["mode"] = "bender",
@@ -9062,11 +9320,11 @@ return {
         {["f"] = "foil", ["n"] = 4}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"foil", "plate"},
       ["process"] = "plate_foil",
-      ["id"] = "bender.plate_foil.foil.cb51a5e835"
+      ["id"] = "bender.plate_foil.foil.e98f24cd0d"
     },
     {
       ["mode"] = "bender",
@@ -9077,11 +9335,11 @@ return {
         {["f"] = "sheetmetal", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 6, ["n"] = 1}
+        {["i"] = 8, ["n"] = 1}
       },
       ["requires"] = {"plate", "sheetmetal"},
       ["process"] = "plate_sheetmetal",
-      ["id"] = "bender.plate_sheetmetal.sheetmetal.e0142ce118"
+      ["id"] = "bender.plate_sheetmetal.sheetmetal.5e742e7d49"
     },
     {
       ["mode"] = "bender",
@@ -9092,11 +9350,11 @@ return {
         {["f"] = "springSmall", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"springSmall", "stick"},
       ["process"] = "stick_springSmall_yield1",
-      ["id"] = "bender.stick_springSmall_yield1.springSmall.0549c6ba5a"
+      ["id"] = "bender.stick_springSmall_yield1.springSmall.263643c9e0"
     },
     {
       ["mode"] = "bender",
@@ -9107,11 +9365,11 @@ return {
         {["f"] = "springSmall", ["n"] = 2}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"springSmall", "stick"},
       ["process"] = "stick_springSmall_yield2",
-      ["id"] = "bender.stick_springSmall_yield2.springSmall.431152a635"
+      ["id"] = "bender.stick_springSmall_yield2.springSmall.df0a71342b"
     },
     {
       ["mode"] = "bender",
@@ -9122,11 +9380,11 @@ return {
         {["f"] = "springSmall", ["n"] = 2}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"springSmall", "wire1"},
       ["process"] = "wire1_springSmall",
-      ["id"] = "bender.wire1_springSmall.springSmall.6dc1955cae"
+      ["id"] = "bender.wire1_springSmall.springSmall.08d13b310e"
     },
     {
       ["mode"] = "bender",
@@ -9137,11 +9395,26 @@ return {
         {["f"] = "spring", ["n"] = 1}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"spring", "stickLong"},
       ["process"] = "stickLong_spring",
-      ["id"] = "bender.stickLong_spring.spring.aa25b638b1"
+      ["id"] = "bender.stickLong_spring.spring.c644ec6887"
+    },
+    {
+      ["mode"] = "solidifier",
+      ["inputs"] = {
+        {["fluid"] = "material", ["n"] = 864}
+      },
+      ["outputs"] = {
+        {["f"] = "turbineBlade", ["n"] = 1}
+      },
+      ["stock"] = {
+        {["i"] = 7, ["n"] = 1}
+      },
+      ["requires"] = {"turbineBlade"},
+      ["process"] = "molten_turbineBlade",
+      ["id"] = "solidifier.molten_turbineBlade.turbineBlade.f134424855"
     },
     {
       ["mode"] = "wiremill",
@@ -9152,11 +9425,11 @@ return {
         {["f"] = "wireFine", ["n"] = 8}
       },
       ["stock"] = {
-        {["i"] = 13, ["n"] = 1}
+        {["i"] = 15, ["n"] = 1}
       },
       ["requires"] = {"ingot", "wireFine"},
       ["process"] = "ingot_wireFine",
-      ["id"] = "wiremill.ingot_wireFine.wireFine.64c8d23b75"
+      ["id"] = "wiremill.ingot_wireFine.wireFine.55a6bb8104"
     },
     {
       ["mode"] = "wiremill",
@@ -9167,11 +9440,11 @@ return {
         {["f"] = "wireFine", ["n"] = 4}
       },
       ["stock"] = {
-        {["i"] = 13, ["n"] = 1}
+        {["i"] = 15, ["n"] = 1}
       },
       ["requires"] = {"stick", "wireFine"},
       ["process"] = "stick_wireFine",
-      ["id"] = "wiremill.stick_wireFine.wireFine.4d6233f073"
+      ["id"] = "wiremill.stick_wireFine.wireFine.78a527b33a"
     },
     {
       ["mode"] = "wiremill",
@@ -9182,18 +9455,18 @@ return {
         {["f"] = "wireFine", ["n"] = 4}
       },
       ["stock"] = {
-        {["i"] = 8, ["n"] = 1}
+        {["i"] = 10, ["n"] = 1}
       },
       ["requires"] = {"wire1", "wireFine"},
       ["process"] = "wire1_wireFine",
-      ["id"] = "wiremill.wire1_wireFine.wireFine.e1f2c950af"
+      ["id"] = "wiremill.wire1_wireFine.wireFine.3b9fe7b3f2"
     }
   },
   ["usage"] = {
     {},
     {["plate"] = true},
-    {["plate"] = true, ["plateDense"] = true, ["plateDouble"] = true},
-    {["plate"] = true, ["plateDouble"] = true},
+    {["plate"] = true, ["plateDense"] = true, ["plateDouble"] = true, ["turbineBlade"] = true},
+    {["plate"] = true, ["plateDouble"] = true, ["turbineBlade"] = true},
     {["plate"] = true, ["plateTriple"] = true},
     {
       ["cable1"] = true,
@@ -9209,6 +9482,7 @@ return {
       ["plateTriple"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9217,6 +9491,7 @@ return {
       ["wire8"] = true,
       ["wireFine"] = true
     },
+    {["turbineBlade"] = true},
     {
       ["cable1"] = true,
       ["cable12"] = true,
@@ -9229,6 +9504,7 @@ return {
       ["plateDouble"] = true,
       ["plateTriple"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire2"] = true,
@@ -9236,7 +9512,7 @@ return {
       ["wire8"] = true,
       ["wireFine"] = true
     },
-    {["foil"] = true, ["plate"] = true, ["plateDouble"] = true},
+    {["foil"] = true, ["plate"] = true, ["plateDouble"] = true, ["turbineBlade"] = true},
     {
       ["cable1"] = true,
       ["cable4"] = true,
@@ -9248,6 +9524,7 @@ return {
       ["sheetmetal"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire4"] = true,
       ["wireFine"] = true
@@ -9260,6 +9537,7 @@ return {
       ["plate"] = true,
       ["plateDouble"] = true,
       ["plateTriple"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire2"] = true,
       ["wire4"] = true,
@@ -9271,6 +9549,7 @@ return {
       ["plate"] = true,
       ["plateDouble"] = true,
       ["plateTriple"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true
     },
     {
@@ -9300,7 +9579,13 @@ return {
     },
     {["cable1"] = true, ["foil"] = true, ["plate"] = true, ["wire1"] = true},
     {["foil"] = true, ["plate"] = true},
-    {["foil"] = true, ["plate"] = true, ["plateDouble"] = true, ["wireFine"] = true},
+    {
+      ["foil"] = true,
+      ["plate"] = true,
+      ["plateDouble"] = true,
+      ["turbineBlade"] = true,
+      ["wireFine"] = true
+    },
     {
       ["cable1"] = true,
       ["cable16"] = true,
@@ -9311,6 +9596,7 @@ return {
       ["plate"] = true,
       ["plateDouble"] = true,
       ["plateTriple"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire2"] = true,
@@ -9349,6 +9635,17 @@ return {
       ["sheetmetal"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
+      ["wireFine"] = true
+    },
+    {
+      ["foil"] = true,
+      ["plate"] = true,
+      ["plateDense"] = true,
+      ["plateDouble"] = true,
+      ["sheetmetal"] = true,
+      ["spring"] = true,
+      ["springSmall"] = true,
       ["wireFine"] = true
     },
     {
@@ -9373,6 +9670,7 @@ return {
       ["plateTriple"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9390,6 +9688,7 @@ return {
       ["plateDouble"] = true,
       ["plateTriple"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire2"] = true,
@@ -9402,6 +9701,7 @@ return {
       ["plateTriple"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wireFine"] = true
     },
     {
@@ -9416,6 +9716,7 @@ return {
       ["plateDouble"] = true,
       ["plateTriple"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9437,6 +9738,7 @@ return {
       ["plateDouble"] = true,
       ["plateTriple"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9445,7 +9747,7 @@ return {
       ["wire8"] = true,
       ["wireFine"] = true
     },
-    {["plate"] = true, ["plateDouble"] = true, ["plateQuadruple"] = true},
+    {["plate"] = true, ["plateDouble"] = true, ["plateQuadruple"] = true, ["turbineBlade"] = true},
     {
       ["foil"] = true,
       ["plate"] = true,
@@ -9454,6 +9756,7 @@ return {
       ["plateTriple"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wireFine"] = true
     },
     {["foil"] = true, ["plate"] = true, ["spring"] = true, ["wire1"] = true},
@@ -9465,6 +9768,7 @@ return {
       ["plateDense"] = true,
       ["plateDouble"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wireFine"] = true
     },
     {
@@ -9474,6 +9778,15 @@ return {
       ["plateDouble"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
+      ["wireFine"] = true
+    },
+    {
+      ["foil"] = true,
+      ["plate"] = true,
+      ["plateDense"] = true,
+      ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wireFine"] = true
     },
     {
@@ -9495,6 +9808,7 @@ return {
       ["plate"] = true,
       ["plateDouble"] = true,
       ["plateTriple"] = true,
+      ["turbineBlade"] = true,
       ["wireFine"] = true
     },
     {
@@ -9507,6 +9821,7 @@ return {
       ["plateDense"] = true,
       ["plateDouble"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire2"] = true,
@@ -9526,6 +9841,7 @@ return {
       ["sheetmetal"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire4"] = true,
       ["wire8"] = true,
@@ -9537,7 +9853,8 @@ return {
       ["plateDouble"] = true,
       ["plateTriple"] = true,
       ["spring"] = true,
-      ["springSmall"] = true
+      ["springSmall"] = true,
+      ["turbineBlade"] = true
     },
     {
       ["cable1"] = true,
@@ -9566,6 +9883,7 @@ return {
       ["cable2"] = true,
       ["plate"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire2"] = true
@@ -9579,6 +9897,7 @@ return {
       ["cable8"] = true,
       ["plate"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9591,6 +9910,7 @@ return {
       ["cable2"] = true,
       ["plate"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire2"] = true
     },
@@ -9606,6 +9926,7 @@ return {
       ["plateTriple"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire4"] = true,
@@ -9619,10 +9940,11 @@ return {
       ["plateDense"] = true,
       ["plateDouble"] = true,
       ["plateTriple"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire2"] = true
     },
-    {["plate"] = true, ["plateDouble"] = true, ["plateTriple"] = true},
+    {["plate"] = true, ["plateDouble"] = true, ["plateTriple"] = true, ["turbineBlade"] = true},
     {
       ["cable1"] = true,
       ["cable16"] = true,
@@ -9633,12 +9955,20 @@ return {
       ["plate"] = true,
       ["plateDense"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire2"] = true,
       ["wire4"] = true,
       ["wire8"] = true,
       ["wireFine"] = true
+    },
+    {
+      ["foil"] = true,
+      ["plate"] = true,
+      ["plateDense"] = true,
+      ["plateDouble"] = true,
+      ["turbineBlade"] = true
     },
     {
       ["cable1"] = true,
@@ -9653,6 +9983,7 @@ return {
       ["plateTriple"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9674,6 +10005,7 @@ return {
       ["plateDouble"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9687,7 +10019,8 @@ return {
       ["plate"] = true,
       ["plateDense"] = true,
       ["plateDouble"] = true,
-      ["plateTriple"] = true
+      ["plateTriple"] = true,
+      ["turbineBlade"] = true
     },
     {
       ["cable1"] = true,
@@ -9698,6 +10031,7 @@ return {
       ["plate"] = true,
       ["plateDense"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire2"] = true,
@@ -9711,6 +10045,7 @@ return {
       ["plateQuadruple"] = true,
       ["plateTriple"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wireFine"] = true
     },
     {
@@ -9721,6 +10056,7 @@ return {
       ["plate"] = true,
       ["plateDouble"] = true,
       ["plateQuadruple"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire2"] = true,
@@ -9799,17 +10135,25 @@ return {
       ["foil"] = true,
       ["plate"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wireFine"] = true
     },
-    {["plate"] = true, ["plateDouble"] = true, ["plateQuadruple"] = true, ["plateTriple"] = true},
-    {["plate"] = true, ["plateDouble"] = true, ["wireFine"] = true},
+    {
+      ["plate"] = true,
+      ["plateDouble"] = true,
+      ["plateQuadruple"] = true,
+      ["plateTriple"] = true,
+      ["turbineBlade"] = true
+    },
+    {["plate"] = true, ["plateDouble"] = true, ["turbineBlade"] = true, ["wireFine"] = true},
     {
       ["cable1"] = true,
       ["cable2"] = true,
       ["cable4"] = true,
       ["plate"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire2"] = true,
       ["wire4"] = true,
@@ -9819,6 +10163,7 @@ return {
       ["cable1"] = true,
       ["plate"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wireFine"] = true
     },
@@ -9828,6 +10173,7 @@ return {
       ["cable2"] = true,
       ["plate"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire2"] = true,
@@ -9840,6 +10186,7 @@ return {
       ["plateTriple"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9852,9 +10199,16 @@ return {
       ["plateDense"] = true,
       ["plateDouble"] = true,
       ["plateTriple"] = true,
-      ["sheetmetal"] = true
+      ["sheetmetal"] = true,
+      ["turbineBlade"] = true
     },
-    {["plate"] = true, ["plateDense"] = true, ["plateDouble"] = true, ["plateTriple"] = true},
+    {
+      ["plate"] = true,
+      ["plateDense"] = true,
+      ["plateDouble"] = true,
+      ["plateTriple"] = true,
+      ["turbineBlade"] = true
+    },
     {
       ["cable1"] = true,
       ["cable12"] = true,
@@ -9867,6 +10221,7 @@ return {
       ["plateTriple"] = true,
       ["sheetmetal"] = true,
       ["spring"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9880,7 +10235,8 @@ return {
       ["plateDense"] = true,
       ["plateDouble"] = true,
       ["plateQuintuple"] = true,
-      ["plateTriple"] = true
+      ["plateTriple"] = true,
+      ["turbineBlade"] = true
     },
     {
       ["cable1"] = true,
@@ -9907,6 +10263,7 @@ return {
       ["plateQuintuple"] = true,
       ["plateTriple"] = true,
       ["spring"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire2"] = true,
@@ -9915,7 +10272,14 @@ return {
       ["wireFine"] = true
     },
     {["foil"] = true, ["plate"] = true, ["plateDense"] = true, ["springSmall"] = true},
-    {["foil"] = true, ["plate"] = true, ["plateDouble"] = true, ["plateQuintuple"] = true},
+    {
+      ["foil"] = true,
+      ["plate"] = true,
+      ["plateDouble"] = true,
+      ["plateQuintuple"] = true,
+      ["turbineBlade"] = true
+    },
+    {["plate"] = true, ["plateDense"] = true, ["plateDouble"] = true, ["plateTriple"] = true},
     {
       ["cable1"] = true,
       ["cable12"] = true,
@@ -9938,6 +10302,7 @@ return {
       ["cable4"] = true,
       ["plate"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire2"] = true,
       ["wire4"] = true
@@ -9951,23 +10316,34 @@ return {
       ["sheetmetal"] = true,
       ["spring"] = true,
       ["springSmall"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire16"] = true,
       ["wire2"] = true,
       ["wire4"] = true
     },
+    {
+      ["foil"] = true,
+      ["plate"] = true,
+      ["plateDense"] = true,
+      ["plateDouble"] = true,
+      ["plateTriple"] = true
+    },
     {["foil"] = true, ["plate"] = true, ["plateDense"] = true},
     {["plate"] = true, ["plateDense"] = true, ["plateTriple"] = true},
-    {["wire1"] = true, ["wire16"] = true, ["wire4"] = true},
+    {["plate"] = true, ["turbineBlade"] = true},
+    {["turbineBlade"] = true, ["wire1"] = true, ["wire16"] = true, ["wire4"] = true},
     {
       ["cable1"] = true,
       ["cable2"] = true,
       ["foil"] = true,
       ["plate"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire2"] = true
     },
+    {["plate"] = true, ["plateDouble"] = true, ["plateQuadruple"] = true},
     {["plate"] = true, ["plateDense"] = true, ["springSmall"] = true},
     {
       ["plate"] = true,
@@ -9980,6 +10356,7 @@ return {
       ["plate"] = true,
       ["plateDense"] = true,
       ["plateDouble"] = true,
+      ["turbineBlade"] = true,
       ["wire1"] = true,
       ["wire12"] = true,
       ["wire16"] = true,
@@ -9996,6 +10373,7 @@ return {
       ["plateQuadruple"] = true,
       ["plateQuintuple"] = true,
       ["plateTriple"] = true,
+      ["turbineBlade"] = true,
       ["wireFine"] = true
     },
     {
@@ -10009,8 +10387,14 @@ return {
     {["wire1"] = true, ["wireFine"] = true},
     {["spring"] = true, ["wire1"] = true},
     {["plate"] = true, ["spring"] = true, ["wire1"] = true},
-    {["plate"] = true, ["plateDense"] = true, ["plateDouble"] = true, ["wireFine"] = true},
-    {["plate"] = true, ["plateDouble"] = true, ["spring"] = true},
+    {
+      ["plate"] = true,
+      ["plateDense"] = true,
+      ["plateDouble"] = true,
+      ["turbineBlade"] = true,
+      ["wireFine"] = true
+    },
+    {["plate"] = true, ["plateDouble"] = true, ["spring"] = true, ["turbineBlade"] = true},
     {
       ["cable1"] = true,
       ["cable4"] = true,
@@ -10019,16 +10403,26 @@ return {
       ["wire4"] = true,
       ["wireFine"] = true
     },
-    {["plate"] = true, ["plateDense"] = true, ["plateDouble"] = true, ["sheetmetal"] = true},
+    {
+      ["plate"] = true,
+      ["plateDense"] = true,
+      ["plateDouble"] = true,
+      ["sheetmetal"] = true,
+      ["turbineBlade"] = true
+    },
     {
       ["foil"] = true,
       ["plate"] = true,
       ["plateDense"] = true,
       ["plateDouble"] = true,
       ["plateTriple"] = true,
+      ["turbineBlade"] = true,
       ["wireFine"] = true
     },
     {["plate"] = true, ["plateDense"] = true, ["wireFine"] = true},
+    {["foil"] = true, ["plate"] = true, ["plateDouble"] = true},
+    {["plate"] = true, ["plateDouble"] = true, ["wireFine"] = true},
+    {["plate"] = true, ["plateDouble"] = true},
     {
       ["foil"] = true,
       ["plate"] = true,
@@ -10063,27 +10457,102 @@ return {
   ["registryNames"] = {
     ["appliedenergistics2:item.itemmultipart"] = "appliedenergistics2:item.ItemMultiPart",
     ["avaritia:resource"] = "Avaritia:Resource",
+    ["bartworks:gt.bwmetageneratedbolt"] = "bartworks:gt.bwMetaGeneratedbolt",
+    ["bartworks:gt.bwmetagenerateddust"] = "bartworks:gt.bwMetaGenerateddust",
     ["bartworks:gt.bwmetageneratedfoil"] = "bartworks:gt.bwMetaGeneratedfoil",
+    ["bartworks:gt.bwmetageneratedgeargt"] = "bartworks:gt.bwMetaGeneratedgearGt",
+    ["bartworks:gt.bwmetageneratedgeargtsmall"] = "bartworks:gt.bwMetaGeneratedgearGtSmall",
     ["bartworks:gt.bwmetageneratedingot"] = "bartworks:gt.bwMetaGeneratedingot",
+    ["bartworks:gt.bwmetageneratednugget"] = "bartworks:gt.bwMetaGeneratednugget",
     ["bartworks:gt.bwmetageneratedplate"] = "bartworks:gt.bwMetaGeneratedplate",
     ["bartworks:gt.bwmetageneratedplatedense"] = "bartworks:gt.bwMetaGeneratedplateDense",
     ["bartworks:gt.bwmetageneratedplatedouble"] = "bartworks:gt.bwMetaGeneratedplateDouble",
     ["bartworks:gt.bwmetageneratedplatetriple"] = "bartworks:gt.bwMetaGeneratedplateTriple",
+    ["bartworks:gt.bwmetageneratedring"] = "bartworks:gt.bwMetaGeneratedring",
+    ["bartworks:gt.bwmetageneratedrotor"] = "bartworks:gt.bwMetaGeneratedrotor",
+    ["bartworks:gt.bwmetageneratedscrew"] = "bartworks:gt.bwMetaGeneratedscrew",
     ["bartworks:gt.bwmetageneratedspring"] = "bartworks:gt.bwMetaGeneratedspring",
     ["bartworks:gt.bwmetageneratedspringsmall"] = "bartworks:gt.bwMetaGeneratedspringSmall",
     ["bartworks:gt.bwmetageneratedstick"] = "bartworks:gt.bwMetaGeneratedstick",
     ["bartworks:gt.bwmetageneratedsticklong"] = "bartworks:gt.bwMetaGeneratedstickLong",
+    ["bartworks:gt.bwmetageneratedturbineblade"] = "bartworks:gt.bwMetaGeneratedturbineBlade",
     ["bartworks:gt.bwmetageneratedwirefine"] = "bartworks:gt.bwMetaGeneratedwireFine",
     ["botania:manaresource"] = "Botania:manaResource",
+    ["botania:storage"] = "Botania:storage",
+    ["dreamcraft:longobsidianrod"] = "dreamcraft:LongObsidianRod",
     ["dreamcraft:micainsulatorfoil"] = "dreamcraft:MicaInsulatorFoil",
     ["dreamcraft:micainsulatorsheet"] = "dreamcraft:MicaInsulatorSheet",
+    ["dreamcraft:reinforcedglassplate"] = "dreamcraft:ReinforcedGlassPlate",
+    ["emt:emtitems"] = "EMT:EMTItems",
     ["enderio:itemalloy"] = "EnderIO:itemAlloy",
+    ["etfuturum:netherite_block"] = "etfuturum:netherite_block",
+    ["extrautilities:cobblestone_compressed"] = "ExtraUtilities:cobblestone_compressed",
+    ["forestry:honeydrop"] = "Forestry:honeyDrop",
     ["galacticraftcore:item.basicitem"] = "GalacticraftCore:item.basicItem",
     ["gregtech:gt.metaitem.02"] = "gregtech:gt.metaitem.02",
     ["hardcoreenderexpansion:endium_ingot"] = "HardcoreEnderExpansion:endium_ingot",
     ["ic2:itemcellempty"] = "IC2:itemCellEmpty",
     ["ic2:itemdenseplates"] = "IC2:itemDensePlates",
     ["ic2:itemingot"] = "IC2:itemIngot",
+    ["minecraft:anvil"] = "minecraft:anvil",
+    ["miscutils:itemboltabyssalalloy"] = "miscutils:itemBoltAbyssalAlloy",
+    ["miscutils:itemboltarcanite"] = "miscutils:itemBoltArcanite",
+    ["miscutils:itemboltarceusalloy2b"] = "miscutils:itemBoltArceusAlloy2B",
+    ["miscutils:itemboltastraltitanium"] = "miscutils:itemBoltAstralTitanium",
+    ["miscutils:itemboltblackmetal"] = "miscutils:itemBoltBlackMetal",
+    ["miscutils:itemboltbloodsteel"] = "miscutils:itemBoltBloodSteel",
+    ["miscutils:itemboltbotmium"] = "miscutils:itemBoltBotmium",
+    ["miscutils:itemboltcelestialtungsten"] = "miscutils:itemBoltCelestialTungsten",
+    ["miscutils:itemboltchromaticglass"] = "miscutils:itemBoltChromaticGlass",
+    ["miscutils:itemboltcinobitea243"] = "miscutils:itemBoltCinobiteA243",
+    ["miscutils:itemboltdragonblood"] = "miscutils:itemBoltDragonblood",
+    ["miscutils:itembolteglinsteel"] = "miscutils:itemBoltEglinSteel",
+    ["miscutils:itemboltenergycrystal"] = "miscutils:itemBoltEnergyCrystal",
+    ["miscutils:itemboltgermanium"] = "miscutils:itemBoltGermanium",
+    ["miscutils:itemboltgrisium"] = "miscutils:itemBoltGrisium",
+    ["miscutils:itembolthastelloyc276"] = "miscutils:itemBoltHastelloyC276",
+    ["miscutils:itembolthastelloyn"] = "miscutils:itemBoltHastelloyN",
+    ["miscutils:itembolthastelloyw"] = "miscutils:itemBoltHastelloyW",
+    ["miscutils:itembolthastelloyx"] = "miscutils:itemBoltHastelloyX",
+    ["miscutils:itembolthelicopter"] = "miscutils:itemBoltHeLiCoPtEr",
+    ["miscutils:itembolths188a"] = "miscutils:itemBoltHS188A",
+    ["miscutils:itembolthypogen"] = "miscutils:itemBoltHypogen",
+    ["miscutils:itemboltincoloy020"] = "miscutils:itemBoltIncoloy020",
+    ["miscutils:itemboltincoloyds"] = "miscutils:itemBoltIncoloyDS",
+    ["miscutils:itemboltincoloyma956"] = "miscutils:itemBoltIncoloyMA956",
+    ["miscutils:itemboltinconel625"] = "miscutils:itemBoltInconel625",
+    ["miscutils:itemboltinconel690"] = "miscutils:itemBoltInconel690",
+    ["miscutils:itemboltinconel792"] = "miscutils:itemBoltInconel792",
+    ["miscutils:itemboltiodine"] = "miscutils:itemBoltIodine",
+    ["miscutils:itemboltlafiumcompound"] = "miscutils:itemBoltLafiumCompound",
+    ["miscutils:itemboltlaurenium"] = "miscutils:itemBoltLaurenium",
+    ["miscutils:itemboltmaragingsteel250"] = "miscutils:itemBoltMaragingSteel250",
+    ["miscutils:itemboltmaragingsteel300"] = "miscutils:itemBoltMaragingSteel300",
+    ["miscutils:itemboltmaragingsteel350"] = "miscutils:itemBoltMaragingSteel350",
+    ["miscutils:itemboltniobiumcarbide"] = "miscutils:itemBoltNiobiumCarbide",
+    ["miscutils:itemboltnitinol60"] = "miscutils:itemBoltNitinol60",
+    ["miscutils:itemboltoctiron"] = "miscutils:itemBoltOctiron",
+    ["miscutils:itemboltpikyonium64b"] = "miscutils:itemBoltPikyonium64B",
+    ["miscutils:itemboltpotin"] = "miscutils:itemBoltPotin",
+    ["miscutils:itemboltquantum"] = "miscutils:itemBoltQuantum",
+    ["miscutils:itemboltrhenium"] = "miscutils:itemBoltRhenium",
+    ["miscutils:itemboltselenium"] = "miscutils:itemBoltSelenium",
+    ["miscutils:itemboltsiliconcarbide"] = "miscutils:itemBoltSiliconCarbide",
+    ["miscutils:itemboltstaballoy"] = "miscutils:itemBoltStaballoy",
+    ["miscutils:itemboltstellite"] = "miscutils:itemBoltStellite",
+    ["miscutils:itembolttalonite"] = "miscutils:itemBoltTalonite",
+    ["miscutils:itembolttantalloy60"] = "miscutils:itemBoltTantalloy60",
+    ["miscutils:itembolttantalloy61"] = "miscutils:itemBoltTantalloy61",
+    ["miscutils:itembolttantalumcarbide"] = "miscutils:itemBoltTantalumCarbide",
+    ["miscutils:itemboltthallium"] = "miscutils:itemBoltThallium",
+    ["miscutils:itembolttitansteel"] = "miscutils:itemBoltTitansteel",
+    ["miscutils:itembolttriniumnaquadahcarbonite"] = "miscutils:itemBoltTriniumNaquadahCarbonite",
+    ["miscutils:itembolttriniumtitaniumalloy"] = "miscutils:itemBoltTriniumTitaniumAlloy",
+    ["miscutils:itembolttumbaga"] = "miscutils:itemBoltTumbaga",
+    ["miscutils:itembolttungstentitaniumcarbide"] = "miscutils:itemBoltTungstenTitaniumCarbide",
+    ["miscutils:itemboltwatertightsteel"] = "miscutils:itemBoltWatertightSteel",
+    ["miscutils:itemboltzeron100"] = "miscutils:itemBoltZeron100",
+    ["miscutils:itemboltzirconiumcarbide"] = "miscutils:itemBoltZirconiumCarbide",
     ["miscutils:itemfinewirecelestialtungsten"] = "miscutils:itemFineWireCelestialTungsten",
     ["miscutils:itemfinewirechromaticglass"] = "miscutils:itemFineWireChromaticGlass",
     ["miscutils:itemfinewiredragonblood"] = "miscutils:itemFineWireDragonblood",
@@ -10108,6 +10577,65 @@ return {
     ["miscutils:itemfoilquantum"] = "miscutils:itemFoilQuantum",
     ["miscutils:itemfoilrhugnor"] = "miscutils:itemFoilRhugnor",
     ["miscutils:itemfoiltitansteel"] = "miscutils:itemFoilTitansteel",
+    ["miscutils:itemgearabyssalalloy"] = "miscutils:itemGearAbyssalAlloy",
+    ["miscutils:itemgeararcanite"] = "miscutils:itemGearArcanite",
+    ["miscutils:itemgeararceusalloy2b"] = "miscutils:itemGearArceusAlloy2B",
+    ["miscutils:itemgearastraltitanium"] = "miscutils:itemGearAstralTitanium",
+    ["miscutils:itemgearblackmetal"] = "miscutils:itemGearBlackMetal",
+    ["miscutils:itemgearbloodsteel"] = "miscutils:itemGearBloodSteel",
+    ["miscutils:itemgearbotmium"] = "miscutils:itemGearBotmium",
+    ["miscutils:itemgearcelestialtungsten"] = "miscutils:itemGearCelestialTungsten",
+    ["miscutils:itemgearchromaticglass"] = "miscutils:itemGearChromaticGlass",
+    ["miscutils:itemgearcinobitea243"] = "miscutils:itemGearCinobiteA243",
+    ["miscutils:itemgeardragonblood"] = "miscutils:itemGearDragonblood",
+    ["miscutils:itemgeareglinsteel"] = "miscutils:itemGearEglinSteel",
+    ["miscutils:itemgearenergycrystal"] = "miscutils:itemGearEnergyCrystal",
+    ["miscutils:itemgeargermanium"] = "miscutils:itemGearGermanium",
+    ["miscutils:itemgeargrisium"] = "miscutils:itemGearGrisium",
+    ["miscutils:itemgearhastelloyc276"] = "miscutils:itemGearHastelloyC276",
+    ["miscutils:itemgearhastelloyn"] = "miscutils:itemGearHastelloyN",
+    ["miscutils:itemgearhastelloyw"] = "miscutils:itemGearHastelloyW",
+    ["miscutils:itemgearhastelloyx"] = "miscutils:itemGearHastelloyX",
+    ["miscutils:itemgearhelicopter"] = "miscutils:itemGearHeLiCoPtEr",
+    ["miscutils:itemgearhs188a"] = "miscutils:itemGearHS188A",
+    ["miscutils:itemgearhypogen"] = "miscutils:itemGearHypogen",
+    ["miscutils:itemgearincoloy020"] = "miscutils:itemGearIncoloy020",
+    ["miscutils:itemgearincoloyds"] = "miscutils:itemGearIncoloyDS",
+    ["miscutils:itemgearincoloyma956"] = "miscutils:itemGearIncoloyMA956",
+    ["miscutils:itemgearinconel625"] = "miscutils:itemGearInconel625",
+    ["miscutils:itemgearinconel690"] = "miscutils:itemGearInconel690",
+    ["miscutils:itemgearinconel792"] = "miscutils:itemGearInconel792",
+    ["miscutils:itemgeariodine"] = "miscutils:itemGearIodine",
+    ["miscutils:itemgearlafiumcompound"] = "miscutils:itemGearLafiumCompound",
+    ["miscutils:itemgearlaurenium"] = "miscutils:itemGearLaurenium",
+    ["miscutils:itemgearmaragingsteel250"] = "miscutils:itemGearMaragingSteel250",
+    ["miscutils:itemgearmaragingsteel300"] = "miscutils:itemGearMaragingSteel300",
+    ["miscutils:itemgearmaragingsteel350"] = "miscutils:itemGearMaragingSteel350",
+    ["miscutils:itemgearniobiumcarbide"] = "miscutils:itemGearNiobiumCarbide",
+    ["miscutils:itemgearnitinol60"] = "miscutils:itemGearNitinol60",
+    ["miscutils:itemgearoctiron"] = "miscutils:itemGearOctiron",
+    ["miscutils:itemgearpikyonium64b"] = "miscutils:itemGearPikyonium64B",
+    ["miscutils:itemgearpotin"] = "miscutils:itemGearPotin",
+    ["miscutils:itemgearquantum"] = "miscutils:itemGearQuantum",
+    ["miscutils:itemgearrhenium"] = "miscutils:itemGearRhenium",
+    ["miscutils:itemgearrhugnor"] = "miscutils:itemGearRhugnor",
+    ["miscutils:itemgearselenium"] = "miscutils:itemGearSelenium",
+    ["miscutils:itemgearsiliconcarbide"] = "miscutils:itemGearSiliconCarbide",
+    ["miscutils:itemgearstaballoy"] = "miscutils:itemGearStaballoy",
+    ["miscutils:itemgearstellite"] = "miscutils:itemGearStellite",
+    ["miscutils:itemgeartalonite"] = "miscutils:itemGearTalonite",
+    ["miscutils:itemgeartantalloy60"] = "miscutils:itemGearTantalloy60",
+    ["miscutils:itemgeartantalloy61"] = "miscutils:itemGearTantalloy61",
+    ["miscutils:itemgeartantalumcarbide"] = "miscutils:itemGearTantalumCarbide",
+    ["miscutils:itemgearthallium"] = "miscutils:itemGearThallium",
+    ["miscutils:itemgeartitansteel"] = "miscutils:itemGearTitansteel",
+    ["miscutils:itemgeartriniumnaquadahcarbonite"] = "miscutils:itemGearTriniumNaquadahCarbonite",
+    ["miscutils:itemgeartriniumtitaniumalloy"] = "miscutils:itemGearTriniumTitaniumAlloy",
+    ["miscutils:itemgeartumbaga"] = "miscutils:itemGearTumbaga",
+    ["miscutils:itemgeartungstentitaniumcarbide"] = "miscutils:itemGearTungstenTitaniumCarbide",
+    ["miscutils:itemgearwatertightsteel"] = "miscutils:itemGearWatertightSteel",
+    ["miscutils:itemgearzeron100"] = "miscutils:itemGearZeron100",
+    ["miscutils:itemgearzirconiumcarbide"] = "miscutils:itemGearZirconiumCarbide",
     ["miscutils:itemingotabyssalalloy"] = "miscutils:itemIngotAbyssalAlloy",
     ["miscutils:itemingotadvancednitinol"] = "miscutils:itemIngotAdvancedNitinol",
     ["miscutils:itemingotancientgranite"] = "miscutils:itemIngotAncientGranite",
@@ -10122,9 +10650,11 @@ return {
     ["miscutils:itemingotcelestialtungsten"] = "miscutils:itemIngotCelestialTungsten",
     ["miscutils:itemingotchromaticglass"] = "miscutils:itemIngotChromaticGlass",
     ["miscutils:itemingotcinobitea243"] = "miscutils:itemIngotCinobiteA243",
+    ["miscutils:itemingotcurium"] = "miscutils:itemIngotCurium",
     ["miscutils:itemingotdragonblood"] = "miscutils:itemIngotDragonblood",
     ["miscutils:itemingoteglinsteel"] = "miscutils:itemIngotEglinSteel",
     ["miscutils:itemingotenergycrystal"] = "miscutils:itemIngotEnergyCrystal",
+    ["miscutils:itemingotfermium"] = "miscutils:itemIngotFermium",
     ["miscutils:itemingotgermanium"] = "miscutils:itemIngotGermanium",
     ["miscutils:itemingotgrisium"] = "miscutils:itemIngotGrisium",
     ["miscutils:itemingothastelloyc276"] = "miscutils:itemIngotHastelloyC276",
@@ -10149,12 +10679,17 @@ return {
     ["miscutils:itemingotmaragingsteel250"] = "miscutils:itemIngotMaragingSteel250",
     ["miscutils:itemingotmaragingsteel300"] = "miscutils:itemIngotMaragingSteel300",
     ["miscutils:itemingotmaragingsteel350"] = "miscutils:itemIngotMaragingSteel350",
+    ["miscutils:itemingotneptunium"] = "miscutils:itemIngotNeptunium",
     ["miscutils:itemingotniobiumcarbide"] = "miscutils:itemIngotNiobiumCarbide",
     ["miscutils:itemingotnitinol60"] = "miscutils:itemIngotNitinol60",
     ["miscutils:itemingotoctiron"] = "miscutils:itemIngotOctiron",
     ["miscutils:itemingotpikyonium64b"] = "miscutils:itemIngotPikyonium64B",
+    ["miscutils:itemingotplutonium238"] = "miscutils:itemIngotPlutonium238",
+    ["miscutils:itemingotpolonium"] = "miscutils:itemIngotPolonium",
     ["miscutils:itemingotpotin"] = "miscutils:itemIngotPotin",
+    ["miscutils:itemingotprotactinium"] = "miscutils:itemIngotProtactinium",
     ["miscutils:itemingotquantum"] = "miscutils:itemIngotQuantum",
+    ["miscutils:itemingotradium"] = "miscutils:itemIngotRadium",
     ["miscutils:itemingotrhenium"] = "miscutils:itemIngotRhenium",
     ["miscutils:itemingotrhugnor"] = "miscutils:itemIngotRhugnor",
     ["miscutils:itemingotrunite"] = "miscutils:itemIngotRunite",
@@ -10179,6 +10714,84 @@ return {
     ["miscutils:itemingotwatertightsteel"] = "miscutils:itemIngotWatertightSteel",
     ["miscutils:itemingotzeron100"] = "miscutils:itemIngotZeron100",
     ["miscutils:itemingotzirconiumcarbide"] = "miscutils:itemIngotZirconiumCarbide",
+    ["miscutils:itemnuggetabyssalalloy"] = "miscutils:itemNuggetAbyssalAlloy",
+    ["miscutils:itemnuggetadvancednitinol"] = "miscutils:itemNuggetAdvancedNitinol",
+    ["miscutils:itemnuggetancientgranite"] = "miscutils:itemNuggetAncientGranite",
+    ["miscutils:itemnuggetarcanite"] = "miscutils:itemNuggetArcanite",
+    ["miscutils:itemnuggetarceusalloy2b"] = "miscutils:itemNuggetArceusAlloy2B",
+    ["miscutils:itemnuggetastraltitanium"] = "miscutils:itemNuggetAstralTitanium",
+    ["miscutils:itemnuggetbabbitalloy"] = "miscutils:itemNuggetBabbitAlloy",
+    ["miscutils:itemnuggetblackmetal"] = "miscutils:itemNuggetBlackMetal",
+    ["miscutils:itemnuggetblacktitanium"] = "miscutils:itemNuggetBlackTitanium",
+    ["miscutils:itemnuggetbloodsteel"] = "miscutils:itemNuggetBloodSteel",
+    ["miscutils:itemnuggetbotmium"] = "miscutils:itemNuggetBotmium",
+    ["miscutils:itemnuggetcelestialtungsten"] = "miscutils:itemNuggetCelestialTungsten",
+    ["miscutils:itemnuggetchromaticglass"] = "miscutils:itemNuggetChromaticGlass",
+    ["miscutils:itemnuggetcinobitea243"] = "miscutils:itemNuggetCinobiteA243",
+    ["miscutils:itemnuggetcurium"] = "miscutils:itemNuggetCurium",
+    ["miscutils:itemnuggetdragonblood"] = "miscutils:itemNuggetDragonblood",
+    ["miscutils:itemnuggeteglinsteel"] = "miscutils:itemNuggetEglinSteel",
+    ["miscutils:itemnuggetenergycrystal"] = "miscutils:itemNuggetEnergyCrystal",
+    ["miscutils:itemnuggetfermium"] = "miscutils:itemNuggetFermium",
+    ["miscutils:itemnuggetgermanium"] = "miscutils:itemNuggetGermanium",
+    ["miscutils:itemnuggetgrisium"] = "miscutils:itemNuggetGrisium",
+    ["miscutils:itemnuggethastelloyc276"] = "miscutils:itemNuggetHastelloyC276",
+    ["miscutils:itemnuggethastelloyn"] = "miscutils:itemNuggetHastelloyN",
+    ["miscutils:itemnuggethastelloyw"] = "miscutils:itemNuggetHastelloyW",
+    ["miscutils:itemnuggethastelloyx"] = "miscutils:itemNuggetHastelloyX",
+    ["miscutils:itemnuggethelicopter"] = "miscutils:itemNuggetHeLiCoPtEr",
+    ["miscutils:itemnuggethg1223"] = "miscutils:itemNuggetHG1223",
+    ["miscutils:itemnuggeths188a"] = "miscutils:itemNuggetHS188A",
+    ["miscutils:itemnuggethypogen"] = "miscutils:itemNuggetHypogen",
+    ["miscutils:itemnuggetincoloy020"] = "miscutils:itemNuggetIncoloy020",
+    ["miscutils:itemnuggetincoloyds"] = "miscutils:itemNuggetIncoloyDS",
+    ["miscutils:itemnuggetincoloyma956"] = "miscutils:itemNuggetIncoloyMA956",
+    ["miscutils:itemnuggetinconel625"] = "miscutils:itemNuggetInconel625",
+    ["miscutils:itemnuggetinconel690"] = "miscutils:itemNuggetInconel690",
+    ["miscutils:itemnuggetinconel792"] = "miscutils:itemNuggetInconel792",
+    ["miscutils:itemnuggetindalloy140"] = "miscutils:itemNuggetIndalloy140",
+    ["miscutils:itemnuggetiodine"] = "miscutils:itemNuggetIodine",
+    ["miscutils:itemnuggetlafiumcompound"] = "miscutils:itemNuggetLafiumCompound",
+    ["miscutils:itemnuggetlaurenium"] = "miscutils:itemNuggetLaurenium",
+    ["miscutils:itemnuggetlithium7"] = "miscutils:itemNuggetLithium7",
+    ["miscutils:itemnuggetmaragingsteel250"] = "miscutils:itemNuggetMaragingSteel250",
+    ["miscutils:itemnuggetmaragingsteel300"] = "miscutils:itemNuggetMaragingSteel300",
+    ["miscutils:itemnuggetmaragingsteel350"] = "miscutils:itemNuggetMaragingSteel350",
+    ["miscutils:itemnuggetneptunium"] = "miscutils:itemNuggetNeptunium",
+    ["miscutils:itemnuggetniobiumcarbide"] = "miscutils:itemNuggetNiobiumCarbide",
+    ["miscutils:itemnuggetnitinol60"] = "miscutils:itemNuggetNitinol60",
+    ["miscutils:itemnuggetoctiron"] = "miscutils:itemNuggetOctiron",
+    ["miscutils:itemnuggetpikyonium64b"] = "miscutils:itemNuggetPikyonium64B",
+    ["miscutils:itemnuggetplutonium238"] = "miscutils:itemNuggetPlutonium238",
+    ["miscutils:itemnuggetpolonium"] = "miscutils:itemNuggetPolonium",
+    ["miscutils:itemnuggetpotin"] = "miscutils:itemNuggetPotin",
+    ["miscutils:itemnuggetprotactinium"] = "miscutils:itemNuggetProtactinium",
+    ["miscutils:itemnuggetquantum"] = "miscutils:itemNuggetQuantum",
+    ["miscutils:itemnuggetradium"] = "miscutils:itemNuggetRadium",
+    ["miscutils:itemnuggetrhenium"] = "miscutils:itemNuggetRhenium",
+    ["miscutils:itemnuggetrhugnor"] = "miscutils:itemNuggetRhugnor",
+    ["miscutils:itemnuggetrunite"] = "miscutils:itemNuggetRunite",
+    ["miscutils:itemnuggetselenium"] = "miscutils:itemNuggetSelenium",
+    ["miscutils:itemnuggetsiliconcarbide"] = "miscutils:itemNuggetSiliconCarbide",
+    ["miscutils:itemnuggetstaballoy"] = "miscutils:itemNuggetStaballoy",
+    ["miscutils:itemnuggetstellite"] = "miscutils:itemNuggetStellite",
+    ["miscutils:itemnuggettalonite"] = "miscutils:itemNuggetTalonite",
+    ["miscutils:itemnuggettantalloy60"] = "miscutils:itemNuggetTantalloy60",
+    ["miscutils:itemnuggettantalloy61"] = "miscutils:itemNuggetTantalloy61",
+    ["miscutils:itemnuggettantalumcarbide"] = "miscutils:itemNuggetTantalumCarbide",
+    ["miscutils:itemnuggettechnetium"] = "miscutils:itemNuggetTechnetium",
+    ["miscutils:itemnuggetthallium"] = "miscutils:itemNuggetThallium",
+    ["miscutils:itemnuggettitansteel"] = "miscutils:itemNuggetTitansteel",
+    ["miscutils:itemnuggettriniumnaquadahalloy"] = "miscutils:itemNuggetTriniumNaquadahAlloy",
+    ["miscutils:itemnuggettriniumnaquadahcarbonite"] = "miscutils:itemNuggetTriniumNaquadahCarbonite",
+    ["miscutils:itemnuggettriniumtitaniumalloy"] = "miscutils:itemNuggetTriniumTitaniumAlloy",
+    ["miscutils:itemnuggettumbaga"] = "miscutils:itemNuggetTumbaga",
+    ["miscutils:itemnuggettungstentitaniumcarbide"] = "miscutils:itemNuggetTungstenTitaniumCarbide",
+    ["miscutils:itemnuggeturanium232"] = "miscutils:itemNuggetUranium232",
+    ["miscutils:itemnuggeturanium233"] = "miscutils:itemNuggetUranium233",
+    ["miscutils:itemnuggetwatertightsteel"] = "miscutils:itemNuggetWatertightSteel",
+    ["miscutils:itemnuggetzeron100"] = "miscutils:itemNuggetZeron100",
+    ["miscutils:itemnuggetzirconiumcarbide"] = "miscutils:itemNuggetZirconiumCarbide",
     ["miscutils:itemplateabyssalalloy"] = "miscutils:itemPlateAbyssalAlloy",
     ["miscutils:itemplateadvancednitinol"] = "miscutils:itemPlateAdvancedNitinol",
     ["miscutils:itemplateancientgranite"] = "miscutils:itemPlateAncientGranite",
@@ -10378,15 +10991,348 @@ return {
     ["miscutils:itemplatewatertightsteel"] = "miscutils:itemPlateWatertightSteel",
     ["miscutils:itemplatezeron100"] = "miscutils:itemPlateZeron100",
     ["miscutils:itemplatezirconiumcarbide"] = "miscutils:itemPlateZirconiumCarbide",
+    ["miscutils:itemringabyssalalloy"] = "miscutils:itemRingAbyssalAlloy",
+    ["miscutils:itemringarcanite"] = "miscutils:itemRingArcanite",
+    ["miscutils:itemringarceusalloy2b"] = "miscutils:itemRingArceusAlloy2B",
+    ["miscutils:itemringastraltitanium"] = "miscutils:itemRingAstralTitanium",
+    ["miscutils:itemringblackmetal"] = "miscutils:itemRingBlackMetal",
+    ["miscutils:itemringbloodsteel"] = "miscutils:itemRingBloodSteel",
+    ["miscutils:itemringbotmium"] = "miscutils:itemRingBotmium",
+    ["miscutils:itemringcelestialtungsten"] = "miscutils:itemRingCelestialTungsten",
+    ["miscutils:itemringchromaticglass"] = "miscutils:itemRingChromaticGlass",
+    ["miscutils:itemringcinobitea243"] = "miscutils:itemRingCinobiteA243",
+    ["miscutils:itemringdragonblood"] = "miscutils:itemRingDragonblood",
+    ["miscutils:itemringeglinsteel"] = "miscutils:itemRingEglinSteel",
+    ["miscutils:itemringenergycrystal"] = "miscutils:itemRingEnergyCrystal",
+    ["miscutils:itemringgermanium"] = "miscutils:itemRingGermanium",
+    ["miscutils:itemringgrisium"] = "miscutils:itemRingGrisium",
+    ["miscutils:itemringhastelloyc276"] = "miscutils:itemRingHastelloyC276",
+    ["miscutils:itemringhastelloyn"] = "miscutils:itemRingHastelloyN",
+    ["miscutils:itemringhastelloyw"] = "miscutils:itemRingHastelloyW",
+    ["miscutils:itemringhastelloyx"] = "miscutils:itemRingHastelloyX",
+    ["miscutils:itemringhelicopter"] = "miscutils:itemRingHeLiCoPtEr",
+    ["miscutils:itemringhs188a"] = "miscutils:itemRingHS188A",
+    ["miscutils:itemringhypogen"] = "miscutils:itemRingHypogen",
+    ["miscutils:itemringincoloy020"] = "miscutils:itemRingIncoloy020",
+    ["miscutils:itemringincoloyds"] = "miscutils:itemRingIncoloyDS",
+    ["miscutils:itemringincoloyma956"] = "miscutils:itemRingIncoloyMA956",
+    ["miscutils:itemringinconel625"] = "miscutils:itemRingInconel625",
+    ["miscutils:itemringinconel690"] = "miscutils:itemRingInconel690",
+    ["miscutils:itemringinconel792"] = "miscutils:itemRingInconel792",
+    ["miscutils:itemringiodine"] = "miscutils:itemRingIodine",
+    ["miscutils:itemringlafiumcompound"] = "miscutils:itemRingLafiumCompound",
+    ["miscutils:itemringlaurenium"] = "miscutils:itemRingLaurenium",
+    ["miscutils:itemringmaragingsteel250"] = "miscutils:itemRingMaragingSteel250",
+    ["miscutils:itemringmaragingsteel300"] = "miscutils:itemRingMaragingSteel300",
+    ["miscutils:itemringmaragingsteel350"] = "miscutils:itemRingMaragingSteel350",
+    ["miscutils:itemringniobiumcarbide"] = "miscutils:itemRingNiobiumCarbide",
+    ["miscutils:itemringnitinol60"] = "miscutils:itemRingNitinol60",
+    ["miscutils:itemringoctiron"] = "miscutils:itemRingOctiron",
+    ["miscutils:itemringpikyonium64b"] = "miscutils:itemRingPikyonium64B",
+    ["miscutils:itemringpotin"] = "miscutils:itemRingPotin",
+    ["miscutils:itemringquantum"] = "miscutils:itemRingQuantum",
+    ["miscutils:itemringrhenium"] = "miscutils:itemRingRhenium",
+    ["miscutils:itemringselenium"] = "miscutils:itemRingSelenium",
+    ["miscutils:itemringsiliconcarbide"] = "miscutils:itemRingSiliconCarbide",
+    ["miscutils:itemringstaballoy"] = "miscutils:itemRingStaballoy",
+    ["miscutils:itemringstellite"] = "miscutils:itemRingStellite",
+    ["miscutils:itemringtalonite"] = "miscutils:itemRingTalonite",
+    ["miscutils:itemringtantalloy60"] = "miscutils:itemRingTantalloy60",
+    ["miscutils:itemringtantalloy61"] = "miscutils:itemRingTantalloy61",
+    ["miscutils:itemringtantalumcarbide"] = "miscutils:itemRingTantalumCarbide",
+    ["miscutils:itemringthallium"] = "miscutils:itemRingThallium",
+    ["miscutils:itemringtitansteel"] = "miscutils:itemRingTitansteel",
+    ["miscutils:itemringtriniumnaquadahcarbonite"] = "miscutils:itemRingTriniumNaquadahCarbonite",
+    ["miscutils:itemringtriniumtitaniumalloy"] = "miscutils:itemRingTriniumTitaniumAlloy",
+    ["miscutils:itemringtumbaga"] = "miscutils:itemRingTumbaga",
+    ["miscutils:itemringtungstentitaniumcarbide"] = "miscutils:itemRingTungstenTitaniumCarbide",
+    ["miscutils:itemringwatertightsteel"] = "miscutils:itemRingWatertightSteel",
+    ["miscutils:itemringzeron100"] = "miscutils:itemRingZeron100",
+    ["miscutils:itemringzirconiumcarbide"] = "miscutils:itemRingZirconiumCarbide",
+    ["miscutils:itemrodabyssalalloy"] = "miscutils:itemRodAbyssalAlloy",
+    ["miscutils:itemrodammoniumbifluoride"] = "miscutils:itemRodAmmoniumBifluoride",
+    ["miscutils:itemrodarcanite"] = "miscutils:itemRodArcanite",
+    ["miscutils:itemrodarceusalloy2b"] = "miscutils:itemRodArceusAlloy2B",
+    ["miscutils:itemrodastraltitanium"] = "miscutils:itemRodAstralTitanium",
+    ["miscutils:itemrodberylliumfluoride"] = "miscutils:itemRodBerylliumFluoride",
+    ["miscutils:itemrodberylliumhydroxide"] = "miscutils:itemRodBerylliumHydroxide",
+    ["miscutils:itemrodblackmetal"] = "miscutils:itemRodBlackMetal",
+    ["miscutils:itemrodbloodsteel"] = "miscutils:itemRodBloodSteel",
+    ["miscutils:itemrodbotmium"] = "miscutils:itemRodBotmium",
     ["miscutils:itemrodcelestialtungsten"] = "miscutils:itemRodCelestialTungsten",
     ["miscutils:itemrodchromaticglass"] = "miscutils:itemRodChromaticGlass",
+    ["miscutils:itemrodcinobitea243"] = "miscutils:itemRodCinobiteA243",
+    ["miscutils:itemrodcurium"] = "miscutils:itemRodCurium",
     ["miscutils:itemroddragonblood"] = "miscutils:itemRodDragonblood",
+    ["miscutils:itemrodeglinsteel"] = "miscutils:itemRodEglinSteel",
+    ["miscutils:itemrodenergycrystal"] = "miscutils:itemRodEnergyCrystal",
+    ["miscutils:itemrodfermium"] = "miscutils:itemRodFermium",
+    ["miscutils:itemrodgermanium"] = "miscutils:itemRodGermanium",
     ["miscutils:itemrodgrisium"] = "miscutils:itemRodGrisium",
+    ["miscutils:itemrodhastelloyc276"] = "miscutils:itemRodHastelloyC276",
+    ["miscutils:itemrodhastelloyn"] = "miscutils:itemRodHastelloyN",
+    ["miscutils:itemrodhastelloyw"] = "miscutils:itemRodHastelloyW",
+    ["miscutils:itemrodhastelloyx"] = "miscutils:itemRodHastelloyX",
+    ["miscutils:itemrodhelicopter"] = "miscutils:itemRodHeLiCoPtEr",
+    ["miscutils:itemrodhs188a"] = "miscutils:itemRodHS188A",
     ["miscutils:itemrodhypogen"] = "miscutils:itemRodHypogen",
+    ["miscutils:itemrodincoloy020"] = "miscutils:itemRodIncoloy020",
+    ["miscutils:itemrodincoloyds"] = "miscutils:itemRodIncoloyDS",
+    ["miscutils:itemrodincoloyma956"] = "miscutils:itemRodIncoloyMA956",
+    ["miscutils:itemrodinconel625"] = "miscutils:itemRodInconel625",
+    ["miscutils:itemrodinconel690"] = "miscutils:itemRodInconel690",
+    ["miscutils:itemrodinconel792"] = "miscutils:itemRodInconel792",
+    ["miscutils:itemrodiodine"] = "miscutils:itemRodIodine",
+    ["miscutils:itemrodlafiumcompound"] = "miscutils:itemRodLafiumCompound",
+    ["miscutils:itemrodlaurenium"] = "miscutils:itemRodLaurenium",
+    ["miscutils:itemrodlithiumfluoride"] = "miscutils:itemRodLithiumFluoride",
+    ["miscutils:itemrodlongabyssalalloy"] = "miscutils:itemRodLongAbyssalAlloy",
+    ["miscutils:itemrodlongammoniumbifluoride"] = "miscutils:itemRodLongAmmoniumBifluoride",
+    ["miscutils:itemrodlongarcanite"] = "miscutils:itemRodLongArcanite",
+    ["miscutils:itemrodlongarceusalloy2b"] = "miscutils:itemRodLongArceusAlloy2B",
+    ["miscutils:itemrodlongastraltitanium"] = "miscutils:itemRodLongAstralTitanium",
+    ["miscutils:itemrodlongberylliumfluoride"] = "miscutils:itemRodLongBerylliumFluoride",
+    ["miscutils:itemrodlongberylliumhydroxide"] = "miscutils:itemRodLongBerylliumHydroxide",
+    ["miscutils:itemrodlongblackmetal"] = "miscutils:itemRodLongBlackMetal",
+    ["miscutils:itemrodlongbloodsteel"] = "miscutils:itemRodLongBloodSteel",
+    ["miscutils:itemrodlongbotmium"] = "miscutils:itemRodLongBotmium",
+    ["miscutils:itemrodlongcelestialtungsten"] = "miscutils:itemRodLongCelestialTungsten",
+    ["miscutils:itemrodlongchromaticglass"] = "miscutils:itemRodLongChromaticGlass",
+    ["miscutils:itemrodlongcinobitea243"] = "miscutils:itemRodLongCinobiteA243",
+    ["miscutils:itemrodlongcurium"] = "miscutils:itemRodLongCurium",
+    ["miscutils:itemrodlongdragonblood"] = "miscutils:itemRodLongDragonblood",
+    ["miscutils:itemrodlongeglinsteel"] = "miscutils:itemRodLongEglinSteel",
+    ["miscutils:itemrodlongenergycrystal"] = "miscutils:itemRodLongEnergyCrystal",
+    ["miscutils:itemrodlongfermium"] = "miscutils:itemRodLongFermium",
+    ["miscutils:itemrodlonggermanium"] = "miscutils:itemRodLongGermanium",
+    ["miscutils:itemrodlonggrisium"] = "miscutils:itemRodLongGrisium",
+    ["miscutils:itemrodlonghastelloyc276"] = "miscutils:itemRodLongHastelloyC276",
+    ["miscutils:itemrodlonghastelloyn"] = "miscutils:itemRodLongHastelloyN",
+    ["miscutils:itemrodlonghastelloyw"] = "miscutils:itemRodLongHastelloyW",
+    ["miscutils:itemrodlonghastelloyx"] = "miscutils:itemRodLongHastelloyX",
+    ["miscutils:itemrodlonghelicopter"] = "miscutils:itemRodLongHeLiCoPtEr",
+    ["miscutils:itemrodlonghs188a"] = "miscutils:itemRodLongHS188A",
+    ["miscutils:itemrodlonghypogen"] = "miscutils:itemRodLongHypogen",
+    ["miscutils:itemrodlongincoloy020"] = "miscutils:itemRodLongIncoloy020",
+    ["miscutils:itemrodlongincoloyds"] = "miscutils:itemRodLongIncoloyDS",
+    ["miscutils:itemrodlongincoloyma956"] = "miscutils:itemRodLongIncoloyMA956",
+    ["miscutils:itemrodlonginconel625"] = "miscutils:itemRodLongInconel625",
+    ["miscutils:itemrodlonginconel690"] = "miscutils:itemRodLongInconel690",
+    ["miscutils:itemrodlonginconel792"] = "miscutils:itemRodLongInconel792",
+    ["miscutils:itemrodlongiodine"] = "miscutils:itemRodLongIodine",
+    ["miscutils:itemrodlonglafiumcompound"] = "miscutils:itemRodLongLafiumCompound",
+    ["miscutils:itemrodlonglaurenium"] = "miscutils:itemRodLongLaurenium",
+    ["miscutils:itemrodlonglithiumfluoride"] = "miscutils:itemRodLongLithiumFluoride",
+    ["miscutils:itemrodlongmaragingsteel250"] = "miscutils:itemRodLongMaragingSteel250",
+    ["miscutils:itemrodlongmaragingsteel300"] = "miscutils:itemRodLongMaragingSteel300",
+    ["miscutils:itemrodlongmaragingsteel350"] = "miscutils:itemRodLongMaragingSteel350",
+    ["miscutils:itemrodlongneptunium"] = "miscutils:itemRodLongNeptunium",
+    ["miscutils:itemrodlongneptuniumhexafluoride"] = "miscutils:itemRodLongNeptuniumHexafluoride",
+    ["miscutils:itemrodlongniobiumcarbide"] = "miscutils:itemRodLongNiobiumCarbide",
+    ["miscutils:itemrodlongnitinol60"] = "miscutils:itemRodLongNitinol60",
+    ["miscutils:itemrodlongoctiron"] = "miscutils:itemRodLongOctiron",
+    ["miscutils:itemrodlongpikyonium64b"] = "miscutils:itemRodLongPikyonium64B",
+    ["miscutils:itemrodlongplutonium238"] = "miscutils:itemRodLongPlutonium238",
+    ["miscutils:itemrodlongpolonium"] = "miscutils:itemRodLongPolonium",
+    ["miscutils:itemrodlongpotin"] = "miscutils:itemRodLongPotin",
+    ["miscutils:itemrodlongprotactinium"] = "miscutils:itemRodLongProtactinium",
+    ["miscutils:itemrodlongquantum"] = "miscutils:itemRodLongQuantum",
+    ["miscutils:itemrodlongradium"] = "miscutils:itemRodLongRadium",
+    ["miscutils:itemrodlongrhenium"] = "miscutils:itemRodLongRhenium",
+    ["miscutils:itemrodlongselenium"] = "miscutils:itemRodLongSelenium",
+    ["miscutils:itemrodlongseleniumhexafluoride"] = "miscutils:itemRodLongSeleniumHexafluoride",
+    ["miscutils:itemrodlongsiliconcarbide"] = "miscutils:itemRodLongSiliconCarbide",
+    ["miscutils:itemrodlongstaballoy"] = "miscutils:itemRodLongStaballoy",
+    ["miscutils:itemrodlongstellite"] = "miscutils:itemRodLongStellite",
+    ["miscutils:itemrodlongtalonite"] = "miscutils:itemRodLongTalonite",
+    ["miscutils:itemrodlongtantalloy60"] = "miscutils:itemRodLongTantalloy60",
+    ["miscutils:itemrodlongtantalloy61"] = "miscutils:itemRodLongTantalloy61",
+    ["miscutils:itemrodlongtantalumcarbide"] = "miscutils:itemRodLongTantalumCarbide",
+    ["miscutils:itemrodlongtechnetium"] = "miscutils:itemRodLongTechnetium",
+    ["miscutils:itemrodlongtechnetiumhexafluoride"] = "miscutils:itemRodLongTechnetiumHexafluoride",
+    ["miscutils:itemrodlongthallium"] = "miscutils:itemRodLongThallium",
+    ["miscutils:itemrodlongthoriumhexafluoride"] = "miscutils:itemRodLongThoriumHexafluoride",
+    ["miscutils:itemrodlongthoriumtetrafluoride"] = "miscutils:itemRodLongThoriumTetrafluoride",
+    ["miscutils:itemrodlongtitansteel"] = "miscutils:itemRodLongTitansteel",
+    ["miscutils:itemrodlongtriniumnaquadahcarbonite"] = "miscutils:itemRodLongTriniumNaquadahCarbonite",
+    ["miscutils:itemrodlongtriniumtitaniumalloy"] = "miscutils:itemRodLongTriniumTitaniumAlloy",
+    ["miscutils:itemrodlongtumbaga"] = "miscutils:itemRodLongTumbaga",
+    ["miscutils:itemrodlongtungstentitaniumcarbide"] = "miscutils:itemRodLongTungstenTitaniumCarbide",
+    ["miscutils:itemrodlonguranium232"] = "miscutils:itemRodLongUranium232",
+    ["miscutils:itemrodlonguranium233"] = "miscutils:itemRodLongUranium233",
+    ["miscutils:itemrodlonguraniumhexafluoride"] = "miscutils:itemRodLongUraniumHexafluoride",
+    ["miscutils:itemrodlonguraniumtetrafluoride"] = "miscutils:itemRodLongUraniumTetrafluoride",
+    ["miscutils:itemrodlongwatertightsteel"] = "miscutils:itemRodLongWatertightSteel",
+    ["miscutils:itemrodlongzeron100"] = "miscutils:itemRodLongZeron100",
+    ["miscutils:itemrodlongzirconiumcarbide"] = "miscutils:itemRodLongZirconiumCarbide",
+    ["miscutils:itemrodlongzirconiumtetrafluoride"] = "miscutils:itemRodLongZirconiumTetrafluoride",
+    ["miscutils:itemrodmaragingsteel250"] = "miscutils:itemRodMaragingSteel250",
+    ["miscutils:itemrodmaragingsteel300"] = "miscutils:itemRodMaragingSteel300",
+    ["miscutils:itemrodmaragingsteel350"] = "miscutils:itemRodMaragingSteel350",
+    ["miscutils:itemrodneptunium"] = "miscutils:itemRodNeptunium",
+    ["miscutils:itemrodneptuniumhexafluoride"] = "miscutils:itemRodNeptuniumHexafluoride",
+    ["miscutils:itemrodniobiumcarbide"] = "miscutils:itemRodNiobiumCarbide",
+    ["miscutils:itemrodnitinol60"] = "miscutils:itemRodNitinol60",
+    ["miscutils:itemrodoctiron"] = "miscutils:itemRodOctiron",
+    ["miscutils:itemrodpikyonium64b"] = "miscutils:itemRodPikyonium64B",
+    ["miscutils:itemrodplutonium238"] = "miscutils:itemRodPlutonium238",
+    ["miscutils:itemrodpolonium"] = "miscutils:itemRodPolonium",
+    ["miscutils:itemrodpotin"] = "miscutils:itemRodPotin",
+    ["miscutils:itemrodprotactinium"] = "miscutils:itemRodProtactinium",
+    ["miscutils:itemrodquantum"] = "miscutils:itemRodQuantum",
+    ["miscutils:itemrodradium"] = "miscutils:itemRodRadium",
+    ["miscutils:itemrodrhenium"] = "miscutils:itemRodRhenium",
+    ["miscutils:itemrodselenium"] = "miscutils:itemRodSelenium",
+    ["miscutils:itemrodseleniumhexafluoride"] = "miscutils:itemRodSeleniumHexafluoride",
+    ["miscutils:itemrodsiliconcarbide"] = "miscutils:itemRodSiliconCarbide",
+    ["miscutils:itemrodstaballoy"] = "miscutils:itemRodStaballoy",
+    ["miscutils:itemrodstellite"] = "miscutils:itemRodStellite",
+    ["miscutils:itemrodtalonite"] = "miscutils:itemRodTalonite",
+    ["miscutils:itemrodtantalloy60"] = "miscutils:itemRodTantalloy60",
+    ["miscutils:itemrodtantalloy61"] = "miscutils:itemRodTantalloy61",
+    ["miscutils:itemrodtantalumcarbide"] = "miscutils:itemRodTantalumCarbide",
+    ["miscutils:itemrodtechnetium"] = "miscutils:itemRodTechnetium",
+    ["miscutils:itemrodtechnetiumhexafluoride"] = "miscutils:itemRodTechnetiumHexafluoride",
+    ["miscutils:itemrodthallium"] = "miscutils:itemRodThallium",
+    ["miscutils:itemrodthoriumhexafluoride"] = "miscutils:itemRodThoriumHexafluoride",
+    ["miscutils:itemrodthoriumtetrafluoride"] = "miscutils:itemRodThoriumTetrafluoride",
+    ["miscutils:itemrodtitansteel"] = "miscutils:itemRodTitansteel",
+    ["miscutils:itemrodtriniumnaquadahcarbonite"] = "miscutils:itemRodTriniumNaquadahCarbonite",
+    ["miscutils:itemrodtriniumtitaniumalloy"] = "miscutils:itemRodTriniumTitaniumAlloy",
+    ["miscutils:itemrodtumbaga"] = "miscutils:itemRodTumbaga",
+    ["miscutils:itemrodtungstentitaniumcarbide"] = "miscutils:itemRodTungstenTitaniumCarbide",
+    ["miscutils:itemroduranium232"] = "miscutils:itemRodUranium232",
+    ["miscutils:itemroduranium233"] = "miscutils:itemRodUranium233",
+    ["miscutils:itemroduraniumhexafluoride"] = "miscutils:itemRodUraniumHexafluoride",
+    ["miscutils:itemroduraniumtetrafluoride"] = "miscutils:itemRodUraniumTetrafluoride",
+    ["miscutils:itemrodwatertightsteel"] = "miscutils:itemRodWatertightSteel",
+    ["miscutils:itemrodzeron100"] = "miscutils:itemRodZeron100",
+    ["miscutils:itemrodzirconiumcarbide"] = "miscutils:itemRodZirconiumCarbide",
+    ["miscutils:itemrodzirconiumtetrafluoride"] = "miscutils:itemRodZirconiumTetrafluoride",
+    ["miscutils:itemrotorabyssalalloy"] = "miscutils:itemRotorAbyssalAlloy",
+    ["miscutils:itemrotorarcanite"] = "miscutils:itemRotorArcanite",
+    ["miscutils:itemrotorarceusalloy2b"] = "miscutils:itemRotorArceusAlloy2B",
+    ["miscutils:itemrotorastraltitanium"] = "miscutils:itemRotorAstralTitanium",
+    ["miscutils:itemrotorblackmetal"] = "miscutils:itemRotorBlackMetal",
+    ["miscutils:itemrotorbloodsteel"] = "miscutils:itemRotorBloodSteel",
+    ["miscutils:itemrotorbotmium"] = "miscutils:itemRotorBotmium",
+    ["miscutils:itemrotorcelestialtungsten"] = "miscutils:itemRotorCelestialTungsten",
+    ["miscutils:itemrotorchromaticglass"] = "miscutils:itemRotorChromaticGlass",
+    ["miscutils:itemrotorcinobitea243"] = "miscutils:itemRotorCinobiteA243",
+    ["miscutils:itemrotordragonblood"] = "miscutils:itemRotorDragonblood",
+    ["miscutils:itemrotoreglinsteel"] = "miscutils:itemRotorEglinSteel",
+    ["miscutils:itemrotorenergycrystal"] = "miscutils:itemRotorEnergyCrystal",
+    ["miscutils:itemrotorgermanium"] = "miscutils:itemRotorGermanium",
+    ["miscutils:itemrotorgrisium"] = "miscutils:itemRotorGrisium",
+    ["miscutils:itemrotorhastelloyc276"] = "miscutils:itemRotorHastelloyC276",
+    ["miscutils:itemrotorhastelloyn"] = "miscutils:itemRotorHastelloyN",
+    ["miscutils:itemrotorhastelloyw"] = "miscutils:itemRotorHastelloyW",
+    ["miscutils:itemrotorhastelloyx"] = "miscutils:itemRotorHastelloyX",
+    ["miscutils:itemrotorhelicopter"] = "miscutils:itemRotorHeLiCoPtEr",
+    ["miscutils:itemrotorhs188a"] = "miscutils:itemRotorHS188A",
+    ["miscutils:itemrotorhypogen"] = "miscutils:itemRotorHypogen",
+    ["miscutils:itemrotorincoloy020"] = "miscutils:itemRotorIncoloy020",
+    ["miscutils:itemrotorincoloyds"] = "miscutils:itemRotorIncoloyDS",
+    ["miscutils:itemrotorincoloyma956"] = "miscutils:itemRotorIncoloyMA956",
+    ["miscutils:itemrotorinconel625"] = "miscutils:itemRotorInconel625",
+    ["miscutils:itemrotorinconel690"] = "miscutils:itemRotorInconel690",
+    ["miscutils:itemrotorinconel792"] = "miscutils:itemRotorInconel792",
+    ["miscutils:itemrotoriodine"] = "miscutils:itemRotorIodine",
+    ["miscutils:itemrotorlafiumcompound"] = "miscutils:itemRotorLafiumCompound",
+    ["miscutils:itemrotorlaurenium"] = "miscutils:itemRotorLaurenium",
+    ["miscutils:itemrotormaragingsteel250"] = "miscutils:itemRotorMaragingSteel250",
+    ["miscutils:itemrotormaragingsteel300"] = "miscutils:itemRotorMaragingSteel300",
+    ["miscutils:itemrotormaragingsteel350"] = "miscutils:itemRotorMaragingSteel350",
+    ["miscutils:itemrotorniobiumcarbide"] = "miscutils:itemRotorNiobiumCarbide",
+    ["miscutils:itemrotornitinol60"] = "miscutils:itemRotorNitinol60",
+    ["miscutils:itemrotoroctiron"] = "miscutils:itemRotorOctiron",
+    ["miscutils:itemrotorpikyonium64b"] = "miscutils:itemRotorPikyonium64B",
+    ["miscutils:itemrotorpotin"] = "miscutils:itemRotorPotin",
+    ["miscutils:itemrotorquantum"] = "miscutils:itemRotorQuantum",
+    ["miscutils:itemrotorrhenium"] = "miscutils:itemRotorRhenium",
+    ["miscutils:itemrotorselenium"] = "miscutils:itemRotorSelenium",
+    ["miscutils:itemrotorsiliconcarbide"] = "miscutils:itemRotorSiliconCarbide",
+    ["miscutils:itemrotorstaballoy"] = "miscutils:itemRotorStaballoy",
+    ["miscutils:itemrotorstellite"] = "miscutils:itemRotorStellite",
+    ["miscutils:itemrotortalonite"] = "miscutils:itemRotorTalonite",
+    ["miscutils:itemrotortantalloy60"] = "miscutils:itemRotorTantalloy60",
+    ["miscutils:itemrotortantalloy61"] = "miscutils:itemRotorTantalloy61",
+    ["miscutils:itemrotortantalumcarbide"] = "miscutils:itemRotorTantalumCarbide",
+    ["miscutils:itemrotorthallium"] = "miscutils:itemRotorThallium",
+    ["miscutils:itemrotortitansteel"] = "miscutils:itemRotorTitansteel",
+    ["miscutils:itemrotortriniumnaquadahcarbonite"] = "miscutils:itemRotorTriniumNaquadahCarbonite",
+    ["miscutils:itemrotortriniumtitaniumalloy"] = "miscutils:itemRotorTriniumTitaniumAlloy",
+    ["miscutils:itemrotortumbaga"] = "miscutils:itemRotorTumbaga",
+    ["miscutils:itemrotortungstentitaniumcarbide"] = "miscutils:itemRotorTungstenTitaniumCarbide",
+    ["miscutils:itemrotorwatertightsteel"] = "miscutils:itemRotorWatertightSteel",
+    ["miscutils:itemrotorzeron100"] = "miscutils:itemRotorZeron100",
+    ["miscutils:itemrotorzirconiumcarbide"] = "miscutils:itemRotorZirconiumCarbide",
+    ["miscutils:itemscrewabyssalalloy"] = "miscutils:itemScrewAbyssalAlloy",
+    ["miscutils:itemscrewarcanite"] = "miscutils:itemScrewArcanite",
+    ["miscutils:itemscrewarceusalloy2b"] = "miscutils:itemScrewArceusAlloy2B",
+    ["miscutils:itemscrewastraltitanium"] = "miscutils:itemScrewAstralTitanium",
+    ["miscutils:itemscrewblackmetal"] = "miscutils:itemScrewBlackMetal",
+    ["miscutils:itemscrewbloodsteel"] = "miscutils:itemScrewBloodSteel",
+    ["miscutils:itemscrewbotmium"] = "miscutils:itemScrewBotmium",
+    ["miscutils:itemscrewcelestialtungsten"] = "miscutils:itemScrewCelestialTungsten",
+    ["miscutils:itemscrewchromaticglass"] = "miscutils:itemScrewChromaticGlass",
+    ["miscutils:itemscrewcinobitea243"] = "miscutils:itemScrewCinobiteA243",
+    ["miscutils:itemscrewdragonblood"] = "miscutils:itemScrewDragonblood",
+    ["miscutils:itemscreweglinsteel"] = "miscutils:itemScrewEglinSteel",
+    ["miscutils:itemscrewenergycrystal"] = "miscutils:itemScrewEnergyCrystal",
+    ["miscutils:itemscrewgermanium"] = "miscutils:itemScrewGermanium",
+    ["miscutils:itemscrewgrisium"] = "miscutils:itemScrewGrisium",
+    ["miscutils:itemscrewhastelloyc276"] = "miscutils:itemScrewHastelloyC276",
+    ["miscutils:itemscrewhastelloyn"] = "miscutils:itemScrewHastelloyN",
+    ["miscutils:itemscrewhastelloyw"] = "miscutils:itemScrewHastelloyW",
+    ["miscutils:itemscrewhastelloyx"] = "miscutils:itemScrewHastelloyX",
+    ["miscutils:itemscrewhelicopter"] = "miscutils:itemScrewHeLiCoPtEr",
+    ["miscutils:itemscrewhs188a"] = "miscutils:itemScrewHS188A",
+    ["miscutils:itemscrewhypogen"] = "miscutils:itemScrewHypogen",
+    ["miscutils:itemscrewincoloy020"] = "miscutils:itemScrewIncoloy020",
+    ["miscutils:itemscrewincoloyds"] = "miscutils:itemScrewIncoloyDS",
+    ["miscutils:itemscrewincoloyma956"] = "miscutils:itemScrewIncoloyMA956",
+    ["miscutils:itemscrewinconel625"] = "miscutils:itemScrewInconel625",
+    ["miscutils:itemscrewinconel690"] = "miscutils:itemScrewInconel690",
+    ["miscutils:itemscrewinconel792"] = "miscutils:itemScrewInconel792",
+    ["miscutils:itemscrewiodine"] = "miscutils:itemScrewIodine",
+    ["miscutils:itemscrewlafiumcompound"] = "miscutils:itemScrewLafiumCompound",
+    ["miscutils:itemscrewlaurenium"] = "miscutils:itemScrewLaurenium",
+    ["miscutils:itemscrewmaragingsteel250"] = "miscutils:itemScrewMaragingSteel250",
+    ["miscutils:itemscrewmaragingsteel300"] = "miscutils:itemScrewMaragingSteel300",
+    ["miscutils:itemscrewmaragingsteel350"] = "miscutils:itemScrewMaragingSteel350",
+    ["miscutils:itemscrewniobiumcarbide"] = "miscutils:itemScrewNiobiumCarbide",
+    ["miscutils:itemscrewnitinol60"] = "miscutils:itemScrewNitinol60",
+    ["miscutils:itemscrewoctiron"] = "miscutils:itemScrewOctiron",
+    ["miscutils:itemscrewpikyonium64b"] = "miscutils:itemScrewPikyonium64B",
+    ["miscutils:itemscrewpotin"] = "miscutils:itemScrewPotin",
+    ["miscutils:itemscrewquantum"] = "miscutils:itemScrewQuantum",
+    ["miscutils:itemscrewrhenium"] = "miscutils:itemScrewRhenium",
+    ["miscutils:itemscrewselenium"] = "miscutils:itemScrewSelenium",
+    ["miscutils:itemscrewsiliconcarbide"] = "miscutils:itemScrewSiliconCarbide",
+    ["miscutils:itemscrewstaballoy"] = "miscutils:itemScrewStaballoy",
+    ["miscutils:itemscrewstellite"] = "miscutils:itemScrewStellite",
+    ["miscutils:itemscrewtalonite"] = "miscutils:itemScrewTalonite",
+    ["miscutils:itemscrewtantalloy60"] = "miscutils:itemScrewTantalloy60",
+    ["miscutils:itemscrewtantalloy61"] = "miscutils:itemScrewTantalloy61",
+    ["miscutils:itemscrewtantalumcarbide"] = "miscutils:itemScrewTantalumCarbide",
+    ["miscutils:itemscrewthallium"] = "miscutils:itemScrewThallium",
+    ["miscutils:itemscrewtitansteel"] = "miscutils:itemScrewTitansteel",
+    ["miscutils:itemscrewtriniumnaquadahcarbonite"] = "miscutils:itemScrewTriniumNaquadahCarbonite",
+    ["miscutils:itemscrewtriniumtitaniumalloy"] = "miscutils:itemScrewTriniumTitaniumAlloy",
+    ["miscutils:itemscrewtumbaga"] = "miscutils:itemScrewTumbaga",
+    ["miscutils:itemscrewtungstentitaniumcarbide"] = "miscutils:itemScrewTungstenTitaniumCarbide",
+    ["miscutils:itemscrewwatertightsteel"] = "miscutils:itemScrewWatertightSteel",
+    ["miscutils:itemscrewzeron100"] = "miscutils:itemScrewZeron100",
+    ["miscutils:itemscrewzirconiumcarbide"] = "miscutils:itemScrewZirconiumCarbide",
+    ["miscutils:itemsmallgearhypogen"] = "miscutils:itemSmallGearHypogen",
     ["natura:barleyfood"] = "Natura:barleyFood",
+    ["railcraft:anvil"] = "Railcraft:anvil",
     ["railcraft:part.rail"] = "Railcraft:part.rail",
     ["railcraft:part.rebar"] = "Railcraft:part.rebar",
     ["tconstruct:materials"] = "TConstruct:materials",
+    ["tconstruct:strangefood"] = "TConstruct:strangeFood",
+    ["thaumcraft:itemnugget"] = "Thaumcraft:ItemNugget",
     ["thaumcraft:itemresource"] = "Thaumcraft:ItemResource",
     ["twilightforest:item.fieryingot"] = "TwilightForest:item.fieryIngot",
     ["twilightforest:item.ironwoodingot"] = "TwilightForest:item.ironwoodIngot",
@@ -10405,9 +11351,10 @@ return {
       ["name"] = "AbyssalAlloy",
       ["family"] = "gtpp",
       ["dsf"] = "abyssalalloy",
+      ["molten"] = "molten.abyssalalloy",
       ["u"] = 2,
       ["a"] = 183,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Acetaldehyde",
@@ -10490,33 +11437,37 @@ return {
       ["name"] = "Adamantium",
       ["family"] = "gt",
       ["dsf"] = 319,
-      ["u"] = 50,
+      ["molten"] = "molten.adamantium",
+      ["u"] = 53,
       ["a"] = 33,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "AdamantiumAlloy",
       ["family"] = "bw",
       ["dsf"] = 10085,
+      ["molten"] = "molten.adamantium alloy",
       ["u"] = 4,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "AdemicSteel",
       ["family"] = "bw",
       ["dsf"] = 96,
+      ["molten"] = "molten.ademic steel",
       ["u"] = 4,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "AdvancedNitinol",
       ["family"] = "gtpp",
       ["dsf"] = "advancednitinol",
+      ["molten"] = "molten.advancednitinol",
       ["u"] = 2,
       ["a"] = 184,
-      ["p"] = 31
+      ["p"] = 45
     },
     {
       ["name"] = "AgarditeCd",
@@ -10597,6 +11548,7 @@ return {
       ["name"] = "Alduorite",
       ["family"] = "gt",
       ["dsf"] = 485,
+      ["molten"] = "molten.alduorite",
       ["u"] = 4,
       ["a"] = 103,
       ["p"] = 2
@@ -10635,6 +11587,7 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5718},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5721},
       ["coating"] = "standard",
+      ["molten"] = "molten.aluminium",
       ["u"] = 6,
       ["a"] = 10,
       ["p"] = 5
@@ -10664,6 +11617,7 @@ return {
       ["name"] = "Alumite",
       ["family"] = "gt",
       ["dsf"] = 400,
+      ["molten"] = "molten.alumite",
       ["u"] = 4,
       ["a"] = 39,
       ["p"] = 2
@@ -10693,7 +11647,8 @@ return {
       ["name"] = "Americium",
       ["family"] = "gt",
       ["dsf"] = 103,
-      ["u"] = 20,
+      ["molten"] = "molten.americium",
+      ["u"] = 22,
       ["a"] = 9,
       ["p"] = 4
     },
@@ -10743,6 +11698,7 @@ return {
       ["name"] = "AncientGranite",
       ["family"] = "gtpp",
       ["dsf"] = "ancientgranite",
+      ["molten"] = "molten.ancientgranite",
       ["u"] = 1,
       ["a"] = 186,
       ["overrides"] = {
@@ -10753,7 +11709,7 @@ return {
         ["dustPure"] = {["name"] = "miscutils:dustpureancientgranite", ["damage"] = 0},
         ["rawOre"] = {["name"] = "miscutils:orerawancientgranite", ["damage"] = 0}
       },
-      ["p"] = 32
+      ["p"] = 46
     },
     {
       ["name"] = "Andradite",
@@ -10768,9 +11724,9 @@ return {
       ["dsf"] = 345,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1380},
       ["coating"] = "standard",
-      ["u"] = 58,
+      ["u"] = 62,
       ["a"] = 92,
-      ["p"] = 7
+      ["p"] = 17
     },
     {
       ["name"] = "AntiKnock",
@@ -10790,9 +11746,10 @@ return {
       ["name"] = "Antimony",
       ["family"] = "gt",
       ["dsf"] = 58,
+      ["molten"] = "molten.antimony",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "AntimonyPentachloride",
@@ -10854,22 +11811,25 @@ return {
       ["name"] = "Arcanite",
       ["family"] = "gtpp",
       ["dsf"] = "arcanite",
+      ["molten"] = "molten.arcanite",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "ArceusAlloy2B",
       ["family"] = "gtpp",
       ["dsf"] = "arceusalloy2b",
-      ["u"] = 8,
+      ["molten"] = "molten.arceusalloy2b",
+      ["u"] = 109,
       ["a"] = 188,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Ardite",
       ["family"] = "gt",
       ["dsf"] = 382,
+      ["molten"] = "molten.ardite",
       ["u"] = 3,
       ["a"] = 28,
       ["p"] = 2
@@ -10885,6 +11845,7 @@ return {
       ["name"] = "Arsenic",
       ["family"] = "gt",
       ["dsf"] = 39,
+      ["molten"] = "molten.arsenic",
       ["u"] = 1,
       ["a"] = 23,
       ["p"] = 1
@@ -10907,9 +11868,10 @@ return {
       ["name"] = "Artherium-Sn",
       ["family"] = "bw",
       ["dsf"] = 10102,
-      ["u"] = 14,
+      ["molten"] = "molten.artherium-sn",
+      ["u"] = 15,
       ["a"] = 178,
-      ["p"] = 24
+      ["p"] = 37
     },
     {
       ["name"] = "Asbestos",
@@ -10936,7 +11898,8 @@ return {
       ["name"] = "AstralSilver",
       ["family"] = "gt",
       ["dsf"] = 333,
-      ["u"] = 8,
+      ["molten"] = "molten.astralsilver",
+      ["u"] = 9,
       ["a"] = 89,
       ["p"] = 2
     },
@@ -10944,9 +11907,10 @@ return {
       ["name"] = "AstralTitanium",
       ["family"] = "gtpp",
       ["dsf"] = "astraltitanium",
-      ["u"] = 14,
+      ["molten"] = "molten.astraltitanium",
+      ["u"] = 15,
       ["a"] = 189,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Atheneite",
@@ -10959,17 +11923,19 @@ return {
       ["name"] = "AtomicSeparationCatalyst",
       ["family"] = "bw",
       ["dsf"] = 10022,
+      ["molten"] = "molten.atomic separation catalyst",
       ["u"] = 4,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "BabbitAlloy",
       ["family"] = "gtpp",
       ["dsf"] = "babbitalloy",
+      ["molten"] = "molten.babbitalloy",
       ["u"] = 2,
       ["a"] = 190,
-      ["p"] = 32
+      ["p"] = 46
     },
     {
       ["name"] = "BandedIron",
@@ -11004,6 +11970,7 @@ return {
       ["name"] = "Barium",
       ["family"] = "gt",
       ["dsf"] = 63,
+      ["molten"] = "molten.barium",
       ["u"] = 1,
       ["a"] = 4,
       ["p"] = 1
@@ -11040,9 +12007,10 @@ return {
       ["name"] = "BatteryAlloy",
       ["family"] = "gt",
       ["dsf"] = 315,
+      ["molten"] = "molten.batteryalloy",
       ["u"] = 2,
       ["a"] = 76,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Bauxite",
@@ -11073,9 +12041,10 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5670},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5675},
       ["coating"] = "pps",
-      ["u"] = 73,
+      ["molten"] = "molten.bedrockium",
+      ["u"] = 77,
       ["a"] = 108,
-      ["p"] = 10
+      ["p"] = 20
     },
     {
       ["name"] = "Bentonite",
@@ -11095,6 +12064,7 @@ return {
       ["name"] = "Beryllium",
       ["family"] = "gt",
       ["dsf"] = 8,
+      ["molten"] = "molten.beryllium",
       ["u"] = 3,
       ["a"] = 5,
       ["p"] = 2
@@ -11159,6 +12129,7 @@ return {
       ["name"] = "Bismuth",
       ["family"] = "gt",
       ["dsf"] = 90,
+      ["molten"] = "molten.bismuth",
       ["u"] = 4,
       ["a"] = 28,
       ["p"] = 2
@@ -11167,6 +12138,7 @@ return {
       ["name"] = "BismuthBronze",
       ["family"] = "gt",
       ["dsf"] = 353,
+      ["molten"] = "molten.bismuthbronze",
       ["u"] = 4,
       ["a"] = 39,
       ["p"] = 2
@@ -11210,6 +12182,7 @@ return {
       ["name"] = "BlackBronze",
       ["family"] = "gt",
       ["dsf"] = 352,
+      ["molten"] = "molten.blackbronze",
       ["u"] = 4,
       ["a"] = 47,
       ["p"] = 2
@@ -11218,7 +12191,8 @@ return {
       ["name"] = "BlackDwarfMatter",
       ["family"] = "gt",
       ["dsf"] = 586,
-      ["u"] = 15,
+      ["molten"] = "molten.blackdwarfmatter",
+      ["u"] = 16,
       ["a"] = 137,
       ["p"] = 2
     },
@@ -11226,9 +12200,10 @@ return {
       ["name"] = "BlackMetal",
       ["family"] = "gtpp",
       ["dsf"] = "blackmetal",
+      ["molten"] = "molten.blackmetal",
       ["u"] = 1,
       ["a"] = 191,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "BlackPlutonium",
@@ -11237,7 +12212,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11390},
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5660},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5665},
-      ["u"] = 68,
+      ["molten"] = "molten.blackplutonium",
+      ["u"] = 72,
       ["a"] = 105,
       ["p"] = 5
     },
@@ -11247,7 +12223,8 @@ return {
       ["dsf"] = 334,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1540},
       ["coating"] = "standard",
-      ["u"] = 57,
+      ["molten"] = "molten.blacksteel",
+      ["u"] = 61,
       ["a"] = 90,
       ["p"] = 5
     },
@@ -11255,9 +12232,10 @@ return {
       ["name"] = "BlackTitanium",
       ["family"] = "gtpp",
       ["dsf"] = "blacktitanium",
+      ["molten"] = "molten.blacktitanium",
       ["u"] = 2,
       ["a"] = 192,
-      ["p"] = 31
+      ["p"] = 45
     },
     {
       ["name"] = "Blaze",
@@ -11281,6 +12259,7 @@ return {
       ["name"] = "BloodInfusedIron",
       ["family"] = "gt",
       ["dsf"] = 977,
+      ["molten"] = "molten.bloodinfusediron",
       ["u"] = 4,
       ["a"] = 39,
       ["p"] = 2
@@ -11289,9 +12268,10 @@ return {
       ["name"] = "BloodSteel",
       ["family"] = "gtpp",
       ["dsf"] = "bloodsteel",
+      ["molten"] = "molten.bloodsteel",
       ["u"] = 1,
       ["a"] = 191,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "BlueAlloy",
@@ -11299,14 +12279,16 @@ return {
       ["dsf"] = 309,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1480},
       ["coating"] = "standard",
-      ["u"] = 43,
+      ["molten"] = "molten.bluealloy",
+      ["u"] = 46,
       ["a"] = 73,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "BlueSteel",
       ["family"] = "gt",
       ["dsf"] = 349,
+      ["molten"] = "molten.bluesteel",
       ["u"] = 4,
       ["a"] = 47,
       ["p"] = 2
@@ -11360,17 +12342,19 @@ return {
       ["name"] = "BorosilicateGlass",
       ["family"] = "gt",
       ["dsf"] = 611,
+      ["molten"] = "molten.borosilicateglass",
       ["u"] = 2,
       ["a"] = 139,
-      ["p"] = 9
+      ["p"] = 28
     },
     {
       ["name"] = "Botmium",
       ["family"] = "gtpp",
       ["dsf"] = "botmium",
-      ["u"] = 14,
+      ["molten"] = "molten.botmium",
+      ["u"] = 15,
       ["a"] = 193,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "BoundlessCosmicSolder",
@@ -11385,6 +12369,7 @@ return {
       ["dsf"] = 301,
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5600},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5603},
+      ["molten"] = "molten.brass",
       ["u"] = 4,
       ["a"] = 67,
       ["overrides"] = {
@@ -11415,9 +12400,10 @@ return {
       ["family"] = "gt",
       ["dsf"] = 300,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5120},
-      ["u"] = 38,
+      ["molten"] = "molten.bronze",
+      ["u"] = 41,
       ["a"] = 66,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "BrownLimonite",
@@ -11465,9 +12451,10 @@ return {
       ["name"] = "Caesium",
       ["family"] = "gt",
       ["dsf"] = 62,
+      ["molten"] = "molten.caesium",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "CaesiumHydroxide",
@@ -11487,7 +12474,8 @@ return {
       ["name"] = "Calcium",
       ["family"] = "gt",
       ["dsf"] = 26,
-      ["u"] = 1,
+      ["molten"] = "molten.calcium",
+      ["u"] = 7,
       ["a"] = 14,
       ["overrides"] = {
         ["nugget"] = {["name"] = "bartworks:gt.bwmetageneratednugget", ["damage"] = 40},
@@ -11502,7 +12490,7 @@ return {
         ["turbineBlade"] = {["name"] = "bartworks:gt.bwmetageneratedturbineblade", ["damage"] = 40},
         ["stickLong"] = {["name"] = "bartworks:gt.bwmetageneratedsticklong", ["damage"] = 40}
       },
-      ["p"] = 6
+      ["p"] = 7
     },
     {
       ["name"] = "CalciumAcetateSolution",
@@ -11543,21 +12531,23 @@ return {
       ["name"] = "Californium",
       ["family"] = "bw",
       ["dsf"] = 39,
+      ["molten"] = "molten.californium",
       ["u"] = 1,
       ["a"] = 172,
       ["overrides"] = {
         ["cellPlasma"] = {["name"] = "miscutils:itemcellplasmacalifornium", ["damage"] = 0},
         ["cell"] = {["name"] = "miscutils:itemcellcalifornium", ["damage"] = 0}
       },
-      ["p"] = 6
+      ["p"] = 7
     },
     {
       ["name"] = "CallistoIce",
       ["family"] = "gt",
       ["dsf"] = 389,
-      ["u"] = 69,
+      ["molten"] = "molten.callistoice",
+      ["u"] = 73,
       ["a"] = 106,
-      ["p"] = 11
+      ["p"] = 19
     },
     {
       ["name"] = "Carbon",
@@ -11600,17 +12590,18 @@ return {
       ["family"] = "gt",
       ["dsf"] = 304,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5260},
-      ["u"] = 19,
+      ["u"] = 20,
       ["a"] = 69,
-      ["p"] = 2
+      ["p"] = 16
     },
     {
       ["name"] = "CelestialTungsten",
       ["family"] = "gtpp",
       ["dsf"] = "celestialtungsten",
-      ["u"] = 23,
+      ["molten"] = "molten.celestialtungsten",
+      ["u"] = 25,
       ["a"] = 194,
-      ["p"] = 33
+      ["p"] = 47
     },
     {
       ["name"] = "Cerite",
@@ -11631,9 +12622,10 @@ return {
       ["name"] = "Cerium",
       ["family"] = "gt",
       ["dsf"] = 65,
+      ["molten"] = "molten.cerium",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "CertusQuartz",
@@ -11658,6 +12650,7 @@ return {
       ["name"] = "Ceruclase",
       ["family"] = "gt",
       ["dsf"] = 952,
+      ["molten"] = "molten.ceruclase",
       ["u"] = 4,
       ["a"] = 103,
       ["p"] = 2
@@ -11767,14 +12760,16 @@ return {
       ["name"] = "ChromaticGlass",
       ["family"] = "gtpp",
       ["dsf"] = "chromaticglass",
-      ["u"] = 80,
+      ["molten"] = "molten.chromaticglass",
+      ["u"] = 85,
       ["a"] = 195,
-      ["p"] = 33
+      ["p"] = 47
     },
     {
       ["name"] = "Chrome",
       ["family"] = "gt",
       ["dsf"] = 30,
+      ["molten"] = "molten.chrome",
       ["u"] = 4,
       ["a"] = 17,
       ["p"] = 2
@@ -11790,9 +12785,10 @@ return {
       ["name"] = "ChromiumDioxide",
       ["family"] = "gt",
       ["dsf"] = 361,
+      ["molten"] = "molten.chromiumdioxide",
       ["u"] = 1,
       ["a"] = 76,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "ChromiumTrioxide",
@@ -11812,6 +12808,7 @@ return {
       ["name"] = "Chrysotile",
       ["family"] = "gt",
       ["dsf"] = 912,
+      ["molten"] = "molten.chrysotile",
       ["u"] = 4,
       ["a"] = 103,
       ["p"] = 2
@@ -11820,7 +12817,8 @@ return {
       ["name"] = "Churitsu",
       ["family"] = "gt",
       ["dsf"] = 190,
-      ["u"] = 20,
+      ["molten"] = "molten.churitsu",
+      ["u"] = 22,
       ["a"] = 57,
       ["p"] = 4
     },
@@ -11835,9 +12833,10 @@ return {
       ["name"] = "CinobiteA243",
       ["family"] = "gtpp",
       ["dsf"] = "cinobitea243",
-      ["u"] = 14,
+      ["molten"] = "molten.cinobitea243",
+      ["u"] = 15,
       ["a"] = 188,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "CircuitCompoundMK3",
@@ -11857,12 +12856,13 @@ return {
         ["plate"] = {["name"] = "miscutils:itemplateclay", ["damage"] = 0},
         ["plateDouble"] = {["name"] = "miscutils:itemplatedoubleclay", ["damage"] = 0}
       },
-      ["p"] = 20
+      ["p"] = 30
     },
     {
       ["name"] = "ClayCompound",
       ["family"] = "gt",
       ["dsf"] = 402,
+      ["molten"] = "molten.crudesteel",
       ["u"] = 4,
       ["a"] = 39,
       ["p"] = 2
@@ -11885,7 +12885,8 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5708},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5711},
       ["coating"] = "standard",
-      ["u"] = 10,
+      ["molten"] = "molten.cobalt",
+      ["u"] = 11,
       ["a"] = 19,
       ["p"] = 5
     },
@@ -11893,6 +12894,7 @@ return {
       ["name"] = "CobaltBrass",
       ["family"] = "gt",
       ["dsf"] = 343,
+      ["molten"] = "molten.cobaltbrass",
       ["u"] = 4,
       ["a"] = 39,
       ["p"] = 2
@@ -12000,16 +13002,19 @@ return {
       ["name"] = "Concrete",
       ["family"] = "gt",
       ["dsf"] = 947,
+      ["molten"] = "wet.concrete",
       ["u"] = 1,
-      ["a"] = 163
+      ["a"] = 163,
+      ["p"] = 31
     },
     {
       ["name"] = "ConductiveIron",
       ["family"] = "gt",
       ["dsf"] = 369,
-      ["u"] = 64,
+      ["molten"] = "molten.conductiveiron",
+      ["u"] = 68,
       ["a"] = 101,
-      ["p"] = 8
+      ["p"] = 11
     },
     {
       ["name"] = "ConstructionFoam",
@@ -12032,9 +13037,10 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1360},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5110},
       ["coating"] = "standard",
-      ["u"] = 12,
+      ["molten"] = "molten.copper",
+      ["u"] = 13,
       ["a"] = 20,
-      ["p"] = 5
+      ["p"] = 8
     },
     {
       ["name"] = "CopperIISulfate",
@@ -12061,18 +13067,20 @@ return {
       ["name"] = "CosmicNeutronium",
       ["family"] = "gt",
       ["dsf"] = 982,
-      ["u"] = 89,
+      ["molten"] = "molten.cosmicneutronium",
+      ["u"] = 97,
       ["a"] = 169,
       ["overrides"] = {
         ["ingot"] = {["name"] = "avaritia:resource", ["damage"] = 4}
       },
-      ["p"] = 12
+      ["p"] = 21
     },
     {
       ["name"] = "Creon",
       ["family"] = "gt",
       ["dsf"] = 149,
-      ["u"] = 36,
+      ["molten"] = "molten.creon",
+      ["u"] = 38,
       ["a"] = 48,
       ["p"] = 2
     },
@@ -12145,6 +13153,7 @@ return {
       ["name"] = "CrystallineAlloy",
       ["family"] = "gt",
       ["dsf"] = 403,
+      ["molten"] = "molten.crystallinealloy",
       ["u"] = 4,
       ["a"] = 47,
       ["p"] = 2
@@ -12153,9 +13162,10 @@ return {
       ["name"] = "CrystallinePinkSlime",
       ["family"] = "gt",
       ["dsf"] = 406,
-      ["u"] = 29,
+      ["molten"] = "molten.crystallinepinkslime",
+      ["u"] = 31,
       ["a"] = 113,
-      ["p"] = 12
+      ["p"] = 21
     },
     {
       ["name"] = "CubicZirconia",
@@ -12184,9 +13194,10 @@ return {
       ["dsf"] = 310,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1340},
       ["coating"] = "standard",
-      ["u"] = 44,
+      ["molten"] = "molten.cupronickel",
+      ["u"] = 47,
       ["a"] = 74,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "Curium",
@@ -12220,15 +13231,17 @@ return {
       ["name"] = "Dalisenite",
       ["family"] = "bw",
       ["dsf"] = 10104,
+      ["molten"] = "molten.dalisenite",
       ["u"] = 2,
       ["a"] = 178,
-      ["p"] = 24
+      ["p"] = 37
     },
     {
       ["name"] = "DamascusSteel",
       ["family"] = "gt",
       ["dsf"] = 335,
-      ["u"] = 8,
+      ["molten"] = "molten.damascussteel",
+      ["u"] = 9,
       ["a"] = 47,
       ["p"] = 2
     },
@@ -12236,6 +13249,7 @@ return {
       ["name"] = "DarkIron",
       ["family"] = "gt",
       ["dsf"] = 342,
+      ["molten"] = "molten.darkiron",
       ["u"] = 3,
       ["a"] = 72,
       ["p"] = 2
@@ -12245,12 +13259,13 @@ return {
       ["family"] = "gt",
       ["dsf"] = 364,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30760},
-      ["u"] = 8,
+      ["molten"] = "molten.darksteel",
+      ["u"] = 9,
       ["a"] = 98,
       ["overrides"] = {
         ["ingot"] = {["name"] = "enderio:itemalloy", ["damage"] = 6}
       },
-      ["p"] = 8
+      ["p"] = 11
     },
     {
       ["name"] = "Datolite",
@@ -12263,6 +13278,7 @@ return {
       ["name"] = "DeepIron",
       ["family"] = "gt",
       ["dsf"] = 829,
+      ["molten"] = "molten.deepiron",
       ["u"] = 4,
       ["a"] = 84,
       ["p"] = 2
@@ -12307,9 +13323,10 @@ return {
       ["name"] = "Desh",
       ["family"] = "gt",
       ["dsf"] = 884,
-      ["u"] = 50,
+      ["molten"] = "molten.desh",
+      ["u"] = 53,
       ["a"] = 162,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "Deuterium",
@@ -12516,9 +13533,10 @@ return {
       ["dsf"] = 975,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11330},
       ["coating"] = "pps",
-      ["u"] = 53,
+      ["molten"] = "molten.draconium",
+      ["u"] = 57,
       ["a"] = 165,
-      ["p"] = 10
+      ["p"] = 18
     },
     {
       ["name"] = "DraconiumAwakened",
@@ -12526,17 +13544,19 @@ return {
       ["dsf"] = 976,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11410},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5240},
-      ["u"] = 88,
+      ["molten"] = "molten.draconiumawakened",
+      ["u"] = 96,
       ["a"] = 166,
-      ["p"] = 10
+      ["p"] = 18
     },
     {
       ["name"] = "Dragonblood",
       ["family"] = "gtpp",
       ["dsf"] = "dragonblood",
-      ["u"] = 64,
+      ["molten"] = "molten.dragonblood",
+      ["u"] = 110,
       ["a"] = 197,
-      ["p"] = 34
+      ["p"] = 48
     },
     {
       ["name"] = "Dragonstone",
@@ -12554,7 +13574,7 @@ return {
       ["dsf"] = 207,
       ["u"] = 1,
       ["a"] = 63,
-      ["p"] = 9
+      ["p"] = 14
     },
     {
       ["name"] = "DTCC",
@@ -12602,9 +13622,10 @@ return {
       ["name"] = "Duralumin",
       ["family"] = "gt",
       ["dsf"] = 392,
-      ["u"] = 50,
+      ["molten"] = "molten.duralumin",
+      ["u"] = 53,
       ["a"] = 106,
-      ["p"] = 11
+      ["p"] = 19
     },
     {
       ["name"] = "Duranium",
@@ -12612,28 +13633,31 @@ return {
       ["dsf"] = 328,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1820},
       ["coating"] = "pps",
-      ["u"] = 55,
+      ["molten"] = "molten.duranium",
+      ["u"] = 59,
       ["a"] = 74,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "Dysprosium",
       ["family"] = "gt",
       ["dsf"] = 73,
+      ["molten"] = "molten.dysprosium",
       ["u"] = 1,
       ["a"] = 30,
       ["overrides"] = {
         ["cell"] = {["name"] = "miscutils:itemcelldysprosium", ["damage"] = 0}
       },
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "EglinSteel",
       ["family"] = "gtpp",
       ["dsf"] = "eglinsteel",
+      ["molten"] = "molten.eglinsteel",
       ["u"] = 2,
       ["a"] = 191,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "EglinSteelBaseCompound",
@@ -12648,16 +13672,19 @@ return {
       ["dsf"] = 365,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11490},
       ["coating"] = "standard",
+      ["molten"] = "molten.electricalsteel",
       ["u"] = 4,
       ["a"] = 99,
-      ["p"] = 10
+      ["p"] = 18
     },
     {
       ["name"] = "Electrotine",
       ["family"] = "gt",
       ["dsf"] = 812,
+      ["molten"] = "molten.electrotine",
       ["u"] = 1,
-      ["a"] = 152
+      ["a"] = 152,
+      ["p"] = 31
     },
     {
       ["name"] = "Electrum",
@@ -12667,13 +13694,14 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5610},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5613},
       ["coating"] = "standard",
-      ["u"] = 39,
+      ["molten"] = "molten.electrum",
+      ["u"] = 42,
       ["a"] = 68,
       ["overrides"] = {
         ["pipeItemRestrictiveTiny"] = {["name"] = "gregtech:gt.blockmachines", ["damage"] = 5642},
         ["pipeItemRestrictiveSmall"] = {["name"] = "gregtech:gt.blockmachines", ["damage"] = 5643}
       },
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "ElectrumFlux",
@@ -12683,21 +13711,23 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5650},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5655},
       ["coating"] = "pps",
-      ["u"] = 51,
+      ["molten"] = "molten.electrumflux",
+      ["u"] = 54,
       ["a"] = 80,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "ElvenElementium",
       ["family"] = "gt",
       ["dsf"] = 203,
+      ["molten"] = "molten.elvenelementium",
       ["u"] = 4,
       ["a"] = 60,
       ["overrides"] = {
         ["nugget"] = {["name"] = "botania:manaresource", ["damage"] = 19},
         ["ingot"] = {["name"] = "botania:manaresource", ["damage"] = 7}
       },
-      ["p"] = 1
+      ["p"] = 12
     },
     {
       ["name"] = "Emerald",
@@ -12741,6 +13771,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 321,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5190},
+      ["molten"] = "molten.enderium",
       ["u"] = 3,
       ["a"] = 81,
       ["p"] = 2
@@ -12749,6 +13780,7 @@ return {
       ["name"] = "EnderiumBase",
       ["family"] = "gt",
       ["dsf"] = 380,
+      ["molten"] = "molten.enderiumbase",
       ["u"] = 4,
       ["a"] = 47,
       ["p"] = 2
@@ -12767,6 +13799,7 @@ return {
       ["name"] = "Endium",
       ["family"] = "gt",
       ["dsf"] = 770,
+      ["molten"] = "molten.heeendium",
       ["u"] = 4,
       ["a"] = 17,
       ["overrides"] = {
@@ -12780,9 +13813,10 @@ return {
       ["dsf"] = 401,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1860},
       ["coating"] = "pps",
+      ["molten"] = "molten.endsteel",
       ["u"] = 4,
       ["a"] = 100,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "Endstone",
@@ -12797,14 +13831,16 @@ return {
       ["dsf"] = 366,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11510},
       ["coating"] = "standard",
-      ["u"] = 62,
+      ["molten"] = "molten.energeticalloy",
+      ["u"] = 66,
       ["a"] = 100,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "EnergeticSilver",
       ["family"] = "gt",
       ["dsf"] = 407,
+      ["molten"] = "molten.energeticsilver",
       ["u"] = 4,
       ["a"] = 39,
       ["p"] = 2
@@ -12813,9 +13849,10 @@ return {
       ["name"] = "EnergyCrystal",
       ["family"] = "gtpp",
       ["dsf"] = "energycrystal",
+      ["molten"] = "molten.energycrystal",
       ["u"] = 1,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Enriched-Naquadah-RichSolution",
@@ -12842,17 +13879,19 @@ return {
       ["name"] = "EnrichedHolmium",
       ["family"] = "gt",
       ["dsf"] = 582,
-      ["u"] = 14,
+      ["molten"] = "molten.enrichedholmium",
+      ["u"] = 15,
       ["a"] = 96,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "EnrichedNaquadahAlloy",
       ["family"] = "bw",
       ["dsf"] = 10110,
+      ["molten"] = "molten.enriched naquadah alloy",
       ["u"] = 3,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "EnrichedNaquadahGoo",
@@ -12886,33 +13925,37 @@ return {
       ["name"] = "Epoxid",
       ["family"] = "gt",
       ["dsf"] = 470,
+      ["molten"] = "molten.epoxid",
       ["u"] = 4,
       ["a"] = 62,
-      ["p"] = 3
+      ["p"] = 13
     },
     {
       ["name"] = "EpoxidFiberReinforced",
       ["family"] = "gt",
       ["dsf"] = 610,
+      ["molten"] = "molten.epoxidfiberreinforced",
       ["u"] = 4,
       ["a"] = 62,
-      ["p"] = 3
+      ["p"] = 13
     },
     {
       ["name"] = "Erbium",
       ["family"] = "gt",
       ["dsf"] = 75,
-      ["u"] = 22,
+      ["molten"] = "molten.erbium",
+      ["u"] = 24,
       ["a"] = 11,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Eternity",
       ["family"] = "gt",
       ["dsf"] = 141,
-      ["u"] = 35,
+      ["molten"] = "molten.eternity",
+      ["u"] = 37,
       ["a"] = 45,
-      ["p"] = 8
+      ["p"] = 11
     },
     {
       ["name"] = "Ethane",
@@ -12989,7 +14032,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 70,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30720},
-      ["u"] = 20,
+      ["molten"] = "molten.europium",
+      ["u"] = 22,
       ["a"] = 29,
       ["p"] = 4
     },
@@ -13042,9 +14086,10 @@ return {
       ["name"] = "ExtremelyUnstableNaquadah",
       ["family"] = "bw",
       ["dsf"] = 10024,
+      ["molten"] = "molten.extremely unstable naquadah",
       ["u"] = 4,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "Fayalite",
@@ -13113,6 +14158,7 @@ return {
       ["name"] = "FierySteel",
       ["family"] = "gt",
       ["dsf"] = 346,
+      ["molten"] = "molten.fierysteel",
       ["u"] = 4,
       ["a"] = 39,
       ["overrides"] = {
@@ -13145,6 +14191,7 @@ return {
       ["name"] = "Flerovium",
       ["family"] = "gt",
       ["dsf"] = 984,
+      ["molten"] = "molten.flerovium_gt5u",
       ["u"] = 3,
       ["a"] = 28,
       ["p"] = 2
@@ -13242,7 +14289,7 @@ return {
       ["dsf"] = 104,
       ["u"] = 2,
       ["a"] = 140,
-      ["p"] = 27
+      ["p"] = 40
     },
     {
       ["name"] = "Fluorspar",
@@ -13255,6 +14302,7 @@ return {
       ["name"] = "Force",
       ["family"] = "gt",
       ["dsf"] = 521,
+      ["molten"] = "molten.force",
       ["u"] = 4,
       ["a"] = 126,
       ["overrides"] = {
@@ -13353,20 +14401,22 @@ return {
       ["name"] = "Gadolinium",
       ["family"] = "gt",
       ["dsf"] = 71,
+      ["molten"] = "molten.gadolinium",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "GaiaSpirit",
       ["family"] = "gt",
       ["dsf"] = 205,
+      ["molten"] = "molten.gaiaspirit",
       ["u"] = 3,
       ["a"] = 62,
       ["overrides"] = {
         ["ingot"] = {["name"] = "botania:manaresource", ["damage"] = 14}
       },
-      ["p"] = 3
+      ["p"] = 13
     },
     {
       ["name"] = "Galena",
@@ -13379,30 +14429,34 @@ return {
       ["name"] = "Galgadorian",
       ["family"] = "gt",
       ["dsf"] = 384,
+      ["molten"] = "molten.galgadorian",
       ["u"] = 4,
       ["a"] = 60,
-      ["p"] = 1
+      ["p"] = 12
     },
     {
       ["name"] = "GalgadorianEnhanced",
       ["family"] = "gt",
       ["dsf"] = 385,
+      ["molten"] = "molten.enhancedgalgadorian",
       ["u"] = 4,
       ["a"] = 60,
-      ["p"] = 1
+      ["p"] = 12
     },
     {
       ["name"] = "Gallium",
       ["family"] = "gt",
       ["dsf"] = 37,
-      ["u"] = 14,
+      ["molten"] = "molten.gallium",
+      ["u"] = 15,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "GalliumArsenide",
       ["family"] = "gt",
       ["dsf"] = 980,
+      ["molten"] = "molten.galliumarsenide",
       ["u"] = 2,
       ["a"] = 54,
       ["p"] = 1
@@ -13496,16 +14550,19 @@ return {
       ["name"] = "Germanium",
       ["family"] = "gtpp",
       ["dsf"] = "germanium",
+      ["molten"] = "molten.germanium",
       ["u"] = 1,
       ["a"] = 199,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Glass",
       ["family"] = "gt",
       ["dsf"] = 890,
+      ["molten"] = "molten.glass",
       ["u"] = 2,
-      ["a"] = 64
+      ["a"] = 64,
+      ["p"] = 31
     },
     {
       ["name"] = "Glauconite",
@@ -13525,11 +14582,13 @@ return {
       ["name"] = "Glowstone",
       ["family"] = "gt",
       ["dsf"] = 811,
+      ["molten"] = "molten.glowstone",
       ["u"] = 2,
       ["a"] = 151,
       ["overrides"] = {
         ["dust"] = {["name"] = "minecraft:glowstone_dust", ["damage"] = 0}
-      }
+      },
+      ["p"] = 31
     },
     {
       ["name"] = "Glue",
@@ -13565,6 +14624,7 @@ return {
       ["dsf"] = 86,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1420},
       ["coating"] = "standard",
+      ["molten"] = "molten.gold",
       ["u"] = 6,
       ["a"] = 18,
       ["overrides"] = {
@@ -13633,15 +14693,19 @@ return {
       ["name"] = "GraniteBlack",
       ["family"] = "gt",
       ["dsf"] = 849,
+      ["molten"] = "molten.graniteblack",
       ["u"] = 2,
-      ["a"] = 156
+      ["a"] = 156,
+      ["p"] = 31
     },
     {
       ["name"] = "GraniteRed",
       ["family"] = "gt",
       ["dsf"] = 850,
+      ["molten"] = "molten.granitered",
       ["u"] = 2,
-      ["a"] = 156
+      ["a"] = 156,
+      ["p"] = 31
     },
     {
       ["name"] = "GraniticMineralSand",
@@ -13655,9 +14719,9 @@ return {
       ["family"] = "gt",
       ["dsf"] = 819,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1600},
-      ["u"] = 84,
+      ["u"] = 91,
       ["a"] = 154,
-      ["p"] = 21
+      ["p"] = 32
     },
     {
       ["name"] = "Graphite",
@@ -13720,9 +14784,10 @@ return {
       ["name"] = "Grisium",
       ["family"] = "gtpp",
       ["dsf"] = "grisium",
-      ["u"] = 4,
+      ["molten"] = "molten.grisium",
+      ["u"] = 111,
       ["a"] = 200,
-      ["p"] = 34
+      ["p"] = 48
     },
     {
       ["name"] = "Grossular",
@@ -13772,7 +14837,7 @@ return {
         ["cellPlasma"] = {["name"] = "miscutils:itemcellplasmahafnium", ["damage"] = 0},
         ["cell"] = {["name"] = "miscutils:itemcellhafnium", ["damage"] = 0}
       },
-      ["p"] = 6
+      ["p"] = 36
     },
     {
       ["name"] = "HafniumCarbide",
@@ -13785,34 +14850,38 @@ return {
       ["name"] = "HastelloyC276",
       ["family"] = "gtpp",
       ["dsf"] = "hastelloyc276",
-      ["u"] = 4,
+      ["molten"] = "molten.hastelloyc276",
+      ["u"] = 111,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "HastelloyN",
       ["family"] = "gtpp",
       ["dsf"] = "hastelloyn",
-      ["u"] = 4,
+      ["molten"] = "molten.hastelloyn",
+      ["u"] = 111,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "HastelloyW",
       ["family"] = "gtpp",
       ["dsf"] = "hastelloyw",
+      ["molten"] = "molten.hastelloyw",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "HastelloyX",
       ["family"] = "gtpp",
       ["dsf"] = "hastelloyx",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30750},
-      ["u"] = 4,
+      ["molten"] = "molten.hastelloyx",
+      ["u"] = 111,
       ["a"] = 201,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "HeatedBauxiteSlurry",
@@ -13846,9 +14915,10 @@ return {
       ["name"] = "HeLiCoPtEr",
       ["family"] = "gtpp",
       ["dsf"] = "helicopter",
+      ["molten"] = "molten.helicopter",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Helium",
@@ -13868,6 +14938,7 @@ return {
       ["name"] = "HellishMetal",
       ["family"] = "gt",
       ["dsf"] = 125,
+      ["molten"] = "molten.hellishmetal",
       ["u"] = 1,
       ["a"] = 40,
       ["p"] = 1
@@ -13890,16 +14961,17 @@ return {
       ["name"] = "Hexanite",
       ["family"] = "gt",
       ["dsf"] = 174,
-      ["u"] = 32,
+      ["u"] = 34,
       ["a"] = 56
     },
     {
       ["name"] = "HG1223",
       ["family"] = "gtpp",
       ["dsf"] = "hg1223",
-      ["u"] = 21,
+      ["molten"] = "molten.hg1223",
+      ["u"] = 23,
       ["a"] = 190,
-      ["p"] = 35
+      ["p"] = 49
     },
     {
       ["name"] = "Hibonite",
@@ -13927,25 +14999,28 @@ return {
       ["name"] = "HighDurabilityCompoundSteel",
       ["family"] = "bw",
       ["dsf"] = 92,
+      ["molten"] = "molten.high durability compound steel",
       ["u"] = 4,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "Hikarium",
       ["family"] = "bw",
       ["dsf"] = 10105,
-      ["u"] = 14,
+      ["molten"] = "molten.hikarium",
+      ["u"] = 15,
       ["a"] = 178,
-      ["p"] = 24
+      ["p"] = 37
     },
     {
       ["name"] = "Holmium",
       ["family"] = "gt",
       ["dsf"] = 74,
-      ["u"] = 21,
+      ["molten"] = "molten.holmium",
+      ["u"] = 23,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "HolyWater",
@@ -13987,7 +15062,7 @@ return {
       ["name"] = "HotProtoHalkonite",
       ["family"] = "gt",
       ["dsf"] = 153,
-      ["u"] = 36,
+      ["u"] = 39,
       ["a"] = 50
     },
     {
@@ -14001,9 +15076,10 @@ return {
       ["name"] = "HS188A",
       ["family"] = "gtpp",
       ["dsf"] = "hs188a",
-      ["u"] = 4,
+      ["molten"] = "molten.hs188a",
+      ["u"] = 111,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "HSSE",
@@ -14011,9 +15087,10 @@ return {
       ["dsf"] = 373,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11590},
       ["coating"] = "pps",
-      ["u"] = 66,
+      ["molten"] = "molten.hsse",
+      ["u"] = 70,
       ["a"] = 83,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "HSSG",
@@ -14021,7 +15098,8 @@ return {
       ["dsf"] = 372,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1700},
       ["coating"] = "pps",
-      ["u"] = 65,
+      ["molten"] = "molten.hssg",
+      ["u"] = 69,
       ["a"] = 78,
       ["p"] = 5
     },
@@ -14031,7 +15109,8 @@ return {
       ["dsf"] = 374,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11470},
       ["coating"] = "pps",
-      ["u"] = 49,
+      ["molten"] = "molten.hsss",
+      ["u"] = 52,
       ["a"] = 78,
       ["p"] = 5
     },
@@ -14103,9 +15182,10 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "hypogen",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30585},
-      ["u"] = 101,
+      ["molten"] = "molten.hypogen",
+      ["u"] = 112,
       ["a"] = 202,
-      ["p"] = 36
+      ["p"] = 50
     },
     {
       ["name"] = "Ice",
@@ -14119,9 +15199,10 @@ return {
       ["family"] = "gt",
       ["dsf"] = 978,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2600},
+      ["molten"] = "molten.ichorium",
       ["u"] = 4,
       ["a"] = 167,
-      ["p"] = 10
+      ["p"] = 18
     },
     {
       ["name"] = "IIButinIIVdiol",
@@ -14170,80 +15251,90 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10084,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30995},
+      ["molten"] = "molten.incoloy-903",
       ["u"] = 2,
       ["a"] = 179,
-      ["p"] = 24
+      ["p"] = 37
     },
     {
       ["name"] = "Incoloy020",
       ["family"] = "gtpp",
       ["dsf"] = "incoloy020",
+      ["molten"] = "molten.incoloy020",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "IncoloyDS",
       ["family"] = "gtpp",
       ["dsf"] = "incoloyds",
-      ["u"] = 4,
+      ["molten"] = "molten.incoloyds",
+      ["u"] = 111,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "IncoloyMA956",
       ["family"] = "gtpp",
       ["dsf"] = "incoloyma956",
+      ["molten"] = "molten.incoloyma956",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Inconel625",
       ["family"] = "gtpp",
       ["dsf"] = "inconel625",
-      ["u"] = 4,
+      ["molten"] = "molten.inconel625",
+      ["u"] = 111,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Inconel690",
       ["family"] = "gtpp",
       ["dsf"] = "inconel690",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30740},
+      ["molten"] = "molten.inconel690",
       ["u"] = 2,
       ["a"] = 201,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Inconel792",
       ["family"] = "gtpp",
       ["dsf"] = "inconel792",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30745},
+      ["molten"] = "molten.inconel792",
       ["u"] = 2,
       ["a"] = 201,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Indalloy140",
       ["family"] = "gtpp",
       ["dsf"] = "indalloy140",
+      ["molten"] = "molten.indalloy140",
       ["u"] = 1,
       ["a"] = 203,
-      ["p"] = 32
+      ["p"] = 46
     },
     {
       ["name"] = "Indium",
       ["family"] = "gt",
       ["dsf"] = 56,
+      ["molten"] = "molten.indium",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "IndiumGalliumPhosphide",
       ["family"] = "gt",
       ["dsf"] = 981,
+      ["molten"] = "molten.indiumgalliumphosphide",
       ["u"] = 1,
       ["a"] = 54,
       ["p"] = 1
@@ -14282,7 +15373,8 @@ return {
       ["dsf"] = 397,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11430},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5250},
-      ["u"] = 74,
+      ["molten"] = "molten.infinity",
+      ["u"] = 78,
       ["a"] = 110,
       ["overrides"] = {
         ["ingot"] = {["name"] = "avaritia:resource", ["damage"] = 6}
@@ -14293,9 +15385,10 @@ return {
       ["name"] = "InfinityCatalyst",
       ["family"] = "gt",
       ["dsf"] = 394,
-      ["u"] = 72,
+      ["molten"] = "molten.infinitycatalyst",
+      ["u"] = 76,
       ["a"] = 33,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "InfusedAir",
@@ -14329,7 +15422,8 @@ return {
       ["name"] = "InfusedGold",
       ["family"] = "gt",
       ["dsf"] = 323,
-      ["u"] = 32,
+      ["molten"] = "molten.infusedgold",
+      ["u"] = 55,
       ["a"] = 17,
       ["p"] = 2
     },
@@ -14351,6 +15445,7 @@ return {
       ["name"] = "Invar",
       ["family"] = "gt",
       ["dsf"] = 302,
+      ["molten"] = "molten.invar",
       ["u"] = 3,
       ["a"] = 39,
       ["p"] = 2
@@ -14359,9 +15454,10 @@ return {
       ["name"] = "Iodine",
       ["family"] = "gtpp",
       ["dsf"] = "iodine",
+      ["molten"] = "molten.iodine",
       ["u"] = 1,
       ["a"] = 199,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Irarsite",
@@ -14382,9 +15478,10 @@ return {
       ["name"] = "Iridium",
       ["family"] = "gt",
       ["dsf"] = 84,
-      ["u"] = 26,
+      ["molten"] = "molten.iridium",
+      ["u"] = 28,
       ["a"] = 33,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "IridiumChloride",
@@ -14413,7 +15510,8 @@ return {
       ["dsf"] = 32,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1300},
       ["coating"] = "standard",
-      ["u"] = 9,
+      ["molten"] = "molten.iron",
+      ["u"] = 10,
       ["a"] = 18,
       ["overrides"] = {
         ["ingot"] = {["name"] = "minecraft:iron_ingot", ["damage"] = 0}
@@ -14438,14 +15536,15 @@ return {
       ["name"] = "IronMagnetic",
       ["family"] = "gt",
       ["dsf"] = 354,
-      ["u"] = 19,
+      ["u"] = 20,
       ["a"] = 39,
-      ["p"] = 2
+      ["p"] = 16
     },
     {
       ["name"] = "IronWood",
       ["family"] = "gt",
       ["dsf"] = 338,
+      ["molten"] = "molten.ironwood",
       ["u"] = 4,
       ["a"] = 39,
       ["overrides"] = {
@@ -14485,7 +15584,7 @@ return {
       ["name"] = "Jade",
       ["family"] = "gt",
       ["dsf"] = 537,
-      ["u"] = 1,
+      ["u"] = 7,
       ["a"] = 132
     },
     {
@@ -14515,9 +15614,10 @@ return {
       ["dsf"] = 312,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1400},
       ["coating"] = "standard",
-      ["u"] = 46,
+      ["molten"] = "molten.kanthal",
+      ["u"] = 49,
       ["a"] = 75,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "Kaolinite",
@@ -14545,9 +15645,10 @@ return {
       ["name"] = "Kevlar",
       ["family"] = "gt",
       ["dsf"] = 765,
-      ["u"] = 83,
+      ["molten"] = "molten.kevlar",
+      ["u"] = 89,
       ["a"] = 142,
-      ["p"] = 15
+      ["p"] = 24
     },
     {
       ["name"] = "KevlarCatalyst",
@@ -14560,7 +15661,8 @@ return {
       ["name"] = "Knightmetal",
       ["family"] = "gt",
       ["dsf"] = 362,
-      ["u"] = 8,
+      ["molten"] = "molten.knightmetal",
+      ["u"] = 9,
       ["a"] = 39,
       ["overrides"] = {
         ["ingot"] = {["name"] = "twilightforest:item.knightmetal", ["damage"] = 0}
@@ -14603,9 +15705,10 @@ return {
       ["name"] = "LafiumCompound",
       ["family"] = "gtpp",
       ["dsf"] = "lafiumcompound",
-      ["u"] = 14,
+      ["molten"] = "molten.lafiumcompound",
+      ["u"] = 15,
       ["a"] = 188,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Lafossaite",
@@ -14671,29 +15774,31 @@ return {
       ["name"] = "Lanthanum",
       ["family"] = "gt",
       ["dsf"] = 64,
-      ["u"] = 18,
+      ["molten"] = "molten.lanthanum",
+      ["u"] = 19,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Lapis",
       ["family"] = "gt",
       ["dsf"] = 526,
-      ["u"] = 78,
+      ["u"] = 83,
       ["a"] = 127,
       ["overrides"] = {
         ["plateDense"] = {["name"] = "ic2:itemdenseplates", ["damage"] = 8},
         ["gem"] = {["name"] = "minecraft:dye", ["damage"] = 4}
       },
-      ["p"] = 17
+      ["p"] = 26
     },
     {
       ["name"] = "Laurenium",
       ["family"] = "gtpp",
       ["dsf"] = "laurenium",
-      ["u"] = 4,
+      ["molten"] = "molten.laurenium",
+      ["u"] = 111,
       ["a"] = 193,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Lautarite",
@@ -14731,7 +15836,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1220},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30770},
       ["coating"] = "standard",
-      ["u"] = 28,
+      ["molten"] = "molten.lead",
+      ["u"] = 30,
       ["a"] = 35,
       ["p"] = 5
     },
@@ -14739,9 +15845,10 @@ return {
       ["name"] = "Ledox",
       ["family"] = "gt",
       ["dsf"] = 390,
-      ["u"] = 70,
+      ["molten"] = "molten.ledox",
+      ["u"] = 74,
       ["a"] = 106,
-      ["p"] = 11
+      ["p"] = 19
     },
     {
       ["name"] = "Lepersonnite",
@@ -14832,6 +15939,7 @@ return {
       ["name"] = "Lithium",
       ["family"] = "gt",
       ["dsf"] = 6,
+      ["molten"] = "molten.lithium",
       ["u"] = 2,
       ["a"] = 4,
       ["p"] = 1
@@ -14840,9 +15948,10 @@ return {
       ["name"] = "Lithium7",
       ["family"] = "gtpp",
       ["dsf"] = "lithium7",
+      ["molten"] = "molten.lithium7",
       ["u"] = 1,
       ["a"] = 204,
-      ["p"] = 32
+      ["p"] = 46
     },
     {
       ["name"] = "LithiumChloride",
@@ -14850,7 +15959,7 @@ return {
       ["dsf"] = 10098,
       ["u"] = 1,
       ["a"] = 177,
-      ["p"] = 6
+      ["p"] = 36
     },
     {
       ["name"] = "LithiumFluoride",
@@ -14879,7 +15988,7 @@ return {
       ["dsf"] = 206,
       ["u"] = 1,
       ["a"] = 63,
-      ["p"] = 9
+      ["p"] = 14
     },
     {
       ["name"] = "Loellingite",
@@ -14946,10 +16055,11 @@ return {
       ["dsf"] = 10101,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 32737},
       ["coating"] = "pps",
-      ["u"] = 97,
+      ["molten"] = "molten.lumiium",
+      ["u"] = 105,
       ["a"] = 180,
-      ["deny"] = {["wiremill.stick_wire.wire16.a7f9c66ea9"] = true},
-      ["p"] = 28
+      ["deny"] = {["wiremill.stick_wire.wire16.2f1ce2daf3"] = true},
+      ["p"] = 41
     },
     {
       ["name"] = "LumipodExtract",
@@ -14962,22 +16072,25 @@ return {
       ["name"] = "Lutetium",
       ["family"] = "gt",
       ["dsf"] = 78,
+      ["molten"] = "molten.lutetium",
       ["u"] = 1,
       ["a"] = 11,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "MagMatter",
       ["family"] = "gt",
       ["dsf"] = 143,
-      ["u"] = 36,
+      ["molten"] = "molten.magmatter",
+      ["u"] = 38,
       ["a"] = 45,
-      ["p"] = 8
+      ["p"] = 11
     },
     {
       ["name"] = "Magnalium",
       ["family"] = "gt",
       ["dsf"] = 313,
+      ["molten"] = "molten.magnalium",
       ["u"] = 4,
       ["a"] = 39,
       ["p"] = 2
@@ -14986,7 +16099,8 @@ return {
       ["name"] = "Magnesia",
       ["family"] = "gt",
       ["dsf"] = 621,
-      ["u"] = 1,
+      ["molten"] = "molten.magnesia",
+      ["u"] = 7,
       ["a"] = 140,
       ["overrides"] = {
         ["nugget"] = {["name"] = "bartworks:gt.bwmetageneratednugget", ["damage"] = 32237},
@@ -15000,7 +16114,7 @@ return {
         ["turbineBlade"] = {["name"] = "bartworks:gt.bwmetageneratedturbineblade", ["damage"] = 32237},
         ["stickLong"] = {["name"] = "bartworks:gt.bwmetageneratedsticklong", ["damage"] = 32237}
       },
-      ["p"] = 6
+      ["p"] = 7
     },
     {
       ["name"] = "Magnesite",
@@ -15013,6 +16127,7 @@ return {
       ["name"] = "Magnesium",
       ["family"] = "gt",
       ["dsf"] = 18,
+      ["molten"] = "molten.magnesium",
       ["u"] = 5,
       ["a"] = 9,
       ["p"] = 4
@@ -15066,19 +16181,21 @@ return {
       ["name"] = "Manasteel",
       ["family"] = "gt",
       ["dsf"] = 201,
+      ["molten"] = "molten.manasteel",
       ["u"] = 4,
       ["a"] = 59,
       ["overrides"] = {
         ["ingot"] = {["name"] = "botania:manaresource", ["damage"] = 0},
         ["nugget"] = {["name"] = "botania:manaresource", ["damage"] = 17}
       },
-      ["p"] = 1
+      ["p"] = 12
     },
     {
       ["name"] = "Manganese",
       ["family"] = "gt",
       ["dsf"] = 31,
-      ["u"] = 8,
+      ["molten"] = "molten.manganese",
+      ["u"] = 9,
       ["a"] = 5,
       ["p"] = 2
     },
@@ -15086,7 +16203,8 @@ return {
       ["name"] = "Manyullyn",
       ["family"] = "gt",
       ["dsf"] = 386,
-      ["u"] = 64,
+      ["molten"] = "molten.manyullyn",
+      ["u"] = 68,
       ["a"] = 103,
       ["p"] = 2
     },
@@ -15094,43 +16212,48 @@ return {
       ["name"] = "MAR-Ce-M200Steel",
       ["family"] = "bw",
       ["dsf"] = 10097,
+      ["molten"] = "molten.mar-ce-m200 steel",
       ["u"] = 4,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "MAR-M200Steel",
       ["family"] = "bw",
       ["dsf"] = 10096,
-      ["u"] = 96,
+      ["molten"] = "molten.mar-m200 steel",
+      ["u"] = 104,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "MaragingSteel250",
       ["family"] = "gtpp",
       ["dsf"] = "maragingsteel250",
+      ["molten"] = "molten.maragingsteel250",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "MaragingSteel300",
       ["family"] = "gtpp",
       ["dsf"] = "maragingsteel300",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30730},
+      ["molten"] = "molten.maragingsteel300",
       ["u"] = 2,
       ["a"] = 201,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "MaragingSteel350",
       ["family"] = "gtpp",
       ["dsf"] = "maragingsteel350",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30735},
+      ["molten"] = "molten.maragingsteel350",
       ["u"] = 2,
       ["a"] = 201,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Marble",
@@ -15171,7 +16294,8 @@ return {
       ["name"] = "Mellion",
       ["family"] = "gt",
       ["dsf"] = 148,
-      ["u"] = 36,
+      ["molten"] = "molten.mellion",
+      ["u"] = 38,
       ["a"] = 47,
       ["p"] = 2
     },
@@ -15181,7 +16305,8 @@ return {
       ["dsf"] = 404,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11550},
       ["coating"] = "pps",
-      ["u"] = 29,
+      ["molten"] = "molten.melodicalloy",
+      ["u"] = 31,
       ["a"] = 78,
       ["p"] = 5
     },
@@ -15217,22 +16342,25 @@ return {
       ["name"] = "MetastableOganesson",
       ["family"] = "bw",
       ["dsf"] = 10111,
+      ["molten"] = "molten.metastable oganesson",
       ["u"] = 3,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "MeteoricIron",
       ["family"] = "gt",
       ["dsf"] = 340,
-      ["u"] = 50,
+      ["molten"] = "molten.meteoriciron",
+      ["u"] = 53,
       ["a"] = 91,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "MeteoricSteel",
       ["family"] = "gt",
       ["dsf"] = 341,
+      ["molten"] = "molten.meteoricsteel",
       ["u"] = 4,
       ["a"] = 89,
       ["p"] = 2
@@ -15269,7 +16397,7 @@ return {
       ["name"] = "MHDCSM",
       ["family"] = "gt",
       ["dsf"] = 583,
-      ["u"] = 80,
+      ["u"] = 85,
       ["a"] = 135
     },
     {
@@ -15319,9 +16447,10 @@ return {
       ["name"] = "Mithril",
       ["family"] = "gt",
       ["dsf"] = 331,
-      ["u"] = 50,
+      ["molten"] = "molten.mithril",
+      ["u"] = 53,
       ["a"] = 88,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "MoltenExoHalkoniteBase",
@@ -15348,6 +16477,7 @@ return {
       ["name"] = "Molybdenum",
       ["family"] = "gt",
       ["dsf"] = 48,
+      ["molten"] = "molten.molybdenum",
       ["u"] = 4,
       ["a"] = 5,
       ["p"] = 2
@@ -15377,9 +16507,9 @@ return {
       ["name"] = "Mu-metal",
       ["family"] = "bw",
       ["dsf"] = 11351,
-      ["u"] = 100,
+      ["u"] = 108,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 43
     },
     {
       ["name"] = "MutatedLivingSolder",
@@ -15393,17 +16523,19 @@ return {
       ["family"] = "gt",
       ["dsf"] = 398,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5230},
-      ["u"] = 50,
+      ["molten"] = "molten.mysteriouscrystal",
+      ["u"] = 53,
       ["a"] = 111,
-      ["p"] = 11
+      ["p"] = 19
     },
     {
       ["name"] = "Mytryl",
       ["family"] = "gt",
       ["dsf"] = 387,
-      ["u"] = 50,
+      ["molten"] = "molten.mytryl",
+      ["u"] = 53,
       ["a"] = 104,
-      ["p"] = 11
+      ["p"] = 19
     },
     {
       ["name"] = "Naphtha",
@@ -15426,7 +16558,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1780},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5200},
       ["coating"] = "pps",
-      ["u"] = 52,
+      ["molten"] = "molten.naquadah",
+      ["u"] = 56,
       ["a"] = 82,
       ["p"] = 5
     },
@@ -15450,9 +16583,10 @@ return {
       ["dsf"] = 325,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1800},
       ["coating"] = "pps",
-      ["u"] = 53,
+      ["molten"] = "molten.naquadahalloy",
+      ["u"] = 57,
       ["a"] = 83,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "NaquadahAsphalt",
@@ -15556,6 +16690,7 @@ return {
       ["name"] = "NaquadahEnriched",
       ["family"] = "gt",
       ["dsf"] = 326,
+      ["molten"] = "molten.naquadahenriched",
       ["u"] = 4,
       ["a"] = 84,
       ["p"] = 2
@@ -15599,9 +16734,10 @@ return {
       ["name"] = "Naquadria",
       ["family"] = "gt",
       ["dsf"] = 327,
-      ["u"] = 54,
+      ["molten"] = "molten.naquadria",
+      ["u"] = 58,
       ["a"] = 85,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "Naquadria-RichSolution",
@@ -15656,7 +16792,8 @@ return {
       ["name"] = "Neodymium",
       ["family"] = "gt",
       ["dsf"] = 67,
-      ["u"] = 19,
+      ["molten"] = "molten.neodymium",
+      ["u"] = 20,
       ["a"] = 28,
       ["p"] = 2
     },
@@ -15664,9 +16801,9 @@ return {
       ["name"] = "NeodymiumMagnetic",
       ["family"] = "gt",
       ["dsf"] = 356,
-      ["u"] = 19,
+      ["u"] = 20,
       ["a"] = 39,
-      ["p"] = 2
+      ["p"] = 16
     },
     {
       ["name"] = "Neon",
@@ -15710,7 +16847,7 @@ return {
       ["name"] = "Netherite",
       ["family"] = "gt",
       ["dsf"] = 132,
-      ["u"] = 32,
+      ["u"] = 34,
       ["a"] = 43
     },
     {
@@ -15744,21 +16881,22 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11350},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5220},
       ["coating"] = "pps",
-      ["u"] = 77,
+      ["u"] = 82,
       ["a"] = 120,
       ["overrides"] = {
         ["gem"] = {["name"] = "minecraft:nether_star", ["damage"] = 0}
       },
-      ["p"] = 16
+      ["p"] = 25
     },
     {
       ["name"] = "Neutronium",
       ["family"] = "gt",
       ["dsf"] = 129,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5210},
-      ["u"] = 30,
+      ["molten"] = "molten.neutronium",
+      ["u"] = 32,
       ["a"] = 41,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "Nichrome",
@@ -15766,9 +16904,10 @@ return {
       ["dsf"] = 311,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1500},
       ["coating"] = "standard",
-      ["u"] = 45,
+      ["molten"] = "molten.nichrome",
+      ["u"] = 48,
       ["a"] = 75,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "Nichromite",
@@ -15793,7 +16932,8 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5698},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5701},
       ["coating"] = "standard",
-      ["u"] = 11,
+      ["molten"] = "molten.nickel",
+      ["u"] = 12,
       ["a"] = 19,
       ["p"] = 5
     },
@@ -15801,6 +16941,7 @@ return {
       ["name"] = "NickelAluminide",
       ["family"] = "gt",
       ["dsf"] = 772,
+      ["molten"] = "molten.nickelaluminide",
       ["u"] = 1,
       ["a"] = 143,
       ["p"] = 1
@@ -15816,33 +16957,37 @@ return {
       ["name"] = "NickelZincFerrite",
       ["family"] = "gt",
       ["dsf"] = 613,
-      ["u"] = 8,
+      ["molten"] = "molten.nickelzincferrite",
+      ["u"] = 9,
       ["a"] = 59,
-      ["p"] = 1
+      ["p"] = 12
     },
     {
       ["name"] = "Niobium",
       ["family"] = "gt",
       ["dsf"] = 47,
+      ["molten"] = "molten.niobium",
       ["u"] = 2,
       ["a"] = 11,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "NiobiumCarbide",
       ["family"] = "gtpp",
       ["dsf"] = "niobiumcarbide",
+      ["molten"] = "molten.niobiumcarbide",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "NiobiumNitride",
       ["family"] = "gt",
       ["dsf"] = 359,
+      ["molten"] = "molten.niobiumnitride",
       ["u"] = 1,
       ["a"] = 96,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "NiobiumTitanium",
@@ -15851,9 +16996,10 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1720},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5180},
       ["coating"] = "pps",
-      ["u"] = 61,
+      ["molten"] = "molten.niobiumtitanium",
+      ["u"] = 65,
       ["a"] = 97,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "Niter",
@@ -15866,9 +17012,10 @@ return {
       ["name"] = "Nitinol60",
       ["family"] = "gtpp",
       ["dsf"] = "nitinol60",
+      ["molten"] = "molten.nitinol60",
       ["u"] = 2,
       ["a"] = 188,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "NitrationMixture",
@@ -15951,12 +17098,13 @@ return {
       ["name"] = "Obsidian",
       ["family"] = "gt",
       ["dsf"] = 804,
-      ["u"] = 78,
+      ["molten"] = "molten.obsidian",
+      ["u"] = 83,
       ["a"] = 146,
       ["overrides"] = {
         ["plateDense"] = {["name"] = "ic2:itemdenseplates", ["damage"] = 7}
       },
-      ["p"] = 19
+      ["p"] = 29
     },
     {
       ["name"] = "Octane",
@@ -15969,9 +17117,10 @@ return {
       ["name"] = "Octiron",
       ["family"] = "gtpp",
       ["dsf"] = "octiron",
+      ["molten"] = "molten.octiron",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Oganesson",
@@ -16061,6 +17210,7 @@ return {
       ["name"] = "Orichalcum",
       ["family"] = "gt",
       ["dsf"] = 966,
+      ["molten"] = "molten.orichalcum",
       ["u"] = 4,
       ["a"] = 103,
       ["p"] = 2
@@ -16069,9 +17219,10 @@ return {
       ["name"] = "Oriharukon",
       ["family"] = "gt",
       ["dsf"] = 393,
-      ["u"] = 50,
+      ["molten"] = "molten.oriharukon",
+      ["u"] = 53,
       ["a"] = 107,
-      ["p"] = 11
+      ["p"] = 19
     },
     {
       ["name"] = "Orundum",
@@ -16086,7 +17237,8 @@ return {
       ["dsf"] = 317,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11610},
       ["coating"] = "pps",
-      ["u"] = 49,
+      ["molten"] = "molten.osmiridium",
+      ["u"] = 52,
       ["a"] = 78,
       ["p"] = 5
     },
@@ -16098,7 +17250,8 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5630},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5633},
       ["coating"] = "pps",
-      ["u"] = 25,
+      ["molten"] = "molten.osmium",
+      ["u"] = 27,
       ["a"] = 32,
       ["overrides"] = {
         ["pipeItemRestrictiveTiny"] = {["name"] = "gregtech:gt.blockmachines", ["damage"] = 5646},
@@ -16145,7 +17298,8 @@ return {
       ["name"] = "Palladium",
       ["family"] = "gt",
       ["dsf"] = 52,
-      ["u"] = 15,
+      ["molten"] = "molten.palladium",
+      ["u"] = 16,
       ["a"] = 25,
       ["p"] = 2
     },
@@ -16174,7 +17328,7 @@ return {
       ["name"] = "Paper",
       ["family"] = "gt",
       ["dsf"] = 879,
-      ["u"] = 29,
+      ["u"] = 93,
       ["a"] = 161,
       ["overrides"] = {
         ["plate"] = {["name"] = "minecraft:paper", ["damage"] = 0}
@@ -16225,7 +17379,7 @@ return {
       ["dsf"] = 11350,
       ["u"] = 1,
       ["a"] = 177,
-      ["p"] = 6
+      ["p"] = 36
     },
     {
       ["name"] = "Perroudite",
@@ -16309,7 +17463,8 @@ return {
       ["name"] = "PigIron",
       ["family"] = "gt",
       ["dsf"] = 307,
-      ["u"] = 19,
+      ["molten"] = "molten.pigiron",
+      ["u"] = 20,
       ["a"] = 72,
       ["p"] = 2
     },
@@ -16317,9 +17472,10 @@ return {
       ["name"] = "Pikyonium64B",
       ["family"] = "gtpp",
       ["dsf"] = "pikyonium64b",
-      ["u"] = 8,
+      ["molten"] = "molten.pikyonium64b",
+      ["u"] = 109,
       ["a"] = 188,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Pitchblende",
@@ -16350,7 +17506,8 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5620},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5623},
       ["coating"] = "pps",
-      ["u"] = 27,
+      ["molten"] = "molten.platinum",
+      ["u"] = 29,
       ["a"] = 34,
       ["overrides"] = {
         ["pipeItemRestrictiveTiny"] = {["name"] = "gregtech:gt.blockmachines", ["damage"] = 5644},
@@ -16397,9 +17554,10 @@ return {
       ["name"] = "Plutonium",
       ["family"] = "gt",
       ["dsf"] = 100,
-      ["u"] = 29,
+      ["molten"] = "molten.plutonium",
+      ["u"] = 31,
       ["a"] = 37,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "Plutonium238",
@@ -16412,7 +17570,8 @@ return {
       ["name"] = "Plutonium241",
       ["family"] = "gt",
       ["dsf"] = 101,
-      ["u"] = 8,
+      ["molten"] = "molten.plutonium241",
+      ["u"] = 9,
       ["a"] = 5,
       ["p"] = 2
     },
@@ -16476,17 +17635,19 @@ return {
       ["name"] = "Polybenzimidazole",
       ["family"] = "gt",
       ["dsf"] = 599,
-      ["u"] = 54,
+      ["molten"] = "molten.polybenzimidazole",
+      ["u"] = 87,
       ["a"] = 116,
-      ["p"] = 15
+      ["p"] = 24
     },
     {
       ["name"] = "Polycaprolactam",
       ["family"] = "gt",
       ["dsf"] = 472,
-      ["u"] = 76,
+      ["molten"] = "molten.polycaprolactam",
+      ["u"] = 80,
       ["a"] = 115,
-      ["p"] = 14
+      ["p"] = 23
     },
     {
       ["name"] = "Polycrase",
@@ -16514,33 +17675,37 @@ return {
       ["name"] = "Polyethylene",
       ["family"] = "gt",
       ["dsf"] = 874,
-      ["u"] = 14,
+      ["molten"] = "molten.plastic",
+      ["u"] = 15,
       ["a"] = 114,
-      ["p"] = 22
+      ["p"] = 34
     },
     {
       ["name"] = "PolyphenyleneSulfide",
       ["family"] = "gt",
       ["dsf"] = 631,
-      ["u"] = 14,
+      ["molten"] = "molten.polyphenylenesulfide",
+      ["u"] = 15,
       ["a"] = 141,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Polystyrene",
       ["family"] = "gt",
       ["dsf"] = 636,
+      ["molten"] = "molten.polystyrene",
       ["u"] = 2,
       ["a"] = 114,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Polytetrafluoroethylene",
       ["family"] = "gt",
       ["dsf"] = 473,
-      ["u"] = 70,
+      ["molten"] = "molten.polytetrafluoroethylene",
+      ["u"] = 81,
       ["a"] = 116,
-      ["p"] = 15
+      ["p"] = 24
     },
     {
       ["name"] = "PolyurethaneResin",
@@ -16560,9 +17725,10 @@ return {
       ["name"] = "PolyvinylChloride",
       ["family"] = "gt",
       ["dsf"] = 649,
-      ["u"] = 82,
+      ["molten"] = "molten.polyvinylchloride",
+      ["u"] = 88,
       ["a"] = 114,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "PoorNetherWaste",
@@ -16582,6 +17748,7 @@ return {
       ["name"] = "Potassium",
       ["family"] = "gt",
       ["dsf"] = 25,
+      ["molten"] = "molten.potassium",
       ["u"] = 1,
       ["a"] = 13,
       ["p"] = 1
@@ -16647,9 +17814,10 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "potin",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30725},
+      ["molten"] = "molten.potin",
       ["u"] = 2,
       ["a"] = 205,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Powellite",
@@ -16662,9 +17830,10 @@ return {
       ["name"] = "Praseodymium",
       ["family"] = "gt",
       ["dsf"] = 66,
+      ["molten"] = "molten.praseodymium",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Prasiolite",
@@ -16684,9 +17853,10 @@ return {
       ["name"] = "PreciousMetalsAlloy",
       ["family"] = "bw",
       ["dsf"] = 10109,
-      ["u"] = 98,
+      ["molten"] = "molten.precious metals alloy",
+      ["u"] = 106,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "PrimordialMatter",
@@ -16741,6 +17911,7 @@ return {
       ["name"] = "PrismaticNaquadah",
       ["family"] = "gt",
       ["dsf"] = 163,
+      ["molten"] = "molten.prismaticnaquadah",
       ["u"] = 2,
       ["a"] = 54,
       ["p"] = 1
@@ -16756,9 +17927,10 @@ return {
       ["name"] = "Promethium",
       ["family"] = "gt",
       ["dsf"] = 68,
+      ["molten"] = "molten.promethium",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Propane",
@@ -16785,7 +17957,7 @@ return {
       ["name"] = "ProtoHalkonite",
       ["family"] = "gt",
       ["dsf"] = 154,
-      ["u"] = 36,
+      ["u"] = 39,
       ["a"] = 51,
       ["overrides"] = {
         ["ingotHot"] = {["name"] = "gregtech:gt.metaitem.01", ["damage"] = 11153}
@@ -16809,9 +17981,10 @@ return {
       ["name"] = "PulsatingIron",
       ["family"] = "gt",
       ["dsf"] = 378,
+      ["molten"] = "molten.pulsatingiron",
       ["u"] = 4,
       ["a"] = 101,
-      ["p"] = 8
+      ["p"] = 11
     },
     {
       ["name"] = "Pumice",
@@ -16871,7 +18044,8 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5730},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5735},
       ["coating"] = "pps",
-      ["u"] = 71,
+      ["molten"] = "molten.quantium",
+      ["u"] = 75,
       ["a"] = 32,
       ["p"] = 5
     },
@@ -16879,9 +18053,10 @@ return {
       ["name"] = "Quantum",
       ["family"] = "gtpp",
       ["dsf"] = "quantum",
-      ["u"] = 82,
+      ["molten"] = "molten.quantum",
+      ["u"] = 88,
       ["a"] = 206,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "QuarkGluonPlasma",
@@ -16952,9 +18127,10 @@ return {
       ["family"] = "gt",
       ["dsf"] = 979,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5760},
-      ["u"] = 8,
+      ["molten"] = "molten.radoxpoly",
+      ["u"] = 9,
       ["a"] = 168,
-      ["p"] = 3
+      ["p"] = 13
     },
     {
       ["name"] = "RaneyNickelActivated",
@@ -17054,6 +18230,7 @@ return {
       ["name"] = "Realgar",
       ["family"] = "gt",
       ["dsf"] = 913,
+      ["molten"] = "molten.realgar",
       ["u"] = 4,
       ["a"] = 17,
       ["p"] = 2
@@ -17064,9 +18241,10 @@ return {
       ["dsf"] = 308,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2000},
       ["coating"] = "standard",
-      ["u"] = 42,
+      ["molten"] = "molten.redalloy",
+      ["u"] = 45,
       ["a"] = 73,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "RedDescloizite",
@@ -17100,6 +18278,7 @@ return {
       ["name"] = "RedSteel",
       ["family"] = "gt",
       ["dsf"] = 348,
+      ["molten"] = "molten.redsteel",
       ["u"] = 4,
       ["a"] = 47,
       ["p"] = 2
@@ -17108,11 +18287,13 @@ return {
       ["name"] = "Redstone",
       ["family"] = "gt",
       ["dsf"] = 810,
+      ["molten"] = "molten.redstone",
       ["u"] = 2,
       ["a"] = 150,
       ["overrides"] = {
         ["dust"] = {["name"] = "minecraft:redstone", ["damage"] = 0}
-      }
+      },
+      ["p"] = 31
     },
     {
       ["name"] = "RedstoneAlloy",
@@ -17120,9 +18301,10 @@ return {
       ["dsf"] = 381,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30645},
       ["coating"] = "standard",
-      ["u"] = 67,
+      ["molten"] = "molten.redstonealloy",
+      ["u"] = 71,
       ["a"] = 99,
-      ["p"] = 10
+      ["p"] = 18
     },
     {
       ["name"] = "RedZircon",
@@ -17142,9 +18324,10 @@ return {
       ["name"] = "Reinforced",
       ["family"] = "gt",
       ["dsf"] = 383,
+      ["molten"] = "molten.reinforced",
       ["u"] = 4,
       ["a"] = 59,
-      ["p"] = 1
+      ["p"] = 12
     },
     {
       ["name"] = "ReinforcedGlass",
@@ -17181,29 +18364,32 @@ return {
       ["name"] = "Rhenium",
       ["family"] = "gtpp",
       ["dsf"] = "rhenium",
+      ["molten"] = "molten.rhenium",
       ["u"] = 1,
       ["a"] = 199,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Rhodium",
       ["family"] = "bw",
       ["dsf"] = 78,
+      ["molten"] = "molten.rhodium",
       ["u"] = 2,
       ["a"] = 174,
       ["overrides"] = {
         ["cellPlasma"] = {["name"] = "miscutils:itemcellplasmarhodium", ["damage"] = 0},
         ["cell"] = {["name"] = "miscutils:itemcellrhodium", ["damage"] = 0}
       },
-      ["p"] = 24
+      ["p"] = 37
     },
     {
       ["name"] = "Rhodium-PlatedPalladium",
       ["family"] = "bw",
       ["dsf"] = 88,
-      ["u"] = 32,
+      ["molten"] = "molten.rhodium-plated palladium",
+      ["u"] = 55,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "RhodiumChloride",
@@ -17265,9 +18451,10 @@ return {
       ["name"] = "Rhugnor",
       ["family"] = "gtpp",
       ["dsf"] = "rhugnor",
-      ["u"] = 18,
+      ["molten"] = "molten.rhugnor",
+      ["u"] = 19,
       ["a"] = 207,
-      ["p"] = 37
+      ["p"] = 51
     },
     {
       ["name"] = "RichNetherWaste",
@@ -17336,7 +18523,7 @@ return {
       ["name"] = "RockSalt",
       ["family"] = "gt",
       ["dsf"] = 944,
-      ["u"] = 2,
+      ["u"] = 90,
       ["a"] = 153,
       ["overrides"] = {
         ["gem"] = {["name"] = "bartworks:gt.bwmetageneratedgem", ["damage"] = 22},
@@ -17354,7 +18541,7 @@ return {
         ["gemFlawless"] = {["name"] = "bartworks:gt.bwmetageneratedgemflawless", ["damage"] = 22},
         ["gemExquisite"] = {["name"] = "bartworks:gt.bwmetageneratedgemexquisite", ["damage"] = 22}
       },
-      ["p"] = 9
+      ["p"] = 14
     },
     {
       ["name"] = "Roquesite",
@@ -17367,7 +18554,8 @@ return {
       ["name"] = "RoseGold",
       ["family"] = "gt",
       ["dsf"] = 351,
-      ["u"] = 15,
+      ["molten"] = "molten.rosegold",
+      ["u"] = 16,
       ["a"] = 39,
       ["p"] = 2
     },
@@ -17375,9 +18563,10 @@ return {
       ["name"] = "Rubber",
       ["family"] = "gt",
       ["dsf"] = 880,
-      ["u"] = 86,
+      ["molten"] = "molten.rubber",
+      ["u"] = 94,
       ["a"] = 114,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "RubberRaw",
@@ -17390,22 +18579,25 @@ return {
       ["name"] = "RubberSilicone",
       ["family"] = "gt",
       ["dsf"] = 471,
-      ["u"] = 75,
+      ["molten"] = "molten.silicone",
+      ["u"] = 79,
       ["a"] = 114,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Rubidium",
       ["family"] = "gt",
       ["dsf"] = 43,
+      ["molten"] = "molten.rubidium",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Rubracium",
       ["family"] = "gt",
       ["dsf"] = 488,
+      ["molten"] = "molten.rubracium",
       ["u"] = 4,
       ["a"] = 17,
       ["p"] = 2
@@ -17428,6 +18620,7 @@ return {
       ["name"] = "Runite",
       ["family"] = "gtpp",
       ["dsf"] = "runite",
+      ["molten"] = "molten.runite",
       ["u"] = 1,
       ["a"] = 208,
       ["overrides"] = {
@@ -17438,27 +18631,29 @@ return {
         ["dustPure"] = {["name"] = "miscutils:dustpurerunite", ["damage"] = 0},
         ["rawOre"] = {["name"] = "miscutils:orerawrunite", ["damage"] = 0}
       },
-      ["p"] = 32
+      ["p"] = 46
     },
     {
       ["name"] = "Ruridit",
       ["family"] = "bw",
       ["dsf"] = 90,
-      ["u"] = 95,
+      ["molten"] = "molten.ruridit",
+      ["u"] = 103,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "Ruthenium",
       ["family"] = "bw",
       ["dsf"] = 64,
+      ["molten"] = "molten.ruthenium",
       ["u"] = 1,
       ["a"] = 174,
       ["overrides"] = {
         ["cellPlasma"] = {["name"] = "miscutils:itemcellplasmaruthenium", ["damage"] = 0},
         ["cell"] = {["name"] = "miscutils:itemcellruthenium", ["damage"] = 0}
       },
-      ["p"] = 24
+      ["p"] = 37
     },
     {
       ["name"] = "RutheniumTetroxide",
@@ -17485,7 +18680,7 @@ return {
       ["name"] = "Salt",
       ["family"] = "gt",
       ["dsf"] = 817,
-      ["u"] = 2,
+      ["u"] = 90,
       ["a"] = 153,
       ["overrides"] = {
         ["gem"] = {["name"] = "bartworks:gt.bwmetageneratedgem", ["damage"] = 20},
@@ -17503,7 +18698,7 @@ return {
         ["gemFlawless"] = {["name"] = "bartworks:gt.bwmetageneratedgemflawless", ["damage"] = 20},
         ["gemExquisite"] = {["name"] = "bartworks:gt.bwmetageneratedgemexquisite", ["damage"] = 20}
       },
-      ["p"] = 9
+      ["p"] = 14
     },
     {
       ["name"] = "Saltpeter",
@@ -17523,17 +18718,18 @@ return {
       ["name"] = "Samarium",
       ["family"] = "gt",
       ["dsf"] = 69,
-      ["u"] = 19,
+      ["molten"] = "molten.samarium",
+      ["u"] = 21,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "SamariumMagnetic",
       ["family"] = "gt",
       ["dsf"] = 399,
-      ["u"] = 19,
+      ["u"] = 20,
       ["a"] = 39,
-      ["p"] = 2
+      ["p"] = 16
     },
     {
       ["name"] = "SamarskiteY",
@@ -17583,9 +18779,10 @@ return {
       ["name"] = "Scandium",
       ["family"] = "gt",
       ["dsf"] = 27,
+      ["molten"] = "molten.scandium",
       ["u"] = 1,
       ["a"] = 15,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Scheelite",
@@ -17626,9 +18823,10 @@ return {
       ["name"] = "Selenium",
       ["family"] = "gtpp",
       ["dsf"] = "selenium",
+      ["molten"] = "molten.selenium",
       ["u"] = 1,
       ["a"] = 199,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "SeleniumDioxide",
@@ -17648,14 +18846,16 @@ return {
       ["name"] = "Shadow",
       ["family"] = "gt",
       ["dsf"] = 368,
-      ["u"] = 63,
+      ["molten"] = "molten.shadow",
+      ["u"] = 67,
       ["a"] = 33,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "ShadowIron",
       ["family"] = "gt",
       ["dsf"] = 336,
+      ["molten"] = "molten.shadowiron",
       ["u"] = 4,
       ["a"] = 84,
       ["p"] = 2
@@ -17664,6 +18864,7 @@ return {
       ["name"] = "ShadowSteel",
       ["family"] = "gt",
       ["dsf"] = 337,
+      ["molten"] = "molten.shadowsteel",
       ["u"] = 4,
       ["a"] = 89,
       ["p"] = 2
@@ -17672,7 +18873,8 @@ return {
       ["name"] = "Shijima",
       ["family"] = "gt",
       ["dsf"] = 189,
-      ["u"] = 37,
+      ["molten"] = "molten.shijima",
+      ["u"] = 40,
       ["a"] = 57,
       ["p"] = 4
     },
@@ -17680,9 +18882,10 @@ return {
       ["name"] = "Shirabon",
       ["family"] = "bw",
       ["dsf"] = 10112,
-      ["u"] = 99,
+      ["molten"] = "molten.shirabon",
+      ["u"] = 107,
       ["a"] = 181,
-      ["p"] = 29
+      ["p"] = 42
     },
     {
       ["name"] = "Signalium",
@@ -17690,10 +18893,11 @@ return {
       ["dsf"] = 10099,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 32749},
       ["coating"] = "pps",
+      ["molten"] = "molten.signalium",
       ["u"] = 1,
       ["a"] = 180,
-      ["deny"] = {["wiremill.stick_wire.wire16.a7f9c66ea9"] = true},
-      ["p"] = 28
+      ["deny"] = {["wiremill.stick_wire.wire16.2f1ce2daf3"] = true},
+      ["p"] = 41
     },
     {
       ["name"] = "Silane",
@@ -17706,9 +18910,10 @@ return {
       ["name"] = "Silicon",
       ["family"] = "gt",
       ["dsf"] = 20,
+      ["molten"] = "molten.silicon",
       ["u"] = 2,
       ["a"] = 11,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Silicon Nitride",
@@ -17716,15 +18921,16 @@ return {
       ["dsf"] = 11353,
       ["u"] = 1,
       ["a"] = 140,
-      ["p"] = 6
+      ["p"] = 36
     },
     {
       ["name"] = "SiliconCarbide",
       ["family"] = "gtpp",
       ["dsf"] = "siliconcarbide",
+      ["molten"] = "molten.siliconcarbide",
       ["u"] = 2,
       ["a"] = 191,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "SiliconDioxide",
@@ -17744,9 +18950,10 @@ return {
       ["name"] = "SiliconSG",
       ["family"] = "gt",
       ["dsf"] = 856,
+      ["molten"] = "molten.siliconsolargrade",
       ["u"] = 2,
       ["a"] = 158,
-      ["p"] = 11
+      ["p"] = 33
     },
     {
       ["name"] = "SiliconTetrachloride",
@@ -17775,7 +18982,8 @@ return {
       ["dsf"] = 54,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1460},
       ["coating"] = "standard",
-      ["u"] = 16,
+      ["molten"] = "molten.silver",
+      ["u"] = 17,
       ["a"] = 18,
       ["p"] = 5
     },
@@ -17783,9 +18991,10 @@ return {
       ["name"] = "SixPhasedCopper",
       ["family"] = "gt",
       ["dsf"] = 147,
+      ["molten"] = "molten.sixphasedcopper",
       ["u"] = 3,
       ["a"] = 46,
-      ["p"] = 1
+      ["p"] = 12
     },
     {
       ["name"] = "SludgeDustResidue",
@@ -17982,9 +19191,10 @@ return {
       ["dsf"] = 314,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1280},
       ["coating"] = "standard",
-      ["u"] = 47,
+      ["molten"] = "molten.solderingalloy",
+      ["u"] = 50,
       ["a"] = 73,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SolidAcidCatalystMixture",
@@ -17997,9 +19207,10 @@ return {
       ["name"] = "Soularium",
       ["family"] = "gt",
       ["dsf"] = 379,
+      ["molten"] = "molten.soularium",
       ["u"] = 4,
       ["a"] = 59,
-      ["p"] = 1
+      ["p"] = 12
     },
     {
       ["name"] = "SoulInfusedMedium",
@@ -18021,9 +19232,10 @@ return {
       ["dsf"] = 588,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2606},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5300},
-      ["u"] = 81,
+      ["molten"] = "molten.spacetime",
+      ["u"] = 86,
       ["a"] = 138,
-      ["p"] = 18
+      ["p"] = 27
     },
     {
       ["name"] = "Spessartine",
@@ -18050,7 +19262,7 @@ return {
       ["name"] = "Spodumene",
       ["family"] = "gt",
       ["dsf"] = 920,
-      ["u"] = 2,
+      ["u"] = 90,
       ["a"] = 153,
       ["overrides"] = {
         ["gem"] = {["name"] = "bartworks:gt.bwmetageneratedgem", ["damage"] = 21},
@@ -18068,16 +19280,17 @@ return {
         ["gemFlawless"] = {["name"] = "bartworks:gt.bwmetageneratedgemflawless", ["damage"] = 21},
         ["gemExquisite"] = {["name"] = "bartworks:gt.bwmetageneratedgemexquisite", ["damage"] = 21}
       },
-      ["p"] = 9
+      ["p"] = 14
     },
     {
       ["name"] = "Staballoy",
       ["family"] = "gtpp",
       ["dsf"] = "staballoy",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30700},
-      ["u"] = 4,
+      ["molten"] = "molten.staballoy",
+      ["u"] = 111,
       ["a"] = 209,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "StableBaryonicMatter",
@@ -18091,9 +19304,10 @@ return {
       ["family"] = "gt",
       ["dsf"] = 306,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5140},
-      ["u"] = 41,
+      ["molten"] = "molten.stainlesssteel",
+      ["u"] = 44,
       ["a"] = 71,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "StargateCrystalSlurry",
@@ -18116,7 +19330,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1520},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5130},
       ["coating"] = "standard",
-      ["u"] = 40,
+      ["molten"] = "molten.steel",
+      ["u"] = 43,
       ["a"] = 70,
       ["p"] = 5
     },
@@ -18129,15 +19344,15 @@ return {
       ["overrides"] = {
         ["ingot"] = {["name"] = "twilightforest:item.steeleafingot", ["damage"] = 0}
       },
-      ["p"] = 2
+      ["p"] = 16
     },
     {
       ["name"] = "SteelMagnetic",
       ["family"] = "gt",
       ["dsf"] = 355,
-      ["u"] = 19,
+      ["u"] = 20,
       ["a"] = 39,
-      ["p"] = 2
+      ["p"] = 16
     },
     {
       ["name"] = "StellarAlloy",
@@ -18145,22 +19360,25 @@ return {
       ["dsf"] = 405,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11570},
       ["coating"] = "pps",
+      ["molten"] = "molten.stellaralloy",
       ["u"] = 3,
       ["a"] = 112,
-      ["p"] = 10
+      ["p"] = 18
     },
     {
       ["name"] = "Stellite",
       ["family"] = "gtpp",
       ["dsf"] = "stellite",
+      ["molten"] = "molten.stellite",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "SterlingSilver",
       ["family"] = "gt",
       ["dsf"] = 350,
+      ["molten"] = "molten.sterlingsilver",
       ["u"] = 4,
       ["a"] = 39,
       ["p"] = 2
@@ -18187,6 +19405,7 @@ return {
       ["name"] = "Strontium",
       ["family"] = "gt",
       ["dsf"] = 44,
+      ["molten"] = "molten.strontium",
       ["u"] = 1,
       ["a"] = 24,
       ["p"] = 1
@@ -18216,9 +19435,10 @@ return {
       ["name"] = "StyreneButadieneRubber",
       ["family"] = "gt",
       ["dsf"] = 635,
-      ["u"] = 75,
+      ["molten"] = "molten.styrenebutadienerubber",
+      ["u"] = 79,
       ["a"] = 114,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Sugar",
@@ -18297,85 +19517,86 @@ return {
       ["name"] = "Sunnarium",
       ["family"] = "gt",
       ["dsf"] = 318,
-      ["u"] = 29,
+      ["molten"] = "molten.sunnarium",
+      ["u"] = 31,
       ["a"] = 79,
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "Superconductor EV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2360},
-      ["u"] = 103,
+      ["u"] = 114,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor HV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2340},
-      ["u"] = 105,
+      ["u"] = 116,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor IV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2380},
-      ["u"] = 105,
+      ["u"] = 116,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor LuV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2400},
-      ["u"] = 102,
+      ["u"] = 113,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor MV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2320},
-      ["u"] = 105,
+      ["u"] = 116,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UEV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2026},
-      ["u"] = 103,
+      ["u"] = 114,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UHV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2020},
-      ["u"] = 102,
+      ["u"] = 113,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UIV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2081},
-      ["u"] = 104,
+      ["u"] = 115,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UMV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2089},
-      ["u"] = 104,
+      ["u"] = 115,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2440},
-      ["u"] = 103,
+      ["u"] = 114,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor ZPM",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2420},
-      ["u"] = 103,
+      ["u"] = 114,
       ["a"] = 212
     },
     {
@@ -18383,99 +19604,110 @@ return {
       ["family"] = "gt",
       ["dsf"] = 989,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2240},
-      ["u"] = 91,
+      ["molten"] = "molten.uraniumtriplatinid",
+      ["u"] = 99,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorHVBase",
       ["family"] = "gt",
       ["dsf"] = 988,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2220},
-      ["u"] = 92,
+      ["molten"] = "molten.titaniumonabariumdecacoppereikosaoxid",
+      ["u"] = 100,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorIVBase",
       ["family"] = "gt",
       ["dsf"] = 990,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2260},
-      ["u"] = 93,
+      ["molten"] = "molten.vanadiumtriindinid",
+      ["u"] = 101,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorLuVBase",
       ["family"] = "gt",
       ["dsf"] = 991,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2280},
-      ["u"] = 94,
+      ["molten"] = "molten.tetraindiumditindibariumtitaniumheptacoppertetrakaidekaoxid",
+      ["u"] = 102,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorMVBase",
       ["family"] = "gt",
       ["dsf"] = 987,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2200},
-      ["u"] = 91,
+      ["molten"] = "molten.pentacadmiummagnesiumhexaoxid",
+      ["u"] = 99,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorUEVBase",
       ["family"] = "gt",
       ["dsf"] = 974,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2032},
-      ["u"] = 87,
+      ["molten"] = "molten.superconductoruevbase",
+      ["u"] = 95,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorUHVBase",
       ["family"] = "gt",
       ["dsf"] = 985,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2520},
-      ["u"] = 90,
+      ["molten"] = "molten.longasssuperconductornameforuhvwire",
+      ["u"] = 98,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorUIVBase",
       ["family"] = "gt",
       ["dsf"] = 131,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2052},
-      ["u"] = 31,
+      ["molten"] = "molten.superconductoruivbase",
+      ["u"] = 33,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorUMVBase",
       ["family"] = "gt",
       ["dsf"] = 134,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2072},
-      ["u"] = 33,
+      ["molten"] = "molten.superconductorumvbase",
+      ["u"] = 35,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorUVBase",
       ["family"] = "gt",
       ["dsf"] = 986,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2500},
-      ["u"] = 31,
+      ["molten"] = "molten.longasssuperconductornameforuvwire",
+      ["u"] = 33,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperconductorZPMBase",
       ["family"] = "gt",
       ["dsf"] = 992,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2300},
-      ["u"] = 31,
+      ["molten"] = "molten.tetranaquadahdiindiumhexaplatiumosminid",
+      ["u"] = 33,
       ["a"] = 42,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "SuperCoolant",
@@ -18488,9 +19720,10 @@ return {
       ["name"] = "Tairitsu",
       ["family"] = "bw",
       ["dsf"] = 10106,
-      ["u"] = 36,
+      ["molten"] = "molten.tairitsu",
+      ["u"] = 38,
       ["a"] = 175,
-      ["p"] = 25
+      ["p"] = 38
     },
     {
       ["name"] = "Talc",
@@ -18503,17 +19736,19 @@ return {
       ["name"] = "Talonite",
       ["family"] = "gtpp",
       ["dsf"] = "talonite",
+      ["molten"] = "molten.talonite",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "TanmolyiumBeta-C",
       ["family"] = "bw",
       ["dsf"] = 10103,
+      ["molten"] = "molten.tanmolyium beta-c",
       ["u"] = 2,
       ["a"] = 178,
-      ["p"] = 24
+      ["p"] = 37
     },
     {
       ["name"] = "Tantalite",
@@ -18527,34 +19762,38 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "tantalloy60",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30705},
+      ["molten"] = "molten.tantalloy60",
       ["u"] = 2,
       ["a"] = 201,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Tantalloy61",
       ["family"] = "gtpp",
       ["dsf"] = "tantalloy61",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30710},
+      ["molten"] = "molten.tantalloy61",
       ["u"] = 2,
       ["a"] = 201,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Tantalum",
       ["family"] = "gt",
       ["dsf"] = 80,
-      ["u"] = 23,
+      ["molten"] = "molten.tantalum",
+      ["u"] = 25,
       ["a"] = 11,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "TantalumCarbide",
       ["family"] = "gtpp",
       ["dsf"] = "tantalumcarbide",
+      ["molten"] = "molten.tantalumcarbide",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "TantalumCarbide/HafniumCarbideMixture",
@@ -18569,7 +19808,7 @@ return {
       ["dsf"] = 11503,
       ["u"] = 1,
       ["a"] = 140,
-      ["p"] = 6
+      ["p"] = 36
     },
     {
       ["name"] = "Tanzanite",
@@ -18582,17 +19821,19 @@ return {
       ["name"] = "Tartarite",
       ["family"] = "gt",
       ["dsf"] = 956,
+      ["molten"] = "molten.tartarite",
       ["u"] = 1,
       ["a"] = 15,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Technetium",
       ["family"] = "gtpp",
       ["dsf"] = "technetium",
+      ["molten"] = "molten.technetium",
       ["u"] = 1,
       ["a"] = 210,
-      ["p"] = 38
+      ["p"] = 52
     },
     {
       ["name"] = "TechnetiumHexafluoride",
@@ -18605,6 +19846,7 @@ return {
       ["name"] = "Tellurium",
       ["family"] = "gt",
       ["dsf"] = 59,
+      ["molten"] = "molten.tellurium",
       ["u"] = 4,
       ["a"] = 27,
       ["overrides"] = {
@@ -18628,7 +19870,8 @@ return {
       ["name"] = "TengamAttuned",
       ["family"] = "gt",
       ["dsf"] = 112,
-      ["u"] = 19,
+      ["molten"] = "molten.tengamattuned",
+      ["u"] = 20,
       ["a"] = 39,
       ["p"] = 2
     },
@@ -18636,7 +19879,8 @@ return {
       ["name"] = "TengamPurified",
       ["family"] = "gt",
       ["dsf"] = 111,
-      ["u"] = 19,
+      ["molten"] = "molten.tengampurified",
+      ["u"] = 20,
       ["a"] = 39,
       ["p"] = 2
     },
@@ -18651,9 +19895,10 @@ return {
       ["name"] = "Terbium",
       ["family"] = "gt",
       ["dsf"] = 72,
+      ["molten"] = "molten.terbium",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "TerephthalicAcid",
@@ -18680,13 +19925,14 @@ return {
       ["name"] = "Terrasteel",
       ["family"] = "gt",
       ["dsf"] = 202,
+      ["molten"] = "molten.terrasteel",
       ["u"] = 4,
       ["a"] = 60,
       ["overrides"] = {
         ["nugget"] = {["name"] = "botania:manaresource", ["damage"] = 18},
         ["ingot"] = {["name"] = "botania:manaresource", ["damage"] = 4}
       },
-      ["p"] = 1
+      ["p"] = 12
     },
     {
       ["name"] = "Tetrafluoroethylene",
@@ -18713,20 +19959,22 @@ return {
       ["name"] = "Thallium",
       ["family"] = "gtpp",
       ["dsf"] = "thallium",
+      ["molten"] = "molten.thallium",
       ["u"] = 1,
       ["a"] = 199,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Thaumium",
       ["family"] = "gt",
       ["dsf"] = 330,
-      ["u"] = 56,
+      ["molten"] = "molten.thaumium",
+      ["u"] = 60,
       ["a"] = 87,
       ["overrides"] = {
         ["ingot"] = {["name"] = "thaumcraft:itemresource", ["damage"] = 2}
       },
-      ["p"] = 4
+      ["p"] = 10
     },
     {
       ["name"] = "ThionylChloride",
@@ -18746,6 +19994,7 @@ return {
       ["name"] = "Thorium",
       ["family"] = "gt",
       ["dsf"] = 96,
+      ["molten"] = "molten.thorium",
       ["u"] = 4,
       ["a"] = 36,
       ["overrides"] = {
@@ -18770,7 +20019,7 @@ return {
         ["cellPlasma"] = {["name"] = "miscutils:itemcellplasmathorium232", ["damage"] = 0},
         ["cell"] = {["name"] = "miscutils:itemcellthorium232", ["damage"] = 0}
       },
-      ["p"] = 6
+      ["p"] = 36
     },
     {
       ["name"] = "ThoriumBasedLiquidFuel",
@@ -18846,9 +20095,10 @@ return {
       ["name"] = "Thulium",
       ["family"] = "gt",
       ["dsf"] = 76,
+      ["molten"] = "molten.thulium",
       ["u"] = 2,
       ["a"] = 11,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Tiberium",
@@ -18856,7 +20106,7 @@ return {
       ["dsf"] = 89,
       ["u"] = 2,
       ["a"] = 176,
-      ["p"] = 26
+      ["p"] = 39
     },
     {
       ["name"] = "Time",
@@ -18873,14 +20123,16 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5589},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5594},
       ["coating"] = "standard",
-      ["u"] = 17,
+      ["molten"] = "molten.tin",
+      ["u"] = 18,
       ["a"] = 26,
-      ["p"] = 5
+      ["p"] = 8
     },
     {
       ["name"] = "TinAlloy",
       ["family"] = "gt",
       ["dsf"] = 363,
+      ["molten"] = "molten.tinalloy",
       ["u"] = 4,
       ["a"] = 39,
       ["p"] = 2
@@ -18907,7 +20159,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1560},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5150},
       ["coating"] = "standard",
-      ["u"] = 7,
+      ["molten"] = "molten.titanium",
+      ["u"] = 8,
       ["a"] = 16,
       ["p"] = 5
     },
@@ -18929,9 +20182,10 @@ return {
       ["name"] = "Titansteel",
       ["family"] = "gtpp",
       ["dsf"] = "titansteel",
-      ["u"] = 82,
+      ["molten"] = "molten.titansteel",
+      ["u"] = 88,
       ["a"] = 188,
-      ["p"] = 13
+      ["p"] = 22
     },
     {
       ["name"] = "Toluene",
@@ -18953,16 +20207,18 @@ return {
       ["dsf"] = 576,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1840},
       ["coating"] = "standard",
-      ["u"] = 79,
+      ["molten"] = "molten.tpvalloy",
+      ["u"] = 84,
       ["a"] = 83,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "TranscendentMetal",
       ["family"] = "gt",
       ["dsf"] = 581,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5310},
-      ["u"] = 36,
+      ["molten"] = "molten.transcendentmetal",
+      ["u"] = 38,
       ["a"] = 134,
       ["p"] = 2
     },
@@ -19007,7 +20263,8 @@ return {
       ["dsf"] = 868,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11450},
       ["coating"] = "pps",
-      ["u"] = 85,
+      ["molten"] = "molten.trinium",
+      ["u"] = 92,
       ["a"] = 160,
       ["p"] = 5
     },
@@ -19015,18 +20272,20 @@ return {
       ["name"] = "TriniumNaquadahAlloy",
       ["family"] = "gtpp",
       ["dsf"] = "triniumnaquadahalloy",
+      ["molten"] = "molten.triniumnaquadahalloy",
       ["u"] = 1,
       ["a"] = 203,
-      ["p"] = 32
+      ["p"] = 46
     },
     {
       ["name"] = "TriniumNaquadahCarbonite",
       ["family"] = "gtpp",
       ["dsf"] = "triniumnaquadahcarbonite",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30500},
+      ["molten"] = "molten.triniumnaquadahcarbonite",
       ["u"] = 1,
       ["a"] = 201,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "TriniumSulphate",
@@ -19039,9 +20298,10 @@ return {
       ["name"] = "TriniumTitaniumAlloy",
       ["family"] = "gtpp",
       ["dsf"] = "triniumtitaniumalloy",
-      ["u"] = 4,
+      ["molten"] = "molten.triniumtitaniumalloy",
+      ["u"] = 111,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Triphenylphosphene",
@@ -19054,7 +20314,8 @@ return {
       ["name"] = "Tritanium",
       ["family"] = "gt",
       ["dsf"] = 329,
-      ["u"] = 15,
+      ["molten"] = "molten.tritanium",
+      ["u"] = 16,
       ["a"] = 86,
       ["p"] = 2
     },
@@ -19076,9 +20337,10 @@ return {
       ["name"] = "Tumbaga",
       ["family"] = "gtpp",
       ["dsf"] = "tumbaga",
+      ["molten"] = "molten.tumbaga",
       ["u"] = 2,
       ["a"] = 191,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Tungstate",
@@ -19094,7 +20356,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1680},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30755},
       ["coating"] = "pps",
-      ["u"] = 24,
+      ["molten"] = "molten.tungsten",
+      ["u"] = 26,
       ["a"] = 31,
       ["p"] = 5
     },
@@ -19102,7 +20365,8 @@ return {
       ["name"] = "TungstenCarbide",
       ["family"] = "gt",
       ["dsf"] = 370,
-      ["u"] = 32,
+      ["molten"] = "molten.tungstencarbide",
+      ["u"] = 55,
       ["a"] = 47,
       ["p"] = 2
     },
@@ -19113,7 +20377,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1660},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5160},
       ["coating"] = "pps",
-      ["u"] = 48,
+      ["molten"] = "molten.tungstensteel",
+      ["u"] = 51,
       ["a"] = 77,
       ["overrides"] = {
         ["pipeFluidQuadruple"] = {["name"] = "gregtech:gt.blockmachines", ["damage"] = 5270},
@@ -19125,15 +20390,17 @@ return {
       ["name"] = "TungstenTitaniumCarbide",
       ["family"] = "gtpp",
       ["dsf"] = "tungstentitaniumcarbide",
+      ["molten"] = "molten.tungstentitaniumcarbide",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Ultimet",
       ["family"] = "gt",
       ["dsf"] = 344,
-      ["u"] = 8,
+      ["molten"] = "molten.ultimet",
+      ["u"] = 9,
       ["a"] = 47,
       ["p"] = 2
     },
@@ -19155,9 +20422,10 @@ return {
       ["name"] = "Universium",
       ["family"] = "gt",
       ["dsf"] = 139,
-      ["u"] = 34,
+      ["molten"] = "molten.universium",
+      ["u"] = 36,
       ["a"] = 44,
-      ["p"] = 8
+      ["p"] = 11
     },
     {
       ["name"] = "Unstable",
@@ -19180,6 +20448,7 @@ return {
       ["name"] = "Uranium",
       ["family"] = "gt",
       ["dsf"] = 98,
+      ["molten"] = "molten.uranium",
       ["u"] = 4,
       ["a"] = 5,
       ["p"] = 2
@@ -19188,22 +20457,25 @@ return {
       ["name"] = "Uranium232",
       ["family"] = "gtpp",
       ["dsf"] = "uranium232",
+      ["molten"] = "molten.uranium232",
       ["u"] = 1,
       ["a"] = 210,
-      ["p"] = 38
+      ["p"] = 52
     },
     {
       ["name"] = "Uranium233",
       ["family"] = "gtpp",
       ["dsf"] = "uranium233",
+      ["molten"] = "molten.uranium233",
       ["u"] = 1,
       ["a"] = 210,
-      ["p"] = 38
+      ["p"] = 52
     },
     {
       ["name"] = "Uranium235",
       ["family"] = "gt",
       ["dsf"] = 97,
+      ["molten"] = "molten.uranium235",
       ["u"] = 4,
       ["a"] = 5,
       ["p"] = 2
@@ -19275,9 +20547,10 @@ return {
       ["name"] = "Vanadium",
       ["family"] = "gt",
       ["dsf"] = 29,
+      ["molten"] = "molten.vanadium",
       ["u"] = 2,
       ["a"] = 11,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "VanadiumGallium",
@@ -19285,9 +20558,10 @@ return {
       ["dsf"] = 357,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1740},
       ["coating"] = "pps",
-      ["u"] = 59,
+      ["molten"] = "molten.vanadiumgallium",
+      ["u"] = 63,
       ["a"] = 94,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "VanadiumMagnetite",
@@ -19307,6 +20581,7 @@ return {
       ["name"] = "VanadiumSteel",
       ["family"] = "gt",
       ["dsf"] = 371,
+      ["molten"] = "molten.vanadiumsteel",
       ["u"] = 4,
       ["a"] = 47,
       ["p"] = 2
@@ -19324,14 +20599,16 @@ return {
       ["dsf"] = 367,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11530},
       ["coating"] = "standard",
-      ["u"] = 8,
+      ["molten"] = "molten.vibrantalloy",
+      ["u"] = 9,
       ["a"] = 83,
-      ["p"] = 7
+      ["p"] = 15
     },
     {
       ["name"] = "Vinteum",
       ["family"] = "gt",
       ["dsf"] = 529,
+      ["molten"] = "molten.vinteum",
       ["u"] = 4,
       ["a"] = 128,
       ["p"] = 2
@@ -19354,6 +20631,7 @@ return {
       ["name"] = "VividAlloy",
       ["family"] = "gt",
       ["dsf"] = 408,
+      ["molten"] = "molten.vividalloy",
       ["u"] = 4,
       ["a"] = 47,
       ["p"] = 2
@@ -19363,6 +20641,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 970,
       ["pipeFluid"] = {["name"] = "buildcraft|transport:item.buildcraftpipe.pipefluidsvoid", ["base"] = -2},
+      ["molten"] = "molten.void",
       ["u"] = 3,
       ["a"] = 164,
       ["overrides"] = {
@@ -19388,6 +20667,7 @@ return {
       ["name"] = "Vulcanite",
       ["family"] = "gt",
       ["dsf"] = 489,
+      ["molten"] = "molten.vulcanite",
       ["u"] = 4,
       ["a"] = 103,
       ["p"] = 2
@@ -19396,6 +20676,7 @@ return {
       ["name"] = "Vyroxeres",
       ["family"] = "gt",
       ["dsf"] = 951,
+      ["molten"] = "molten.vyroxeres",
       ["u"] = 4,
       ["a"] = 84,
       ["p"] = 2
@@ -19411,9 +20692,10 @@ return {
       ["name"] = "WatertightSteel",
       ["family"] = "gtpp",
       ["dsf"] = "watertightsteel",
+      ["molten"] = "molten.watertightsteel",
       ["u"] = 2,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Wheat",
@@ -19426,9 +20708,10 @@ return {
       ["name"] = "WhiteDwarfMatter",
       ["family"] = "gt",
       ["dsf"] = 585,
-      ["u"] = 8,
+      ["molten"] = "molten.whitedwarfmatter",
+      ["u"] = 9,
       ["a"] = 136,
-      ["p"] = 3
+      ["p"] = 13
     },
     {
       ["name"] = "Wittichenite",
@@ -19448,12 +20731,12 @@ return {
       ["name"] = "Wood",
       ["family"] = "gt",
       ["dsf"] = 809,
-      ["u"] = 14,
+      ["u"] = 15,
       ["a"] = 149,
       ["overrides"] = {
         ["stick"] = {["name"] = "biomesoplenty:bamboo", ["damage"] = 0}
       },
-      ["p"] = 9
+      ["p"] = 14
     },
     {
       ["name"] = "Wood'sGlass",
@@ -19487,7 +20770,7 @@ return {
       ["dsf"] = 889,
       ["u"] = 2,
       ["a"] = 149,
-      ["p"] = 9
+      ["p"] = 14
     },
     {
       ["name"] = "WoodTar",
@@ -19546,9 +20829,10 @@ return {
       ["name"] = "Ytterbium",
       ["family"] = "gt",
       ["dsf"] = 77,
+      ["molten"] = "molten.ytterbium",
       ["u"] = 1,
       ["a"] = 22,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "Yttriaite",
@@ -19584,9 +20868,10 @@ return {
       ["name"] = "Yttrium",
       ["family"] = "gt",
       ["dsf"] = 45,
+      ["molten"] = "molten.yttrium",
       ["u"] = 1,
       ["a"] = 11,
-      ["p"] = 2
+      ["p"] = 6
     },
     {
       ["name"] = "YttriumBariumCuprate",
@@ -19594,9 +20879,10 @@ return {
       ["dsf"] = 358,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1760},
       ["coating"] = "pps",
-      ["u"] = 60,
+      ["molten"] = "molten.yttriumbariumcuprate",
+      ["u"] = 64,
       ["a"] = 95,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "Yttrocerite",
@@ -19624,9 +20910,10 @@ return {
       ["name"] = "Zeron100",
       ["family"] = "gtpp",
       ["dsf"] = "zeron100",
-      ["u"] = 4,
+      ["molten"] = "molten.zeron100",
+      ["u"] = 111,
       ["a"] = 187,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "Zimbabweite",
@@ -19649,9 +20936,10 @@ return {
       ["dsf"] = 36,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1260},
       ["coating"] = "standard",
-      ["u"] = 13,
+      ["molten"] = "molten.zinc",
+      ["u"] = 14,
       ["a"] = 21,
-      ["p"] = 7
+      ["p"] = 9
     },
     {
       ["name"] = "ZincChloride",
@@ -19678,17 +20966,19 @@ return {
       ["name"] = "Zircaloy-2",
       ["family"] = "bw",
       ["dsf"] = 10083,
+      ["molten"] = "molten.zircaloy-2",
       ["u"] = 1,
       ["a"] = 178,
-      ["p"] = 24
+      ["p"] = 37
     },
     {
       ["name"] = "Zircaloy-4",
       ["family"] = "bw",
       ["dsf"] = 10082,
+      ["molten"] = "molten.zircaloy-4",
       ["u"] = 2,
       ["a"] = 178,
-      ["p"] = 24
+      ["p"] = 37
     },
     {
       ["name"] = "Zircon",
@@ -19709,22 +20999,23 @@ return {
       ["name"] = "Zirconium",
       ["family"] = "bw",
       ["dsf"] = 3,
-      ["u"] = 21,
+      ["u"] = 23,
       ["a"] = 170,
       ["overrides"] = {
         ["cellPlasma"] = {["name"] = "miscutils:itemcellplasmazirconium", ["damage"] = 0},
         ["cell"] = {["name"] = "miscutils:itemcellzirconium", ["damage"] = 0},
         ["wireFine"] = {["name"] = "miscutils:itemfinewirezirconium", ["damage"] = 0}
       },
-      ["p"] = 23
+      ["p"] = 35
     },
     {
       ["name"] = "ZirconiumCarbide",
       ["family"] = "gtpp",
       ["dsf"] = "zirconiumcarbide",
-      ["u"] = 4,
+      ["molten"] = "molten.zirconiumcarbide",
+      ["u"] = 111,
       ["a"] = 191,
-      ["p"] = 30
+      ["p"] = 44
     },
     {
       ["name"] = "ZirconiumTetrafluoride",
@@ -19782,9 +21073,10 @@ return {
       ["name"] = "Zn-ThAlloy",
       ["family"] = "bw",
       ["dsf"] = 10053,
+      ["molten"] = "molten.zn-th alloy",
       ["u"] = 1,
       ["a"] = 177,
-      ["p"] = 6
+      ["p"] = 7
     }
   }
 }

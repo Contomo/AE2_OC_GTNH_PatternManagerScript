@@ -273,6 +273,48 @@ class MatrixTests(unittest.TestCase):
         self.assertGreater(len(expanded), 2500)
         self.assertFalse(expanded - source, 'Bender matrix generated a recipe absent from the scrape')
 
+    @unittest.skipUnless(Path('.research/pattern-catalog-with-shaper.json.gz').exists(),
+                         'Local Fluid Shaper evidence not installed')
+    def test_fluid_shaper_expansion_contains_no_recipe_absent_from_scrape(self):
+        catalog = json.load(gzip.open('.research/pattern-catalog-with-shaper.json.gz', 'rt'))
+        registry = json.loads(Path('../OreDictScript/data/registry-rules.json').read_text(encoding='utf-8-sig'))
+        resources = {r['id']: r for r in json.load(gzip.open('../OreDictScript/research/resource-index.json.gz', 'rt'))['resources']}
+        resources.update(json.load(gzip.open('../OreDictScript/data/ores.json.gz', 'rt'))['resources'])
+        data = compile_matrix(catalog, registry, resources=resources)
+        _, _, reverse = registry_forms(registry, resources)
+        source = set()
+        for recipe in catalog['recipes']:
+            if recipe['machineType'] != 'Fluid Solidifier' or len(recipe['outputs']) != 1:
+                continue
+            output = reverse.get(recipe['outputs'][0]['id'])
+            consumed = [e for e in recipe['inputs'] if e.get('consumed', True)]
+            stocked = [e for e in recipe['inputs'] if e.get('consumed') is False]
+            if (not output or output[1] not in ('plate', 'turbineBlade') or
+                    len(consumed) != 1 or consumed[0]['kind'] != 'fluid' or
+                    len(stocked) != 1 or stocked[0]['kind'] != 'item'):
+                continue
+            source.add((consumed[0]['id'], consumed[0]['amount'],
+                        descriptor(recipe['outputs'][0]['id']), recipe['outputs'][0]['amount'],
+                        descriptor(stocked[0]['id'])))
+        expanded = set()
+        for material in data['materials']:
+            available = data['capabilities'][material['a'] - 1]
+            production = data['production'][material['p'] - 1] if material.get('p') else {}
+            for rule in data['rules']:
+                if (rule['mode'] != 'solidifier' or not production.get(rule['process']) or
+                        rule['id'] in material.get('deny', {}) or
+                        any(form not in available for form in rule['requires'])):
+                    continue
+                self.assertEqual(rule['inputs'][0]['fluid'], 'material')
+                output_name, output_damage = resolve(data['families'], material,
+                                                     rule['outputs'][0]['f'])
+                mold = data['items'][rule['stock'][0]['i'] - 1]
+                expanded.add((material['molten'], rule['inputs'][0]['n'],
+                              (output_name, output_damage), rule['outputs'][0]['n'],
+                              (mold['name'], mold['damage'])))
+        self.assertGreater(len(expanded), 400)
+        self.assertFalse(expanded - source, 'Fluid Shaper matrix generated a recipe absent from the scrape')
+
 
 if __name__ == '__main__':
     unittest.main()

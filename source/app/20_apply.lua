@@ -84,14 +84,17 @@ end
 local function setEntry(hw, slot, which, index, s)
   local method = which == 'inputs' and 'setInterfacePatternInput' or 'setInterfacePatternOutput'
   if s then
+    local detail = s.type == 'fluid'
+      and { name = s.name, amount = s.size, size = s.size }
+      or { name = s.name, damage = s.damage, size = s.size, tag = s.tag }
     U.check(
       direct(
         hw,
         method,
         slot,
         index,
-        { name = s.name, damage = s.damage, size = s.size, tag = s.tag },
-        'item'
+        detail,
+        s.type or 'item'
       ) == true,
       'Pattern setter returned failure'
     )

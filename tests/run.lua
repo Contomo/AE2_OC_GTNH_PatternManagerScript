@@ -120,8 +120,10 @@ for _,which in ipairs({'Input','Output'}) do
     assert(index>=1,'one based entry index required')
     local p=assert(b.patterns[s]);mutate('set-before')
     if detail then
-      assert(tp=='item','must use item type')
-      local value=cp(detail);value.label='Item';value.hasTag=value.tag~=nil
+      assert(tp=='item' or tp=='fluid','must use item or fluid type')
+      local value=cp(detail);value.label=tp=='fluid' and 'Molten fluid' or 'Item'
+      value.hasTag=value.tag~=nil
+      if tp=='fluid' then value.damage=nil;value.amount=value.size end
       if value.tag then local root=unser(value.tag).__value;if root.display and root.display.__value.Name then value.label=root.display.__value.Name.__value end end
       if p.newEncoding then
         p.rawCounts[key][index]=value.size
@@ -589,7 +591,7 @@ local function click(label,row)
 end
 local function nav(label)
   return function()
-    for y=7,40 do
+    for y=7,46 do
       local x=frame[y] and frame[y]:sub(1,29):find(label,1,true)
       if x then return 'touch','screen',x,y,0 end
     end
@@ -732,6 +734,43 @@ local function insulator()
   cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
   return api.runner.preview(cfg,'insulator')
 end
+
+test('Fluid Shaper requests molten fluid, keeps molds stocked, and reuses its patterns',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    data.capabilities[1].plate=true;data.capabilities[1].turbineBlade=true
+    data.production[1].molten_plate=true
+    data.production[1].molten_turbineBlade=true
+    data.families.gt.plate={name='gregtech:gt.metaitem.01',prefix=17000}
+    data.families.gt.turbineBlade={name='gregtech:gt.metaitem.02',prefix=16000}
+    data.items[2]={name='gregtech:gt.metaitem.01',damage=32301,label='Mold (Plate)'}
+    data.items[3]={name='gregtech:gt.metaitem.01',damage=32325,label='Mold (Turbine Blade)'}
+    for _,material in ipairs(data.materials) do material.molten='molten.'..material.name:lower() end
+    data.rules[#data.rules+1]={id='molten_plate',mode='solidifier',process='molten_plate',
+      requires={'plate'},inputs={{fluid='material',n=144}},outputs={{f='plate',n=1}},stock={{i=2,n=1}}}
+    data.rules[#data.rules+1]={id='molten_blade',mode='solidifier',process='molten_turbineBlade',
+      requires={'turbineBlade'},inputs={{fluid='material',n=864}},outputs={{f='turbineBlade',n=1}},stock={{i=3,n=1}}}
+    local settings=cfg.programs.fluidShaper
+    settings.plate=cfg.programs.assline.target;settings.turbineBlade='Blades'
+    settings.multiplier='2'
+    target.patterns={};local blades=iface('Blades',70)
+    buffer.patterns[2]=cp(buffer.patterns[0]);buffer.patterns[3]=cp(buffer.patterns[0])
+    local preview=api.runner.preview(cfg,'fluidShaper')
+    assert(#preview.plan.errors==0 and #preview.manifest.recipes==4)
+    assert(preview.report:find('288 mB Molten A',1,true))
+    for _,recipe in ipairs(preview.manifest.recipes) do
+      assert(#recipe.inputs==1 and recipe.inputs[1].type=='fluid')
+      assert(#recipe.stock==1 and recipe.stock[1].label:find('Mold',1,true))
+    end
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].inputs[1].name=='molten.a')
+    assert(target.patterns[0].inputs[1].damage==nil)
+    assert(target.patterns[0].inputs[1].size==288)
+    assert(blades.patterns[0].inputs[1].size==1728)
+    local again=api.runner.preview(cfg,'fluidShaper')
+    assert(again.plan.reused==4 and #again.plan.creates==0)
+  end)
+end)
 
 test('generator starts short, waits between patterns and discovers a newly filled remote bank',function()
   withMatrix(function()
@@ -1077,6 +1116,29 @@ test('bender output switches toggle independently and migrate into the unified s
     local selected=api.config.selected(c.programs.bender.forms,choices)
     assert(not selected.plate and selected.plateDouble and selected.foil)
     snapshot('bender_switches')
+    return quit()
+  end)
+  api.runUI()
+end)
+
+test('Fluid Shaper enables each destination beside its interface field',function()
+  local v=cfg.programs.fluidShaper
+  v.plate='Plates'
+  v.turbineBlade=''
+  mustFail(function() api.config.requireProgram(cfg,'fluidShaper') end,
+    'Turbine blade interface name')
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),nav('Fluid Shaper'),function()
+    assert(frame[12]:find('[ X ]',1,true) and frame[12]:find('Plates',1,true))
+    assert(frame[16]:find('[ X ]',1,true) and frame[16]:find('(not configured)',1,true))
+    assert(not frame[20]:find('Enabled Fluid Shaper outputs',1,true))
+    snapshot('fluid_shaper_settings')
+    return click('[ X ]',16)()
+  end,function()
+    local saved=unser(files[api.paths.config])
+    assert(saved.programs.fluidShaper.forms=='plate')
+    api.config.requireProgram(saved,'fluidShaper')
+    assert(frame[16]:find('[   ]',1,true))
     return quit()
   end)
   api.runUI()

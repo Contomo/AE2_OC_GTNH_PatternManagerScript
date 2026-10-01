@@ -121,7 +121,13 @@ local function runUI()
     invalidate()
   end
   local function fields()
-    return state.settings == 'shared' and Config.fields or Programs.byId[state.settings].fields
+    local definitions = state.settings == 'shared' and Config.fields
+      or Programs.byId[state.settings].fields
+    local visible = {}
+    for _, f in ipairs(definitions) do
+      if not f.hidden then visible[#visible + 1] = f end
+    end
+    return visible
   end
   local function values()
     return Config.values(cfg, state.settings)
@@ -135,6 +141,14 @@ local function runUI()
     saveConfig(trial)
     edit = nil
     status('Settings saved. Choose a program to build a new preview.', 'green')
+  end
+  local function toggleForm(key, choices, choice)
+    commitEdit()
+    local trial = U.clone(cfg)
+    local v = Config.values(trial, state.settings)
+    v[key] = Config.toggleSelected(v[key], choices, choice)
+    saveConfig(trial)
+    status('Settings saved.', 'green')
   end
   navigate = function(page, section)
     commitEdit()
@@ -241,7 +255,7 @@ local function runUI()
       add('Run program opens the chooser. Select a program and press Preview selected.')
       add('Review changes, required interfaces, existing-pattern sorting and donors.')
       add('Verify destination interfaces have all 36 slots available, then Execute preview.')
-      add('Assembly line, insulator, wiremill and bender share settings, editor and recovery.')
+      add('Assembly line, insulator, wiremill, bender and Fluid Shaper share the editor and recovery.')
       add('Wire combining remains unavailable until its recipes have been verified.')
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
@@ -261,24 +275,25 @@ local function runUI()
         add(row[1], row[2], row[3], row[4])
       end
     elseif state.section == 'details' and preview.manifest then
-      if preview.id == 'bender' then
-        add('BENDER CIRCUITS', 'blue')
-        add(
-          'Keep these circuits stocked in the machine; patterns request the selected solids only.'
-        )
-        local circuits, labels = {}, {}
+      if preview.id == 'bender' or preview.id == 'fluidShaper' then
+        add('STOCKED IN MACHINE', 'blue')
+        add('These reusable items stay in the machine and are omitted from patterns.')
+        local stocked = {}
         for _, recipe in ipairs(preview.manifest.recipes) do
-          for _, stock in ipairs(recipe.stock or {}) do
-            if stock.name == 'gregtech:gt.integrated_circuit' then
-              circuits[recipe.outputForm] = stock.damage
-              labels[recipe.outputForm] = recipe.outputLabel
-            end
-          end
+          stocked[recipe.outputForm] = stocked[recipe.outputForm] or {
+            label = recipe.outputLabel, items = recipe.stock or {}
+          }
         end
-        for _, entry in ipairs(Programs.byId.bender.formChoices) do
-          local circuit = circuits[entry[1]]
-          if circuit then
-            add((labels[entry[1]] or entry[2]) .. ': circuit ' .. circuit)
+        for _, entry in ipairs(Programs.byId[preview.id].formChoices) do
+          local group = stocked[entry[1]]
+          if group and #group.items > 0 then
+            local names = {}
+            for _, item in ipairs(group.items) do
+              names[#names + 1] = item.name == 'gregtech:gt.integrated_circuit'
+                and ('circuit ' .. item.damage)
+                or tostring(item.label or item.name)
+            end
+            add((group.label or entry[2]) .. ': ' .. table.concat(names, ', '))
           end
         end
         add('')
@@ -500,15 +515,18 @@ local function runUI()
               x, row = 34, row + 1
             end
             x = button(x, row, option[2], function()
-              commitEdit()
-              local trial = U.clone(cfg)
-              local v = Config.values(trial, state.settings)
-              v[key] = Config.toggleSelected(v[key], f.choices, choice)
-              saveConfig(trial)
-              status('Settings saved.', 'green')
+              toggleForm(key, f.choices, choice)
             end, true, selected[choice])
           end
           helpY, height = row + 1, row - y + 4
+        elseif f.enableForm then
+          local program = Programs.byId[state.settings]
+          local choice = f.enableForm
+          local selected = Config.selected(values()[program.formSwitch], program.formChoices)
+          button(34, y + 1, selected[choice] and 'X' or ' ', function()
+            toggleForm(program.formSwitch, program.formChoices, choice)
+          end, true, selected[choice])
+          editorRow(42, y + 1, 116, f)
         elseif f.choices then
           local x = 34
           for _, option in ipairs(f.choices) do

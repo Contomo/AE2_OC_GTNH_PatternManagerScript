@@ -31,6 +31,7 @@ local labels = {
   spring = 'Spring',
   stickLong = 'Long rod',
   wire1 = '1x wire',
+  turbineBlade = 'Turbine blade',
 }
 local function formLabel(form)
   local kind, size = form:match('^(%a+)(%d+)$')
@@ -134,7 +135,7 @@ function M.compile(data, mode, options, checkpoint)
   end
   U.check(data.version == 2, 'Unsupported material matrix')
   U.check(
-    mode == 'wiremill' or mode == 'coating' or mode == 'bender',
+    mode == 'wiremill' or mode == 'coating' or mode == 'bender' or mode == 'solidifier',
     'Mode has no verified recipe rules yet'
   )
   local manifest = {
@@ -183,6 +184,14 @@ function M.compile(data, mode, options, checkpoint)
         end
         if eligible then
           local function resolve(e, stocked)
+            if e.fluid == 'material' then
+              local fluid = U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
+              local size = e.n * (stocked and 1 or multiplier)
+              U.check(U.integer(size) and size > 0,
+                'Pattern multiplier exceeds the supported fluid quantity')
+              return { type = 'fluid', name = fluid, label = 'Molten ' .. material.name,
+                size = size }
+            end
             local item
             if e.f then
               item = M.resolve(data, material, e.f)
@@ -239,7 +248,7 @@ function M.compile(data, mode, options, checkpoint)
           for _, e in ipairs(rule.stock or {}) do
             recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
           end
-          U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no consumed solids')
+          U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
           local key = Planner.recipeKey(recipe)
           if not seen[key] then
             manifest.recipes[#manifest.recipes + 1] = recipe

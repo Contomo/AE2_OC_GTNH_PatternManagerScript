@@ -248,4 +248,29 @@ test('plate-fed bender routes, sheet metal and both spring inputs use source cir
   end
 end)
 
+test('Fluid Shaper compiles only verified molten plate and turbine-blade routes',function()
+  local manifest=M.compile(data,'solidifier',
+    {forms={plate=true,turbineBlade=true},multiplier=2})
+  local counts={plate=0,turbineBlade=0}
+  local found={}
+  for _,r in ipairs(manifest.recipes) do
+    counts[r.outputForm]=counts[r.outputForm]+1
+    assert(#r.inputs==1 and r.inputs[1].type=='fluid')
+    assert(r.inputs[1].size>0 and r.inputs[1].size%2==0)
+    assert(#r.outputs==1 and r.outputs[1].type=='item' and r.outputs[1].size==2)
+    assert(#r.stock==1 and r.stock[1].name=='gregtech:gt.metaitem.01')
+    if r.material=='Orichalcum' and r.outputForm=='turbineBlade' then
+      assert(r.inputs[1].name=='molten.orichalcum' and r.inputs[1].size==1728)
+      assert(r.stock[1].damage==32325)
+      found.orichalcum=true
+    elseif r.material=='Oriharukon' and r.outputForm=='plate' then
+      assert(r.inputs[1].name=='molten.oriharukon' and r.inputs[1].size==288)
+      found.oriharukon=true
+    end
+  end
+  assert(counts.plate>100 and counts.turbineBlade>100)
+  assert(found.orichalcum and found.oriharukon)
+  assert(#manifest.unresolved==0, table.concat(manifest.unresolved, ', '))
+end)
+
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

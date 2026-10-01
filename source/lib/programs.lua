@@ -42,19 +42,29 @@ local benderForms = {
   { 'springSmall', 'Small spring' },
   { 'spring', 'Spring' },
 }
-local function formSwitches()
+local shaperForms = {
+  { 'plate', '1x Plate' },
+  { 'turbineBlade', 'Turbine blade' },
+}
+local function formSwitches(choices, label, help, hidden)
   local names = {}
-  for _, option in ipairs(benderForms) do
+  for _, option in ipairs(choices) do
     names[#names + 1] = option[1]
   end
   local f = field(
     'forms',
-    'Enabled bending outputs',
-    'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.',
+    label,
+    help,
     table.concat(names, ','),
     'multiToggle'
   )
-  f.choices = benderForms
+  f.choices = choices
+  f.hidden = hidden
+  return f
+end
+local function enabledDestination(form, label, help)
+  local f = field(form, label, help, '', 'text', true)
+  f.enableForm = form
   return f
 end
 M.list = {
@@ -214,7 +224,8 @@ M.list = {
         'text',
         true
       ),
-      formSwitches(),
+      formSwitches(benderForms, 'Enabled bending outputs',
+        'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.'),
       field(
         'spring',
         'Spring interface name',
@@ -237,6 +248,24 @@ M.list = {
         'stick',
         'Large springs always use long rods; sheet metal always uses 1x plates.'
       ),
+      multiplier(),
+    },
+  },
+  {
+    id = 'fluidShaper',
+    name = 'Fluid Shaper',
+    mode = 'solidifier',
+    description = 'Cast plates and turbine blades from molten fluid with stocked molds.',
+    formChoices = shaperForms,
+    formSwitch = 'forms',
+    outputs = { plate = 'plate', turbineBlade = 'turbineBlade' },
+    fields = {
+      enabledDestination('plate', 'Plate interface name',
+        'Destination for molten-fluid to 1x-plate patterns.'),
+      enabledDestination('turbineBlade', 'Turbine blade interface name',
+        'Destination for molten-fluid to turbine-blade patterns.'),
+      formSwitches(shaperForms, 'Enabled Fluid Shaper outputs',
+        'Only verified Fluid Solidifier routes are included. The reusable mold stays in the machine.', true),
       multiplier(),
     },
   },

@@ -6,8 +6,9 @@ of an item stays unchanged. Subsequent occurrences get unique names, starting
 over for each pattern. Stack quantities and recipe outputs are preserved.
 
 One application runs several programs through **Run program**: assembly-line
-renaming, wire insulation, wiremill patterns for 1x wire and fine wire, and
-bending-machine patterns for plates, foil, sheet metal and springs.
+renaming, wire insulation, wiremill patterns for 1x wire and fine wire,
+bending-machine patterns for plates, foil, sheet metal and springs, and Fluid
+Shaper patterns for molten-fluid plates and turbine blades.
 Navigation is on the left; Scan, Execute, Recover and Quit are in the bottom row.
 Settings has shared interfaces/hardware and a separate section for each program.
 [Program architecture and recipe matrix](PATTERN_MAKER.md).
@@ -195,6 +196,7 @@ obsolete slot limits are not carried forward.
 | Wiremill | 1x wire and fine-wire destination names; separate input routes, default Ingot |
 | Wire combining | Bare-wire destination, insulated-cable destination (future rules) |
 | Bending machine | Plate, foil, sheet-metal and spring destinations; ten output switches, larger-plate/foil and small-spring input selectors, pattern multiplier |
+| Fluid Shaper | Separate plate and turbine-blade interfaces, each with an inline enable switch; molten fluid is requested, and the reusable mold stays in the machine |
 
 Shared default names are `OC Pattern Editor` and `OC Pattern Buffer`. Component
 addresses are optional when only one component of each type is connected.
