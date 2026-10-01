@@ -1438,6 +1438,20 @@ test('multiplier settings default on migration, reject fractions and stay separa
   api.runUI()
 end)
 
+test('numeric settings expand shorthand on save and leave interface names untouched',function()
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),replace('New pattern buffer name','4k'),nav('Wiremill'),
+    replace('Pattern multiplier','1.5K'),nav('Tier multipliers'),
+    replace('Maximum items per pattern ingredient','4k'),replace('Maximum fluid per pattern ingredient (mB)','4M'),function()
+      local c=unser(files[api.paths.config])
+      assert(c.shared.donors=='4k' and c.programs.wiremill.multiplier=='1500')
+      assert(c.batch.itemLimit=='4000' and c.batch.fluidLimit=='4000000')
+      assert(frame[31]:find('4000',1,true))
+      return quit()
+    end)
+  api.runUI()
+end)
+
 test('shortage preview allows Execute and the UI Cancel button stops refill waiting',function()
   withMatrix(function()
     cfg.programs.insulator.destination=cfg.programs.assline.target

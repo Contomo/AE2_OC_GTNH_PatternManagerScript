@@ -780,12 +780,14 @@ M.fields = {
   },
   {
     key = 'energyPause',
+    kind = 'number',
     label = 'Pause work below energy %',
     help = 'Pause component work at this charge level.',
     default = '25',
   },
   {
     key = 'energyResume',
+    kind = 'number',
     label = 'Resume work at energy %',
     help = 'At least 10 percentage points above the pause level; at most 95%.',
     default = '75',
@@ -812,6 +814,42 @@ for _, p in ipairs(Programs.list) do
     values[f.key] = f.default
   end
 end
+-- Expand shorthand only in numeric fields. Runtime consumers continue to read
+-- ordinary decimal values; names, addresses and templates are never rewritten.
+local function normalizeNumber(value)
+  local digits, suffix = U.trim(value):match('^([+-]?%d*%.?%d+)([kKmM])$')
+  if not digits then
+    return value
+  end
+  local scale = suffix:lower() == 'k' and 1000 or 1000000
+  local number = tonumber(digits) * scale
+  if U.integer(number) then
+    return string.format('%.0f', number)
+  end
+  -- Keep fractions for validation, and leave overflow invalid rather than
+  -- rounding or accepting a value beyond the existing integer limits.
+  return number == number and math.abs(number) < math.huge and tostring(number) or value
+end
+
+function M.normalize(c)
+  local function fields(values, definitions)
+    U.check(type(values) == 'table', 'Missing configuration section')
+    for _, f in ipairs(definitions) do
+      local value = values[f.key]
+      if (f.kind == 'number' or f.kind == 'positiveInteger' or f.kind == 'optionalPositiveInteger')
+        and type(value) == 'string' and not value:find('[%c]') then
+        values[f.key] = normalizeNumber(value)
+      end
+    end
+  end
+  fields(c.shared, M.fields)
+  fields(c.batch, Batch.fields)
+  for _, p in ipairs(Programs.list) do
+    fields(c.programs[p.id], p.fields)
+  end
+  return c
+end
+
 function M.validate(c)
   U.check(
     type(c) == 'table'
@@ -946,7 +984,7 @@ function M.migrate(old)
   if prior and not prior.polymer and prior.pvc then
     c.programs.insulator.polymer = prior.pvc == 'off' and 'none' or 'pvcSmall'
   end
-  return M.validate(c)
+  return M.validate(M.normalize(c))
 end
 function M.capacityReport(groups)
   local result = {}
@@ -3827,7 +3865,7 @@ local function runUI()
     state.verified = false
   end
   local function saveConfig(value)
-    Config.validate(value)
+    Config.validate(Config.normalize(value))
     writeFile(paths.config, value)
     cfg = value
     invalidate()

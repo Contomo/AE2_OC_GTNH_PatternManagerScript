@@ -77,4 +77,33 @@ test('migration preserves existing fixed multipliers and new settings persist', 
   c.batch.overrideUHV = '0.5'
   assert(not pcall(Config.validate, c))
 end)
+test('numeric shorthand normalizes centrally without altering names or blank overrides', function()
+  local c = U.clone(Config.defaults)
+  c.shared.editor = '4k'
+  c.shared.energyPause = '0.025K'
+  c.batch.itemLimit = '4k'
+  c.batch.fluidLimit = '4M'
+  c.batch.overrideULV = '1.5K'
+  c.batch.overrideLV = '2m'
+  c.programs.wiremill.multiplier = '1.5k'
+  c = Config.migrate(c)
+  assert(c.shared.editor == '4k' and c.shared.energyPause == '25')
+  assert(c.batch.itemLimit == '4000' and c.batch.fluidLimit == '4000000')
+  assert(c.batch.overrideULV == '1500' and c.batch.overrideLV == '2000000')
+  assert(c.batch.overrideMV == '' and c.programs.wiremill.multiplier == '1500')
+  assert(U.eq(Config.normalize(U.clone(c)), c))
+  assert(B.resolve(c.batch, 'ULV', 8, 1, {{type='item',size=2}}) == 448)
+end)
+
+test('shorthand retains numeric validation for malformed, fractional and excessive values', function()
+  for _, value in ipairs({'4kk', '4MB', 'k', '0k', '-1k', '0.0001k', '2147.483648M', '1e309M'}) do
+    local c = U.clone(Config.defaults)
+    c.batch.itemLimit = value
+    assert(not pcall(Config.migrate, c), 'Unexpectedly accepted: ' .. value)
+  end
+  local c = U.clone(Config.defaults)
+  c.shared.energyPause = '4k'
+  assert(not pcall(Config.migrate, c))
+end)
+
 print('SUCCESS: ' .. tests .. ' tests')

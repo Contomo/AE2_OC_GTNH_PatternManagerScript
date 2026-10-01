@@ -46,6 +46,9 @@ Wiremill, the insulator and the bending machine each have a **Pattern multiplier
 `1`. Enter a positive whole number: `256` makes a 1-ingot → 2-wire recipe request
 256 ingots and produce 512 wires. The multiplier applies to every encoded input
 and output in the selected recipe, including requested polymer/PPS.
+Numeric settings accept case-insensitive decimal shorthand: `4k` means `4000`,
+`4M` means `4000000`, and `1.5k` means `1500`. Values expand when saved; existing
+whole-number and range checks still apply. Interface names remain unchanged.
 **Settings > Tier multipliers** adds a shared tiered policy for every recipe
 program. New installs start at LuV; existing installations keep **Fixed** until
 you enable **Tiered**. Current progression and voltage reference tiers have

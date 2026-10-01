@@ -125,7 +125,7 @@ local function runUI()
     state.verified = false
   end
   local function saveConfig(value)
-    Config.validate(value)
+    Config.validate(Config.normalize(value))
     writeFile(paths.config, value)
     cfg = value
     invalidate()
