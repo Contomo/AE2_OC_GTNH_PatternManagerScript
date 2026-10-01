@@ -37,7 +37,10 @@ local benderForms = {
   { 'plateQuadruple', '4x' },
   { 'plateQuintuple', '5x' },
   { 'plateDense', 'Dense (9x)' },
-  { 'foil', 'Foil (1 to 4)' },
+  { 'foil', 'Foil' },
+  { 'sheetmetal', 'Sheet metal' },
+  { 'springSmall', 'Small spring' },
+  { 'spring', 'Spring' },
 }
 local function formSwitches()
   local names = {}
@@ -46,8 +49,8 @@ local function formSwitches()
   end
   local f = field(
     'forms',
-    'Enabled ingot routes',
-    'Each switch independently includes an ingot-input recipe when that material has one.',
+    'Enabled bending outputs',
+    'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.',
     table.concat(names, ','),
     'multiToggle'
   )
@@ -120,6 +123,7 @@ M.list = {
     mode = 'wiremill',
     description = 'Create 1x wire and fine-wire patterns in separate destination banks.',
     outputs = { wire1 = 'wire1', wireFine = 'wireFine' },
+    sources = { fields = { wire1 = 'wireSource', wireFine = 'fineSource' } },
     fields = {
       field(
         'wire1',
@@ -158,7 +162,7 @@ M.list = {
     id = 'bender',
     name = 'Bending machine',
     mode = 'bender',
-    description = 'Ingot-input plates and foil, with independent output switches.',
+    description = 'Scraped plate, foil, sheet-metal and spring routes with selectable inputs.',
     formChoices = benderForms,
     formSwitch = 'forms',
     outputs = {
@@ -169,6 +173,21 @@ M.list = {
       plateQuintuple = 'plate',
       plateDense = 'plate',
       foil = 'foil',
+      sheetmetal = 'sheetMetal',
+      springSmall = 'spring',
+      spring = 'spring',
+    },
+    sources = {
+      fixed = { plate = 'ingot', sheetmetal = 'plate', spring = 'stickLong' },
+      fields = {
+        plateDouble = 'plateSource',
+        plateTriple = 'plateSource',
+        plateQuadruple = 'plateSource',
+        plateQuintuple = 'plateSource',
+        plateDense = 'plateSource',
+        foil = 'plateSource',
+        springSmall = 'springSmallSource',
+      },
     },
     fields = {
       field(
@@ -182,7 +201,7 @@ M.list = {
       field(
         'foil',
         'Foil interface name',
-        'Destination bank for ingot to foil patterns.',
+        'Destination bank for the selected foil input route.',
         '',
         'text',
         true
@@ -190,12 +209,34 @@ M.list = {
       field(
         'sheetMetal',
         'Sheet metal interface name',
-        'Reserved for a later plate-input mode: no ingot to sheet metal recipe was found in the scrape.',
+        'Destination bank for plate to sheet-metal patterns.',
         '',
         'text',
         true
       ),
       formSwitches(),
+      field(
+        'spring',
+        'Spring interface name',
+        'Destination bank for enabled small and large springs.',
+        '',
+        'text',
+        true
+      ),
+      choice(
+        'plateSource',
+        'Larger plate / foil input',
+        { { 'ingot', 'Ingot' }, { 'plate', '1x plate' } },
+        'ingot',
+        'Applies to 2x, 3x, 4x, 5x and dense plates, plus foil. 1x plates always use ingots.'
+      ),
+      choice(
+        'springSmallSource',
+        'Small spring input',
+        { { 'stick', 'Rod' }, { 'wire1', '1x wire' } },
+        'stick',
+        'Large springs always use long rods; sheet metal always uses 1x plates.'
+      ),
       multiplier(),
     },
   },

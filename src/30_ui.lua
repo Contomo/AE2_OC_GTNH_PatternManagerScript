@@ -7,6 +7,22 @@ local function runUI()
   local maxW, maxH = gpu.maxResolution()
   U.check(maxW >= 160 and maxH >= 50, 'Use a tier 3 GPU and screen with 160x50 resolution')
   local w, h = 160, 50
+  -- OC can report char=0 for keypad keys (notably with Num Lock off).
+  -- The physical key code still identifies the intended digit.
+  local keypad = {
+    [0x52] = '0',
+    [0x4F] = '1',
+    [0x50] = '2',
+    [0x51] = '3',
+    [0x4B] = '4',
+    [0x4C] = '5',
+    [0x4D] = '6',
+    [0x47] = '7',
+    [0x48] = '8',
+    [0x49] = '9',
+    [0x53] = '.',
+    [0xB3] = ',',
+  }
   local colors = {
     bg = 0x101A26,
     panel = 0x1A2A3C,
@@ -219,9 +235,7 @@ local function runUI()
       add('Run program opens the chooser. Select a program and press Preview selected.')
       add('Review changes, required interfaces, existing-pattern sorting and donors.')
       add('Verify destination interfaces have all 36 slots available, then Execute preview.')
-      add(
-        'Assembly line, insulator, wiremill and ingot-input bender share settings, editor and recovery.'
-      )
+      add('Assembly line, insulator, wiremill and bender share settings, editor and recovery.')
       add('Wire combining remains unavailable until its recipes have been verified.')
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
@@ -239,7 +253,9 @@ local function runUI()
     elseif state.section == 'details' and preview.manifest then
       if preview.id == 'bender' then
         add('BENDER CIRCUITS', 'blue')
-        add('Keep these circuits stocked in the machine; patterns request ingots only.')
+        add(
+          'Keep these circuits stocked in the machine; patterns request the selected solids only.'
+        )
         local circuits, labels = {}, {}
         for _, recipe in ipairs(preview.manifest.recipes) do
           for _, stock in ipairs(recipe.stock or {}) do
@@ -482,15 +498,19 @@ local function runUI()
         or Programs.byId[state.settings].name
       text(34, 7, 'SETTINGS / ' .. name, 124, 'blue')
       text(34, 8, 'Changes save when you accept a field or navigate away.', 124, 'muted')
-      for n, f in ipairs(fields()) do
-        local y = 11 + (n - 1) * 4
+      local y = 11
+      for _, f in ipairs(fields()) do
+        local helpY, height = y + 2, 4
         text(34, y, f.label, 124, 'blue')
         if f.kind == 'multiToggle' then
-          local x = 34
+          local x, row = 34, y + 1
           local selected = Config.selected(values()[f.key], f.choices)
           for _, option in ipairs(f.choices) do
             local key, choice = f.key, option[1]
-            x = button(x, y + 1, option[2], function()
+            if x + unicode.wlen('[ ' .. option[2] .. ' ]') - 1 > 157 then
+              x, row = 34, row + 1
+            end
+            x = button(x, row, option[2], function()
               commitEdit()
               local trial = U.clone(cfg)
               local v = Config.values(trial, state.settings)
@@ -499,6 +519,7 @@ local function runUI()
               status('Settings saved.', 'green')
             end, true, selected[choice])
           end
+          helpY, height = row + 1, row - y + 4
         elseif f.choices then
           local x = 34
           for _, option in ipairs(f.choices) do
@@ -523,12 +544,10 @@ local function runUI()
         else
           editorRow(34, y + 1, 124, f)
         end
-        text(34, y + 2, f.help, 124, 'muted')
+        text(34, helpY, f.help, 124, 'muted')
+        y = y + height
       end
-      local x = button(34, 47, 'Save settings', function()
-        action('save')
-      end)
-      button(x, 47, 'Run program', function()
+      button(34, 47, 'Run program', function()
         navigate('programs')
       end)
     elseif state.page == 'programs' then
@@ -722,10 +741,6 @@ local function runUI()
     local ok, why = pcall(function()
       if name == 'history' then
         history()
-      elseif name == 'save' then
-        Config.validate(cfg)
-        writeFile(paths.config, cfg)
-        status('Settings saved.', 'green')
       elseif name == 'preview' then
         U.check(not fs.exists(paths.pending), 'Recover the pending operation before previewing')
         local id = state.page == 'preview' and state.preview and state.preview.id or state.selected
@@ -854,7 +869,7 @@ local function runUI()
           state.running = false
         end
       elseif edit then
-        if key == 28 then
+        if key == 28 or key == 0x9C then
           commitEdit()
         elseif key == 1 then
           edit = nil
@@ -884,8 +899,11 @@ local function runUI()
               edit.cursor = at
             end
           end
-        elseif char and char >= 32 and not keyboard.isControlDown() then
-          insert(unicode.char(char))
+        elseif not keyboard.isControlDown() then
+          local value = char and char >= 32 and unicode.char(char) or keypad[key]
+          if value then
+            insert(value)
+          end
         end
       elseif key == 201 then
         state.offset = state.offset - 31

@@ -963,6 +963,11 @@ test('bender output switches toggle independently and migrate into the unified s
   local old=cp(cfg);old.programs.bender.forms=nil
   local migrated=api.config.migrate(old)
   assert(migrated.programs.bender.forms:find('plateDouble',1,true))
+  old.programs.bender.forms='plate,foil'
+  old.programs.bender.plateSource=nil;old.programs.bender.springSmallSource=nil
+  migrated=api.config.migrate(old)
+  assert(migrated.programs.bender.forms=='plate,foil')
+  assert(migrated.programs.bender.plateSource=='ingot' and migrated.programs.bender.springSmallSource=='stick')
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Bending machine'),function()
     assert(frame[24]:find('[ 1x ]',1,true) and frame[24]:find('[ 2x ]',1,true))
@@ -975,6 +980,83 @@ test('bender output switches toggle independently and migrate into the unified s
     snapshot('bender_switches')
     return quit()
   end)
+  api.runUI()
+end)
+
+test('enabled bending outputs require only their own destination name',function()
+  cfg.programs.bender.forms='sheetmetal'
+  mustFail(function() api.config.requireProgram(cfg,'bender') end,'Sheet metal interface name')
+  cfg.programs.bender.sheetMetal='Sheets'
+  api.config.requireProgram(cfg,'bender')
+  cfg.programs.bender.forms='springSmall'
+  mustFail(function() api.config.requireProgram(cfg,'bender') end,'Spring interface name')
+end)
+
+test('bender input choices select one scraped route per output and keep fixed inputs',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    local cap=data.capabilities[1]
+    for _,form in ipairs({'plate','plateDouble','sheetmetal','springSmall','spring','stick','stickLong'}) do
+      cap[form]=true
+    end
+    local processes=data.production[1]
+    for _,process in ipairs({'ingot_plate','ingot_plateDouble','plate_plateDouble',
+      'plate_sheetmetal','stick_springSmall_yield2','wire1_springSmall','stickLong_spring'}) do
+      processes[process]=true
+    end
+    for form,prefix in pairs({plate=17000,plateDouble=18000,sheetmetal=30000,
+      stick=23000,stickLong=24000,springSmall=33000,spring=34000}) do
+      data.families.gt[form]={name='gregtech:gt.metaitem.01',prefix=prefix}
+    end
+    data.items[2]={name='gregtech:gt.integrated_circuit',damage=1}
+    data.items[3]={name='gregtech:gt.integrated_circuit',damage=2}
+    data.items[4]={name='gregtech:gt.integrated_circuit',damage=11}
+    local function rule(id,source,destination,input,output,circuit)
+      data.rules[#data.rules+1]={id=id,mode='bender',process=id,
+        requires={source,destination},inputs={{f=source,n=input}},
+        outputs={{f=destination,n=output}},stock={{i=circuit,n=1}}}
+    end
+    rule('ingot_plate','ingot','plate',1,1,2)
+    rule('ingot_plateDouble','ingot','plateDouble',2,1,3)
+    rule('plate_plateDouble','plate','plateDouble',2,1,3)
+    rule('plate_sheetmetal','plate','sheetmetal',2,1,4)
+    rule('stick_springSmall_yield2','stick','springSmall',1,2,2)
+    rule('wire1_springSmall','wire1','springSmall',1,2,2)
+    rule('stickLong_spring','stickLong','spring',1,1,2)
+    local v=cfg.programs.bender
+    v.plate=cfg.programs.assline.target;v.sheetMetal='Sheets';v.spring='Springs'
+    v.forms='plate,plateDouble,sheetmetal,springSmall,spring'
+    iface('Sheets',60);iface('Springs',61);target.patterns={}
+    local first=api.runner.preview(cfg,'bender')
+    assert(#first.plan.errors==0 and #first.manifest.recipes==10)
+    for _,r in ipairs(first.manifest.recipes) do
+      if r.outputForm=='plateDouble' then assert(r.inputs[1].damage==11000+tonumber(r.material=='A' and 1 or 2)) end
+      if r.outputForm=='sheetmetal' then assert(r.inputs[1].damage>=17001 and r.inputs[1].damage<=17002) end
+    end
+    v.plateSource='plate';v.springSmallSource='wire1'
+    local second=api.runner.preview(cfg,'bender')
+    assert(#second.plan.errors==0 and #second.manifest.recipes==10)
+    for _,r in ipairs(second.manifest.recipes) do
+      local source=r.inputs[1].damage
+      if r.outputForm=='plate' then assert(source>=11001 and source<=11002) end
+      if r.outputForm=='plateDouble' then assert(source>=17001 and source<=17002) end
+      if r.outputForm=='springSmall' then assert(r.inputs[1].name=='gregtech:gt.blockmachines') end
+      if r.outputForm=='spring' then assert(source>=24001 and source<=24002) end
+    end
+  end)
+end)
+
+test('keypad digits and Enter edit settings without a Save button',function()
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),nav('Bending machine'),function()
+    assert(not frame[47]:find('Save settings',1,true))
+    return field('Pattern multiplier')()
+  end,function() controlDown=true;return 'key_down','kbd',97,30 end,
+    {'key_down','kbd',0,0x50},{'key_down','kbd',0,0x4C},{'key_down','kbd',0,0x4D},
+    {'key_down','kbd',13,0x9C},function()
+      assert(unser(files[api.paths.config]).programs.bender.multiplier=='256')
+      return quit()
+    end)
   api.runUI()
 end)
 

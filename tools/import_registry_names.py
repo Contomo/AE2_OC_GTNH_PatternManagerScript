@@ -45,7 +45,9 @@ def recover(archive, registry, catalog, enderio_item, enderio_objects, item_regi
         component = source('gtPlusPlus/core/item/base/BaseItemComponent.java')
         assert '"item" + componentType.COMPONENT_NAME + material.getUnlocalizedName()' in component
         components = re.findall(r'\w+\("([^"]+)",\s*"[^"]+",\s*"[^"]+",\s*OrePrefixes\.\w+\)', component)
-        for material in registry['gtppMaterials']:
+        # GT++ can register components for both its own materials and wrapped
+        # GT Materials (e.g. Clay plates). Both use the same source formula.
+        for material in set(registry['gtppMaterials']) | set(registry['materials'].values()):
             for form in components:
                 add('miscutils:item' + form + material, 'gtPlusPlus/core/item/base/BaseItemComponent.java + registry material declarations')
 

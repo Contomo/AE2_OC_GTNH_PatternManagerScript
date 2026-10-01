@@ -240,6 +240,20 @@ function M.requireProgram(c, id)
       'Set ' .. f.label .. ' in Settings > ' .. p.name
     )
   end
+  if p.formSwitch and p.outputs then
+    local selected = M.selected(c.programs[id][p.formSwitch], p.formChoices)
+    local needed = {}
+    for form, key in pairs(p.outputs) do
+      if selected[form] then
+        needed[key] = true
+      end
+    end
+    for _, f in ipairs(p.fields) do
+      if needed[f.key] then
+        U.check(c.programs[id][f.key] ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
+      end
+    end
+  end
   return p
 end
 return M

@@ -207,7 +207,10 @@ local benderForms = {
   { 'plateQuadruple', '4x' },
   { 'plateQuintuple', '5x' },
   { 'plateDense', 'Dense (9x)' },
-  { 'foil', 'Foil (1 to 4)' },
+  { 'foil', 'Foil' },
+  { 'sheetmetal', 'Sheet metal' },
+  { 'springSmall', 'Small spring' },
+  { 'spring', 'Spring' },
 }
 local function formSwitches()
   local names = {}
@@ -216,8 +219,8 @@ local function formSwitches()
   end
   local f = field(
     'forms',
-    'Enabled ingot routes',
-    'Each switch independently includes an ingot-input recipe when that material has one.',
+    'Enabled bending outputs',
+    'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.',
     table.concat(names, ','),
     'multiToggle'
   )
@@ -290,6 +293,7 @@ M.list = {
     mode = 'wiremill',
     description = 'Create 1x wire and fine-wire patterns in separate destination banks.',
     outputs = { wire1 = 'wire1', wireFine = 'wireFine' },
+    sources = { fields = { wire1 = 'wireSource', wireFine = 'fineSource' } },
     fields = {
       field(
         'wire1',
@@ -328,7 +332,7 @@ M.list = {
     id = 'bender',
     name = 'Bending machine',
     mode = 'bender',
-    description = 'Ingot-input plates and foil, with independent output switches.',
+    description = 'Scraped plate, foil, sheet-metal and spring routes with selectable inputs.',
     formChoices = benderForms,
     formSwitch = 'forms',
     outputs = {
@@ -339,6 +343,21 @@ M.list = {
       plateQuintuple = 'plate',
       plateDense = 'plate',
       foil = 'foil',
+      sheetmetal = 'sheetMetal',
+      springSmall = 'spring',
+      spring = 'spring',
+    },
+    sources = {
+      fixed = { plate = 'ingot', sheetmetal = 'plate', spring = 'stickLong' },
+      fields = {
+        plateDouble = 'plateSource',
+        plateTriple = 'plateSource',
+        plateQuadruple = 'plateSource',
+        plateQuintuple = 'plateSource',
+        plateDense = 'plateSource',
+        foil = 'plateSource',
+        springSmall = 'springSmallSource',
+      },
     },
     fields = {
       field(
@@ -352,7 +371,7 @@ M.list = {
       field(
         'foil',
         'Foil interface name',
-        'Destination bank for ingot to foil patterns.',
+        'Destination bank for the selected foil input route.',
         '',
         'text',
         true
@@ -360,12 +379,34 @@ M.list = {
       field(
         'sheetMetal',
         'Sheet metal interface name',
-        'Reserved for a later plate-input mode: no ingot to sheet metal recipe was found in the scrape.',
+        'Destination bank for plate to sheet-metal patterns.',
         '',
         'text',
         true
       ),
       formSwitches(),
+      field(
+        'spring',
+        'Spring interface name',
+        'Destination bank for enabled small and large springs.',
+        '',
+        'text',
+        true
+      ),
+      choice(
+        'plateSource',
+        'Larger plate / foil input',
+        { { 'ingot', 'Ingot' }, { 'plate', '1x plate' } },
+        'ingot',
+        'Applies to 2x, 3x, 4x, 5x and dense plates, plus foil. 1x plates always use ingots.'
+      ),
+      choice(
+        'springSmallSource',
+        'Small spring input',
+        { { 'stick', 'Rod' }, { 'wire1', '1x wire' } },
+        'stick',
+        'Large springs always use long rods; sheet metal always uses 1x plates.'
+      ),
       multiplier(),
     },
   },
@@ -620,6 +661,20 @@ function M.requireProgram(c, id)
       f.optional or c.programs[id][f.key] ~= '',
       'Set ' .. f.label .. ' in Settings > ' .. p.name
     )
+  end
+  if p.formSwitch and p.outputs then
+    local selected = M.selected(c.programs[id][p.formSwitch], p.formChoices)
+    local needed = {}
+    for form, key in pairs(p.outputs) do
+      if selected[form] then
+        needed[key] = true
+      end
+    end
+    for _, f in ipairs(p.fields) do
+      if needed[f.key] then
+        U.check(c.programs[id][f.key] ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
+      end
+    end
   end
   return p
 end
@@ -2205,6 +2260,11 @@ local labels = {
   plateQuintuple = '5x Plate',
   plateDense = 'Dense Plate',
   foil = 'Foil',
+  sheetmetal = 'Sheet metal',
+  springSmall = 'Small spring',
+  spring = 'Spring',
+  stickLong = 'Long rod',
+  wire1 = '1x wire',
 }
 local function formLabel(form)
   local kind, size = form:match('^(%a+)(%d+)$')
@@ -2363,7 +2423,9 @@ function M.compile(data, mode, options, checkpoint)
         local out = rule.outputs[1]
         local label = formLabel(out.f)
         local source = rule.inputs[1].f
-        local route = mode == 'wiremill' and (' / from ' .. (labels[source] or source)) or ''
+        local route = (mode == 'wiremill' or mode == 'bender')
+            and (' / from ' .. (labels[source] or source))
+          or ''
         local recipe = {
           kind = 'processing',
           material = material.name,
@@ -2670,14 +2732,23 @@ local function programRouting(c, id)
       end
     end
   end
+  local sources
+  if program.sources then
+    sources = {}
+    for form, source in pairs(program.sources.fixed or {}) do
+      sources[form] = source
+    end
+    for form, key in pairs(program.sources.fields or {}) do
+      sources[form] = values[key]
+    end
+  end
   return routing,
     {
       polymer = values.polymer,
       multiplier = tonumber(values.multiplier),
       pps = values.pps ~= 'off',
       forms = forms,
-      sources = id == 'wiremill' and { wire1 = values.wireSource, wireFine = values.fineSource }
-        or nil,
+      sources = sources,
     },
     program
 end
@@ -2892,6 +2963,22 @@ local function runUI()
   local maxW, maxH = gpu.maxResolution()
   U.check(maxW >= 160 and maxH >= 50, 'Use a tier 3 GPU and screen with 160x50 resolution')
   local w, h = 160, 50
+  -- OC can report char=0 for keypad keys (notably with Num Lock off).
+  -- The physical key code still identifies the intended digit.
+  local keypad = {
+    [0x52] = '0',
+    [0x4F] = '1',
+    [0x50] = '2',
+    [0x51] = '3',
+    [0x4B] = '4',
+    [0x4C] = '5',
+    [0x4D] = '6',
+    [0x47] = '7',
+    [0x48] = '8',
+    [0x49] = '9',
+    [0x53] = '.',
+    [0xB3] = ',',
+  }
   local colors = {
     bg = 0x101A26,
     panel = 0x1A2A3C,
@@ -3104,9 +3191,7 @@ local function runUI()
       add('Run program opens the chooser. Select a program and press Preview selected.')
       add('Review changes, required interfaces, existing-pattern sorting and donors.')
       add('Verify destination interfaces have all 36 slots available, then Execute preview.')
-      add(
-        'Assembly line, insulator, wiremill and ingot-input bender share settings, editor and recovery.'
-      )
+      add('Assembly line, insulator, wiremill and bender share settings, editor and recovery.')
       add('Wire combining remains unavailable until its recipes have been verified.')
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
@@ -3124,7 +3209,9 @@ local function runUI()
     elseif state.section == 'details' and preview.manifest then
       if preview.id == 'bender' then
         add('BENDER CIRCUITS', 'blue')
-        add('Keep these circuits stocked in the machine; patterns request ingots only.')
+        add(
+          'Keep these circuits stocked in the machine; patterns request the selected solids only.'
+        )
         local circuits, labels = {}, {}
         for _, recipe in ipairs(preview.manifest.recipes) do
           for _, stock in ipairs(recipe.stock or {}) do
@@ -3367,15 +3454,19 @@ local function runUI()
         or Programs.byId[state.settings].name
       text(34, 7, 'SETTINGS / ' .. name, 124, 'blue')
       text(34, 8, 'Changes save when you accept a field or navigate away.', 124, 'muted')
-      for n, f in ipairs(fields()) do
-        local y = 11 + (n - 1) * 4
+      local y = 11
+      for _, f in ipairs(fields()) do
+        local helpY, height = y + 2, 4
         text(34, y, f.label, 124, 'blue')
         if f.kind == 'multiToggle' then
-          local x = 34
+          local x, row = 34, y + 1
           local selected = Config.selected(values()[f.key], f.choices)
           for _, option in ipairs(f.choices) do
             local key, choice = f.key, option[1]
-            x = button(x, y + 1, option[2], function()
+            if x + unicode.wlen('[ ' .. option[2] .. ' ]') - 1 > 157 then
+              x, row = 34, row + 1
+            end
+            x = button(x, row, option[2], function()
               commitEdit()
               local trial = U.clone(cfg)
               local v = Config.values(trial, state.settings)
@@ -3384,6 +3475,7 @@ local function runUI()
               status('Settings saved.', 'green')
             end, true, selected[choice])
           end
+          helpY, height = row + 1, row - y + 4
         elseif f.choices then
           local x = 34
           for _, option in ipairs(f.choices) do
@@ -3408,12 +3500,10 @@ local function runUI()
         else
           editorRow(34, y + 1, 124, f)
         end
-        text(34, y + 2, f.help, 124, 'muted')
+        text(34, helpY, f.help, 124, 'muted')
+        y = y + height
       end
-      local x = button(34, 47, 'Save settings', function()
-        action('save')
-      end)
-      button(x, 47, 'Run program', function()
+      button(34, 47, 'Run program', function()
         navigate('programs')
       end)
     elseif state.page == 'programs' then
@@ -3607,10 +3697,6 @@ local function runUI()
     local ok, why = pcall(function()
       if name == 'history' then
         history()
-      elseif name == 'save' then
-        Config.validate(cfg)
-        writeFile(paths.config, cfg)
-        status('Settings saved.', 'green')
       elseif name == 'preview' then
         U.check(not fs.exists(paths.pending), 'Recover the pending operation before previewing')
         local id = state.page == 'preview' and state.preview and state.preview.id or state.selected
@@ -3739,7 +3825,7 @@ local function runUI()
           state.running = false
         end
       elseif edit then
-        if key == 28 then
+        if key == 28 or key == 0x9C then
           commitEdit()
         elseif key == 1 then
           edit = nil
@@ -3769,8 +3855,11 @@ local function runUI()
               edit.cursor = at
             end
           end
-        elseif char and char >= 32 and not keyboard.isControlDown() then
-          insert(unicode.char(char))
+        elseif not keyboard.isControlDown() then
+          local value = char and char >= 32 and unicode.char(char) or keypad[key]
+          if value then
+            insert(value)
+          end
         end
       elseif key == 201 then
         state.offset = state.offset - 31

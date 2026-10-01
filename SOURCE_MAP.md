@@ -82,13 +82,15 @@ both new imprints and resizes through the same editing function; the shared
 executor journals the original pattern and requested quantities for recovery.
 Resizing uses the pattern already in the destination, not a disposable donor.
 
-For the bending program, `tools/compile_matrix.py` imports only recipes with
-one consumed ingot and one stocked integrated circuit. Seven shared rules cover
-1x/2x/3x/4x/5x/dense plates and foil. Each material receives production flags
-only for routes actually present in the scrape. `lib/programs.lua` defines the
-output switches and destinations; `maker/scan.lua` passes those switches to the
-same compiler and planner used by wiremill. A disabled output leaves any
-existing pattern untouched as a foreign pattern in the destination layout.
+For the bending program, `tools/compile_matrix.py` imports only the selected
+one-solid routes with a stocked integrated circuit. Its 18 shared rules cover
+ingot/plate routes for plates and foil, plate-fed sheet metal, and rod/wire-fed
+springs. Each material receives production flags only for routes actually
+present in the scrape. Distinct small-spring yields have distinct flags.
+`lib/programs.lua` defines output switches, source selectors and destinations;
+`maker/scan.lua` passes those selections to the same compiler and planner used
+by wiremill. A disabled output leaves any existing pattern untouched as a
+foreign pattern in the destination layout.
 
 ## Donor refills and safety boundaries
 

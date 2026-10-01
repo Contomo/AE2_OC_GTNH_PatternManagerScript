@@ -261,14 +261,23 @@ local function programRouting(c, id)
       end
     end
   end
+  local sources
+  if program.sources then
+    sources = {}
+    for form, source in pairs(program.sources.fixed or {}) do
+      sources[form] = source
+    end
+    for form, key in pairs(program.sources.fields or {}) do
+      sources[form] = values[key]
+    end
+  end
   return routing,
     {
       polymer = values.polymer,
       multiplier = tonumber(values.multiplier),
       pps = values.pps ~= 'off',
       forms = forms,
-      sources = id == 'wiremill' and { wire1 = values.wireSource, wireFine = values.fineSource }
-        or nil,
+      sources = sources,
     },
     program
 end

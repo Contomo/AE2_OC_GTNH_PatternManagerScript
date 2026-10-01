@@ -39,7 +39,7 @@ class MatrixTests(unittest.TestCase):
         data = compile_matrix(catalog, registry)
         self.assertEqual([row['dsf'] for row in data['materials']], [30])
 
-    def test_bender_imports_only_ingot_routes_and_preserves_stocked_circuits(self):
+    def test_bender_imports_scraped_ingot_and_plate_routes_with_stocked_circuits(self):
         catalog, registry = self.fixture()
         catalog['recipes'] = []
         prefixes = ['null'] * 30
@@ -61,9 +61,11 @@ class MatrixTests(unittest.TestCase):
             recipe('niobium-plate',360,'ingot',1,'plate',1)]
         data=compile_matrix(catalog,registry)
         rules=[r for r in data['rules'] if r['mode']=='bender']
-        self.assertEqual(len(rules),2)
-        self.assertEqual({r['process'] for r in rules},{'ingot_plate','ingot_plateDouble'})
-        self.assertTrue(all(r['inputs'][0]['f']=='ingot' and len(r['inputs'])==1 for r in rules))
+        self.assertEqual(len(rules),3)
+        self.assertEqual({r['process'] for r in rules},
+                         {'ingot_plate','ingot_plateDouble','plate_plateDouble'})
+        self.assertTrue(all(len(r['inputs'])==1 for r in rules))
+        self.assertEqual({r['inputs'][0]['f'] for r in rules},{'ingot','plate'})
         circuits={r['outputs'][0]['f']:data['items'][r['stock'][0]['i']-1]['damage'] for r in rules}
         self.assertEqual(circuits,{'plate':1,'plateDouble':2})
         niobium=next(m for m in data['materials'] if m['name']=='NiobiumTitanium')
@@ -198,6 +200,55 @@ class MatrixTests(unittest.TestCase):
                          'itemCasing','plateDouble','plateTriple','plateQuadruple','plateQuintuple','plateDense',
                          'plateSuperdense','frameGt','pipeFluidTiny','pipeItemSmall','casingBolted','casingRebolted',
                          'sheetmetal','round','foil'} <= forms)
+
+    @unittest.skipUnless(Path('.research/pattern-catalog-with-bender.json.gz').exists(),
+                         'Local bending evidence not installed')
+    def test_bender_expansion_contains_no_recipe_absent_from_scrape(self):
+        catalog = json.load(gzip.open('.research/pattern-catalog-with-bender.json.gz', 'rt'))
+        registry = json.loads(Path('../OreDictScript/data/registry-rules.json').read_text(encoding='utf-8-sig'))
+        resources = {r['id']: r for r in json.load(gzip.open('../OreDictScript/research/resource-index.json.gz', 'rt'))['resources']}
+        resources.update(json.load(gzip.open('../OreDictScript/data/ores.json.gz', 'rt'))['resources'])
+        data = compile_matrix(catalog, registry, resources=resources)
+
+        def ingredient(rid, amount):
+            name, damage = descriptor(rid)
+            return name, damage, amount
+
+        def identity(inputs, outputs, stock):
+            return tuple(sorted(inputs)), tuple(sorted(outputs)), tuple(sorted(stock))
+
+        source = set()
+        for recipe in catalog['recipes']:
+            if recipe['machineType'] != 'Bending Machine':
+                continue
+            inputs, stock = [], []
+            for item in recipe['inputs']:
+                (inputs if item.get('consumed', True) else stock).append(ingredient(item['id'], item['amount']))
+            outputs = [ingredient(item['id'], item['amount']) for item in recipe['outputs']]
+            source.add(identity(inputs, outputs, stock))
+
+        expanded = set()
+        for material in data['materials']:
+            available = data['capabilities'][material['a']-1]
+            production = data['production'][material['p']-1] if material.get('p') else {}
+            for rule in data['rules']:
+                if rule['mode'] != 'bender' or not production.get(rule['process']):
+                    continue
+                if any(form not in available for form in rule['requires']) or rule['id'] in material.get('deny', {}):
+                    continue
+                def expand(entries):
+                    result = []
+                    for entry in entries:
+                        if 'f' in entry:
+                            name, damage = resolve(data['families'], material, entry['f'])
+                        else:
+                            item = data['items'][entry['i']-1]
+                            name, damage = item['name'], item['damage']
+                        result.append((name, damage, entry['n']))
+                    return result
+                expanded.add(identity(expand(rule['inputs']), expand(rule['outputs']), expand(rule['stock'])))
+        self.assertGreater(len(expanded), 2500)
+        self.assertFalse(expanded - source, 'Bender matrix generated a recipe absent from the scrape')
 
 
 if __name__ == '__main__':

@@ -13,8 +13,10 @@ and matrix occupy about 0.6 MB, within the 4 MB cap.
 Settings has shared hardware/interfaces and a separate section per program.
 Wire insulator has its destination, five-way polymer selector and independent PPS switch; wiremill has separate
 1x wire and fine-wire destinations and independent input-route choices (Ingot by default).
-Bending has separate plate/foil destinations, seven independent output switches
-and a batch multiplier. Fields save on acceptance or navigation.
+Bending has separate plate, foil, sheet-metal and spring destinations, ten
+independent output switches, a larger-plate/foil input choice, a small-spring
+input choice and a batch multiplier. Fields save on acceptance or navigation;
+there is no separate Save button. Keypad digits and keypad Enter work in edits.
 All buffers matching the shared donor name are counted from their actual
 patterns, independently of their capacity. Only the shared editor is local.
 
@@ -34,14 +36,15 @@ Registry spelling is recovered from registration code, source recipe references
 and GTNH's NEI item configuration. All current selectable modes resolve;
 future unresolved IDs block execution and appear in Details.
 
-The bending mode selects only scrape-backed, directly ingot-fed plate/foil rules.
-It uses circuits 1, 2, 3, 4, 5, 9 and 10 as external machine selectors; the
-circuits are not requested in processing patterns. Existing matching recipes
+The bending mode selects only scrape-backed single-solid routes. 1x plates use
+ingots; larger plates and foil choose ingots or 1x plates. Sheet metal uses
+1x plates, small springs choose rods or 1x wire, and large springs use long
+rods. Source circuit selectors remain external machine stock, not requested
+in processing patterns. Existing matching recipes
 are reused or resized by ratio. Turning off a form preserves existing patterns
 as unrelated entries after the selected layout; it does not destroy them.
 Combining has a settings section reserved for future verified rules and its
-preview/execution controls remain disabled. Bending sheet metal also remains
-reserved until a plate-input route is implemented.
+preview/execution controls remain disabled.
 Crafting donors are counted, but the current executable generators use processing
 patterns; crafting-grid execution remains a future capability.
 
@@ -66,9 +69,10 @@ ore dictionary. `tools/compile_matrix.py` emits matrix schema **2**:
   `1 ingot(material) -> 2 wire1(material)`, and shared larger-wire/fine-wire routes.
   The **96 coating rules** serve two shared classes (`standard` and `pps`);
   each class is selected once per material, rather than repeating its recipe list.
-- The **7 bending rules** select ingot → 1x/2x/3x/4x/5x/dense plate or foil.
-  They share material production flags rather than per-material recipe lists.
-- `items`: **15** shared literal supplies/circuits, with scraped display names.
+- The **18 bending rules** cover the selected ingot/plate outputs and spring
+  routes. They share material production flags rather than per-material recipe
+  lists. Two different rod → small-spring yields have separate semantic flags.
+- `items`: **16** shared literal supplies/circuits, with scraped display names.
 - `registryNames`: shared case-preserving IDs recovered from source declarations.
   `data/registry-names.json` records the source evidence; this is a desktop import, not a hand-maintained exception list.
 - `source`: recipe provenance, registry version, compatibility evidence and

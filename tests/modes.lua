@@ -121,7 +121,7 @@ test('wiremill input selection excludes alternative routes and uses recovered re
     for _,r in ipairs(result.recipes) do
       local key=r.outputs[1].name..':'..r.outputs[1].damage
       assert(not outputs[key]);outputs[key]=true
-      assert(r.label:find('from '..(r.outputForm=='wire1' and 'Ingot' or ({ingot='Ingot',stick='Rod',wire1='wire1'})[source]),1,true))
+      assert(r.label:find('from '..(r.outputForm=='wire1' and 'Ingot' or ({ingot='Ingot',stick='Rod',wire1='1x wire'})[source]),1,true))
     end
     if source=='ingot' then assert(#result.recipes==294) end
   end
@@ -178,7 +178,9 @@ test('bender compiles only scraped ingot routes, with source circuit selectors s
   local expected={plate={1,1,1},plateDouble={2,1,2},plateTriple={3,1,3},
     plateQuadruple={4,1,4},plateQuintuple={5,1,5},plateDense={9,1,9},foil={1,4,10}}
   local enabled={};for _,form in ipairs(forms) do enabled[form]=true end
-  local manifest=M.compile(data,'bender',{forms=enabled,multiplier=1})
+  local sources={plate='ingot',plateDouble='ingot',plateTriple='ingot',
+    plateQuadruple='ingot',plateQuintuple='ingot',plateDense='ingot',foil='ingot'}
+  local manifest=M.compile(data,'bender',{forms=enabled,sources=sources,multiplier=1})
   local counts={};local seen={}
   for _,r in ipairs(manifest.recipes) do
     local form=r.outputForm;local tuple=assert(expected[form]);counts[form]=(counts[form] or 0)+1
@@ -190,11 +192,40 @@ test('bender compiles only scraped ingot routes, with source circuit selectors s
   end
   assert(#manifest.unresolved==0 and #manifest.recipes>1000,'unresolved='..#manifest.unresolved..' recipes='..#manifest.recipes..' first='..tostring(manifest.unresolved[1] and manifest.unresolved[1].reason or manifest.unresolved[1]))
   for _,form in ipairs(forms) do assert(counts[form]>0) end
-  local onlyFoil=M.compile(data,'bender',{forms={foil=true}})
+  local onlyFoil=M.compile(data,'bender',{forms={foil=true},sources={foil='ingot'}})
   assert(#onlyFoil.recipes==counts.foil)
   for _,r in ipairs(onlyFoil.recipes) do assert(r.outputForm=='foil') end
-  local noSingles=M.compile(data,'bender',{forms={plateDouble=true}})
+  local noSingles=M.compile(data,'bender',{forms={plateDouble=true},sources={plateDouble='ingot'}})
   assert(#noSingles.recipes==counts.plateDouble)
+end)
+
+test('plate-fed bender routes, sheet metal and both spring inputs use source circuits',function()
+  local forms={plateDouble=true,plateDense=true,foil=true,sheetmetal=true,springSmall=true,spring=true}
+  local sources={plateDouble='plate',plateDense='plate',foil='plate',sheetmetal='plate',
+    springSmall='stick',spring='stickLong'}
+  local manifest=M.compile(data,'bender',{forms=forms,sources=sources})
+  local counts={}
+  local circuits={plateDouble=2,plateDense=9,foil=1,sheetmetal=11,springSmall=1,spring=1}
+  local copperDense=false
+  for _,r in ipairs(manifest.recipes) do
+    counts[r.outputForm]=(counts[r.outputForm] or 0)+1
+    assert(#r.inputs==1 and r.stock[1].name=='gregtech:gt.integrated_circuit')
+    assert(r.stock[1].damage==circuits[r.outputForm])
+    if r.material=='Copper' and r.outputForm=='plateDense' then
+      assert(r.outputs[1].name=='gregtech:gt.metaitem.01' and r.outputs[1].damage==22035)
+      copperDense=true
+    end
+    assert(r.inputs[1].label:lower():find(sources[r.outputForm]:lower(),1,true)
+      or r.outputForm=='springSmall' and r.inputs[1].label:find('Rod',1,true)
+      or r.outputForm=='spring' and r.inputs[1].label:find('Long rod',1,true))
+  end
+  assert(#manifest.unresolved==0 and copperDense,table.concat(manifest.unresolved,','))
+  for form in pairs(forms) do assert(counts[form]>0,form..' missing') end
+  local wire=M.compile(data,'bender',{forms={springSmall=true},sources={springSmall='wire1'}})
+  assert(#wire.recipes>0 and #wire.unresolved==0)
+  for _,r in ipairs(wire.recipes) do
+    assert(r.outputForm=='springSmall' and r.inputs[1].label:find('Wire',1,true))
+  end
 end)
 
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

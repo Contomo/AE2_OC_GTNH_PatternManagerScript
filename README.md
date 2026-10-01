@@ -7,7 +7,7 @@ over for each pattern. Stack quantities and recipe outputs are preserved.
 
 One application runs several programs through **Run program**: assembly-line
 renaming, wire insulation, wiremill patterns for 1x wire and fine wire, and
-ingot-fed bending-machine patterns.
+bending-machine patterns for plates, foil, sheet metal and springs.
 Navigation is on the left; Scan, Execute, Recover and Quit are in the bottom row.
 Settings has shared interfaces/hardware and a separate section for each program.
 [Program architecture and recipe matrix](PATTERN_MAKER.md).
@@ -70,17 +70,24 @@ ingredient, ingredient NBT or substitution policy is still a different recipe.
 Normal PVC's base batch is 4 wires + 1 pulp → 4 cables; multiplier `2` gives
 8 wires + 2 pulp → 8 cables. The multiplier does not change the selected polymer.
 
-The bending machine has seven independent output switches, all initially on:
-1x, 2x, 3x, 4x, 5x and dense plates, plus foil. Each selected route must exist in
-the scrape for that material and must consume ingots directly. For example,
-2 ingots → 1 double plate uses circuit 2; 1 ingot → 4 foil uses circuit 10.
-Circuits 1, 2, 3, 4, 5, 9 and 10 are **externally stocked** machine selectors,
-not requested by the AE pattern. Plate-to-plate assembly routes are excluded.
+The bending machine has ten independent output switches: 1x, 2x, 3x, 4x, 5x
+and dense plates, foil, sheet metal, small springs and large springs. New
+installations start with all ten on. Existing settings retain their selected
+outputs; the three newly added switches start off until selected.
+**Larger plate / foil input** chooses Ingot or 1x plate for 2x–5x and dense
+plates and foil. 1x plates always use ingots. Sheet metal always uses 1x plates;
+large springs use long rods. **Small spring input** independently chooses Rod or
+1x wire. A route is generated only when that exact material and input appear
+in the scrape. For example, foil yields four per ingot *or* plate; the ingot
+route uses circuit 10 and the plate route uses circuit 1. Sheet metal uses
+circuit 11. The circuits are **externally stocked** machine selectors, not
+requested by the AE pattern. Plate-to-plate recipes that produce the chosen
+output are included; alternatives such as double-plate → quadruple-plate are
+outside this selector.
 Turning off 1x plates removes them from the desired plan without deleting existing
-patterns, so another program can take over that route later. Plate and foil
-destinations can each be left blank when their corresponding switches are off.
-The sheet-metal destination is reserved for a future plate-input mode because
-the source has no ingot → sheet-metal route. Wire combining remains unavailable.
+patterns, so another program can take over that route later. Each destination
+name can be left blank when all of its output switches are off. Wire combining
+remains unavailable.
 
 ## Install and update with wget
 
@@ -176,7 +183,7 @@ obsolete slot limits are not carried forward.
 | Wire insulator | Destination interface name, five-way polymer selector, request PPS |
 | Wiremill | 1x wire and fine-wire destination names; separate input routes, default Ingot |
 | Wire combining | Bare-wire destination, insulated-cable destination (future rules) |
-| Bending machine | Plate and foil destinations, seven independent ingot-output switches, pattern multiplier; sheet-metal destination reserved for future rules |
+| Bending machine | Plate, foil, sheet-metal and spring destinations; ten output switches, larger-plate/foil and small-spring input selectors, pattern multiplier |
 
 Shared default names are `OC Pattern Editor` and `OC Pattern Buffer`. Component
 addresses are optional when only one component of each type is connected.

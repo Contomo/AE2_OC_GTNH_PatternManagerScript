@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "release": "415ad6220d77e072",
-  "bytes": 574597,
+  "release": "c4e9a8f7695c76c7",
+  "bytes": 590103,
   "files": [
     {
       "path": "assline.lua",
@@ -10,13 +10,13 @@
     },
     {
       "path": "assline_app.lua",
-      "bytes": 122033,
-      "checksum": "f17eae5f"
+      "bytes": 124592,
+      "checksum": "95d981f2"
     },
     {
       "path": "assline_data.lua",
-      "bytes": 438152,
-      "checksum": "e1dff3ff"
+      "bytes": 451099,
+      "checksum": "2afb56e8"
     },
     {
       "path": "interface_probe.lua",

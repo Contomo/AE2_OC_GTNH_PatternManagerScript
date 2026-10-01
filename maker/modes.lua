@@ -26,6 +26,11 @@ local labels = {
   plateQuintuple = '5x Plate',
   plateDense = 'Dense Plate',
   foil = 'Foil',
+  sheetmetal = 'Sheet metal',
+  springSmall = 'Small spring',
+  spring = 'Spring',
+  stickLong = 'Long rod',
+  wire1 = '1x wire',
 }
 local function formLabel(form)
   local kind, size = form:match('^(%a+)(%d+)$')
@@ -184,7 +189,9 @@ function M.compile(data, mode, options, checkpoint)
         local out = rule.outputs[1]
         local label = formLabel(out.f)
         local source = rule.inputs[1].f
-        local route = mode == 'wiremill' and (' / from ' .. (labels[source] or source)) or ''
+        local route = (mode == 'wiremill' or mode == 'bender')
+            and (' / from ' .. (labels[source] or source))
+          or ''
         local recipe = {
           kind = 'processing',
           material = material.name,
