@@ -50,7 +50,7 @@ local function runUI()
   local buttonWidths, scrollbar = {}, nil
   local contentKey, contentRows
   local draw, handle, action, commitEdit, navigate
-  local function text(x, y, s, width, tone, bg)
+  local function text(x, y, s, width, tone, bg, guideWidth, guideTone)
     width = math.min(width or w - x + 1, w - x + 1)
     if width < 1 then
       return
@@ -58,6 +58,7 @@ local function runUI()
     s = unicode.sub(tostring(s or ''):gsub('\194\167.', ''):gsub('[%c]', ' '), 1, width)
     local key = x .. ':' .. y
     local value = width .. ':' .. s .. ':' .. tostring(tone) .. ':' .. tostring(bg)
+      .. ':' .. tostring(guideWidth) .. ':' .. tostring(guideTone)
     if paintCache[key] == value then
       return
     end
@@ -65,6 +66,10 @@ local function runUI()
     gpu.setForeground(colors[tone or 'text'])
     gpu.setBackground(colors[bg or 'bg'])
     gpu.set(x, y, s .. string.rep(' ', math.max(0, width - unicode.wlen(s))))
+    if guideWidth and guideWidth > 0 then
+      gpu.setForeground(colors[guideTone or tone or 'text'])
+      gpu.set(x, y, unicode.sub(s, 1, guideWidth))
+    end
   end
   local function button(x, y, label, callback, enabled, selected)
     local content = '[ ' .. label .. ' ]'
@@ -253,7 +258,7 @@ local function runUI()
       )
     elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
       for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
-        add(row[1], row[2])
+        add(row[1], row[2], row[3], row[4])
       end
     elseif state.section == 'details' and preview.manifest then
       if preview.id == 'bender' then
@@ -312,11 +317,11 @@ local function runUI()
       end
     elseif state.section == 'capacity' then
       for _, row in ipairs(Preview.capacityRows(p)) do
-        add(row[1], row[2])
+        add(row[1], row[2], row[3], row[4])
       end
     elseif preview.id ~= 'assline' then
       for _, row in ipairs(Preview.planRows(p, preview.manifest)) do
-        add(row[1], row[2])
+        add(row[1], row[2], row[3], row[4])
       end
     elseif state.section == 'recipes' then
       for _, r in ipairs(p.recipes) do
@@ -360,6 +365,7 @@ local function runUI()
       contentRows = {}
       for _, r in ipairs(lines()) do
         local remaining = r[1]
+        local guideWidth = r[3] or 0
         while unicode.len(remaining) > width do
           local prefix = unicode.sub(remaining, 1, width)
           local at = prefix:match('^.*()%s')
@@ -367,17 +373,21 @@ local function runUI()
           if count == 0 then
             count = width
           end
-          contentRows[#contentRows + 1] = { unicode.sub(remaining, 1, count), r[2] }
+          contentRows[#contentRows + 1] = {
+            unicode.sub(remaining, 1, count), r[2], math.min(guideWidth, count), r[4]
+          }
+          guideWidth = 0
           remaining = unicode.sub(remaining, count + 1):gsub('^%s+', '')
         end
-        contentRows[#contentRows + 1] = { remaining, r[2] }
+        contentRows[#contentRows + 1] = { remaining, r[2], guideWidth, r[4] }
       end
     end
     local rows = contentRows
     state.offset = math.max(0, math.min(state.offset, math.max(0, #rows - room)))
     for n = 1, room do
       local r = rows[state.offset + n]
-      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text')
+      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text',
+        nil, r and r[3], r and r[4])
     end
     local maximum = math.max(0, #rows - room)
     local thumb = maximum == 0 and room or math.max(1, math.floor(room * room / #rows))

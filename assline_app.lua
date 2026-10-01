@@ -184,8 +184,8 @@ end
 -- Shared row construction for preview and UI text, with one default tone.
 function M.rows()
   local result = {}
-  local function add(text, tone)
-    result[#result + 1] = { text, tone or 'text' }
+  local function add(text, tone, guideWidth, guideTone)
+    result[#result + 1] = { text, tone or 'text', guideWidth, guideTone }
   end
   return result, add
 end
@@ -2557,9 +2557,16 @@ local Preview=(function()
 local U = U
 local Planner = Planner
 local M = {}
+local interfaceTone = 'muted'
 
 local function spacer(rows, add)
   if #rows > 0 and rows[#rows][1] ~= '' then add('') end
+end
+
+local function treeRow(rows, add, prefix, content, tone)
+  add(prefix .. content, tone)
+  local row = rows[#rows]
+  row[3], row[4] = #prefix, interfaceTone
 end
 
 function M.planRows(plan, manifest)
@@ -2585,27 +2592,33 @@ function M.planRows(plan, manifest)
       group, bank, material = entry.group, nil, nil
       add('DESTINATION: ' .. tostring(group), 'blue')
     end
-    local location = entry.destination and U.where(entry.destination)
-    if location and bank ~= location then
+    local location = entry.destination and U.where(entry.destination) or 'needs space'
+    if bank ~= location then
+      if bank then spacer(rows, add) end
       bank, material = location, nil
-      add('  +-- Interface ' .. U.locationText(entry.destination), 'muted')
+      add('  +-- Interface '
+        .. (entry.destination and U.locationText(entry.destination) or '(needs space)'),
+        interfaceTone)
+    else
+      add('  |', interfaceTone)
     end
     local currentMaterial = recipe.material or recipe.label
     if material ~= currentMaterial then
       material = currentMaterial
-      add('  |  ' .. material, 'blue')
+      treeRow(rows, add, '  |  ', material, 'blue')
     end
-    add('  |    ' .. (entry.resize and 'RESIZE  ' or entry.existing and 'REUSE   ' or 'CREATE  ')
+    treeRow(rows, add, '  |    ',
+      (entry.resize and 'RESIZE  ' or entry.existing and 'REUSE   ' or 'CREATE  ')
       .. (recipe.outputLabel or recipe.outputForm or '')
       .. (entry.destination and ('   slot ' .. entry.destination.slot) or '   needs space'),
       entry.resize and 'yellow_lighter1' or entry.existing and 'green' or 'yellow')
     if entry.resize then
-      add('  |      Multiply current quantities by ' .. entry.newScale .. ' / ' .. entry.oldScale,
+      treeRow(rows, add, '  |      ',
+        'Multiply current quantities by ' .. entry.newScale .. ' / ' .. entry.oldScale,
         'yellow_lighter1')
     end
-    add('  |      ' .. U.ingredientSummary(recipe.inputs))
-    add('  |      -> ' .. U.ingredientSummary(recipe.outputs), 'green')
-    add('')
+    treeRow(rows, add, '  |      ', U.ingredientSummary(recipe.inputs))
+    treeRow(rows, add, '  |      ', '-> ' .. U.ingredientSummary(recipe.outputs), 'green')
   end
   return rows
 end
@@ -2631,29 +2644,35 @@ function M.existingRows(plan)
   add('EXISTING DESTINATION PATTERNS', 'blue')
   add(#(plan.existing or {}) .. ' occupied; ' .. plan.reused .. ' reused; '
     .. #plan.preserved .. ' kept.', 'muted')
-  local bank
+  local group, bank
   for _, entry in ipairs(plan.existing or {}) do
     local location = U.where(entry.from)
-    if bank ~= location then
+    if group ~= entry.interface then
       spacer(rows, add)
-      bank = location
-      add('DESTINATION: ' .. entry.interface, 'blue')
-      add('  +-- Interface ' .. U.locationText(entry.from), 'muted')
+      group, bank = entry.interface, nil
+      add('DESTINATION: ' .. group, 'blue')
     end
-    add('  |  ' .. entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
+    if bank ~= location then
+      if bank then spacer(rows, add) end
+      bank = location
+      add('  +-- Interface ' .. U.locationText(entry.from), interfaceTone)
+    else
+      add('  |', interfaceTone)
+    end
+    treeRow(rows, add, '  |  ', entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
       entry.status == 'RESIZE' and 'yellow_lighter1'
         or entry.status == 'KEEP' and 'yellow' or 'green')
-    add('  |    ' .. entry.reason, 'muted')
+    treeRow(rows, add, '  |    ', entry.reason, 'muted')
     if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
-      add('  |    Encoded inputs: ' .. entry.inputs, 'muted')
+      treeRow(rows, add, '  |    ', 'Encoded inputs: ' .. entry.inputs, 'muted')
     end
     if entry.requestedInputs and entry.status == 'KEEP' then
-      add('  |    Requested inputs: ' .. entry.requestedInputs, 'muted')
+      treeRow(rows, add, '  |    ', 'Requested inputs: ' .. entry.requestedInputs, 'muted')
     end
     if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
-      add('  |    Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot, 'muted')
+      treeRow(rows, add, '  |    ',
+        'Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot, 'muted')
     end
-    add('')
   end
   if #(plan.existing or {}) == 0 then add('No patterns in the selected destination interfaces.', 'muted') end
   spacer(rows, add)
@@ -3285,7 +3304,7 @@ local function runUI()
   local buttonWidths, scrollbar = {}, nil
   local contentKey, contentRows
   local draw, handle, action, commitEdit, navigate
-  local function text(x, y, s, width, tone, bg)
+  local function text(x, y, s, width, tone, bg, guideWidth, guideTone)
     width = math.min(width or w - x + 1, w - x + 1)
     if width < 1 then
       return
@@ -3293,6 +3312,7 @@ local function runUI()
     s = unicode.sub(tostring(s or ''):gsub('\194\167.', ''):gsub('[%c]', ' '), 1, width)
     local key = x .. ':' .. y
     local value = width .. ':' .. s .. ':' .. tostring(tone) .. ':' .. tostring(bg)
+      .. ':' .. tostring(guideWidth) .. ':' .. tostring(guideTone)
     if paintCache[key] == value then
       return
     end
@@ -3300,6 +3320,10 @@ local function runUI()
     gpu.setForeground(colors[tone or 'text'])
     gpu.setBackground(colors[bg or 'bg'])
     gpu.set(x, y, s .. string.rep(' ', math.max(0, width - unicode.wlen(s))))
+    if guideWidth and guideWidth > 0 then
+      gpu.setForeground(colors[guideTone or tone or 'text'])
+      gpu.set(x, y, unicode.sub(s, 1, guideWidth))
+    end
   end
   local function button(x, y, label, callback, enabled, selected)
     local content = '[ ' .. label .. ' ]'
@@ -3488,7 +3512,7 @@ local function runUI()
       )
     elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
       for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
-        add(row[1], row[2])
+        add(row[1], row[2], row[3], row[4])
       end
     elseif state.section == 'details' and preview.manifest then
       if preview.id == 'bender' then
@@ -3547,11 +3571,11 @@ local function runUI()
       end
     elseif state.section == 'capacity' then
       for _, row in ipairs(Preview.capacityRows(p)) do
-        add(row[1], row[2])
+        add(row[1], row[2], row[3], row[4])
       end
     elseif preview.id ~= 'assline' then
       for _, row in ipairs(Preview.planRows(p, preview.manifest)) do
-        add(row[1], row[2])
+        add(row[1], row[2], row[3], row[4])
       end
     elseif state.section == 'recipes' then
       for _, r in ipairs(p.recipes) do
@@ -3595,6 +3619,7 @@ local function runUI()
       contentRows = {}
       for _, r in ipairs(lines()) do
         local remaining = r[1]
+        local guideWidth = r[3] or 0
         while unicode.len(remaining) > width do
           local prefix = unicode.sub(remaining, 1, width)
           local at = prefix:match('^.*()%s')
@@ -3602,17 +3627,21 @@ local function runUI()
           if count == 0 then
             count = width
           end
-          contentRows[#contentRows + 1] = { unicode.sub(remaining, 1, count), r[2] }
+          contentRows[#contentRows + 1] = {
+            unicode.sub(remaining, 1, count), r[2], math.min(guideWidth, count), r[4]
+          }
+          guideWidth = 0
           remaining = unicode.sub(remaining, count + 1):gsub('^%s+', '')
         end
-        contentRows[#contentRows + 1] = { remaining, r[2] }
+        contentRows[#contentRows + 1] = { remaining, r[2], guideWidth, r[4] }
       end
     end
     local rows = contentRows
     state.offset = math.max(0, math.min(state.offset, math.max(0, #rows - room)))
     for n = 1, room do
       local r = rows[state.offset + n]
-      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text')
+      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text',
+        nil, r and r[3], r and r[4])
     end
     local maximum = math.max(0, #rows - room)
     local thumb = maximum == 0 and room or math.max(1, math.floor(room * room / #rows))

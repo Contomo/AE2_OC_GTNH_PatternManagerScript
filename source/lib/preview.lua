@@ -2,9 +2,16 @@
 local U = require('assline_util')
 local Planner = require('assline_planner')
 local M = {}
+local interfaceTone = 'muted'
 
 local function spacer(rows, add)
   if #rows > 0 and rows[#rows][1] ~= '' then add('') end
+end
+
+local function treeRow(rows, add, prefix, content, tone)
+  add(prefix .. content, tone)
+  local row = rows[#rows]
+  row[3], row[4] = #prefix, interfaceTone
 end
 
 function M.planRows(plan, manifest)
@@ -30,27 +37,33 @@ function M.planRows(plan, manifest)
       group, bank, material = entry.group, nil, nil
       add('DESTINATION: ' .. tostring(group), 'blue')
     end
-    local location = entry.destination and U.where(entry.destination)
-    if location and bank ~= location then
+    local location = entry.destination and U.where(entry.destination) or 'needs space'
+    if bank ~= location then
+      if bank then spacer(rows, add) end
       bank, material = location, nil
-      add('  +-- Interface ' .. U.locationText(entry.destination), 'muted')
+      add('  +-- Interface '
+        .. (entry.destination and U.locationText(entry.destination) or '(needs space)'),
+        interfaceTone)
+    else
+      add('  |', interfaceTone)
     end
     local currentMaterial = recipe.material or recipe.label
     if material ~= currentMaterial then
       material = currentMaterial
-      add('  |  ' .. material, 'blue')
+      treeRow(rows, add, '  |  ', material, 'blue')
     end
-    add('  |    ' .. (entry.resize and 'RESIZE  ' or entry.existing and 'REUSE   ' or 'CREATE  ')
+    treeRow(rows, add, '  |    ',
+      (entry.resize and 'RESIZE  ' or entry.existing and 'REUSE   ' or 'CREATE  ')
       .. (recipe.outputLabel or recipe.outputForm or '')
       .. (entry.destination and ('   slot ' .. entry.destination.slot) or '   needs space'),
       entry.resize and 'yellow_lighter1' or entry.existing and 'green' or 'yellow')
     if entry.resize then
-      add('  |      Multiply current quantities by ' .. entry.newScale .. ' / ' .. entry.oldScale,
+      treeRow(rows, add, '  |      ',
+        'Multiply current quantities by ' .. entry.newScale .. ' / ' .. entry.oldScale,
         'yellow_lighter1')
     end
-    add('  |      ' .. U.ingredientSummary(recipe.inputs))
-    add('  |      -> ' .. U.ingredientSummary(recipe.outputs), 'green')
-    add('')
+    treeRow(rows, add, '  |      ', U.ingredientSummary(recipe.inputs))
+    treeRow(rows, add, '  |      ', '-> ' .. U.ingredientSummary(recipe.outputs), 'green')
   end
   return rows
 end
@@ -76,29 +89,35 @@ function M.existingRows(plan)
   add('EXISTING DESTINATION PATTERNS', 'blue')
   add(#(plan.existing or {}) .. ' occupied; ' .. plan.reused .. ' reused; '
     .. #plan.preserved .. ' kept.', 'muted')
-  local bank
+  local group, bank
   for _, entry in ipairs(plan.existing or {}) do
     local location = U.where(entry.from)
-    if bank ~= location then
+    if group ~= entry.interface then
       spacer(rows, add)
-      bank = location
-      add('DESTINATION: ' .. entry.interface, 'blue')
-      add('  +-- Interface ' .. U.locationText(entry.from), 'muted')
+      group, bank = entry.interface, nil
+      add('DESTINATION: ' .. group, 'blue')
     end
-    add('  |  ' .. entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
+    if bank ~= location then
+      if bank then spacer(rows, add) end
+      bank = location
+      add('  +-- Interface ' .. U.locationText(entry.from), interfaceTone)
+    else
+      add('  |', interfaceTone)
+    end
+    treeRow(rows, add, '  |  ', entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
       entry.status == 'RESIZE' and 'yellow_lighter1'
         or entry.status == 'KEEP' and 'yellow' or 'green')
-    add('  |    ' .. entry.reason, 'muted')
+    treeRow(rows, add, '  |    ', entry.reason, 'muted')
     if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
-      add('  |    Encoded inputs: ' .. entry.inputs, 'muted')
+      treeRow(rows, add, '  |    ', 'Encoded inputs: ' .. entry.inputs, 'muted')
     end
     if entry.requestedInputs and entry.status == 'KEEP' then
-      add('  |    Requested inputs: ' .. entry.requestedInputs, 'muted')
+      treeRow(rows, add, '  |    ', 'Requested inputs: ' .. entry.requestedInputs, 'muted')
     end
     if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
-      add('  |    Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot, 'muted')
+      treeRow(rows, add, '  |    ',
+        'Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot, 'muted')
     end
-    add('')
   end
   if #(plan.existing or {}) == 0 then add('No patterns in the selected destination interfaces.', 'muted') end
   spacer(rows, add)

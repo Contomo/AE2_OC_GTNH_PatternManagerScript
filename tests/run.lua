@@ -987,6 +987,13 @@ test('70 recipes require two 36-slot destination interfaces and donor slots need
     assert(preview.plan.capacities[1].patterns==70 and preview.plan.capacities[1].interfaces==2)
     assert(preview.plan.layout[37].destination.location.x==50 and preview.plan.layout[37].destination.slot==0)
     assert(preview.report:find('2 interfaces (70 patterns)',1,true) and mutations==0)
+    local rows=maker.rows(preview.plan,preview.manifest)
+    local banks={}
+    for index,row in ipairs(rows) do
+      if row[1]:find('+-- Interface',1,true) then banks[#banks+1]=index end
+    end
+    assert(#banks==2 and rows[banks[2]-1][1]=='')
+    assert(rows[banks[2]+1][1]:find('  |  M037',1,true))
   end)
 end)
 
@@ -1360,8 +1367,28 @@ test('insulator preview uses readable groups and contains no external-stock dump
     assert(report:find('PVC Pulp',1,true) and not report:find('gregtech:',1,true))
     assert(not report:find('External',1,true) and not report:find('UNVERIFIED',1,true))
     local count=0;for _ in report:gmatch('%+%-%- Interface') do count=count+1 end;assert(count==1)
+    local rows=maker.rows(preview.plan,preview.manifest)
+    local guideTone,bridges
+    bridges=0
+    for _,row in ipairs(rows) do
+      if row[1]:find('+-- Interface',1,true) then guideTone=row[2] end
+      if row[1]=='  |' then
+        bridges=bridges+1
+        assert(row[2]==guideTone)
+      end
+      if row[3] then assert(row[4]==guideTone) end
+    end
+    assert(bridges==1 and report:find('\n  |\n',1,true))
     files[api.paths.config]=ser(cfg)
     queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
+      local interfaceY,materialY
+      for y=12,42 do
+        if frame[y]:find('+-- Interface',34,true) then interfaceY=y end
+        if frame[y]:find('  |  A',34,true) then materialY=y end
+      end
+      assert(interfaceY and materialY)
+      assert(foreground[interfaceY][36]==foreground[materialY][36])
+      assert(foreground[materialY][36]~=foreground[materialY][39])
       snapshot('insulator_preview');return quit()
     end)
     api.runUI()
