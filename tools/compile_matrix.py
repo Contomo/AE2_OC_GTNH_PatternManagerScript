@@ -14,7 +14,7 @@ from material_forms import descriptor, registry_forms, resolve
 
 def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None, usage=None):
     if usage:
-        if usage.get('policy') != 'direct-nonrecycling-v1':
+        if usage.get('policy') != 'reachable-nonrecycling-v2':
             raise ValueError('Unsupported usage policy')
         if usage.get('datasetVersionId') != catalog['source'].get('datasetId'):
             raise ValueError('Usage index and recipe catalog came from different datasets')
@@ -205,12 +205,13 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
     rules = sorted(rules.values(), key=rule_order)
     capabilities, cap_index, production, production_index = [], {}, [], {}
     use_profiles, use_index = [], {}
+    useful_items = set(usage['useful']) if usage else set()
     output_forms = {rule['outputs'][0]['f'] for rule in rules}
     for key, row in rows.items():
         row['_forms'].update(row.pop('_recipeForms', {}))
         if usage:
             used = tuple(sorted(form for form in output_forms if form in row['_forms']
-                                and usage['counts'].get(row['_forms'][form], [0, 0])[0] > 0))
+                                and row['_forms'][form] in useful_items))
             if used not in use_index:
                 use_index[used] = len(use_profiles) + 1
                 use_profiles.append(dict.fromkeys(used, True))

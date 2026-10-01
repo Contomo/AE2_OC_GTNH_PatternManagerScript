@@ -97,7 +97,7 @@ end)
 test('insulation has exactly one pattern per material and size for every PVC/PPS setting',function()
   for _,pvc in ipairs({true,false}) do for _,pps in ipairs({true,false}) do
     local result=M.compile(data,'coating',{pvc=pvc,pps=pps});local outputs={}
-    assert(#result.recipes==306 and #result.unresolved==0)
+    assert(#result.recipes==183 and #result.unresolved==0)
     for _,r in ipairs(result.recipes) do
       assert(r.outputs[1].size==1 and r.inputs[1].size==1)
       local key=r.outputs[1].name..':'..r.outputs[1].damage
@@ -129,7 +129,7 @@ test('all five polymer choices use scraped batch sizes and retain one pattern pe
   local ids={pvc=2649,pvcSmall=1649,pdms=2633,pdmsSmall=1633}
   for _,polymer in ipairs({'pvc','pvcSmall','pdms','pdmsSmall','none'}) do for _,pps in ipairs({true,false}) do
     local manifest=M.compile(data,'coating',{polymer=polymer,pps=pps});local seen={}
-    assert(#manifest.recipes==306 and #manifest.unresolved==0)
+    assert(#manifest.recipes==183 and #manifest.unresolved==0)
     local batch=(polymer=='pvc' or polymer=='pdms') and 4 or 1
     local annealed=false
     for _,r in ipairs(manifest.recipes) do
@@ -198,6 +198,8 @@ test('bender compiles only scraped ingot routes, with source circuit selectors s
   end
   local noSingles=M.compile(data,'bender',{forms={plateDouble=true},sources={plateDouble='ingot'}})
   assert(#noSingles.recipes==counts.plateDouble)
+  local singles=M.compile(data,'bender',{forms={plate=true},sources={plate='ingot'}})
+  for _,r in ipairs(singles.recipes) do assert(r.material~='LithiumChloride') end
 end)
 
 test('plate-fed bender routes, sheet metal and both spring inputs use source circuits',function()

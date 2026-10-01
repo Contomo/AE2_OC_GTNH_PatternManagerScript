@@ -1286,7 +1286,7 @@ test('real insulation preview shows named ingredients, capacity and reused cable
   cfg.programs.insulator.destination='Wire insulator';target.name='Wire insulator';target.patterns={}
   for slot=0,11 do buffer.patterns[slot]=pattern({},{}) end
   local preview=api.runner.preview(cfg,'insulator')
-  assert(#preview.plan.errors==0 and #preview.manifest.recipes==12)
+  assert(#preview.plan.errors==0 and #preview.manifest.recipes==11)
   local r=preview.manifest.recipes[1]
   target.patterns[0]=pattern(r.inputs,r.outputs)
   local report=api.runner.preview(cfg,'insulator');assert(report.plan.reused==1)

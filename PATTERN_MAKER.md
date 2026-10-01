@@ -64,7 +64,7 @@ ore dictionary. `tools/compile_matrix.py` emits matrix schema **2**:
   templates. They use separate material namespaces; BW IDs are not GT suffixes.
 - `production`: shared semantic route flags, such as `ingot_wire` or
   `stick_wireFine`. Registering forms does not grant a machine route.
-- `usage`: shared sets of output forms with a direct, non-recycling consumer
+- `usage`: shared sets of output forms with a path to a non-recycling product
   in the full recipe export. Each material stores only a shared set index (`u`).
   No per-material recipe lists or manual inclusion switches are needed.
 - `rules`: material-neutral transformations with required forms and a production
@@ -85,7 +85,8 @@ The matrix covers **1,159 materials**, including materials without a currently
 implemented production mode. Identical availability and production flags are
 stored once. Only **two explicit recipe exclusions** are needed to reproduce
 unusual source behavior. No material contains numeric foreign keys into recipes. The current modes
-select one polymer route per material/size, producing 306 patterns. The four
+select one polymer route per material/size; 183 of the 306 scraped
+material/size combinations reach a non-recycling product. The four
 scraped consumed-polymer routes are normal/small PVC and normal/small PDMS.
 Normal piles use four-output batches; small piles use one-output batches.
 Nothing uses the small-PVC route with that polymer omitted from the pattern;
@@ -111,14 +112,16 @@ stock alternatives remain internal recipe evidence and are omitted from the patt
 to external stocking; it does not change what the machine consumes.
 
 The desktop usage index scans **all** exported recipes, not just the three
-currently implemented machines. An output form qualifies when its exact item ID
-appears as an input to at least one recipe outside the recovery routes. Listed
-input alternatives count. Macerating, fluid extraction, recycling, essentia
-smelting, and conversion back to the same material's nugget/ingot/dust or molten
-fluid do not count. This is a direct-use test: a plate feeding an otherwise
-unused foil still counts as used. Previews show how many otherwise available
-recipe routes were skipped. The result reflects the exported recipes; it cannot
-see player-defined uses or recipes missing from that export.
+currently implemented machines. It follows exact item IDs through conversions
+between forms of the same material. A form qualifies only when that chain
+eventually feeds a non-recycling product. Listed input alternatives count.
+Macerating, fluid extraction, recycling, essentia smelting, and conversion
+back to the same material's nugget/ingot/dust or molten fluid do not count.
+A plate feeding only unused foil therefore drops out; a double plate feeding
+only another unused plate also drops out. Cycles between forms cannot justify
+each other. Previews show how many otherwise available recipe routes were
+skipped. The result reflects the exported recipes; it cannot see player-defined
+uses or recipes missing from that export.
 
 ## Source and rebuild
 

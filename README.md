@@ -47,8 +47,9 @@ Wiremill, the insulator and the bending machine each have a **Pattern multiplier
 and output in the selected recipe, including requested polymer/PPS.
 The insulator selects PVC pulp, small PVC pulp, PDMS pulp, small PDMS pulp, or
 nothing. PPS sheets have a separate toggle. Normal piles use the scraped
-four-cable batches; small piles and nothing use single-cable batches. Every
-choice produces **306 patterns (51 materials ? 6 sizes)**. For example, normal
+four-cable batches; small piles and nothing use single-cable batches. The scrape
+has **306 material/size candidates (51 materials x 6 sizes)**; the current
+non-recycling-use check retains **183**. For example, normal
 PVC uses 4 Annealed Copper wires + 1 PVC pulp ? 4 Annealed Copper cables.
 Existing PVC On/Off settings migrate to Small PVC pulp/Nothing, preserving the
 previous recipe choice. New installations default to normal PVC pulp.
@@ -85,10 +86,10 @@ requested by the AE pattern. Plate-to-plate recipes that produce the chosen
 output are included; alternatives such as double-plate → quadruple-plate are
 outside this selector.
 All pattern programs automatically skip an output form when the full recipe
-export shows no use for that exact item beyond recycling it to nuggets, dust or
-its molten form. The preview counts skipped routes. For example, Cerium Foil
-and Lithium Chloride Foil have only recovery uses in the current export, so
-the bender does not request their patterns.
+export shows no path from that exact item to a non-recycling product. Converting
+a plate into unused foil, or a double plate into another unused plate, does not
+make it useful. The preview counts skipped routes. In the current export,
+Cerium Foil, Lithium Chloride Foil and Lithium Chloride Plate are excluded.
 Turning off 1x plates removes them from the desired plan without deleting existing
 patterns, so another program can take over that route later. Each destination
 name can be left blank when all of its output switches are off. Wire combining
