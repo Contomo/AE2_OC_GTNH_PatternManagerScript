@@ -39,6 +39,24 @@ class MatrixTests(unittest.TestCase):
         data = compile_matrix(catalog, registry)
         self.assertEqual([row['dsf'] for row in data['materials']], [30])
 
+    def test_direct_use_profiles_follow_actual_output_ids(self):
+        catalog, registry = self.fixture()
+        catalog['source']['datasetId'] = 'fixture'
+        outputs = [recipe['outputs'][0]['id'] for recipe in catalog['recipes']]
+        usage = {'policy': 'direct-nonrecycling-v1', 'datasetVersionId': 'fixture',
+                 'recipeCount': 9, 'recipeExportSha256': 'fixture-sha',
+                 'counts': {outputs[0]: [0, 3], outputs[1]: [1, 0]}}
+        data = compile_matrix(catalog, registry, usage=usage)
+        rows = {row['name']: row for row in data['materials']}
+        self.assertNotIn('wireFine', data['usage'][rows['Chrome']['u'] - 1])
+        self.assertIn('wireFine', data['usage'][rows['NiobiumTitanium']['u'] - 1])
+        self.assertEqual(data['source']['usagePolicy'], usage['policy'])
+        with self.assertRaisesRegex(ValueError, 'different datasets'):
+            compile_matrix(catalog, registry, usage={**usage, 'datasetVersionId': 'other'})
+        catalog['source']['sha256'] = 'export-sha'
+        with self.assertRaisesRegex(ValueError, 'different exports'):
+            compile_matrix(catalog, registry, usage=usage)
+
     def test_bender_imports_scraped_ingot_and_plate_routes_with_stocked_circuits(self):
         catalog, registry = self.fixture()
         catalog['recipes'] = []

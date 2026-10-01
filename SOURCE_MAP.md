@@ -65,6 +65,12 @@ These sets describe registered item forms. They do not, by themselves, prove
 that a machine recipe exists. The separate shared production flags and scraped
 rule requirements decide which transformations are allowed.
 
+`usage` is another deduplicated set array. A material's `u` indexes output
+forms with a direct non-recycling consumer anywhere in the full recipe export.
+`tools/build_usage.py` creates that evidence on the desktop; `tools/compile_matrix.py`
+embeds only the shared form sets. `maker/modes.lua` applies the same exclusion to
+all program modes and reports the number of skipped routes in the preview.
+
 ## Recipe proportions and configured batches
 
 `maker/planner.lua` owns recipe identity. For processing patterns it aggregates

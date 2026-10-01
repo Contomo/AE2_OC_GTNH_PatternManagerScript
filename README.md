@@ -84,6 +84,11 @@ circuit 11. The circuits are **externally stocked** machine selectors, not
 requested by the AE pattern. Plate-to-plate recipes that produce the chosen
 output are included; alternatives such as double-plate → quadruple-plate are
 outside this selector.
+All pattern programs automatically skip an output form when the full recipe
+export shows no use for that exact item beyond recycling it to nuggets, dust or
+its molten form. The preview counts skipped routes. For example, Cerium Foil
+and Lithium Chloride Foil have only recovery uses in the current export, so
+the bender does not request their patterns.
 Turning off 1x plates removes them from the desired plan without deleting existing
 patterns, so another program can take over that route later. Each destination
 name can be left blank when all of its output switches are off. Wire combining

@@ -180,6 +180,9 @@ local function previewRows(plan, manifest, labels)
     ),
     'green'
   )
+  if manifest.source.usagePolicy then
+    add(manifest.unusedExcluded .. ' recipe routes skipped: output has no non-recycling use.', 'muted')
+  end
   add('')
   if plan.resizeCount > 0 then
     add(plan.resizeCount .. ' reused patterns will be resized to the configured batch.', 'yellow')

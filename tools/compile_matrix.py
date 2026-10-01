@@ -12,7 +12,14 @@ from pathlib import Path
 from material_forms import descriptor, registry_forms, resolve
 
 
-def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None):
+def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None, usage=None):
+    if usage:
+        if usage.get('policy') != 'direct-nonrecycling-v1':
+            raise ValueError('Unsupported usage policy')
+        if usage.get('datasetVersionId') != catalog['source'].get('datasetId'):
+            raise ValueError('Usage index and recipe catalog came from different datasets')
+        if catalog['source'].get('sha256') and usage.get('recipeExportSha256') != catalog['source']['sha256']:
+            raise ValueError('Usage index and recipe catalog came from different exports')
     resources = dict(resources or {})
     for rid, resource in catalog['resources'].items():
         resources[rid] = {**resources.get(rid, {}), **resource}
@@ -197,8 +204,17 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
         return (1, bender_order.index(form) if form in bender_order else 99, form, rule['id'])
     rules = sorted(rules.values(), key=rule_order)
     capabilities, cap_index, production, production_index = [], {}, [], {}
+    use_profiles, use_index = [], {}
+    output_forms = {rule['outputs'][0]['f'] for rule in rules}
     for key, row in rows.items():
         row['_forms'].update(row.pop('_recipeForms', {}))
+        if usage:
+            used = tuple(sorted(form for form in output_forms if form in row['_forms']
+                                and usage['counts'].get(row['_forms'][form], [0, 0])[0] > 0))
+            if used not in use_index:
+                use_index[used] = len(use_profiles) + 1
+                use_profiles.append(dict.fromkeys(used, True))
+            row['u'] = use_index[used]
         available = sorted(row['_forms'])
         cap = tuple(available)
         if cap not in cap_index:
@@ -235,11 +251,16 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
                 production.append(processes)
             row['p'] = production_index[identity]
         del row['_forms'], row['_rank']
-    return {'version': 2, 'source': {**catalog['source'], 'registryVersion': registry.get('gtVersion'),
+    source = {**catalog['source'], 'registryVersion': registry.get('gtVersion'),
                                    'alternativePolicy': 'primary-listed', 'excludedRecipes': excluded,
                                    'excludedOutputs': excluded_outputs,
-                                   'compatibleTargets': list(compatible_targets), 'compatibilityBasis': compatibility_basis},
+                                   'compatibleTargets': list(compatible_targets), 'compatibilityBasis': compatibility_basis}
+    if usage:
+        source.update(usagePolicy=usage['policy'], usageRecipeCount=usage['recipeCount'],
+                      usageExportSha256=usage['recipeExportSha256'])
+    return {'version': 2, 'source': source,
             'families': families, 'capabilities': capabilities, 'production': production, 'items': items, 'rules': rules,
+            'usage': use_profiles,
             'registryNames': registry_names or {},
             'materials': sorted(rows.values(), key=lambda row: row['name'].lower())}
 
@@ -275,6 +296,7 @@ if __name__ == '__main__':
     parser.add_argument('--compatible-target', action='append', default=[])
     parser.add_argument('--compatibility-basis', default='')
     parser.add_argument('--registry-names', help='Case-preserving source registration import')
+    parser.add_argument('--usage', required=True, help='Full-recipe direct-use index from build_usage.py')
     args = parser.parse_args()
     catalog = json.load(gzip.open(args.catalog, 'rt', encoding='utf-8'))
     registry = json.loads(Path(args.registry).read_text(encoding='utf-8-sig'))
@@ -285,7 +307,8 @@ if __name__ == '__main__':
             if rid in resources:
                 resources[rid] = {**resources[rid], 'tags': resource.get('tags', [])}
     names = json.loads(Path(args.registry_names).read_text())['names'] if args.registry_names else {}
-    model = compile_matrix(catalog, registry, args.compatible_target, args.compatibility_basis, resources, names)
+    usage = json.loads(Path(args.usage).read_text())
+    model = compile_matrix(catalog, registry, args.compatible_target, args.compatibility_basis, resources, names, usage)
     content = 'return ' + lua(model) + '\n'
     if len(content.encode()) > 4 * 1024 * 1024:
         raise ValueError('Library exceeds the absolute 4 MB budget')

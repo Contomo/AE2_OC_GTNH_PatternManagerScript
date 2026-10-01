@@ -64,6 +64,9 @@ ore dictionary. `tools/compile_matrix.py` emits matrix schema **2**:
   templates. They use separate material namespaces; BW IDs are not GT suffixes.
 - `production`: shared semantic route flags, such as `ingot_wire` or
   `stick_wireFine`. Registering forms does not grant a machine route.
+- `usage`: shared sets of output forms with a direct, non-recycling consumer
+  in the full recipe export. Each material stores only a shared set index (`u`).
+  No per-material recipe lists or manual inclusion switches are needed.
 - `rules`: material-neutral transformations with required forms and a production
   flag or coating class. The **21 wiremill rules** include one
   `1 ingot(material) -> 2 wire1(material)`, and shared larger-wire/fine-wire routes.
@@ -107,6 +110,16 @@ from settings. Equivalent solid patterns are deduplicated; different external
 stock alternatives remain internal recipe evidence and are omitted from the pattern preview. Omitting polymer/PPS moves that requirement
 to external stocking; it does not change what the machine consumes.
 
+The desktop usage index scans **all** exported recipes, not just the three
+currently implemented machines. An output form qualifies when its exact item ID
+appears as an input to at least one recipe outside the recovery routes. Listed
+input alternatives count. Macerating, fluid extraction, recycling, essentia
+smelting, and conversion back to the same material's nugget/ingot/dust or molten
+fluid do not count. This is a direct-use test: a plate feeding an otherwise
+unused foil still counts as used. Previews show how many otherwise available
+recipe routes were skipped. The result reflects the exported recipes; it cannot
+see player-defined uses or recipes missing from that export.
+
 ## Source and rebuild
 
 The adjacent `OreDictScript/research/recipes.json.gz` is the recipe evidence.
@@ -130,11 +143,16 @@ python tools/import_registry_names.py .research\gt-5.09.54.133.zip `
   ..\OreDictScript\data\registry-rules.json .research\pattern-catalog.json.gz `
   .research\EnderIO-ItemAlloy.java .research\EnderIO-ModObject.java data\registry-names.json `
   --item-registry .research\hiddenitems.cfg
+python tools/build_usage.py ..\OreDictScript\research\recipes.json.gz `
+  ..\OreDictScript\data\registry-rules.json `
+  ..\OreDictScript\research\resource-index.json.gz `
+  ..\OreDictScript\data\ores.json.gz .research\usage.json
 python tools/compile_matrix.py .research\pattern-catalog.json.gz `
   ..\OreDictScript\data\registry-rules.json data\matrix.lua `
   --resources ..\OreDictScript\research\resource-index.json.gz `
   --ore-resources ..\OreDictScript\data\ores.json.gz `
   --registry-names data\registry-names.json `
+  --usage .research\usage.json `
   --compatible-target 2.9.0-beta-3 `
   --compatibility-basis "User confirmed recipes unchanged from beta 2 to beta 3"
 node build.js
@@ -172,8 +190,8 @@ the shared donor pool in `src/20_apply.lua`; refill waits use the existing
 cooperative event handling. See [SOURCE_MAP.md](SOURCE_MAP.md) for source/output
 ownership and the limits of the simulated tests.
 
-Next stages are additional verified **LATEX**, **combining**, plate-input
-bending and fluid-shaping rules. Combining can use the requested 2→1, 4→1, 8→1, 4+8 and
+Next stages are additional verified **LATEX**, **combining** and fluid-shaping
+rules. Combining can use the requested 2→1, 4→1, 8→1, 4+8 and
 8+8 routes once their crafting grids/machine recipes are resolved. Later wiremill
 routes, plates, extruder forms and fluid shaping add eligible shared rules and
 resolvers rather than expanded recipe lists. Registering an item form alone
