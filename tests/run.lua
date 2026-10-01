@@ -30,7 +30,18 @@ local function refresh(p)
   local root=unser(p.tag)
   for _,which in ipairs({'inputs','outputs'}) do
     local arr={}; local n=p.lengths[which]
-    for i=1,n do arr[i]=compound(p[which][i] or {}) end
+    for i=1,n do
+      local stack=p[which][i]
+      if p.newEncoding and stack then
+        arr[i]=compound({Cnt=typed('int',p.rawCounts[which][i]),Count=typed('byte',0),
+          Craft=typed('byte',0),Damage=typed('int',stack.damage),id=typed('short',7495),
+          fieq=typed('byte',0),['Stack Type']='item'})
+      elseif stack then
+        local fields=cp(stack)
+        fields.Count=typed('int',stack.size)
+        arr[i]=compound(fields)
+      else arr[i]=compound({}) end
+    end
     root.__value[which=='inputs' and 'in' or 'out']=typed('list',arr)
   end
   p.tag=ser(root);return p
@@ -42,6 +53,20 @@ local function pattern(inputs,outputs,crafting)
     isCraftable=crafting==true,tag=ser(compound({crafting=typed('byte',crafting and 1 or 0),substitute=typed('byte',0),
     preserved=typed('int',42)}))}
   p.lengths={inputs=n,outputs=#p.outputs};return refresh(p)
+end
+local function newPattern(inputs,outputs)
+  local p=pattern(inputs,outputs)
+  p.name='ae2fc:encodedPattern'
+  p.newEncoding=true
+  p.rawCounts={inputs={},outputs={}}
+  for _,which in ipairs({'inputs','outputs'}) do
+    for index,s in pairs(p[which]) do
+      p.rawCounts[which][index]=s.size
+      s.size=0
+      s.amount=0
+    end
+  end
+  return refresh(p)
 end
 local function iface(name,x,patterns,side)
   local t={name=name,location={x=x,y=64,z=0,dimId=0},side=side or 6,patterns=patterns or {}}
@@ -98,10 +123,19 @@ for _,which in ipairs({'Input','Output'}) do
       assert(tp=='item','must use item type')
       local value=cp(detail);value.label='Item';value.hasTag=value.tag~=nil
       if value.tag then local root=unser(value.tag).__value;if root.display and root.display.__value.Name then value.label=root.display.__value.Name.__value end end
+      if p.newEncoding then
+        p.rawCounts[key][index]=value.size
+        value.size=0
+        value.amount=0
+      end
       p[key][index]=value;p.lengths[key]=math.max(p.lengths[key],index)
     else
       for i=index,p.lengths[key]-1 do p[key][i]=p[key][i+1] end
       p[key][p.lengths[key]]=nil;p.lengths[key]=p.lengths[key]-1
+      if p.newEncoding then
+        for i=index,p.lengths[key] do p.rawCounts[key][i]=p.rawCounts[key][i+1] end
+        p.rawCounts[key][p.lengths[key]+1]=nil
+      end
     end
     refresh(p);mutate('set-after');return true
   end
@@ -734,6 +768,48 @@ test('ordinary processing patterns use ItemStack size even when amount is zero',
   assert(p.reused==1 and p.resizeCount==1 and #p.creates==0)
   assert(p.existing[1].status=='RESIZE')
   assert(p.existing[1].inputs:find('2048 x Red Steel Ingot',1,true))
+end)
+test('new Cnt patterns scan, resize and verify with Count left at zero',function()
+  withMatrix(function()
+    cfg.programs.insulator.destination=cfg.programs.assline.target
+    target.patterns={}
+    local first=api.runner.preview(cfg,'insulator')
+    local recipe=first.manifest.recipes[1]
+    local inputs,outputs={},{}
+    for i,s in ipairs(recipe.inputs) do
+      inputs[i]=cp(s);inputs[i].size=s.size*4
+    end
+    for i,s in ipairs(recipe.outputs) do
+      outputs[i]=cp(s);outputs[i].size=s.size*4
+    end
+    target.patterns[0]=newPattern(inputs,outputs)
+    local preview=api.runner.preview(cfg,'insulator')
+    assert(preview.plan.reused==1 and preview.plan.resizeCount==1)
+    assert(preview.plan.existing[1].inputs:find('4 x ',1,true))
+    api.runner.execute(cfg,preview)
+    local refreshed=api.runner.preview(cfg,'insulator')
+    assert(refreshed.plan.reused==2 and refreshed.plan.resizeCount==0)
+    local resized
+    for _,p in pairs(target.patterns) do
+      if p.name=='ae2fc:encodedPattern' then resized=p end
+    end
+    assert(resized)
+    local root=unser(resized.tag).__value
+    assert(root['in'].__value[1].__value.Cnt.__value==1)
+    assert(root['in'].__value[1].__value.Count.__value==0)
+  end)
+end)
+test('unreadable encoded counts are kept with a reason instead of blocking the scan',function()
+  local encoded=pattern({item('Unknown input',1,111)},{item('Output',1,222)})
+  encoded.inputs[1].size=0
+  refresh(encoded)
+  target.patterns={[0]=encoded}
+  local requested=pattern({item('Unknown input',1,111)},{item('Output',1,222)})
+  local prof=manifestFor(requested)
+  local p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,
+    donors=cfg.shared.donors,workspace=cfg.shared.editor})
+  assert(p.reused==0 and #p.preserved==1)
+  assert(p.existing[1].reason:find('no readable count',1,true))
 end)
 
 test('donors can be replaced after preview without replanning destinations',function()

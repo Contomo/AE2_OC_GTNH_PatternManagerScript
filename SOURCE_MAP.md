@@ -100,9 +100,12 @@ patterns exist, otherwise schedules a resize after sorting. The adapter sends
 both new imprints and resizes through the same editing function; the shared
 executor journals the original pattern and requested quantities for recovery.
 Resizing uses the pattern already in the destination, not a disposable donor.
-The OC pattern converter exposes item stacks with `size`; `amount=0` can also
-appear on ordinary processing patterns. The maker adapter always reads `size`
-for encoded item ingredients, including batches greater than a stack.
+The maker adapter reads both encoded item layouts: older entries store a
+positive `Count`; newer entries store `Cnt` while leaving `Count` at zero.
+It falls back to OC's converted `size`/`amount` when the raw entry lacks a
+positive count. The same normalization is used for edit read-back and recovery.
+An unreadable count leaves that pattern unmatched with a reason in Existing,
+instead of stopping the whole scan.
 
 For the bending program, `source/tools/compile_matrix.py` imports only the selected
 one-solid routes with a stocked integrated circuit. Its 18 shared rules cover

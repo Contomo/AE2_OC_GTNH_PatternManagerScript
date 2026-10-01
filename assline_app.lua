@@ -138,11 +138,22 @@ function M.exists(x)
   return type(x) == 'table' and type(x.name) == 'string'
 end
 
--- OC's pattern converter returns ItemStacks. Their count is `size`; an
--- unrelated `amount` field can be zero on ordinary encoded patterns.
-function M.patternCount(stack)
-  return M.check(M.integer(stack.size) and stack.size > 0 and stack.size,
-    'Encoded pattern ingredient has no positive item stack size')
+-- Encoded stacks have two layouts: older patterns store Count, while newer
+-- patterns store Cnt and leave Count at zero. OC's converted size can thus be
+-- zero even though the encoded amount is positive.
+function M.patternEntry(root, which, index)
+  local list = root and root[which == 'inputs' and 'in' or 'out']
+  return list and list.__nbt_type == 'list' and list.__value[index]
+end
+
+function M.patternCount(stack, entry)
+  local fields = entry and entry.__nbt_type == 'compound' and entry.__value
+  local function positive(value)
+    if type(value) == 'table' then value = value.__value end
+    return M.integer(value) and value > 0 and value or nil
+  end
+  return positive(fields and fields.Cnt) or positive(fields and fields.Count)
+    or positive(stack.size) or positive(stack.amount)
 end
 
 function M.ingredientSummary(list)
@@ -1150,6 +1161,32 @@ local function encodedPattern(data, p)
     return root
   end
 end
+local function effectivePattern(data, p)
+  if not U.exists(p) then return p end
+  local needsNormalization = p.name == 'ae2fc:encodedPattern'
+  for _, which in ipairs({ 'inputs', 'outputs' }) do
+    for _, s in pairs(p[which] or {}) do
+      if U.exists(s) and (not U.integer(s.size) or s.size <= 0 or s.amount ~= nil) then
+        needsNormalization = true
+        break
+      end
+    end
+  end
+  if not needsNormalization then return p end
+  local root = encodedPattern(data, p)
+  if not root then return p end
+  local normalized = compact(p)
+  for _, which in ipairs({ 'inputs', 'outputs' }) do
+    for index, s in pairs(normalized[which]) do
+      local count = U.patternCount(s, U.patternEntry(root, which, index))
+      if count then
+        s.size = count
+        s.amount = nil
+      end
+    end
+  end
+  return normalized
+end
 local function donorIssue(data, p)
   local root = encodedPattern(data, p)
   if not root then
@@ -1484,8 +1521,8 @@ local function rawList(data, p, which)
   U.check(t and t.__nbt_type == 'list', 'Unsupported encoded pattern layout')
   return t.__value
 end
-local function expected(op)
-  local p = compact(op.original)
+local function expected(data, op)
+  local p = compact(effectivePattern(data, op.original))
   if op.kind == 'recipe' or op.kind == 'imprint' or op.kind == 'resize' then
     p.inputs = op.recipe and U.clone(op.recipe.inputs) or { [1] = op.input }
     p.outputs = op.recipe and U.clone(op.recipe.outputs) or { [1] = op.output }
@@ -1503,6 +1540,7 @@ local function semantic(hw, p, q)
   if not U.eq(metadata(hw.data, p), metadata(hw.data, q)) then
     return false
   end
+  p = effectivePattern(hw.data, p)
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     local all = {}
     for k in pairs(p[which] or {}) do
@@ -1528,13 +1566,15 @@ local function allowedPartial(hw, p, op)
     U.eq(metadata(hw.data, p), metadata(hw.data, op.original)),
     'Pattern flags or other NBT changed; recovery stopped'
   )
-  local final = expected(op)
+  local final = expected(hw.data, op)
+  p = effectivePattern(hw.data, p)
+  local original = effectivePattern(hw.data, op.original)
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     local all = {}
     for k in pairs(p[which] or {}) do
       all[k] = true
     end
-    for k in pairs(op.original[which]) do
+    for k in pairs(original[which]) do
       all[k] = true
     end
     for k in pairs(final[which]) do
@@ -1542,7 +1582,7 @@ local function allowedPartial(hw, p, op)
     end
     for k in pairs(all) do
       local a = p[which][k]
-      local old = op.original[which][k]
+      local old = original[which][k]
       local new = final[which][k]
       U.check(
         stackEq(hw.data, a, old) or stackEq(hw.data, a, new),
@@ -1583,7 +1623,7 @@ local function finish(hw, op, progress)
       and where(op.buffer) == where(hw.buffer),
     'Recovery hardware differs from saved operation'
   )
-  local goal = expected(op)
+  local goal = expected(hw.data, op)
   local dest = current(hw, op.destination)
   local remote = current(hw, op.buffer)
   local p = remote.patterns[op.slot]
@@ -1611,13 +1651,14 @@ local function finish(hw, op, progress)
     U.check(patternEq(hw.data, p, op.original), 'Moved donor failed read-back')
   end
   allowedPartial(hw, p, op)
+  local observed = effectivePattern(hw.data, p)
   if op.kind == 'recipe' or op.kind == 'imprint' or op.kind == 'resize' then
     -- Clearing removes an NBT list element: ALWAYS clear from the end.
     for _, which in ipairs({ 'inputs', 'outputs' }) do
       local desired = goal[which]
       local entries = rawList(hw.data, p, which)
       for index, s in ipairs(desired) do
-        if not stackEq(hw.data, p[which][index], s) then
+        if not stackEq(hw.data, observed[which][index], s) then
           setEntry(hw, op.slot, which, index, s)
         end
       end
@@ -1636,7 +1677,7 @@ local function finish(hw, op, progress)
     end
   else
     for _, e in ipairs(op.edits) do
-      if not stackEq(hw.data, p.inputs[e.index], e.after) then
+      if not stackEq(hw.data, observed.inputs[e.index], e.after) then
         setEntry(hw, op.slot, 'inputs', e.index, e.after)
       end
     end
@@ -2705,11 +2746,15 @@ local function patternRecipe(p, root)
     for index, s in pairs(p[which]) do
       if U.exists(s) then
         U.check(not U.truth(s.hasTag) or type(s.tag) == 'string', 'Ingredient NBT hidden')
+        local count = U.patternCount(s, U.patternEntry(root, which, index))
+        if not count then
+          return nil, 'Encoded ' .. which .. ' slot ' .. index .. ' has no readable count'
+        end
         r[which][index] = {
           type = 'item',
           name = s.name,
           damage = s.damage,
-          size = U.patternCount(s),
+          size = count,
           tag = s.tag,
         }
       end
@@ -2875,7 +2920,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
             value.output = {
               name = output.name,
               damage = output.damage,
-              size = U.patternCount(output),
+              size = U.patternCount(output, U.patternEntry(root, 'outputs', 1)),
               label = output.label,
             }
           end
@@ -2883,23 +2928,29 @@ local function scanManifest(c, manifest, routing, progress, control, started)
           for _, index in ipairs(U.keys(p.inputs)) do
             local input = p.inputs[index]
             if U.exists(input) then
-              inputLabels[#inputLabels + 1] = tostring(U.patternCount(input))
+              inputLabels[#inputLabels + 1] = tostring(U.patternCount(
+                input, U.patternEntry(root, 'inputs', index)) or '?')
                 .. ' x '
                 .. tostring(input.label or input.name)
             end
           end
           value.inputSummary = table.concat(inputLabels, ', ')
           if root then
-            local r = patternRecipe(p, root)
-            value.kind = r.kind
-            local valid, key, scale = pcall(recipeKey, hw.data, r)
-            if valid then
-              value.recipeKey = key
-              value.scale = scale
+            local r, issue = patternRecipe(p, root)
+            if r then
+              value.kind = r.kind
+              local valid, key, scale = pcall(recipeKey, hw.data, r)
+              if valid then
+                value.recipeKey = key
+                value.scale = scale
+              else
+                value.matchIssue = 'Encoded ingredients could not be compared'
+              end
+              value.donor = value.reason == nil
             else
-              value.matchIssue = 'Encoded ingredients could not be compared'
+              value.matchIssue = issue
+              value.reason = value.reason or issue
             end
-            value.donor = value.reason == nil
           end
           compacted.patterns[slot] = value
         end

@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "release": "18029aaafd27916c",
-  "bytes": 664359,
+  "release": "8c70f7be59a983d0",
+  "bytes": 666369,
   "files": [
     {
       "path": "assline.lua",
@@ -10,8 +10,8 @@
     },
     {
       "path": "assline_app.lua",
-      "bytes": 134620,
-      "checksum": "8cc70a1a"
+      "bytes": 136630,
+      "checksum": "3f218af2"
     },
     {
       "path": "assline_data.lua",

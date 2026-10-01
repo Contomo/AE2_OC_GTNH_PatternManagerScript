@@ -30,11 +30,15 @@ local function patternRecipe(p, root)
     for index, s in pairs(p[which]) do
       if U.exists(s) then
         U.check(not U.truth(s.hasTag) or type(s.tag) == 'string', 'Ingredient NBT hidden')
+        local count = U.patternCount(s, U.patternEntry(root, which, index))
+        if not count then
+          return nil, 'Encoded ' .. which .. ' slot ' .. index .. ' has no readable count'
+        end
         r[which][index] = {
           type = 'item',
           name = s.name,
           damage = s.damage,
-          size = U.patternCount(s),
+          size = count,
           tag = s.tag,
         }
       end
@@ -200,7 +204,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
             value.output = {
               name = output.name,
               damage = output.damage,
-              size = U.patternCount(output),
+              size = U.patternCount(output, U.patternEntry(root, 'outputs', 1)),
               label = output.label,
             }
           end
@@ -208,23 +212,29 @@ local function scanManifest(c, manifest, routing, progress, control, started)
           for _, index in ipairs(U.keys(p.inputs)) do
             local input = p.inputs[index]
             if U.exists(input) then
-              inputLabels[#inputLabels + 1] = tostring(U.patternCount(input))
+              inputLabels[#inputLabels + 1] = tostring(U.patternCount(
+                input, U.patternEntry(root, 'inputs', index)) or '?')
                 .. ' x '
                 .. tostring(input.label or input.name)
             end
           end
           value.inputSummary = table.concat(inputLabels, ', ')
           if root then
-            local r = patternRecipe(p, root)
-            value.kind = r.kind
-            local valid, key, scale = pcall(recipeKey, hw.data, r)
-            if valid then
-              value.recipeKey = key
-              value.scale = scale
+            local r, issue = patternRecipe(p, root)
+            if r then
+              value.kind = r.kind
+              local valid, key, scale = pcall(recipeKey, hw.data, r)
+              if valid then
+                value.recipeKey = key
+                value.scale = scale
+              else
+                value.matchIssue = 'Encoded ingredients could not be compared'
+              end
+              value.donor = value.reason == nil
             else
-              value.matchIssue = 'Encoded ingredients could not be compared'
+              value.matchIssue = issue
+              value.reason = value.reason or issue
             end
-            value.donor = value.reason == nil
           end
           compacted.patterns[slot] = value
         end

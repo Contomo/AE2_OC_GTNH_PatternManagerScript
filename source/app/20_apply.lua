@@ -6,8 +6,8 @@ local function rawList(data, p, which)
   U.check(t and t.__nbt_type == 'list', 'Unsupported encoded pattern layout')
   return t.__value
 end
-local function expected(op)
-  local p = compact(op.original)
+local function expected(data, op)
+  local p = compact(effectivePattern(data, op.original))
   if op.kind == 'recipe' or op.kind == 'imprint' or op.kind == 'resize' then
     p.inputs = op.recipe and U.clone(op.recipe.inputs) or { [1] = op.input }
     p.outputs = op.recipe and U.clone(op.recipe.outputs) or { [1] = op.output }
@@ -25,6 +25,7 @@ local function semantic(hw, p, q)
   if not U.eq(metadata(hw.data, p), metadata(hw.data, q)) then
     return false
   end
+  p = effectivePattern(hw.data, p)
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     local all = {}
     for k in pairs(p[which] or {}) do
@@ -50,13 +51,15 @@ local function allowedPartial(hw, p, op)
     U.eq(metadata(hw.data, p), metadata(hw.data, op.original)),
     'Pattern flags or other NBT changed; recovery stopped'
   )
-  local final = expected(op)
+  local final = expected(hw.data, op)
+  p = effectivePattern(hw.data, p)
+  local original = effectivePattern(hw.data, op.original)
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     local all = {}
     for k in pairs(p[which] or {}) do
       all[k] = true
     end
-    for k in pairs(op.original[which]) do
+    for k in pairs(original[which]) do
       all[k] = true
     end
     for k in pairs(final[which]) do
@@ -64,7 +67,7 @@ local function allowedPartial(hw, p, op)
     end
     for k in pairs(all) do
       local a = p[which][k]
-      local old = op.original[which][k]
+      local old = original[which][k]
       local new = final[which][k]
       U.check(
         stackEq(hw.data, a, old) or stackEq(hw.data, a, new),
@@ -105,7 +108,7 @@ local function finish(hw, op, progress)
       and where(op.buffer) == where(hw.buffer),
     'Recovery hardware differs from saved operation'
   )
-  local goal = expected(op)
+  local goal = expected(hw.data, op)
   local dest = current(hw, op.destination)
   local remote = current(hw, op.buffer)
   local p = remote.patterns[op.slot]
@@ -133,13 +136,14 @@ local function finish(hw, op, progress)
     U.check(patternEq(hw.data, p, op.original), 'Moved donor failed read-back')
   end
   allowedPartial(hw, p, op)
+  local observed = effectivePattern(hw.data, p)
   if op.kind == 'recipe' or op.kind == 'imprint' or op.kind == 'resize' then
     -- Clearing removes an NBT list element: ALWAYS clear from the end.
     for _, which in ipairs({ 'inputs', 'outputs' }) do
       local desired = goal[which]
       local entries = rawList(hw.data, p, which)
       for index, s in ipairs(desired) do
-        if not stackEq(hw.data, p[which][index], s) then
+        if not stackEq(hw.data, observed[which][index], s) then
           setEntry(hw, op.slot, which, index, s)
         end
       end
@@ -158,7 +162,7 @@ local function finish(hw, op, progress)
     end
   else
     for _, e in ipairs(op.edits) do
-      if not stackEq(hw.data, p.inputs[e.index], e.after) then
+      if not stackEq(hw.data, observed.inputs[e.index], e.after) then
         setEntry(hw, op.slot, 'inputs', e.index, e.after)
       end
     end

@@ -450,6 +450,32 @@ local function encodedPattern(data, p)
     return root
   end
 end
+local function effectivePattern(data, p)
+  if not U.exists(p) then return p end
+  local needsNormalization = p.name == 'ae2fc:encodedPattern'
+  for _, which in ipairs({ 'inputs', 'outputs' }) do
+    for _, s in pairs(p[which] or {}) do
+      if U.exists(s) and (not U.integer(s.size) or s.size <= 0 or s.amount ~= nil) then
+        needsNormalization = true
+        break
+      end
+    end
+  end
+  if not needsNormalization then return p end
+  local root = encodedPattern(data, p)
+  if not root then return p end
+  local normalized = compact(p)
+  for _, which in ipairs({ 'inputs', 'outputs' }) do
+    for index, s in pairs(normalized[which]) do
+      local count = U.patternCount(s, U.patternEntry(root, which, index))
+      if count then
+        s.size = count
+        s.amount = nil
+      end
+    end
+  end
+  return normalized
+end
 local function donorIssue(data, p)
   local root = encodedPattern(data, p)
   if not root then

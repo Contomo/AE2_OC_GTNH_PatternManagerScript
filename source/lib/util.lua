@@ -119,11 +119,22 @@ function M.exists(x)
   return type(x) == 'table' and type(x.name) == 'string'
 end
 
--- OC's pattern converter returns ItemStacks. Their count is `size`; an
--- unrelated `amount` field can be zero on ordinary encoded patterns.
-function M.patternCount(stack)
-  return M.check(M.integer(stack.size) and stack.size > 0 and stack.size,
-    'Encoded pattern ingredient has no positive item stack size')
+-- Encoded stacks have two layouts: older patterns store Count, while newer
+-- patterns store Cnt and leave Count at zero. OC's converted size can thus be
+-- zero even though the encoded amount is positive.
+function M.patternEntry(root, which, index)
+  local list = root and root[which == 'inputs' and 'in' or 'out']
+  return list and list.__nbt_type == 'list' and list.__value[index]
+end
+
+function M.patternCount(stack, entry)
+  local fields = entry and entry.__nbt_type == 'compound' and entry.__value
+  local function positive(value)
+    if type(value) == 'table' then value = value.__value end
+    return M.integer(value) and value > 0 and value or nil
+  end
+  return positive(fields and fields.Cnt) or positive(fields and fields.Count)
+    or positive(stack.size) or positive(stack.amount)
 end
 
 function M.ingredientSummary(list)
