@@ -58,6 +58,16 @@ class UsageTests(unittest.TestCase):
         _, useful = usage_index(recipes, reverse)
         self.assertEqual(useful, {'mod:plateDouble', 'mod:plateQuintuple'})
 
+    def test_arc_furnace_ash_is_disposal_not_a_product(self):
+        reverse = {'mod:quad': ('Polybenzimidazole', 'plateQuadruple'),
+                   'mod:ash': ('ash', 'dustSmall')}
+        recipe = {'machineType': 'Arc Furnace',
+                  'inputs': [{'id': 'mod:quad', 'kind': 'item'}],
+                  'outputs': [{'id': 'mod:ash', 'kind': 'item'}]}
+        counts, useful = usage_index([recipe], reverse)
+        self.assertEqual(counts['mod:quad'], [0, 1])
+        self.assertNotIn('mod:quad', useful)
+
     @unittest.skipUnless(Path('.research/usage.json').exists(), 'Local usage index not installed')
     def test_local_examples_have_no_product_path(self):
         index = json.loads(Path('.research/usage.json').read_text())
@@ -65,6 +75,7 @@ class UsageTests(unittest.TestCase):
         self.assertNotIn('gregtech:gt.metaitem.01@29065', useful)
         self.assertNotIn('bartworks:gt.bwmetageneratedfoil@10098', useful)
         self.assertNotIn('bartworks:gt.bwmetageneratedplate@10098', useful)
+        self.assertNotIn('gregtech:gt.metaitem.01@20599', useful)
 
 
 if __name__ == '__main__':

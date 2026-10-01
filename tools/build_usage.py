@@ -21,6 +21,7 @@ RECOVERY_FORMS = {
 RECOVERY_MACHINES = {
     'Macerator', 'Fluid Extractor', 'Thaumcraft Essentia Smelting', 'Recycler',
 }
+ARC_WASTE_MATERIALS = {'ash', 'ashdark'}
 
 
 def is_recovered_output(output, material, reverse):
@@ -39,6 +40,11 @@ def is_recycling(recipe, material, reverse):
     if recipe.get('machineType') in RECOVERY_MACHINES:
         return True
     outputs = recipe.get('outputs') or []
+    if recipe.get('machineType') == 'Arc Furnace' and outputs and all(
+            output.get('kind') == 'item'
+            and (found := reverse.get(output.get('id'))) is not None
+            and found[0].lower() in ARC_WASTE_MATERIALS for output in outputs):
+        return True
     return bool(outputs) and all(is_recovered_output(output, material, reverse)
                                  for output in outputs)
 
@@ -102,7 +108,7 @@ def build(recipe_export, registry, resource_index, ore_resources):
 
     counts, useful = usage_index(recipes(), reverse)
     return {
-        'policy': 'reachable-nonrecycling-v2',
+        'policy': 'reachable-nonrecycling-v3',
         'datasetVersionId': source['datasetVersionId'],
         'recipeExportSha256': hashlib.sha256(Path(recipe_export).read_bytes()).hexdigest(),
         'recipeCount': recipe_count,

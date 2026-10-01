@@ -26,7 +26,7 @@ return {
     },
     ["compatibleTargets"] = {"2.9.0-beta-3"},
     ["compatibilityBasis"] = "User confirmed recipes unchanged from beta 2 to beta 3",
-    ["usagePolicy"] = "reachable-nonrecycling-v2",
+    ["usagePolicy"] = "reachable-nonrecycling-v3",
     ["usageRecipeCount"] = 276677,
     ["usageExportSha256"] = "2c09a018091ea934c1cf8f612f447796f17e31e4f9d9cb3b01b894746abe0fed"
   },
@@ -9718,13 +9718,6 @@ return {
       ["wire4"] = true
     },
     {
-      ["plate"] = true,
-      ["plateDense"] = true,
-      ["plateDouble"] = true,
-      ["sheetmetal"] = true,
-      ["spring"] = true
-    },
-    {
       ["cable1"] = true,
       ["cable12"] = true,
       ["cable16"] = true,
@@ -9912,24 +9905,8 @@ return {
       ["wire8"] = true,
       ["wireFine"] = true
     },
-    {
-      ["foil"] = true,
-      ["plate"] = true,
-      ["plateDense"] = true,
-      ["plateDouble"] = true,
-      ["spring"] = true,
-      ["springSmall"] = true
-    },
+    {["foil"] = true, ["plate"] = true, ["plateDense"] = true, ["springSmall"] = true},
     {["foil"] = true, ["plate"] = true, ["plateDouble"] = true, ["plateQuintuple"] = true},
-    {
-      ["plate"] = true,
-      ["plateDense"] = true,
-      ["plateDouble"] = true,
-      ["plateQuadruple"] = true,
-      ["plateQuintuple"] = true,
-      ["plateTriple"] = true,
-      ["spring"] = true
-    },
     {
       ["cable1"] = true,
       ["cable12"] = true,
@@ -9970,24 +9947,8 @@ return {
       ["wire2"] = true,
       ["wire4"] = true
     },
-    {
-      ["foil"] = true,
-      ["plate"] = true,
-      ["plateDense"] = true,
-      ["plateDouble"] = true,
-      ["plateQuadruple"] = true,
-      ["plateQuintuple"] = true,
-      ["plateTriple"] = true,
-      ["spring"] = true
-    },
-    {
-      ["foil"] = true,
-      ["plate"] = true,
-      ["plateDense"] = true,
-      ["plateDouble"] = true,
-      ["spring"] = true
-    },
-    {["plate"] = true, ["plateDense"] = true, ["plateDouble"] = true, ["spring"] = true},
+    {["foil"] = true, ["plate"] = true, ["plateDense"] = true},
+    {["plate"] = true, ["plateDense"] = true, ["plateTriple"] = true},
     {["wire1"] = true, ["wire16"] = true, ["wire4"] = true},
     {
       ["cable1"] = true,
@@ -9998,20 +9959,7 @@ return {
       ["wire1"] = true,
       ["wire2"] = true
     },
-    {
-      ["plate"] = true,
-      ["plateDouble"] = true,
-      ["plateQuadruple"] = true,
-      ["plateQuintuple"] = true,
-      ["plateTriple"] = true
-    },
-    {
-      ["plate"] = true,
-      ["plateDense"] = true,
-      ["plateDouble"] = true,
-      ["spring"] = true,
-      ["springSmall"] = true
-    },
+    {["plate"] = true, ["plateDense"] = true, ["springSmall"] = true},
     {
       ["plate"] = true,
       ["sheetmetal"] = true,
@@ -10084,7 +10032,6 @@ return {
       ["wire8"] = true,
       ["wireFine"] = true
     },
-    {["foil"] = true, ["plate"] = true, ["plateDense"] = true},
     {
       ["wire1"] = true,
       ["wire12"] = true,
@@ -10811,7 +10758,7 @@ return {
       ["dsf"] = 345,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1380},
       ["coating"] = "standard",
-      ["u"] = 59,
+      ["u"] = 58,
       ["a"] = 92,
       ["p"] = 7
     },
@@ -11116,7 +11063,7 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5670},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5675},
       ["coating"] = "pps",
-      ["u"] = 74,
+      ["u"] = 73,
       ["a"] = 108,
       ["p"] = 10
     },
@@ -11280,7 +11227,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11390},
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5660},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5665},
-      ["u"] = 69,
+      ["u"] = 68,
       ["a"] = 105,
       ["p"] = 5
     },
@@ -11594,7 +11541,7 @@ return {
       ["name"] = "CallistoIce",
       ["family"] = "gt",
       ["dsf"] = 389,
-      ["u"] = 70,
+      ["u"] = 69,
       ["a"] = 106,
       ["p"] = 11
     },
@@ -11712,7 +11659,7 @@ return {
       ["name"] = "Charcoal",
       ["family"] = "gt",
       ["dsf"] = 536,
-      ["u"] = 2,
+      ["u"] = 1,
       ["a"] = 131,
       ["overrides"] = {
         ["gem"] = {["name"] = "minecraft:coal", ["damage"] = 1}
@@ -11806,7 +11753,7 @@ return {
       ["name"] = "ChromaticGlass",
       ["family"] = "gtpp",
       ["dsf"] = "chromaticglass",
-      ["u"] = 82,
+      ["u"] = 80,
       ["a"] = 195,
       ["p"] = 34
     },
@@ -11910,7 +11857,7 @@ return {
       ["name"] = "Coal",
       ["family"] = "gt",
       ["dsf"] = 535,
-      ["u"] = 2,
+      ["u"] = 1,
       ["a"] = 125,
       ["overrides"] = {
         ["gem"] = {["name"] = "minecraft:coal", ["damage"] = 0}
@@ -12046,7 +11993,7 @@ return {
       ["name"] = "ConductiveIron",
       ["family"] = "gt",
       ["dsf"] = 369,
-      ["u"] = 65,
+      ["u"] = 64,
       ["a"] = 101,
       ["p"] = 8
     },
@@ -12100,7 +12047,7 @@ return {
       ["name"] = "CosmicNeutronium",
       ["family"] = "gt",
       ["dsf"] = 982,
-      ["u"] = 93,
+      ["u"] = 89,
       ["a"] = 169,
       ["overrides"] = {
         ["ingot"] = {["name"] = "avaritia:resource", ["damage"] = 4}
@@ -12565,7 +12512,7 @@ return {
       ["dsf"] = 976,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11410},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5240},
-      ["u"] = 92,
+      ["u"] = 88,
       ["a"] = 166,
       ["p"] = 10
     },
@@ -12573,7 +12520,7 @@ return {
       ["name"] = "Dragonblood",
       ["family"] = "gtpp",
       ["dsf"] = "dragonblood",
-      ["u"] = 65,
+      ["u"] = 64,
       ["a"] = 197,
       ["p"] = 35
     },
@@ -12591,7 +12538,7 @@ return {
       ["name"] = "Dreamwood",
       ["family"] = "gt",
       ["dsf"] = 207,
-      ["u"] = 2,
+      ["u"] = 1,
       ["a"] = 63,
       ["p"] = 9
     },
@@ -12836,7 +12783,7 @@ return {
       ["dsf"] = 366,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11510},
       ["coating"] = "standard",
-      ["u"] = 63,
+      ["u"] = 62,
       ["a"] = 100,
       ["p"] = 7
     },
@@ -13694,7 +13641,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 819,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1600},
-      ["u"] = 87,
+      ["u"] = 84,
       ["a"] = 154,
       ["p"] = 21
     },
@@ -14045,7 +13992,7 @@ return {
       ["dsf"] = 373,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11590},
       ["coating"] = "pps",
-      ["u"] = 67,
+      ["u"] = 66,
       ["a"] = 83,
       ["p"] = 7
     },
@@ -14055,7 +14002,7 @@ return {
       ["dsf"] = 372,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1700},
       ["coating"] = "pps",
-      ["u"] = 66,
+      ["u"] = 65,
       ["a"] = 78,
       ["p"] = 5
     },
@@ -14137,7 +14084,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "hypogen",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30585},
-      ["u"] = 104,
+      ["u"] = 100,
       ["a"] = 202,
       ["p"] = 37
     },
@@ -14316,7 +14263,7 @@ return {
       ["dsf"] = 397,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11430},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5250},
-      ["u"] = 75,
+      ["u"] = 74,
       ["a"] = 110,
       ["overrides"] = {
         ["ingot"] = {["name"] = "avaritia:resource", ["damage"] = 6}
@@ -14327,7 +14274,7 @@ return {
       ["name"] = "InfinityCatalyst",
       ["family"] = "gt",
       ["dsf"] = 394,
-      ["u"] = 73,
+      ["u"] = 72,
       ["a"] = 33,
       ["p"] = 4
     },
@@ -14480,7 +14427,7 @@ return {
       ["name"] = "IronWood",
       ["family"] = "gt",
       ["dsf"] = 338,
-      ["u"] = 58,
+      ["u"] = 4,
       ["a"] = 39,
       ["overrides"] = {
         ["ingot"] = {["name"] = "twilightforest:item.ironwoodingot", ["damage"] = 0}
@@ -14579,7 +14526,7 @@ return {
       ["name"] = "Kevlar",
       ["family"] = "gt",
       ["dsf"] = 765,
-      ["u"] = 78,
+      ["u"] = 83,
       ["a"] = 142,
       ["p"] = 15
     },
@@ -14713,7 +14660,7 @@ return {
       ["name"] = "Lapis",
       ["family"] = "gt",
       ["dsf"] = 526,
-      ["u"] = 80,
+      ["u"] = 78,
       ["a"] = 127,
       ["overrides"] = {
         ["plateDense"] = {["name"] = "ic2:itemdenseplates", ["damage"] = 8},
@@ -14773,7 +14720,7 @@ return {
       ["name"] = "Ledox",
       ["family"] = "gt",
       ["dsf"] = 390,
-      ["u"] = 71,
+      ["u"] = 70,
       ["a"] = 106,
       ["p"] = 11
     },
@@ -14824,7 +14771,7 @@ return {
       ["name"] = "Lignite",
       ["family"] = "gt",
       ["dsf"] = 538,
-      ["u"] = 2,
+      ["u"] = 1,
       ["a"] = 125
     },
     {
@@ -14911,7 +14858,7 @@ return {
       ["name"] = "Livingwood",
       ["family"] = "gt",
       ["dsf"] = 206,
-      ["u"] = 2,
+      ["u"] = 1,
       ["a"] = 63,
       ["p"] = 9
     },
@@ -14980,7 +14927,7 @@ return {
       ["dsf"] = 10101,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 32737},
       ["coating"] = "pps",
-      ["u"] = 101,
+      ["u"] = 97,
       ["a"] = 181,
       ["deny"] = {["wiremill.stick_wire.wire16.a7f9c66ea9"] = true},
       ["p"] = 29
@@ -15117,7 +15064,7 @@ return {
       ["name"] = "Manyullyn",
       ["family"] = "gt",
       ["dsf"] = 386,
-      ["u"] = 65,
+      ["u"] = 64,
       ["a"] = 103,
       ["p"] = 2
     },
@@ -15133,7 +15080,7 @@ return {
       ["name"] = "MAR-M200Steel",
       ["family"] = "bw",
       ["dsf"] = 10096,
-      ["u"] = 100,
+      ["u"] = 96,
       ["a"] = 175,
       ["p"] = 26
     },
@@ -15300,7 +15247,7 @@ return {
       ["name"] = "MHDCSM",
       ["family"] = "gt",
       ["dsf"] = 583,
-      ["u"] = 82,
+      ["u"] = 80,
       ["a"] = 135
     },
     {
@@ -15767,7 +15714,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11350},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5220},
       ["coating"] = "pps",
-      ["u"] = 79,
+      ["u"] = 77,
       ["a"] = 120,
       ["overrides"] = {
         ["gem"] = {["name"] = "minecraft:nether_star", ["damage"] = 0}
@@ -15874,7 +15821,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1720},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5180},
       ["coating"] = "pps",
-      ["u"] = 62,
+      ["u"] = 61,
       ["a"] = 97,
       ["p"] = 7
     },
@@ -15974,7 +15921,7 @@ return {
       ["name"] = "Obsidian",
       ["family"] = "gt",
       ["dsf"] = 804,
-      ["u"] = 80,
+      ["u"] = 78,
       ["a"] = 146,
       ["overrides"] = {
         ["plateDense"] = {["name"] = "ic2:itemdenseplates", ["damage"] = 7}
@@ -16197,7 +16144,7 @@ return {
       ["name"] = "Paper",
       ["family"] = "gt",
       ["dsf"] = 879,
-      ["u"] = 89,
+      ["u"] = 29,
       ["a"] = 161,
       ["overrides"] = {
         ["plate"] = {["name"] = "minecraft:paper", ["damage"] = 0}
@@ -16491,7 +16438,7 @@ return {
       ["name"] = "Polybenzimidazole",
       ["family"] = "gt",
       ["dsf"] = 599,
-      ["u"] = 84,
+      ["u"] = 54,
       ["a"] = 116,
       ["p"] = 15
     },
@@ -16499,7 +16446,7 @@ return {
       ["name"] = "Polycaprolactam",
       ["family"] = "gt",
       ["dsf"] = 472,
-      ["u"] = 77,
+      ["u"] = 76,
       ["a"] = 115,
       ["p"] = 14
     },
@@ -16529,7 +16476,7 @@ return {
       ["name"] = "Polyethylene",
       ["family"] = "gt",
       ["dsf"] = 874,
-      ["u"] = 85,
+      ["u"] = 14,
       ["a"] = 114,
       ["p"] = 22
     },
@@ -16537,7 +16484,7 @@ return {
       ["name"] = "PolyphenyleneSulfide",
       ["family"] = "gt",
       ["dsf"] = 631,
-      ["u"] = 85,
+      ["u"] = 14,
       ["a"] = 141,
       ["p"] = 13
     },
@@ -16545,7 +16492,7 @@ return {
       ["name"] = "Polystyrene",
       ["family"] = "gt",
       ["dsf"] = 636,
-      ["u"] = 86,
+      ["u"] = 2,
       ["a"] = 114,
       ["p"] = 13
     },
@@ -16553,7 +16500,7 @@ return {
       ["name"] = "Polytetrafluoroethylene",
       ["family"] = "gt",
       ["dsf"] = 473,
-      ["u"] = 78,
+      ["u"] = 70,
       ["a"] = 116,
       ["p"] = 15
     },
@@ -16575,7 +16522,7 @@ return {
       ["name"] = "PolyvinylChloride",
       ["family"] = "gt",
       ["dsf"] = 649,
-      ["u"] = 85,
+      ["u"] = 82,
       ["a"] = 114,
       ["p"] = 13
     },
@@ -16699,7 +16646,7 @@ return {
       ["name"] = "PreciousMetalsAlloy",
       ["family"] = "bw",
       ["dsf"] = 10109,
-      ["u"] = 102,
+      ["u"] = 98,
       ["a"] = 175,
       ["p"] = 26
     },
@@ -16886,7 +16833,7 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5730},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5735},
       ["coating"] = "pps",
-      ["u"] = 72,
+      ["u"] = 71,
       ["a"] = 32,
       ["p"] = 5
     },
@@ -16894,7 +16841,7 @@ return {
       ["name"] = "Quantum",
       ["family"] = "gtpp",
       ["dsf"] = "quantum",
-      ["u"] = 105,
+      ["u"] = 82,
       ["a"] = 206,
       ["p"] = 13
     },
@@ -17135,7 +17082,7 @@ return {
       ["dsf"] = 381,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30645},
       ["coating"] = "standard",
-      ["u"] = 68,
+      ["u"] = 67,
       ["a"] = 99,
       ["p"] = 10
     },
@@ -17390,7 +17337,7 @@ return {
       ["name"] = "Rubber",
       ["family"] = "gt",
       ["dsf"] = 880,
-      ["u"] = 90,
+      ["u"] = 86,
       ["a"] = 114,
       ["p"] = 13
     },
@@ -17405,7 +17352,7 @@ return {
       ["name"] = "RubberSilicone",
       ["family"] = "gt",
       ["dsf"] = 471,
-      ["u"] = 76,
+      ["u"] = 75,
       ["a"] = 114,
       ["p"] = 13
     },
@@ -17459,7 +17406,7 @@ return {
       ["name"] = "Ruridit",
       ["family"] = "bw",
       ["dsf"] = 90,
-      ["u"] = 99,
+      ["u"] = 95,
       ["a"] = 175,
       ["p"] = 26
     },
@@ -17663,7 +17610,7 @@ return {
       ["name"] = "Shadow",
       ["family"] = "gt",
       ["dsf"] = 368,
-      ["u"] = 64,
+      ["u"] = 63,
       ["a"] = 33,
       ["p"] = 4
     },
@@ -17695,7 +17642,7 @@ return {
       ["name"] = "Shirabon",
       ["family"] = "bw",
       ["dsf"] = 10112,
-      ["u"] = 103,
+      ["u"] = 99,
       ["a"] = 182,
       ["p"] = 30
     },
@@ -18028,7 +17975,7 @@ return {
       ["dsf"] = 588,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2606},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5300},
-      ["u"] = 83,
+      ["u"] = 81,
       ["a"] = 138,
       ["p"] = 18
     },
@@ -18131,7 +18078,7 @@ return {
       ["name"] = "Steeleaf",
       ["family"] = "gt",
       ["dsf"] = 339,
-      ["u"] = 58,
+      ["u"] = 4,
       ["a"] = 39,
       ["overrides"] = {
         ["ingot"] = {["name"] = "twilightforest:item.steeleafingot", ["damage"] = 0}
@@ -18223,7 +18170,7 @@ return {
       ["name"] = "StyreneButadieneRubber",
       ["family"] = "gt",
       ["dsf"] = 635,
-      ["u"] = 76,
+      ["u"] = 75,
       ["a"] = 114,
       ["p"] = 13
     },
@@ -18312,77 +18259,77 @@ return {
       ["name"] = "Superconductor EV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2360},
-      ["u"] = 107,
+      ["u"] = 102,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor HV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2340},
-      ["u"] = 109,
+      ["u"] = 104,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor IV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2380},
-      ["u"] = 109,
+      ["u"] = 104,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor LuV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2400},
-      ["u"] = 106,
+      ["u"] = 101,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor MV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2320},
-      ["u"] = 109,
+      ["u"] = 104,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UEV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2026},
-      ["u"] = 107,
+      ["u"] = 102,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UHV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2020},
-      ["u"] = 106,
+      ["u"] = 101,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UIV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2081},
-      ["u"] = 108,
+      ["u"] = 103,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UMV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2089},
-      ["u"] = 108,
+      ["u"] = 103,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor UV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2440},
-      ["u"] = 107,
+      ["u"] = 102,
       ["a"] = 212
     },
     {
       ["name"] = "Superconductor ZPM",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2420},
-      ["u"] = 107,
+      ["u"] = 102,
       ["a"] = 212
     },
     {
@@ -18390,7 +18337,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 989,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2240},
-      ["u"] = 95,
+      ["u"] = 91,
       ["a"] = 42,
       ["p"] = 7
     },
@@ -18399,7 +18346,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 988,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2220},
-      ["u"] = 96,
+      ["u"] = 92,
       ["a"] = 42,
       ["p"] = 7
     },
@@ -18408,7 +18355,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 990,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2260},
-      ["u"] = 97,
+      ["u"] = 93,
       ["a"] = 42,
       ["p"] = 7
     },
@@ -18417,7 +18364,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 991,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2280},
-      ["u"] = 98,
+      ["u"] = 94,
       ["a"] = 42,
       ["p"] = 7
     },
@@ -18426,7 +18373,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 987,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2200},
-      ["u"] = 95,
+      ["u"] = 91,
       ["a"] = 42,
       ["p"] = 7
     },
@@ -18435,7 +18382,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 974,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2032},
-      ["u"] = 91,
+      ["u"] = 87,
       ["a"] = 42,
       ["p"] = 7
     },
@@ -18444,7 +18391,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 985,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2520},
-      ["u"] = 94,
+      ["u"] = 90,
       ["a"] = 42,
       ["p"] = 7
     },
@@ -18936,7 +18883,7 @@ return {
       ["name"] = "Titansteel",
       ["family"] = "gtpp",
       ["dsf"] = "titansteel",
-      ["u"] = 105,
+      ["u"] = 82,
       ["a"] = 188,
       ["p"] = 13
     },
@@ -18960,7 +18907,7 @@ return {
       ["dsf"] = 576,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1840},
       ["coating"] = "standard",
-      ["u"] = 81,
+      ["u"] = 79,
       ["a"] = 83,
       ["p"] = 7
     },
@@ -19014,7 +18961,7 @@ return {
       ["dsf"] = 868,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11450},
       ["coating"] = "pps",
-      ["u"] = 88,
+      ["u"] = 85,
       ["a"] = 160,
       ["p"] = 5
     },
@@ -19292,7 +19239,7 @@ return {
       ["dsf"] = 357,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1740},
       ["coating"] = "pps",
-      ["u"] = 60,
+      ["u"] = 59,
       ["a"] = 94,
       ["p"] = 7
     },
@@ -19601,7 +19548,7 @@ return {
       ["dsf"] = 358,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1760},
       ["coating"] = "pps",
-      ["u"] = 61,
+      ["u"] = 60,
       ["a"] = 95,
       ["p"] = 7
     },

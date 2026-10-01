@@ -182,6 +182,7 @@ test('bender compiles only scraped ingot routes, with source circuit selectors s
   local counts={};local seen={}
   for _,r in ipairs(manifest.recipes) do
     local form=r.outputForm;local tuple=assert(expected[form]);counts[form]=(counts[form] or 0)+1
+    assert(not (r.material=='Polybenzimidazole' and form=='plateQuadruple'))
     assert(#r.inputs==1 and r.inputs[1].size==tuple[1] and r.outputs[1].size==tuple[2])
     assert(#r.stock==1 and r.stock[1].name=='gregtech:gt.integrated_circuit')
     assert(r.stock[1].damage==tuple[3] and r.stock[1].size==1)

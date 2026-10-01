@@ -69,7 +69,10 @@ rule requirements decide which transformations are allowed.
 forms that reach a non-recycling product through the full recipe export.
 `tools/build_usage.py` creates that evidence on the desktop; `tools/compile_matrix.py`
 embeds only the shared form sets. `maker/modes.lua` applies the same exclusion to
-all program modes and reports the number of skipped routes in the preview.
+all program modes and records the skipped material/forms in the preview.
+`maker/scan.lua` compares occupied destination patterns with that list and the
+planned recipes to show why each pattern is reused or preserved. This diagnosis
+uses the already read terminal snapshot; it makes no extra component calls.
 
 ## Recipe proportions and configured batches
 

@@ -14,7 +14,7 @@ from material_forms import descriptor, registry_forms, resolve
 
 def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None, usage=None):
     if usage:
-        if usage.get('policy') != 'reachable-nonrecycling-v2':
+        if usage.get('policy') != 'reachable-nonrecycling-v3':
             raise ValueError('Unsupported usage policy')
         if usage.get('datasetVersionId') != catalog['source'].get('datasetId'):
             raise ValueError('Usage index and recipe catalog came from different datasets')

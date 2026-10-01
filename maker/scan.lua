@@ -42,6 +42,101 @@ local function patternRecipe(p, root)
   end
   return r
 end
+local function ingredientSummary(list)
+  local out = {}
+  for _, item in ipairs(list or {}) do
+    out[#out + 1] = tostring(item.size or item.amount or 1)
+      .. ' x ' .. tostring(item.label or item.name)
+  end
+  return table.concat(out, ', ')
+end
+local function explainExisting(plan, snapshot, request, manifest)
+  local function itemKey(item)
+    return item and item.name and (item.name .. ':' .. tostring(item.damage or 0))
+  end
+  local function slotKey(entry)
+    return where(entry) .. ':' .. entry.slot
+  end
+  local skipped, wantedOutputs, wantedKeys = {}, {}, {}
+  for _, item in ipairs(manifest.skipped or {}) do
+    skipped[itemKey(item)] = item
+  end
+  for index, recipe in ipairs(manifest.recipes) do
+    local desired = request.recipes[index]
+    wantedKeys[desired.destination .. ':' .. desired.key] = true
+    for _, output in pairs(recipe.outputs) do
+      wantedOutputs[itemKey(output)] = {
+        label = recipe.label,
+        destination = desired.destination,
+        inputs = ingredientSummary(recipe.inputs),
+      }
+    end
+  end
+  local reused, kept = {}, {}
+  for _, entry in ipairs(plan.layout) do
+    if entry.source then
+      reused[slotKey(entry.source)] = entry
+    end
+  end
+  for _, entry in ipairs(plan.preserved) do
+    kept[slotKey(entry.from)] = entry
+  end
+  local destinations = {}
+  for _, interface in ipairs(snapshot.interfaces) do
+    if interface.role == 'destination' then
+      destinations[#destinations + 1] = interface
+    end
+  end
+  table.sort(destinations, U.ordered)
+  plan.existing, plan.moveLabels = {}, {}
+  for _, interface in ipairs(destinations) do
+    for _, slot in ipairs(U.keys(interface.patterns)) do
+      local pattern = interface.patterns[slot]
+      local from = U.endpoint(interface, slot)
+      local key = slotKey(from)
+      local reusedEntry, keptEntry = reused[key], kept[key]
+      local outputKey = itemKey(pattern.output)
+      local skippedItem = skipped[outputKey]
+      local wantedOutput = wantedOutputs[outputKey]
+      local label = skippedItem and skippedItem.label
+        or wantedOutput and wantedOutput.label
+        or pattern.output and pattern.output.label
+        or outputKey
+        or 'Unknown output'
+      local reason
+      if reusedEntry then
+        reason = reusedEntry.resize and 'Recipe matches; batch will be resized.'
+          or 'Recipe matches the selected route.'
+      elseif skippedItem then
+        reason = 'Skipped: no path to a non-recycling product in the recipe export.'
+      elseif wantedKeys[interface.name .. ':' .. tostring(pattern.recipeKey)] then
+        reason = 'Duplicate of a selected recipe; kept after the planned patterns.'
+      elseif wantedOutput and wantedOutput.destination ~= interface.name then
+        reason = 'Selected output belongs in interface ' .. wantedOutput.destination .. '.'
+      elseif wantedOutput then
+        reason = pattern.reason and ('Output selected; ' .. pattern.reason .. '.')
+          or 'Output selected, but encoded inputs, proportions, NBT or flags differ.'
+      elseif pattern.matchIssue then
+        reason = pattern.matchIssue
+      else
+        reason = 'Output not requested by this program or its current settings.'
+      end
+      local entry = {
+        interface = interface.name,
+        from = from,
+        to = reusedEntry and reusedEntry.destination or keptEntry and keptEntry.to or from,
+        status = reusedEntry and (reusedEntry.resize and 'RESIZE' or 'REUSE') or 'KEEP',
+        label = label,
+        output = pattern.output,
+        inputs = pattern.inputSummary,
+        requestedInputs = wantedOutput and wantedOutput.inputs or nil,
+        reason = reason,
+      }
+      plan.existing[#plan.existing + 1] = entry
+      plan.moveLabels[pattern.fingerprint] = label
+    end
+  end
+end
 local function scanManifest(c, manifest, routing, progress, control, started)
   validate(c)
   if not started then
@@ -108,6 +203,25 @@ local function scanManifest(c, manifest, routing, progress, control, started)
           local reason, root = donorIssue(hw.data, p)
           local value =
             { kind = 'unknown', fingerprint = patternFingerprint(hw, p), reason = reason }
+          local output = p.outputs and p.outputs[1]
+          if U.exists(output) then
+            value.output = {
+              name = output.name,
+              damage = output.damage,
+              size = output.amount or output.size,
+              label = output.label,
+            }
+          end
+          local inputLabels = {}
+          for _, index in ipairs(U.keys(p.inputs)) do
+            local input = p.inputs[index]
+            if U.exists(input) then
+              inputLabels[#inputLabels + 1] = tostring(input.amount or input.size or 1)
+                .. ' x '
+                .. tostring(input.label or input.name)
+            end
+          end
+          value.inputSummary = table.concat(inputLabels, ', ')
           if root then
             local r = patternRecipe(p, root)
             value.kind = r.kind
@@ -115,6 +229,8 @@ local function scanManifest(c, manifest, routing, progress, control, started)
             if valid then
               value.recipeKey = key
               value.scale = scale
+            else
+              value.matchIssue = 'Encoded ingredients could not be compared'
             end
             value.donor = value.reason == nil
           end
@@ -155,18 +271,12 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     gate()
     U.check(computer.freeMemory() > 160000, 'Low memory while planning')
   end)
+  explainExisting(plan, snapshot, request, manifest)
   return plan, snapshot, request, labels
 end
 local function previewRows(plan, manifest, labels)
   local rows, add = U.rows()
   local details = {}
-  local function ingredients(list)
-    local out = {}
-    for _, s in ipairs(list) do
-      out[#out + 1] = s.size .. ' x ' .. (s.label or s.name)
-    end
-    return table.concat(out, ', ')
-  end
   for _, recipe in ipairs(manifest.recipes) do
     details[recipe.key or Planner.recipeKey(recipe)] = recipe
   end
@@ -217,8 +327,8 @@ local function previewRows(plan, manifest, labels)
     if r.resize then
       add('  Multiply current quantities by ' .. r.newScale .. ' / ' .. r.oldScale, 'muted')
     end
-    add('  ' .. ingredients(recipe.inputs))
-    add('  -> ' .. ingredients(recipe.outputs), 'green')
+    add('  ' .. ingredientSummary(recipe.inputs))
+    add('  -> ' .. ingredientSummary(recipe.outputs), 'green')
     add('')
   end
   return rows
@@ -233,6 +343,35 @@ local function previewReport(plan, manifest, labels)
   end
   for _, warning in ipairs(plan.warnings) do
     lines[#lines + 1] = 'NOTE: ' .. warning
+  end
+  lines[#lines + 1] = ''
+  lines[#lines + 1] = 'EXISTING DESTINATION PATTERNS'
+  for _, entry in ipairs(plan.existing or {}) do
+    lines[#lines + 1] = entry.interface .. ' / ' .. U.locationText(entry.from)
+      .. ' slot ' .. entry.from.slot .. '  ' .. entry.status .. '  ' .. entry.label
+    lines[#lines + 1] = '  ' .. entry.reason
+    if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
+      lines[#lines + 1] = '  Encoded inputs: ' .. entry.inputs
+    end
+    if entry.requestedInputs and entry.status == 'KEEP' then
+      lines[#lines + 1] = '  Requested inputs: ' .. entry.requestedInputs
+    end
+    if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
+      lines[#lines + 1] = '  Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot
+    end
+  end
+  lines[#lines + 1] = ''
+  lines[#lines + 1] = 'EXCLUDED BY RECIPE USE'
+  for _, item in ipairs(manifest.skipped or {}) do
+    lines[#lines + 1] = item.label .. '  (' .. item.name .. ':' .. item.damage .. ')'
+  end
+  lines[#lines + 1] = ''
+  lines[#lines + 1] = 'SORTING MOVES'
+  for n, move in ipairs(plan.moves) do
+    lines[#lines + 1] = n .. '/' .. #plan.moves .. '  '
+      .. ((plan.moveLabels or {})[move.fingerprint] or 'Pattern')
+      .. '  ' .. U.locationText(move.from) .. ' slot ' .. move.from.slot
+      .. ' -> ' .. U.locationText(move.to) .. ' slot ' .. move.to.slot
   end
   return table.concat(lines, '\n') .. '\n'
 end

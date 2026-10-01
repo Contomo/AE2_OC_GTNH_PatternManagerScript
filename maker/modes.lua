@@ -149,8 +149,9 @@ function M.compile(data, mode, options, checkpoint)
     },
     recipes = {},
     unusedExcluded = 0,
+    skipped = {},
   }
-  local seen, unresolved = {}, {}
+  local seen, unresolved, skipped = {}, {}, {}
   manifest.unresolved = {}
   for _, material in ipairs(data.materials) do
     if checkpoint then
@@ -166,6 +167,19 @@ function M.compile(data, mode, options, checkpoint)
         local eligible, reason = M.eligible(data, material, rule)
         if reason == 'unused' then
           manifest.unusedExcluded = manifest.unusedExcluded + 1
+          local out = rule.outputs[1]
+          local item = M.resolve(data, material, out.f)
+          local key = item.name .. ':' .. item.damage
+          if not skipped[key] then
+            skipped[key] = true
+            manifest.skipped[#manifest.skipped + 1] = {
+              material = material.name,
+              form = out.f,
+              label = material.name .. ' ' .. formLabel(out.f),
+              name = item.name,
+              damage = item.damage,
+            }
+          end
         end
         if eligible then
           local function resolve(e, stocked)

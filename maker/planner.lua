@@ -255,6 +255,7 @@ function M.plan(request, snapshot, checkpoint)
         group = r.destination,
         destination = dest,
         existing = match ~= nil,
+        source = match and copy(match.current) or nil,
         resize = match ~= nil and r.scale ~= nil and match.pattern.scale ~= r.scale,
       }
       p.layout[#p.layout + 1] = entry

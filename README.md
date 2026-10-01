@@ -56,9 +56,14 @@ previous recipe choice. New installations default to normal PVC pulp.
 
 The Patterns tab groups readable ingredients by destination and material, marks
 CREATE/REUSE in color, and prints an interface location once per group. Capacity
-shows space requirements; Details contains buffer discovery, sorting and source
+shows space requirements. Existing lists every encoded pattern in the selected
+destination interfaces, whether it matches or is kept, its final slot, and each
+labeled sorting move. Excluded lists each selected output rejected by the recipe-use
+check. Details contains buffer discovery and source
 coverage. Buffer counts come from the terminal and include empty encoded
 processing patterns. Ultimate processing patterns are recognized even without a `crafting` NBT tag.
+**Export report** saves those diagnostics and the complete plan to
+`/home/assline-preview.txt` for inspection or sharing. It does not execute the plan.
 Details explains rejected donors, including substitution or invalid-pattern flags.
 Unsupported tagged items are not donor patterns. Existing
 processing recipes compare actual item IDs, input/output proportions, substitution flags and semantic NBT;

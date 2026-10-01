@@ -210,7 +210,7 @@ io.open=function(path,mode)
   return {seek=function(_,whence,n) assert(whence=='set');offset=n;return n end,
     read=function() return content:sub(offset+1) end,write=function(self,s) content=content..s;return self end,
     flush=function(self) if failDisk then return nil,'disk full' end;files[path]=content;return self end,
-    close=function() files[path]=content end}
+    close=function() files[path]=content;return true end}
 end
 local api=assert(loadfile(artifact))('--test')
 local cfg
@@ -1295,6 +1295,63 @@ test('real insulation preview shows named ingredients, capacity and reused cable
     snapshot('real_insulator_preview');return quit()
   end)
   api.runUI();package.loaded.assline_data=saved
+end)
+
+test('preview identifies kept encoded outputs, excluded forms and labeled sorting moves',function()
+  local saved=package.loaded.assline_data
+  local fixture=matrixFixture()
+  fixture.source.usagePolicy='reachable-nonrecycling-v3'
+  fixture.usage={{cable1=true},{}}
+  fixture.materials[1].u=1;fixture.materials[2].u=2
+  package.loaded.assline_data=fixture
+  local ok,why=pcall(function()
+    cfg.programs.insulator.destination='Diagnosis';target.name='Diagnosis';target.patterns={}
+    local first=api.runner.preview(cfg,'insulator')
+    assert(#first.manifest.recipes==1 and #first.manifest.skipped==1)
+    local wanted=first.manifest.recipes[1]
+    local other=cp(wanted.outputs[1]);other.damage=206;other.label='B 1x Cable'
+    target.patterns[0]=pattern(wanted.inputs,{other})
+    target.patterns[1]=pattern(wanted.inputs,wanted.outputs)
+    target.patterns[2]=pattern({item('Different route',1,55)},wanted.outputs)
+    local preview=api.runner.preview(cfg,'insulator')
+    assert(preview.plan.reused==1 and #preview.plan.preserved==2)
+    assert(#preview.plan.existing==3 and #preview.plan.moves>0)
+    assert(preview.plan.existing[1].status=='KEEP')
+    assert(preview.plan.existing[1].reason:find('no path',1,true))
+    assert(preview.plan.existing[2].status=='REUSE')
+    assert(preview.plan.existing[3].status=='KEEP')
+    assert(preview.plan.existing[3].reason:find('encoded inputs',1,true))
+    assert(preview.plan.existing[3].requestedInputs:find('A 1x Wire',1,true))
+    files[api.paths.config]=ser(cfg)
+    local function screenText()
+      local rows={};for y=1,50 do rows[#rows+1]=frame[y] or '' end
+      return table.concat(rows,'\n')
+    end
+    queue(nav('Programs'),click('[ Wire insulator ]'),click('[ Preview selected ]',47),
+      click('[ Existing ]',9),function()
+        local screen=screenText()
+        assert(screen:find('B 1x Cable',1,true) and screen:find('SORTING MOVES',1,true))
+        assert(screen:find('Requested inputs:',1,true))
+        snapshot('diagnosis_existing')
+        return click('[ Excluded ]',9)()
+      end,function()
+        local screen=screenText()
+        assert(screen:find('EXCLUDED BY RECIPE USE',1,true))
+        assert(screen:find('B 1x Cable',1,true))
+        snapshot('diagnosis_excluded')
+        return click('[ Export report ]',45)()
+      end,function()
+        local report=assert(files['/home/assline-preview.txt'])
+        assert(report:find('B 1x Cable',1,true))
+        assert(report:find('Requested inputs:',1,true))
+        assert(report:find('EXISTING DESTINATION PATTERNS',1,true))
+        assert(report:find('SORTING MOVES',1,true))
+        return quit()
+      end)
+    api.runUI()
+  end)
+  package.loaded.assline_data=saved
+  assert(ok,why)
 end)
 
 test('five polymer choices save immediately with one highlighted choice and independent PPS',function()

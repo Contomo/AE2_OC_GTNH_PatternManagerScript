@@ -25,6 +25,14 @@ Review reuse, preserved patterns, sorting, new recipes, donor requirements and
 capacity. Destination interfaces are assumed to have 36 slots; the report states
 the minimum number required, including preserved patterns. Confirm these slots
 are actually available in game before pressing **Execute preview**.
+The **Existing** page lists every occupied destination slot with its output,
+matching status, reason for keeping it, final slot and labeled sorting moves.
+The **Excluded** page lists every selected material/form skipped by the
+non-recycling-use check. An excluded output already encoded in an interface is
+kept; the Existing page identifies that pattern so it can be inspected.
+**Export report** writes the full preview, including existing-pattern reasons,
+excluded outputs and sorting moves, to `/home/assline-preview.txt` without
+touching AE interfaces.
 
 The processing-pattern executor sorts existing patterns first, then stages each
 remote donor through the shared editor, imprints and verifies its ingredients,
@@ -117,6 +125,9 @@ between forms of the same material. A form qualifies only when that chain
 eventually feeds a non-recycling product. Listed input alternatives count.
 Macerating, fluid extraction, recycling, essentia smelting, and conversion
 back to the same material's nugget/ingot/dust or molten fluid do not count.
+Arc Furnace incineration into Ashes/Dark Ashes is also disposal. This excludes
+Polybenzimidazole Quadruple Plate, whose only apparent external output was
+Small Pile of Ashes.
 A plate feeding only unused foil therefore drops out; a double plate feeding
 only another unused plate also drops out. Cycles between forms cannot justify
 each other. Previews show how many otherwise available recipe routes were

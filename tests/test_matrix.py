@@ -43,7 +43,7 @@ class MatrixTests(unittest.TestCase):
         catalog, registry = self.fixture()
         catalog['source']['datasetId'] = 'fixture'
         outputs = [recipe['outputs'][0]['id'] for recipe in catalog['recipes']]
-        usage = {'policy': 'reachable-nonrecycling-v2', 'datasetVersionId': 'fixture',
+        usage = {'policy': 'reachable-nonrecycling-v3', 'datasetVersionId': 'fixture',
                  'recipeCount': 9, 'recipeExportSha256': 'fixture-sha',
                  'useful': [outputs[1]],
                  'counts': {outputs[0]: [1, 3], outputs[1]: [1, 0]}}
