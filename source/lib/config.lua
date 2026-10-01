@@ -244,7 +244,7 @@ function M.requireProgram(c, id)
     local selected = M.selected(c.programs[id][p.formSwitch], p.formChoices)
     local needed = {}
     for form, key in pairs(p.outputs) do
-      if selected[form] then
+      if selected[Programs.switchKey(p, form)] then
         needed[key] = true
       end
     end

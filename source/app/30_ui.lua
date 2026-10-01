@@ -39,6 +39,7 @@ local function runUI()
   local state = {
     page = 'programs',
     settings = 'shared',
+    settingsPage = 1,
     selected = nil,
     section = 'changes',
     offset = 0,
@@ -157,6 +158,7 @@ local function runUI()
     state.scrollDrag = nil
     if section then
       state.settings = section
+      state.settingsPage = 1
     end
     if page == 'history' then
       action('history')
@@ -279,12 +281,14 @@ local function runUI()
         add('STOCKED IN MACHINE', 'blue')
         add('These reusable items stay in the machine and are omitted from patterns.')
         local stocked = {}
+        local program = Programs.byId[preview.id]
         for _, recipe in ipairs(preview.manifest.recipes) do
-          stocked[recipe.outputForm] = stocked[recipe.outputForm] or {
+          local key = Programs.switchKey(program, recipe.outputForm)
+          stocked[key] = stocked[key] or {
             label = recipe.outputLabel, items = recipe.stock or {}
           }
         end
-        for _, entry in ipairs(Programs.byId[preview.id].formChoices) do
+        for _, entry in ipairs(program.formChoices) do
           local group = stocked[entry[1]]
           if group and #group.items > 0 then
             local names = {}
@@ -293,7 +297,8 @@ local function runUI()
                 and ('circuit ' .. item.damage)
                 or tostring(item.label or item.name)
             end
-            add((group.label or entry[2]) .. ': ' .. table.concat(names, ', '))
+            add((program.switchByDestination and entry[2] or group.label or entry[2])
+              .. ': ' .. table.concat(names, ', '))
           end
         end
         add('')
@@ -442,6 +447,7 @@ local function runUI()
   draw = function()
     local key = state.page
       .. state.settings
+      .. tostring(state.settingsPage)
       .. tostring(state.selected)
       .. state.section
       .. tostring(state.preview)
@@ -502,8 +508,14 @@ local function runUI()
         or Programs.byId[state.settings].name
       text(34, 7, 'SETTINGS / ' .. name, 124, 'blue')
       text(34, 8, 'Changes save when you accept a field or navigate away.', 124, 'muted')
+      local allFields = fields()
+      local pageSize = 8
+      local pages = math.max(1, math.ceil(#allFields / pageSize))
+      state.settingsPage = math.min(state.settingsPage, pages)
       local y = 11
-      for _, f in ipairs(fields()) do
+      for index = (state.settingsPage - 1) * pageSize + 1,
+        math.min(state.settingsPage * pageSize, #allFields) do
+        local f = allFields[index]
         local helpY, height = y + 2, 4
         text(34, y, f.label, 124, 'blue')
         if f.kind == 'multiToggle' then
@@ -553,6 +565,17 @@ local function runUI()
         end
         text(34, helpY, f.help, 124, 'muted')
         y = y + height
+      end
+      if pages > 1 then
+        text(34, 44, 'Settings page ' .. state.settingsPage .. '/' .. pages, 30, 'muted')
+        button(111, 44, 'Previous', function()
+          commitEdit()
+          state.settingsPage = state.settingsPage - 1
+        end, state.settingsPage > 1)
+        button(133, 44, 'Next', function()
+          commitEdit()
+          state.settingsPage = state.settingsPage + 1
+        end, state.settingsPage < pages)
       end
       button(34, 47, 'Run program', function()
         navigate('programs')

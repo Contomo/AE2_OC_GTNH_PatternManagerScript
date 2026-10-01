@@ -227,6 +227,11 @@ class MatrixTests(unittest.TestCase):
         registry = json.loads(Path('../OreDictScript/data/registry-rules.json').read_text(encoding='utf-8-sig'))
         resources = {r['id']: r for r in json.load(gzip.open('../OreDictScript/research/resource-index.json.gz', 'rt'))['resources']}
         resources.update(json.load(gzip.open('../OreDictScript/data/ores.json.gz', 'rt'))['resources'])
+        resources.update(catalog['resources'])
+        for recipe in catalog['recipes']:
+            for entry in recipe['inputs'] + recipe['outputs']:
+                if entry['kind'] == 'item':
+                    resources.setdefault(entry['id'], {'kind': 'item'})
         data = compile_matrix(catalog, registry, resources=resources)
         mu = next(m for m in data['materials'] if m['name'] == 'Mu-metal')
         self.assertEqual(mu['dsf'], 11351)
@@ -280,6 +285,11 @@ class MatrixTests(unittest.TestCase):
         registry = json.loads(Path('../OreDictScript/data/registry-rules.json').read_text(encoding='utf-8-sig'))
         resources = {r['id']: r for r in json.load(gzip.open('../OreDictScript/research/resource-index.json.gz', 'rt'))['resources']}
         resources.update(json.load(gzip.open('../OreDictScript/data/ores.json.gz', 'rt'))['resources'])
+        resources.update(catalog['resources'])
+        for recipe in catalog['recipes']:
+            for entry in recipe['inputs'] + recipe['outputs']:
+                if entry['kind'] == 'item':
+                    resources.setdefault(entry['id'], {'kind': 'item'})
         data = compile_matrix(catalog, registry, resources=resources)
         _, _, reverse = registry_forms(registry, resources)
         source = set()
@@ -289,9 +299,10 @@ class MatrixTests(unittest.TestCase):
             output = reverse.get(recipe['outputs'][0]['id'])
             consumed = [e for e in recipe['inputs'] if e.get('consumed', True)]
             stocked = [e for e in recipe['inputs'] if e.get('consumed') is False]
-            if (not output or output[1] not in ('plate', 'turbineBlade') or
+            if (not output or output[1] in ('dust', 'gem') or
                     len(consumed) != 1 or consumed[0]['kind'] != 'fluid' or
-                    len(stocked) != 1 or stocked[0]['kind'] != 'item'):
+                    len(stocked) != 1 or stocked[0]['kind'] != 'item' or
+                    not stocked[0]['id'].startswith('gregtech:gt.metaitem.01@323')):
                 continue
             source.add((consumed[0]['id'], consumed[0]['amount'],
                         descriptor(recipe['outputs'][0]['id']), recipe['outputs'][0]['amount'],
@@ -312,8 +323,11 @@ class MatrixTests(unittest.TestCase):
                 expanded.add((material['molten'], rule['inputs'][0]['n'],
                               (output_name, output_damage), rule['outputs'][0]['n'],
                               (mold['name'], mold['damage'])))
-        self.assertGreater(len(expanded), 400)
+        self.assertGreater(len(expanded), 3000)
         self.assertFalse(expanded - source, 'Fluid Shaper matrix generated a recipe absent from the scrape')
+        materials = {row['name']: row for row in data['materials']}
+        self.assertEqual(materials['Copper']['molten'], 'molten.copper')
+        self.assertEqual(materials['Iron']['molten'], 'molten.iron')
 
 
 if __name__ == '__main__':

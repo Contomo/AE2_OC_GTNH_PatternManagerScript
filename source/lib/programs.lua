@@ -43,10 +43,28 @@ local benderForms = {
   { 'spring', 'Spring' },
 }
 local shaperForms = {
+  { 'ingot', 'Ingot' },
+  { 'nugget', 'Nugget' },
   { 'plate', '1x Plate' },
+  { 'stick', 'Rod' },
+  { 'stickLong', 'Long rod' },
+  { 'ring', 'Ring' },
+  { 'bolt', 'Bolt' },
+  { 'screw', 'Screw' },
+  { 'round', 'Round' },
+  { 'gearGt', 'Gear' },
+  { 'gearGtSmall', 'Small gear' },
+  { 'rotor', 'Rotor' },
+  { 'itemCasing', 'Item casing' },
+  { 'toolHeadDrill', 'Drill head' },
   { 'turbineBlade', 'Turbine blade' },
+  { 'pipeTiny', 'Tiny pipe' },
+  { 'pipeSmall', 'Small pipe' },
+  { 'pipeMedium', 'Medium pipe' },
+  { 'pipeLarge', 'Large pipe' },
+  { 'pipeHuge', 'Huge pipe' },
 }
-local function formSwitches(choices, label, help, hidden)
+local function formSwitches(choices, label, help, hidden, default)
   local names = {}
   for _, option in ipairs(choices) do
     names[#names + 1] = option[1]
@@ -55,7 +73,7 @@ local function formSwitches(choices, label, help, hidden)
     'forms',
     label,
     help,
-    table.concat(names, ','),
+    default or table.concat(names, ','),
     'multiToggle'
   )
   f.choices = choices
@@ -67,6 +85,25 @@ local function enabledDestination(form, label, help)
   f.enableForm = form
   return f
 end
+local shaperOutputs = {}
+local shaperFields = {}
+for _, entry in ipairs(shaperForms) do
+  local key, label = entry[1], entry[2]
+  shaperFields[#shaperFields + 1] = enabledDestination(key, label .. ' interface name',
+    'Destination for ' .. label:lower() .. ' patterns; keep its mold stocked in the machine.')
+  if key:match('^pipe') then
+    local size = key:sub(5)
+    shaperOutputs['pipeFluid' .. size] = key
+    shaperOutputs['pipeItem' .. size] = key
+  else
+    shaperOutputs[key] = key
+  end
+end
+shaperFields[#shaperFields + 1] = formSwitches(shaperForms,
+  'Enabled Fluid Shaper molds',
+  'Only verified Fluid Solidifier routes are included. The reusable mold stays in the machine.',
+  true, 'plate,turbineBlade')
+shaperFields[#shaperFields + 1] = multiplier()
 M.list = {
   {
     id = 'assline',
@@ -255,23 +292,19 @@ M.list = {
     id = 'fluidShaper',
     name = 'Fluid Shaper',
     mode = 'solidifier',
-    description = 'Cast plates and turbine blades from molten fluid with stocked molds.',
+    description = 'Cast verified solid parts from molten fluid with stocked molds.',
     formChoices = shaperForms,
     formSwitch = 'forms',
-    outputs = { plate = 'plate', turbineBlade = 'turbineBlade' },
-    fields = {
-      enabledDestination('plate', 'Plate interface name',
-        'Destination for molten-fluid to 1x-plate patterns.'),
-      enabledDestination('turbineBlade', 'Turbine blade interface name',
-        'Destination for molten-fluid to turbine-blade patterns.'),
-      formSwitches(shaperForms, 'Enabled Fluid Shaper outputs',
-        'Only verified Fluid Solidifier routes are included. The reusable mold stays in the machine.', true),
-      multiplier(),
-    },
+    switchByDestination = true,
+    outputs = shaperOutputs,
+    fields = shaperFields,
   },
 }
 M.byId = {}
 for _, program in ipairs(M.list) do
   M.byId[program.id] = program
+end
+function M.switchKey(program, form)
+  return program.switchByDestination and program.outputs[form] or form
 end
 return M

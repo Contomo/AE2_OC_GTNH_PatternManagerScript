@@ -17,9 +17,11 @@ Bending has separate plate, foil, sheet-metal and spring destinations, ten
 independent output switches, a larger-plate/foil input choice, a small-spring
 input choice and a batch multiplier. Fields save on acceptance or navigation;
 there is no separate Save button. Keypad digits and keypad Enter work in edits.
-Fluid Shaper has separate plate and turbine-blade interface fields, each with
-an enable button beside it. Patterns request molten fluid; the reusable mold
-stays stocked in the machine.
+Fluid Shaper has a paged list of mold interface fields, each with an enable
+button beside it. Plate and turbine blade remain the default enabled molds;
+the newly added molds start disabled. Fluid and item pipes of the same size
+share one mold switch and destination. Patterns request molten fluid; the
+reusable mold stays stocked in the machine.
 All buffers matching the shared donor name are counted from their actual
 patterns, independently of their capacity. Only the shared editor is local.
 
@@ -90,9 +92,11 @@ ore dictionary. `source/tools/compile_matrix.py` emits matrix schema **2**:
 - The **18 bending rules** cover the selected ingot/plate outputs and spring
   routes. They share material production flags rather than per-material recipe
   lists. Two different rod → small-spring yields have separate semantic flags.
-- The **2 Fluid Solidifier rules** request verified molten fluid and produce a
-  plate or turbine blade. Each uses a shared stocked mold.
-- `items`: **18** shared literal supplies/circuits/molds, with scraped display names.
+- The **25 Fluid Solidifier rules** request verified molten fluid and produce
+  registered parts. Each uses a shared stocked mold. Copper and Iron use their
+  primary molten fluid when the export also offers an alternate melt for the
+  same output.
+- `items`: **36** shared literal supplies/circuits/molds, with scraped display names.
 - `registryNames`: shared case-preserving IDs recovered from source declarations.
   `data/registry-names.json` records the source evidence; this is a desktop import, not a hand-maintained exception list.
 - `source`: recipe provenance, registry version, compatibility evidence and
@@ -215,10 +219,10 @@ the shared donor pool in `source/app/20_apply.lua`; refill waits use the existin
 cooperative event handling. See [SOURCE_MAP.md](SOURCE_MAP.md) for source/output
 ownership and the limits of the simulated tests.
 
-Next stages are additional verified **LATEX**, **combining** and Fluid Shaper
-forms. Combining can use the requested 2→1, 4→1, 8→1, 4+8 and
+Next stages are additional verified **LATEX** and **combining** rules, and
+cross-program route comparisons. Combining can use the requested 2→1, 4→1, 8→1, 4+8 and
 8+8 routes once their crafting grids/machine recipes are resolved. Later wiremill
-routes, extruder forms and further fluid shaping add eligible shared rules and
+routes, extruder forms and any additional fluid shaping add eligible shared rules and
 resolvers rather than expanded recipe lists. Registering an item form alone
 must never manufacture a machine recipe.
 

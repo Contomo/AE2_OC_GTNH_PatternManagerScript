@@ -241,10 +241,28 @@ local benderForms = {
   { 'spring', 'Spring' },
 }
 local shaperForms = {
+  { 'ingot', 'Ingot' },
+  { 'nugget', 'Nugget' },
   { 'plate', '1x Plate' },
+  { 'stick', 'Rod' },
+  { 'stickLong', 'Long rod' },
+  { 'ring', 'Ring' },
+  { 'bolt', 'Bolt' },
+  { 'screw', 'Screw' },
+  { 'round', 'Round' },
+  { 'gearGt', 'Gear' },
+  { 'gearGtSmall', 'Small gear' },
+  { 'rotor', 'Rotor' },
+  { 'itemCasing', 'Item casing' },
+  { 'toolHeadDrill', 'Drill head' },
   { 'turbineBlade', 'Turbine blade' },
+  { 'pipeTiny', 'Tiny pipe' },
+  { 'pipeSmall', 'Small pipe' },
+  { 'pipeMedium', 'Medium pipe' },
+  { 'pipeLarge', 'Large pipe' },
+  { 'pipeHuge', 'Huge pipe' },
 }
-local function formSwitches(choices, label, help, hidden)
+local function formSwitches(choices, label, help, hidden, default)
   local names = {}
   for _, option in ipairs(choices) do
     names[#names + 1] = option[1]
@@ -253,7 +271,7 @@ local function formSwitches(choices, label, help, hidden)
     'forms',
     label,
     help,
-    table.concat(names, ','),
+    default or table.concat(names, ','),
     'multiToggle'
   )
   f.choices = choices
@@ -265,6 +283,25 @@ local function enabledDestination(form, label, help)
   f.enableForm = form
   return f
 end
+local shaperOutputs = {}
+local shaperFields = {}
+for _, entry in ipairs(shaperForms) do
+  local key, label = entry[1], entry[2]
+  shaperFields[#shaperFields + 1] = enabledDestination(key, label .. ' interface name',
+    'Destination for ' .. label:lower() .. ' patterns; keep its mold stocked in the machine.')
+  if key:match('^pipe') then
+    local size = key:sub(5)
+    shaperOutputs['pipeFluid' .. size] = key
+    shaperOutputs['pipeItem' .. size] = key
+  else
+    shaperOutputs[key] = key
+  end
+end
+shaperFields[#shaperFields + 1] = formSwitches(shaperForms,
+  'Enabled Fluid Shaper molds',
+  'Only verified Fluid Solidifier routes are included. The reusable mold stays in the machine.',
+  true, 'plate,turbineBlade')
+shaperFields[#shaperFields + 1] = multiplier()
 M.list = {
   {
     id = 'assline',
@@ -453,24 +490,20 @@ M.list = {
     id = 'fluidShaper',
     name = 'Fluid Shaper',
     mode = 'solidifier',
-    description = 'Cast plates and turbine blades from molten fluid with stocked molds.',
+    description = 'Cast verified solid parts from molten fluid with stocked molds.',
     formChoices = shaperForms,
     formSwitch = 'forms',
-    outputs = { plate = 'plate', turbineBlade = 'turbineBlade' },
-    fields = {
-      enabledDestination('plate', 'Plate interface name',
-        'Destination for molten-fluid to 1x-plate patterns.'),
-      enabledDestination('turbineBlade', 'Turbine blade interface name',
-        'Destination for molten-fluid to turbine-blade patterns.'),
-      formSwitches(shaperForms, 'Enabled Fluid Shaper outputs',
-        'Only verified Fluid Solidifier routes are included. The reusable mold stays in the machine.', true),
-      multiplier(),
-    },
+    switchByDestination = true,
+    outputs = shaperOutputs,
+    fields = shaperFields,
   },
 }
 M.byId = {}
 for _, program in ipairs(M.list) do
   M.byId[program.id] = program
+end
+function M.switchKey(program, form)
+  return program.switchByDestination and program.outputs[form] or form
 end
 return M
 
@@ -723,7 +756,7 @@ function M.requireProgram(c, id)
     local selected = M.selected(c.programs[id][p.formSwitch], p.formChoices)
     local needed = {}
     for form, key in pairs(p.outputs) do
-      if selected[form] then
+      if selected[Programs.switchKey(p, form)] then
         needed[key] = true
       end
     end
@@ -2341,7 +2374,17 @@ local aliases = {
 }
 local labels = {
   ingot = 'Ingot',
+  nugget = 'Nugget',
   stick = 'Rod',
+  ring = 'Ring',
+  bolt = 'Bolt',
+  screw = 'Screw',
+  round = 'Round',
+  gearGt = 'Gear',
+  gearGtSmall = 'Small gear',
+  rotor = 'Rotor',
+  itemCasing = 'Item casing',
+  toolHeadDrill = 'Drill head',
   dust = 'Dust',
   wireFine = 'Fine wire',
   plate = '1x Plate',
@@ -2359,6 +2402,9 @@ local labels = {
   turbineBlade = 'Turbine blade',
 }
 local function formLabel(form)
+  local pipeKind, pipeSize = form:match('^pipe(Fluid)(%a+)$')
+  if not pipeKind then pipeKind, pipeSize = form:match('^pipe(Item)(%a+)$') end
+  if pipeKind then return pipeSize .. ' ' .. pipeKind:lower() .. ' pipe' end
   local kind, size = form:match('^(%a+)(%d+)$')
   if kind == 'wire' or kind == 'cable' then
     return size .. 'x ' .. (kind == 'wire' and 'Wire' or 'Cable')
@@ -3076,7 +3122,7 @@ local function programRouting(c, id)
     if program.formSwitch then
       local selected = Config.selected(values[program.formSwitch], program.formChoices)
       for form in pairs(forms) do
-        forms[form] = selected[form] == true
+        forms[form] = selected[Programs.switchKey(program, form)] == true
       end
     end
   end
@@ -3335,6 +3381,7 @@ local function runUI()
   local state = {
     page = 'programs',
     settings = 'shared',
+    settingsPage = 1,
     selected = nil,
     section = 'changes',
     offset = 0,
@@ -3453,6 +3500,7 @@ local function runUI()
     state.scrollDrag = nil
     if section then
       state.settings = section
+      state.settingsPage = 1
     end
     if page == 'history' then
       action('history')
@@ -3575,12 +3623,14 @@ local function runUI()
         add('STOCKED IN MACHINE', 'blue')
         add('These reusable items stay in the machine and are omitted from patterns.')
         local stocked = {}
+        local program = Programs.byId[preview.id]
         for _, recipe in ipairs(preview.manifest.recipes) do
-          stocked[recipe.outputForm] = stocked[recipe.outputForm] or {
+          local key = Programs.switchKey(program, recipe.outputForm)
+          stocked[key] = stocked[key] or {
             label = recipe.outputLabel, items = recipe.stock or {}
           }
         end
-        for _, entry in ipairs(Programs.byId[preview.id].formChoices) do
+        for _, entry in ipairs(program.formChoices) do
           local group = stocked[entry[1]]
           if group and #group.items > 0 then
             local names = {}
@@ -3589,7 +3639,8 @@ local function runUI()
                 and ('circuit ' .. item.damage)
                 or tostring(item.label or item.name)
             end
-            add((group.label or entry[2]) .. ': ' .. table.concat(names, ', '))
+            add((program.switchByDestination and entry[2] or group.label or entry[2])
+              .. ': ' .. table.concat(names, ', '))
           end
         end
         add('')
@@ -3738,6 +3789,7 @@ local function runUI()
   draw = function()
     local key = state.page
       .. state.settings
+      .. tostring(state.settingsPage)
       .. tostring(state.selected)
       .. state.section
       .. tostring(state.preview)
@@ -3798,8 +3850,14 @@ local function runUI()
         or Programs.byId[state.settings].name
       text(34, 7, 'SETTINGS / ' .. name, 124, 'blue')
       text(34, 8, 'Changes save when you accept a field or navigate away.', 124, 'muted')
+      local allFields = fields()
+      local pageSize = 8
+      local pages = math.max(1, math.ceil(#allFields / pageSize))
+      state.settingsPage = math.min(state.settingsPage, pages)
       local y = 11
-      for _, f in ipairs(fields()) do
+      for index = (state.settingsPage - 1) * pageSize + 1,
+        math.min(state.settingsPage * pageSize, #allFields) do
+        local f = allFields[index]
         local helpY, height = y + 2, 4
         text(34, y, f.label, 124, 'blue')
         if f.kind == 'multiToggle' then
@@ -3849,6 +3907,17 @@ local function runUI()
         end
         text(34, helpY, f.help, 124, 'muted')
         y = y + height
+      end
+      if pages > 1 then
+        text(34, 44, 'Settings page ' .. state.settingsPage .. '/' .. pages, 30, 'muted')
+        button(111, 44, 'Previous', function()
+          commitEdit()
+          state.settingsPage = state.settingsPage - 1
+        end, state.settingsPage > 1)
+        button(133, 44, 'Next', function()
+          commitEdit()
+          state.settingsPage = state.settingsPage + 1
+        end, state.settingsPage < pages)
       end
       button(34, 47, 'Run program', function()
         navigate('programs')

@@ -4,6 +4,7 @@ The normalized oracle export is evidence, never the deployed runtime library.
 No machine recipe is inferred merely because an item is registered.
 """
 import argparse
+from collections import Counter, defaultdict
 import gzip
 import hashlib
 import json
@@ -98,10 +99,12 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
         if (len(consumed) != 1 or len(catalysts) != 1 or len(outputs) != 1 or
                 consumed[0].get('kind') != 'fluid' or
                 catalysts[0].get('kind') != 'item' or
+                catalysts[0].get('amount') != 1 or
+                not re.fullmatch(r'gregtech:gt\.metaitem\.01@323\d+', catalysts[0]['id']) or
                 outputs[0].get('kind') != 'item'):
             return None
         destination = reverse.get(outputs[0]['id'])
-        if not destination or destination[1] not in ('plate', 'turbineBlade'):
+        if not destination or destination[1] in ('dust', 'gem'):
             return None
         return destination[0], destination[1], consumed[0]['id']
 
@@ -109,7 +112,11 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
     # material. Prefer the canonical output, then the canonical input. The
     # remaining selected item becomes a resolver override when needed.
     bender_variants = {}
+    solidifier_fluids = defaultdict(Counter)
     for recipe in catalog['recipes']:
+        solidifier = solidifier_route(recipe)
+        if solidifier:
+            solidifier_fluids[solidifier[0]][solidifier[2]] += 1
         route = bender_route(recipe)
         if route:
             key = route[:3] + route[5:]
@@ -118,6 +125,12 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             score = (route[4] == canonical_output, route[3] == canonical_input)
             candidate = (score, route[3], route[4])
             bender_variants[key] = max(candidate, bender_variants.get(key, candidate))
+    primary_fluid = {}
+    for key, frequencies in solidifier_fluids.items():
+        ranked = frequencies.most_common()
+        if len(ranked) > 1 and ranked[0][1] == ranked[1][1]:
+            raise ValueError('Ambiguous molten fluid for ' + rows[key]['name'])
+        primary_fluid[key] = ranked[0][0]
     excluded = 0
     excluded_outputs = {}
     for recipe in sorted(catalog['recipes'], key=lambda r: r['id']):
@@ -134,8 +147,10 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             key = route[:3] + route[5:]
             if route[3:5] != bender_variants[key][1:]:
                 continue
-        if mode == 'solidifier' and not solidifier_route(recipe):
-            continue
+        if mode == 'solidifier':
+            route = solidifier_route(recipe)
+            if not route or route[2] != primary_fluid[route[0]]:
+                continue
         output = reverse.get(recipe['outputs'][0]['id'])
         if not output:
             excluded += 1
@@ -155,7 +170,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
         key, output_form = output
         row = rows[key]
         if mode == 'solidifier':
-            fluid = solidifier_route(recipe)[2]
+            fluid = route[2]
             if row.get('molten') and row['molten'] != fluid:
                 raise ValueError('Conflicting molten fluids for ' + row['name'])
             row['molten'] = fluid

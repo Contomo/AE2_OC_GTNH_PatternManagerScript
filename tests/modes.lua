@@ -273,4 +273,23 @@ test('Fluid Shaper compiles only verified molten plate and turbine-blade routes'
   assert(#manifest.unresolved==0, table.concat(manifest.unresolved, ', '))
 end)
 
+test('Fluid Shaper compiles stocked pipe molds and the primary fluid for alternate melts',function()
+  local manifest=M.compile(data,'solidifier',
+    {forms={ingot=true,nugget=true,pipeFluidTiny=true,pipeItemTiny=true}})
+  local seen={}
+  for _,r in ipairs(manifest.recipes) do
+    if r.material=='Copper' and r.outputForm=='ingot' then
+      assert(r.inputs[1].name=='molten.copper')
+      seen.copper=true
+    elseif r.material=='Iron' and r.outputForm=='nugget' then
+      assert(r.inputs[1].name=='molten.iron')
+      seen.iron=true
+    elseif r.outputForm=='pipeFluidTiny' or r.outputForm=='pipeItemTiny' then
+      assert(r.stock[1].damage==32326)
+      seen[r.outputForm]=true
+    end
+  end
+  assert(seen.copper and seen.iron and seen.pipeFluidTiny and seen.pipeItemTiny)
+end)
+
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

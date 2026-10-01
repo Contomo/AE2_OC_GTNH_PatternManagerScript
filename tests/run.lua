@@ -772,6 +772,44 @@ test('Fluid Shaper requests molten fluid, keeps molds stocked, and reuses its pa
   end)
 end)
 
+test('Fluid Shaper routes fluid and item pipes through their shared mold interface',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    local forms={'pipeFluidTiny','pipeItemTiny'}
+    for _,form in ipairs(forms) do
+      data.capabilities[1][form]=true
+      data.production[1]['molten_'..form]=true
+    end
+    data.items[2]={name='gregtech:gt.metaitem.01',damage=32326,label='Mold (Tiny Pipe)'}
+    for n,material in ipairs(data.materials) do
+      material.molten='molten.'..material.name:lower()
+      material.overrides={
+        pipeFluidTiny={name='gregtech:gt.blockmachines',damage=500+n},
+        pipeItemTiny={name='gregtech:gt.blockmachines',damage=600+n},
+      }
+    end
+    for _,form in ipairs(forms) do
+      data.rules[#data.rules+1]={id='molten_'..form,mode='solidifier',
+        process='molten_'..form,requires={form},inputs={{fluid='material',n=72}},
+        outputs={{f=form,n=1}},stock={{i=2,n=1}}}
+    end
+    local setting=cfg.programs.fluidShaper
+    setting.forms='pipeTiny';setting.pipeTiny='Tiny Pipes'
+    local pipes=iface('Tiny Pipes',70)
+    local preview=api.runner.preview(cfg,'fluidShaper')
+    assert(#preview.plan.errors==0 and #preview.manifest.recipes==4)
+    local seen={}
+    for _,recipe in ipairs(preview.manifest.recipes) do
+      seen[recipe.outputForm]=true
+      assert(recipe.stock[1].damage==32326)
+    end
+    assert(seen.pipeFluidTiny and seen.pipeItemTiny)
+    for _,entry in ipairs(preview.plan.layout) do
+      assert(entry.destination.location.x==pipes.location.x)
+    end
+  end)
+end)
+
 test('generator starts short, waits between patterns and discovers a newly filled remote bank',function()
   withMatrix(function()
     buffer.patterns[1]=nil
@@ -1129,19 +1167,42 @@ test('Fluid Shaper enables each destination beside its interface field',function
     'Turbine blade interface name')
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Fluid Shaper'),function()
-    assert(frame[12]:find('[ X ]',1,true) and frame[12]:find('Plates',1,true))
-    assert(frame[16]:find('[ X ]',1,true) and frame[16]:find('(not configured)',1,true))
-    assert(not frame[20]:find('Enabled Fluid Shaper outputs',1,true))
+    assert(frame[12]:find('[   ]',1,true) and frame[12]:find('(not configured)',1,true))
+    assert(frame[20]:find('[ X ]',1,true) and frame[20]:find('Plates',1,true))
+    assert(frame[44]:find('Settings page 1/3',1,true))
     snapshot('fluid_shaper_settings')
-    return click('[ X ]',16)()
+    return click('[ Next ]',44)()
+  end,function()
+    assert(frame[36]:find('[ X ]',1,true) and frame[36]:find('(not configured)',1,true))
+    snapshot('fluid_shaper_settings_page_2')
+    return click('[ Next ]',44)()
+  end,function()
+    assert(frame[11]:find('Small pipe interface name',1,true))
+    assert(frame[23]:find('Huge pipe interface name',1,true))
+    assert(frame[27]:find('Pattern multiplier',1,true))
+    return click('[ Previous ]',44)()
+  end,function()
+    return click('[ X ]',36)()
   end,function()
     local saved=unser(files[api.paths.config])
     assert(saved.programs.fluidShaper.forms=='plate')
     api.config.requireProgram(saved,'fluidShaper')
-    assert(frame[16]:find('[   ]',1,true))
+    assert(frame[36]:find('[   ]',1,true))
     return quit()
   end)
   api.runUI()
+end)
+
+test('Fluid Shaper pipe mold uses one switch and destination for both pipe types',function()
+  local v=cfg.programs.fluidShaper
+  v.forms='pipeTiny'
+  mustFail(function() api.config.requireProgram(cfg,'fluidShaper') end,
+    'Tiny pipe interface name')
+  v.pipeTiny='Tiny Pipes'
+  api.config.requireProgram(cfg,'fluidShaper')
+  local program=api.programs.byId.fluidShaper
+  assert(api.programs.switchKey(program,'pipeFluidTiny')=='pipeTiny')
+  assert(api.programs.switchKey(program,'pipeItemTiny')=='pipeTiny')
 end)
 
 test('enabled bending outputs require only their own destination name',function()

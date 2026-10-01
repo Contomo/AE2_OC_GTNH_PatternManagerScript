@@ -299,7 +299,7 @@ local function programRouting(c, id)
     if program.formSwitch then
       local selected = Config.selected(values[program.formSwitch], program.formChoices)
       for form in pairs(forms) do
-        forms[form] = selected[form] == true
+        forms[form] = selected[Programs.switchKey(program, form)] == true
       end
     end
   end

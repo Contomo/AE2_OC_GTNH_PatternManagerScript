@@ -16,7 +16,17 @@ local aliases = {
 }
 local labels = {
   ingot = 'Ingot',
+  nugget = 'Nugget',
   stick = 'Rod',
+  ring = 'Ring',
+  bolt = 'Bolt',
+  screw = 'Screw',
+  round = 'Round',
+  gearGt = 'Gear',
+  gearGtSmall = 'Small gear',
+  rotor = 'Rotor',
+  itemCasing = 'Item casing',
+  toolHeadDrill = 'Drill head',
   dust = 'Dust',
   wireFine = 'Fine wire',
   plate = '1x Plate',
@@ -34,6 +44,9 @@ local labels = {
   turbineBlade = 'Turbine blade',
 }
 local function formLabel(form)
+  local pipeKind, pipeSize = form:match('^pipe(Fluid)(%a+)$')
+  if not pipeKind then pipeKind, pipeSize = form:match('^pipe(Item)(%a+)$') end
+  if pipeKind then return pipeSize .. ' ' .. pipeKind:lower() .. ' pipe' end
   local kind, size = form:match('^(%a+)(%d+)$')
   if kind == 'wire' or kind == 'cable' then
     return size .. 'x ' .. (kind == 'wire' and 'Wire' or 'Cable')
