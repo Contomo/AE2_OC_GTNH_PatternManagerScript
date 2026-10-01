@@ -182,10 +182,15 @@ gpu.maxResolution=function() return 160,50 end;gpu.getResolution=function() retu
 gpu.setResolution=function(w,h) width,height=w,h;return true end
 gpu.getForeground=function() return 0xffffff end;gpu.getBackground=function() return 0 end
 gpu.setForeground=function(c) fg=c end;gpu.setBackground=function(c) bg=c end
-gpu.fill=function()
+gpu.fill=function(x,y,w,h,s)
   gpuFills=gpuFills+1
-  frame={};foreground={};background={}
-  for y=1,50 do foreground[y]={};background[y]={};for x=1,160 do foreground[y][x]=fg;background[y][x]=bg end end
+  assert(x>=1 and y>=1 and x+w-1<=width and y+h-1<=height,'GPU fill bounds')
+  for row=y,y+h-1 do
+    local old=frame[row] or string.rep(' ',160)
+    frame[row]=old:sub(1,x-1)..string.rep(s,w)..old:sub(x+w)
+    foreground[row]=foreground[row] or {};background[row]=background[row] or {}
+    for col=x,x+w-1 do foreground[row][col]=fg;background[row][col]=bg end
+  end
 end
 gpu.set=function(x,y,s)
   assert(x>=1 and y>=1 and y<=50 and x+#s-1<=160,'GPU bounds '..x..','..y)
@@ -256,6 +261,7 @@ local function reset()
   powerDropAt,gpuFills=nil,0
   callCost,callCounts,pollEvents=0,{},{}
   cfg=cp(api.defaults)
+  cfg.batch.mode='fixed'
   editor=iface(cfg.shared.editor,20)
   target=iface(cfg.programs.assline.target,1,{[0]=pattern({item('Samarium Rod',1,5),item(),item(),item()})})
   buffer=iface(cfg.shared.donors,2,{[0]=pattern({item('Junk',3,9),item('Other',2,8),item('Third',1,7)},
@@ -1310,6 +1316,34 @@ test('wiremill reuses 256 to 512 patterns, sorts and resizes them without dispos
   end)
 end)
 
+test('changing the global tier resizes reused patterns through the common editor',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    data.materials[1].tier='LuV';data.materials[2].tier='IV'
+    for _,rule in ipairs(data.rules) do rule.eut=8 end
+    cfg.programs.wiremill.wire1=cfg.programs.assline.target
+    cfg.programs.wiremill.wireFine='Fine wires'
+    target.patterns={};local fine=iface('Fine wires',50)
+    buffer.patterns[2]=cp(buffer.patterns[0]);buffer.patterns[3]=cp(buffer.patterns[0])
+    api.runner.execute(cfg,api.runner.preview(cfg,'wiremill'))
+    cfg.batch.mode='tiered';cfg.batch.voltagePolicy='off'
+    local preview=api.runner.preview(cfg,'wiremill')
+    assert(preview.plan.reused==4 and preview.plan.resizeCount==4 and #preview.plan.creates==0)
+    assert(preview.report:find('Batch 4x',1,true) and preview.report:find('Batch 32x',1,true))
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].inputs[1].size==4 and target.patterns[1].inputs[1].size==32)
+    assert(fine.patterns[0].outputs[1].size==32 and next(buffer.patterns)==nil)
+    preview=api.runner.preview(cfg,'wiremill')
+    cfg.batch.currentTier='ZPM'
+    mustFail(function() api.runner.execute(cfg,preview) end,'Settings changed')
+    preview=api.runner.preview(cfg,'wiremill')
+    assert(preview.plan.resizeCount==4 and #preview.plan.creates==0)
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].inputs[1].size==32 and target.patterns[1].inputs[1].size==64)
+    assert(fine.patterns[0].outputs[1].size==256 and next(buffer.patterns)==nil)
+  end)
+end)
+
 test('insulator resizes all inputs including polymer and PPS to the configured multiplier',function()
   withMatrix(function()
     local data=package.loaded.assline_data
@@ -1349,6 +1383,43 @@ test('interrupted resizing recovers the same ultimate pattern and a fresh previe
       api.runner.execute(cfg,preview);assert(target.patterns[1].outputs[1].size==9)
     end)
   end
+end)
+
+test('tier settings use a modal selector, save globally and show the shifted budgets',function()
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),nav('Tier multipliers'),click('[ Tiered ]'),
+    click('[ LuV v ]'),function()
+      assert(frame[10]:find('Current progression tier',1,true))
+      snapshot('tier_picker')
+      -- Underlying Quit is inactive while the selector is open.
+      return 'touch','screen',153,47,0
+    end,function()
+      assert(frame[10]:find('Current progression tier',1,true))
+      return click('[ UV ]')()
+    end,function()
+      local c=unser(files[api.paths.config])
+      assert(c.batch.mode=='tiered' and c.batch.currentTier=='UV')
+      assert(frame[15]:find('[ UV v ]',1,true))
+      snapshot('tier_settings')
+      return click('[ Effective tiers ]',47)()
+    end,function()
+      assert(frame[10]:find('budgets at UV',1,true))
+      assert(frame[30]:find('UV  4x',1,true))
+      assert(frame[28]:find('ZPM  32x',1,true))
+      snapshot('tier_budgets')
+      return 'key_down','kbd',0,1
+    end,click('[ Next ]',45),replace('Material 2 tier(s) below','96'),
+    function()
+      assert(unser(files[api.paths.config]).batch.below2=='96')
+      return quit()
+    end)
+  api.runUI()
+  queue(nav('Settings'),nav('Tier multipliers'),function()
+    assert(frame[15]:find('[ UV v ]',1,true))
+    assert(unser(files[api.paths.config]).batch.below2=='96')
+    return quit()
+  end)
+  api.runUI()
 end)
 
 test('multiplier settings default on migration, reject fractions and stay separate per program',function()

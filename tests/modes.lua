@@ -292,4 +292,32 @@ test('Fluid Shaper compiles stocked pipe molds and the primary fluid for alterna
   assert(seen.copper and seen.iron and seen.pipeFluidTiny and seen.pipeItemTiny)
 end)
 
+test('tiered batches retain actual recipe voltage and the selected item proportions',function()
+  local cfg=require('assline_config')
+  local batch=U.clone(cfg.defaults.batch)
+  batch.currentTier='UHV'
+  batch.overrideUHV='2'
+  batch.voltagePolicy='off'
+  local fixed=M.compile(data,'wiremill',{forms={wireFine=true},sources={wireFine='ingot'}})
+  local tiered=M.compile(data,'wiremill',{forms={wireFine=true},sources={wireFine='ingot'},batch=batch})
+  assert(#fixed.recipes==#tiered.recipes)
+  local seen={}
+  for n,r in ipairs(tiered.recipes) do
+    local original=fixed.recipes[n]
+    assert(P.recipeKey(r)==P.recipeKey(original))
+    assert(type(r.batch.eut)=='number' and r.batch.eut>=0)
+    if r.material=='Infinity' then
+      assert(r.batch.materialTier=='UHV' and r.batch.multiplier==2)
+      seen.infinity=true
+    elseif r.material=='Copper' then
+      assert(r.batch.materialTier=='ULV' and r.batch.multiplier==512)
+      seen.copper=true
+    end
+    for i,s in ipairs(r.inputs) do assert(s.size==original.inputs[i].size*r.batch.multiplier) end
+    for i,s in ipairs(r.outputs) do assert(s.size==original.outputs[i].size*r.batch.multiplier) end
+    assert(U.eq(r.stock,original.stock))
+  end
+  assert(seen.infinity and seen.copper)
+end)
+
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

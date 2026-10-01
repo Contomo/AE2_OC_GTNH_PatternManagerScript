@@ -2,6 +2,7 @@
 -- Eligibility uses form capabilities, production flags and rare exceptions.
 local U = require('assline_util')
 local Planner = require('assline_planner')
+local Batch = require('assline_batch')
 local M = {}
 local aliases = {
   rod = 'stick',
@@ -45,8 +46,12 @@ local labels = {
 }
 local function formLabel(form)
   local pipeKind, pipeSize = form:match('^pipe(Fluid)(%a+)$')
-  if not pipeKind then pipeKind, pipeSize = form:match('^pipe(Item)(%a+)$') end
-  if pipeKind then return pipeSize .. ' ' .. pipeKind:lower() .. ' pipe' end
+  if not pipeKind then
+    pipeKind, pipeSize = form:match('^pipe(Item)(%a+)$')
+  end
+  if pipeKind then
+    return pipeSize .. ' ' .. pipeKind:lower() .. ' pipe'
+  end
   local kind, size = form:match('^(%a+)(%d+)$')
   if kind == 'wire' or kind == 'cable' then
     return size .. 'x ' .. (kind == 'wire' and 'Wire' or 'Cable')
@@ -123,7 +128,9 @@ function M.eligible(data, material, rule)
       return false
     end
   end
-  if data.usage and data.source.usagePolicy
+  if
+    data.usage
+    and data.source.usagePolicy
     and not (data.usage[material.u] or {})[rule.outputs[1].f]
   then
     return false, 'unused'
@@ -160,9 +167,11 @@ function M.compile(data, mode, options, checkpoint)
       pps = options.pps ~= false,
       sources = U.clone(options.sources),
       multiplier = multiplier,
+      batch = U.clone(options.batch),
     },
     recipes = {},
     unusedExcluded = 0,
+    unclassifiedRecipes = 0,
     skipped = {},
   }
   local seen, unresolved, skipped = {}, {}, {}
@@ -171,7 +180,7 @@ function M.compile(data, mode, options, checkpoint)
     if checkpoint then
       checkpoint()
     end
-    for _, rule in ipairs(data.rules) do
+    for ruleIndex, rule in ipairs(data.rules) do
       if
         rule.mode == mode
         and (not options.forms or options.forms[rule.outputs[1].f])
@@ -196,14 +205,42 @@ function M.compile(data, mode, options, checkpoint)
           end
         end
         if eligible then
+          if not material.tier then
+            manifest.unclassifiedRecipes = manifest.unclassifiedRecipes + 1
+          end
+          local quantities = {}
+          for _, side in ipairs({ 'inputs', 'outputs' }) do
+            for _, e in ipairs(rule[side]) do
+              local shared = e.i and data.items[e.i]
+              if not shared or not shared.option or options[shared.option] ~= false then
+                quantities[#quantities + 1] = { type = e.fluid and 'fluid' or 'item', size = e.n }
+              end
+            end
+          end
+          local voltage = data.voltages and data.voltages[material.v] or {}
+          local eut = voltage[ruleIndex]
+          if eut == nil then
+            eut = rule.eut
+          elseif eut == false then
+            eut = nil
+          end
+          local recipeMultiplier, batch =
+            Batch.resolve(options.batch, material.tier, eut, multiplier, quantities)
           local function resolve(e, stocked)
             if e.fluid == 'material' then
-              local fluid = U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
-              local size = e.n * (stocked and 1 or multiplier)
-              U.check(U.integer(size) and size > 0,
-                'Pattern multiplier exceeds the supported fluid quantity')
-              return { type = 'fluid', name = fluid, label = 'Molten ' .. material.name,
-                size = size }
+              local fluid =
+                U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
+              local size = e.n * (stocked and 1 or recipeMultiplier)
+              U.check(
+                U.integer(size) and size > 0,
+                'Pattern multiplier exceeds the supported fluid quantity'
+              )
+              return {
+                type = 'fluid',
+                name = fluid,
+                label = 'Molten ' .. material.name,
+                size = size,
+              }
             end
             local item
             if e.f then
@@ -217,7 +254,7 @@ function M.compile(data, mode, options, checkpoint)
             end
             item.option = nil
             item.type = 'item'
-            item.size = e.n * (stocked and 1 or multiplier)
+            item.size = e.n * (stocked and 1 or recipeMultiplier)
             U.check(
               U.integer(item.size) and item.size > 0,
               'Pattern multiplier exceeds the supported ingredient quantity'
@@ -247,6 +284,7 @@ function M.compile(data, mode, options, checkpoint)
             outputs = {},
             label = material.name .. ' / ' .. label .. route,
             stock = {},
+            batch = batch,
           }
           for _, which in ipairs({ 'inputs', 'outputs' }) do
             for _, e in ipairs(rule[which]) do

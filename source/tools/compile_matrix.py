@@ -11,9 +11,17 @@ import json
 import re
 from pathlib import Path
 from material_forms import descriptor, registry_forms, resolve
+TIER_NAMES = json.loads((Path(__file__).parents[1] / 'data' / 'tiers.json').read_text())['names']
 
 
-def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None, usage=None):
+def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None, usage=None, material_tiers=None):
+    if material_tiers:
+        if material_tiers.get('policy') != 'first-solid-task-v1':
+            raise ValueError('Unsupported material tier policy')
+        if material_tiers.get('packVersion') != catalog['source'].get('targetVersion'):
+            raise ValueError('Material tiers and target pack version differ')
+        if any(e.get('tier') not in TIER_NAMES for e in material_tiers['materials'].values()):
+            raise ValueError('Unknown material progression tier')
     if usage:
         if usage.get('policy') != 'reachable-nonrecycling-v3':
             raise ValueError('Unsupported usage policy')
@@ -31,6 +39,8 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
                 resources.setdefault(e['id'], {'kind': 'item'})
     families, rows, reverse = registry_forms(registry, resources)
     items, item_index, rules, observations = [], {}, {}, {}
+    voltages = defaultdict(dict)
+    voltage_counts = defaultdict(Counter)
 
     def literal(rid):
         if rid not in item_index:
@@ -233,7 +243,18 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             stem = mode + '.' + (rule.get('process') or rule['coating']) + '.' + output_form
             rule['id'] = stem + '.' + hashlib.sha256(encoded.encode()).hexdigest()[:10]
             rules[encoded] = rule
-        observations.setdefault(key, set()).add(rules[encoded]['id'])
+        rule_id = rules[encoded]['id']
+        observations.setdefault(key, set()).add(rule_id)
+        eut = recipe.get('eut')
+        if eut is not None:
+            if type(eut) != int or eut < 0:
+                raise ValueError('Invalid recipe voltage: ' + recipe['id'])
+            # Equivalent routes can have multiple voltage observations. Keep
+            # the cheapest actual route, without changing recipe identity.
+            prior = voltages[key].get(rule_id, False)
+            voltages[key][rule_id] = eut if prior is False else min(eut, prior)
+        else:
+            voltages[key].setdefault(rule_id, False)
 
     def rule_order(rule):
         form = rule['outputs'][0].get('f', '')
@@ -245,11 +266,30 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
                         'springSmall', 'spring']
         return (1, bender_order.index(form) if form in bender_order else 99, form, rule['id'])
     rules = sorted(rules.values(), key=rule_order)
+    for values in voltages.values():
+        for rule_id, eut in values.items():
+            if eut is not False:
+                voltage_counts[rule_id][eut] += 1
+    for rule in rules:
+        if voltage_counts[rule['id']]:
+            counts = voltage_counts[rule['id']]
+            rule['eut'] = min(counts, key=lambda eut: (-counts[eut], eut))
     capabilities, cap_index, production, production_index = [], {}, [], {}
     use_profiles, use_index = [], {}
+    voltage_profiles, voltage_index = [], {}
     useful_items = set(usage['useful']) if usage else set()
     output_forms = {rule['outputs'][0]['f'] for rule in rules}
     for key, row in rows.items():
+        if material_tiers and key in material_tiers['materials']:
+            row['tier'] = material_tiers['materials'][key]['tier']
+        overrides_eu = {n: voltages[key][r['id']] for n, r in enumerate(rules, 1)
+                        if r['id'] in voltages[key] and voltages[key][r['id']] != r.get('eut', False)}
+        if overrides_eu:
+            identity = tuple(sorted(overrides_eu.items()))
+            if identity not in voltage_index:
+                voltage_index[identity] = len(voltage_profiles) + 1
+                voltage_profiles.append(overrides_eu)
+            row['v'] = voltage_index[identity]
         row['_forms'].update(row.pop('_recipeForms', {}))
         if usage:
             used = tuple(sorted(form for form in output_forms if form in row['_forms']
@@ -301,8 +341,13 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
     if usage:
         source.update(usagePolicy=usage['policy'], usageRecipeCount=usage['recipeCount'],
                       usageExportSha256=usage['recipeExportSha256'])
+    if material_tiers:
+        source.update(materialTierPolicy=material_tiers['policy'],
+                      materialTierSource=material_tiers['source'],
+                      classifiedMaterials=sum('tier' in r for r in rows.values()))
     return {'version': 2, 'source': source,
             'families': families, 'capabilities': capabilities, 'production': production, 'items': items, 'rules': rules,
+            'voltages': voltage_profiles,
             'usage': use_profiles,
             'registryNames': registry_names or {},
             'materials': sorted(rows.values(), key=lambda row: row['name'].lower())}
@@ -340,6 +385,7 @@ if __name__ == '__main__':
     parser.add_argument('--compatibility-basis', default='')
     parser.add_argument('--registry-names', help='Case-preserving source registration import')
     parser.add_argument('--usage', required=True, help='Full-recipe direct-use index from build_usage.py')
+    parser.add_argument('--material-tiers', help='Versioned questbook progression evidence from build_tiers.py')
     args = parser.parse_args()
     catalog = json.load(gzip.open(args.catalog, 'rt', encoding='utf-8'))
     registry = json.loads(Path(args.registry).read_text(encoding='utf-8-sig'))
@@ -351,7 +397,8 @@ if __name__ == '__main__':
                 resources[rid] = {**resources[rid], 'tags': resource.get('tags', [])}
     names = json.loads(Path(args.registry_names).read_text())['names'] if args.registry_names else {}
     usage = json.loads(Path(args.usage).read_text())
-    model = compile_matrix(catalog, registry, args.compatible_target, args.compatibility_basis, resources, names, usage)
+    material_tiers = json.loads(Path(args.material_tiers).read_text()) if args.material_tiers else None
+    model = compile_matrix(catalog, registry, args.compatible_target, args.compatibility_basis, resources, names, usage, material_tiers)
     content = 'return ' + lua(model) + '\n'
     if len(content.encode()) > 4 * 1024 * 1024:
         raise ValueError('Library exceeds the absolute 4 MB budget')

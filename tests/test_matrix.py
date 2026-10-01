@@ -39,6 +39,33 @@ class MatrixTests(unittest.TestCase):
         data = compile_matrix(catalog, registry)
         self.assertEqual([row['dsf'] for row in data['materials']], [30])
 
+    def test_voltage_metadata_does_not_split_shared_recipes_or_copy_recipe_lists(self):
+        catalog, registry = self.fixture()
+        catalog['recipes'][0]['eut'] = 8
+        catalog['recipes'][1]['eut'] = 7680
+        tiers = {'policy': 'first-solid-task-v1', 'packVersion': 'beta3', 'source': 'fixture-source',
+                 'materials': {'chrome': {'tier': 'HV'}, 'niobiumtitanium': {'tier': 'EV'}}}
+        data = compile_matrix(catalog, registry, material_tiers=tiers)
+        self.assertEqual(len(data['rules']), 1)
+        rule = data['rules'][0]
+        rows = {m['name']: m for m in data['materials']}
+        self.assertEqual(rows['Chrome']['tier'], 'HV')
+        self.assertEqual(rows['NiobiumTitanium']['tier'], 'EV')
+        for name, eut in [('Chrome', 8), ('NiobiumTitanium', 7680)]:
+            row = rows[name]
+            voltage = data['voltages'][row['v']-1] if 'v' in row else {}
+            self.assertEqual(voltage.get(1, rule['eut']), eut)
+        self.assertEqual(len(data['voltages']), 1)
+        del catalog['recipes'][1]['eut']
+        missing = compile_matrix(catalog, registry)
+        row = next(m for m in missing['materials'] if m['name'] == 'NiobiumTitanium')
+        self.assertIs(missing['voltages'][row['v']-1][1], False)
+        with self.assertRaisesRegex(ValueError, 'version differ'):
+            compile_matrix(catalog, registry, material_tiers={**tiers, 'packVersion': 'other'})
+        catalog['recipes'][0]['eut'] = -1
+        with self.assertRaisesRegex(ValueError, 'Invalid recipe voltage'):
+            compile_matrix(catalog, registry)
+
     def test_direct_use_profiles_follow_actual_output_ids(self):
         catalog, registry = self.fixture()
         catalog['source']['datasetId'] = 'fixture'

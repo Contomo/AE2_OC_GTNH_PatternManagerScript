@@ -1,6 +1,7 @@
 -- One configuration for the application: shared hardware and per-program fields.
 local U = require('assline_util')
 local Programs = require('assline_programs')
+local Batch = require('assline_batch')
 local M = {}
 M.destinationSlots = 36
 function M.selected(value, choices)
@@ -74,9 +75,19 @@ M.fields = {
     default = '75',
   },
 }
-M.defaults = { version = 2, shared = {}, programs = {} }
+M.defaults = { version = 2, shared = {}, batch = {}, programs = {} }
 for _, f in ipairs(M.fields) do
   M.defaults.shared[f.key] = f.default
+end
+for _, f in ipairs(Batch.fields) do
+  M.defaults.batch[f.key] = f.default
+end
+M.sections = {
+  shared = { name = 'Shared interfaces', fields = M.fields },
+  batch = { name = 'Tier multipliers', fields = Batch.fields, pageSize = 9 },
+}
+function M.section(id)
+  return U.check(M.sections[id] or Programs.byId[id], 'Unknown settings section')
 end
 for _, p in ipairs(Programs.list) do
   local values = {}
@@ -126,6 +137,8 @@ function M.validate(c)
     end
   end
   fields(c.shared, M.fields)
+  fields(c.batch, Batch.fields)
+  Batch.validate(c.batch)
   for _, p in ipairs(Programs.list) do
     fields(c.programs[p.id], p.fields)
   end
@@ -152,6 +165,14 @@ function M.migrate(old)
   U.check(type(old) == 'table', 'Invalid saved configuration')
   U.check(old.version == nil or old.version == 2, 'Unsupported saved configuration version')
   if old.version == 2 then
+    if not old.batch then
+      c.batch.mode = 'fixed'
+    end
+    for _, f in ipairs(Batch.fields) do
+      if old.batch and old.batch[f.key] ~= nil then
+        c.batch[f.key] = old.batch[f.key]
+      end
+    end
     for _, f in ipairs(M.fields) do
       if old.shared and old.shared[f.key] ~= nil then
         c.shared[f.key] = old.shared[f.key]
@@ -166,6 +187,7 @@ function M.migrate(old)
       end
     end
   else
+    c.batch.mode = 'fixed'
     -- The old "buffer" was actually the directly connected editor.
     local shared = {
       editor = 'buffer',
@@ -220,7 +242,7 @@ function M.capacityReport(groups)
   return result
 end
 function M.values(c, section)
-  return section == 'shared' and c.shared
+  return M.sections[section] and c[section]
     or U.check(c.programs[section], 'Unknown settings section')
 end
 function M.requireProgram(c, id)

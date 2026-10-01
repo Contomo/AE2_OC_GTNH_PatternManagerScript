@@ -16,6 +16,7 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/app/90_main.lua` | Application entry point |
 | `source/lib/util.lua` | Shared value/collection helpers, identities, endpoints and text-row construction |
 | `source/lib/config.lua`, `source/lib/programs.lua` | Unified settings and program definitions |
+| `source/lib/batch.lua`, `source/data/tiers.json` | One shared batch policy and one versioned voltage-tier definition table |
 | `source/lib/modes.lua` | Expands selected semantic recipe rules using the material matrix |
 | `source/lib/planner.lua` | Pure destination capacity, reuse, sorting and creation planning |
 | `source/lib/preview.lua` | One maker preview renderer used by the UI and exported report |
@@ -100,6 +101,16 @@ patterns exist, otherwise schedules a resize after sorting. The adapter sends
 both new imprints and resizes through the same editing function; the shared
 executor journals the original pattern and requested quantities for recovery.
 Resizing uses the pattern already in the destination, not a disposable donor.
+`source/lib/batch.lua` computes the per-recipe multiplier once, before ingredient
+resolution. Fixed batching preserves earlier settings. Tiered batching combines
+relative material budgets, optional absolute tier overrides, recipe voltage,
+program factors and quantity limits. `source/data/tiers.json` is read by both
+the desktop tools and bundle builder; the voltage names/thresholds are not
+copied into a second hand-edited table. The compiler keeps a common EU/t on
+each semantic rule and interns sparse voltage exceptions into shared sets.
+`source/tools/build_tiers.py` scrapes quest requirements. The generated
+`data/material-tiers.json` is desktop provenance, and only its tier values and
+source summary are included in the OC matrix.
 The maker adapter reads both encoded item layouts: older entries store a
 positive `Count`; newer entries store `Cnt` while leaving `Count` at zero.
 It falls back to OC's converted `size`/`amount` when the raw entry lacks a
@@ -148,8 +159,8 @@ that exact physical donor and keeps its original validation behavior.
 Use StyLua 2.5.2 with the checked-in configuration:
 
 ```text
-stylua --verify src lib maker
-node test.js
+stylua --verify source/app source/lib
+npm test
 ```
 
 `--verify` checks formatting against the original syntax tree. Functional tests

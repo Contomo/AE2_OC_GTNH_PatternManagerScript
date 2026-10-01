@@ -27,7 +27,10 @@ return {
     ["compatibilityBasis"] = "User confirmed recipes unchanged from beta 2 to beta 3",
     ["usagePolicy"] = "reachable-nonrecycling-v3",
     ["usageRecipeCount"] = 276677,
-    ["usageExportSha256"] = "2c09a018091ea934c1cf8f612f447796f17e31e4f9d9cb3b01b894746abe0fed"
+    ["usageExportSha256"] = "2c09a018091ea934c1cf8f612f447796f17e31e4f9d9cb3b01b894746abe0fed",
+    ["materialTierPolicy"] = "first-solid-task-v1",
+    ["materialTierSource"] = "https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/tree/27e61fbea6e245df80839885460994aa0ef9da9f/config/betterquesting/DefaultQuests",
+    ["classifiedMaterials"] = 98
   },
   ["families"] = {
     ["gt"] = {
@@ -8504,7 +8507,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.39310b3665"
+      ["id"] = "coating.pps.cable1.39310b3665",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8522,7 +8526,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.5874a677c2"
+      ["id"] = "coating.pps.cable1.5874a677c2",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8540,7 +8545,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.595a7b2e83"
+      ["id"] = "coating.pps.cable1.595a7b2e83",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8558,7 +8564,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.5a201cd1cd"
+      ["id"] = "coating.pps.cable1.5a201cd1cd",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8576,7 +8583,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.6dae05367c"
+      ["id"] = "coating.pps.cable1.6dae05367c",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8594,7 +8602,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.8fec097474"
+      ["id"] = "coating.pps.cable1.8fec097474",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8612,7 +8621,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.98430bcdb8"
+      ["id"] = "coating.pps.cable1.98430bcdb8",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8630,7 +8640,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable1.ce51c5e07d"
+      ["id"] = "coating.pps.cable1.ce51c5e07d",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8647,7 +8658,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.0baafbd231"
+      ["id"] = "coating.standard.cable1.0baafbd231",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -8664,7 +8676,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.439ddcf478"
+      ["id"] = "coating.standard.cable1.439ddcf478",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -8681,7 +8694,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.451f9c94af"
+      ["id"] = "coating.standard.cable1.451f9c94af",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -8698,7 +8712,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.4bbe7a9569"
+      ["id"] = "coating.standard.cable1.4bbe7a9569",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -8715,7 +8730,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.53a5cf7396"
+      ["id"] = "coating.standard.cable1.53a5cf7396",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -8732,7 +8748,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.93baddb1d2"
+      ["id"] = "coating.standard.cable1.93baddb1d2",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -8749,7 +8766,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.a7bdfe1f28"
+      ["id"] = "coating.standard.cable1.a7bdfe1f28",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -8766,7 +8784,8 @@ return {
       ["requires"] = {"cable1", "wire1"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable1.dddf4bbae4"
+      ["id"] = "coating.standard.cable1.dddf4bbae4",
+      ["eut"] = 7
     },
     {
       ["mode"] = "wiremill",
@@ -8781,7 +8800,8 @@ return {
       },
       ["requires"] = {"dust", "wire1"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire1.5000e59dea"
+      ["id"] = "wiremill.dust_wire.wire1.5000e59dea",
+      ["eut"] = 2
     },
     {
       ["mode"] = "wiremill",
@@ -8796,7 +8816,8 @@ return {
       },
       ["requires"] = {"ingot", "wire1"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire1.e52d974974"
+      ["id"] = "wiremill.ingot_wire.wire1.e52d974974",
+      ["eut"] = 4
     },
     {
       ["mode"] = "wiremill",
@@ -8811,7 +8832,8 @@ return {
       },
       ["requires"] = {"stick", "wire1"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire1.df23bcbad5"
+      ["id"] = "wiremill.stick_wire.wire1.df23bcbad5",
+      ["eut"] = 4
     },
     {
       ["mode"] = "coating",
@@ -8829,7 +8851,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.08c1b141b5"
+      ["id"] = "coating.pps.cable2.08c1b141b5",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8847,7 +8870,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.191dd00b13"
+      ["id"] = "coating.pps.cable2.191dd00b13",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8865,7 +8889,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.1e6c28780e"
+      ["id"] = "coating.pps.cable2.1e6c28780e",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8883,7 +8908,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.32bd6e3c10"
+      ["id"] = "coating.pps.cable2.32bd6e3c10",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8901,7 +8927,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.4398c7487b"
+      ["id"] = "coating.pps.cable2.4398c7487b",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8919,7 +8946,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.7e5776ed42"
+      ["id"] = "coating.pps.cable2.7e5776ed42",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8937,7 +8965,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.a30d85c951"
+      ["id"] = "coating.pps.cable2.a30d85c951",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8955,7 +8984,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable2.af705753ae"
+      ["id"] = "coating.pps.cable2.af705753ae",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -8972,7 +9002,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.3b8c1dd8d3"
+      ["id"] = "coating.standard.cable2.3b8c1dd8d3",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -8989,7 +9020,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.3d03f2fda5"
+      ["id"] = "coating.standard.cable2.3d03f2fda5",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9006,7 +9038,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.825d952605"
+      ["id"] = "coating.standard.cable2.825d952605",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9023,7 +9056,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.841c028fb7"
+      ["id"] = "coating.standard.cable2.841c028fb7",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9040,7 +9074,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.c925aa66f3"
+      ["id"] = "coating.standard.cable2.c925aa66f3",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9057,7 +9092,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.cce7c3f54a"
+      ["id"] = "coating.standard.cable2.cce7c3f54a",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9074,7 +9110,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.d180f5ed0e"
+      ["id"] = "coating.standard.cable2.d180f5ed0e",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9091,7 +9128,8 @@ return {
       ["requires"] = {"cable2", "wire2"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable2.e42232393a"
+      ["id"] = "coating.standard.cable2.e42232393a",
+      ["eut"] = 7
     },
     {
       ["mode"] = "wiremill",
@@ -9106,7 +9144,8 @@ return {
       },
       ["requires"] = {"dust", "wire2"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire2.6b535c049e"
+      ["id"] = "wiremill.dust_wire.wire2.6b535c049e",
+      ["eut"] = 2
     },
     {
       ["mode"] = "wiremill",
@@ -9121,7 +9160,8 @@ return {
       },
       ["requires"] = {"ingot", "wire2"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire2.a105dff003"
+      ["id"] = "wiremill.ingot_wire.wire2.a105dff003",
+      ["eut"] = 4
     },
     {
       ["mode"] = "wiremill",
@@ -9136,7 +9176,8 @@ return {
       },
       ["requires"] = {"stick", "wire2"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire2.22cb4f1a0c"
+      ["id"] = "wiremill.stick_wire.wire2.22cb4f1a0c",
+      ["eut"] = 4
     },
     {
       ["mode"] = "coating",
@@ -9154,7 +9195,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.1972a76863"
+      ["id"] = "coating.pps.cable4.1972a76863",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9172,7 +9214,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.3de4ba620d"
+      ["id"] = "coating.pps.cable4.3de4ba620d",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9190,7 +9233,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.40d22838bb"
+      ["id"] = "coating.pps.cable4.40d22838bb",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9208,7 +9252,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.4fd9b722aa"
+      ["id"] = "coating.pps.cable4.4fd9b722aa",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9226,7 +9271,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.7b890c094a"
+      ["id"] = "coating.pps.cable4.7b890c094a",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9244,7 +9290,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.832bf0d734"
+      ["id"] = "coating.pps.cable4.832bf0d734",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9262,7 +9309,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.87e90dc063"
+      ["id"] = "coating.pps.cable4.87e90dc063",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9280,7 +9328,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable4.fc0a11581f"
+      ["id"] = "coating.pps.cable4.fc0a11581f",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9297,7 +9346,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.1556303ce4"
+      ["id"] = "coating.standard.cable4.1556303ce4",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9314,7 +9364,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.7552e5f730"
+      ["id"] = "coating.standard.cable4.7552e5f730",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9331,7 +9382,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.7ba6360686"
+      ["id"] = "coating.standard.cable4.7ba6360686",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9348,7 +9400,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.9bf4f6a660"
+      ["id"] = "coating.standard.cable4.9bf4f6a660",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9365,7 +9418,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.ac00914022"
+      ["id"] = "coating.standard.cable4.ac00914022",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9382,7 +9436,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.ad9a5b4f82"
+      ["id"] = "coating.standard.cable4.ad9a5b4f82",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9399,7 +9454,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.b8e0f8113c"
+      ["id"] = "coating.standard.cable4.b8e0f8113c",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9416,7 +9472,8 @@ return {
       ["requires"] = {"cable4", "wire4"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable4.c849d6ca05"
+      ["id"] = "coating.standard.cable4.c849d6ca05",
+      ["eut"] = 7
     },
     {
       ["mode"] = "wiremill",
@@ -9431,7 +9488,8 @@ return {
       },
       ["requires"] = {"dust", "wire4"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire4.710d507ce5"
+      ["id"] = "wiremill.dust_wire.wire4.710d507ce5",
+      ["eut"] = 2
     },
     {
       ["mode"] = "wiremill",
@@ -9446,7 +9504,8 @@ return {
       },
       ["requires"] = {"ingot", "wire4"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire4.3223c3cf5b"
+      ["id"] = "wiremill.ingot_wire.wire4.3223c3cf5b",
+      ["eut"] = 4
     },
     {
       ["mode"] = "wiremill",
@@ -9461,7 +9520,8 @@ return {
       },
       ["requires"] = {"stick", "wire4"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire4.1953e942a4"
+      ["id"] = "wiremill.stick_wire.wire4.1953e942a4",
+      ["eut"] = 4
     },
     {
       ["mode"] = "coating",
@@ -9479,7 +9539,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.302a6d44ff"
+      ["id"] = "coating.pps.cable8.302a6d44ff",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9497,7 +9558,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.4ee6532f5d"
+      ["id"] = "coating.pps.cable8.4ee6532f5d",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9515,7 +9577,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.5c9c661df8"
+      ["id"] = "coating.pps.cable8.5c9c661df8",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9533,7 +9596,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.9ee584fdd2"
+      ["id"] = "coating.pps.cable8.9ee584fdd2",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9551,7 +9615,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.b2592a410c"
+      ["id"] = "coating.pps.cable8.b2592a410c",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9569,7 +9634,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.c8a1cc0ed3"
+      ["id"] = "coating.pps.cable8.c8a1cc0ed3",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9587,7 +9653,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.e303c18133"
+      ["id"] = "coating.pps.cable8.e303c18133",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9605,7 +9672,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable8.e5ff5636eb"
+      ["id"] = "coating.pps.cable8.e5ff5636eb",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9622,7 +9690,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.0683108ceb"
+      ["id"] = "coating.standard.cable8.0683108ceb",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9639,7 +9708,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.6e447c3b6d"
+      ["id"] = "coating.standard.cable8.6e447c3b6d",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9656,7 +9726,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.75926c3ade"
+      ["id"] = "coating.standard.cable8.75926c3ade",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9673,7 +9744,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.8eb226d54f"
+      ["id"] = "coating.standard.cable8.8eb226d54f",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9690,7 +9762,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.b7999e47d8"
+      ["id"] = "coating.standard.cable8.b7999e47d8",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9707,7 +9780,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.dacb2297e4"
+      ["id"] = "coating.standard.cable8.dacb2297e4",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9724,7 +9798,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.ef491e6112"
+      ["id"] = "coating.standard.cable8.ef491e6112",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9741,7 +9816,8 @@ return {
       ["requires"] = {"cable8", "wire8"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable8.f0515c086e"
+      ["id"] = "coating.standard.cable8.f0515c086e",
+      ["eut"] = 7
     },
     {
       ["mode"] = "wiremill",
@@ -9756,7 +9832,8 @@ return {
       },
       ["requires"] = {"dust", "wire8"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire8.bf23f7a3d3"
+      ["id"] = "wiremill.dust_wire.wire8.bf23f7a3d3",
+      ["eut"] = 2
     },
     {
       ["mode"] = "wiremill",
@@ -9771,7 +9848,8 @@ return {
       },
       ["requires"] = {"ingot", "wire8"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire8.81b1b4805f"
+      ["id"] = "wiremill.ingot_wire.wire8.81b1b4805f",
+      ["eut"] = 4
     },
     {
       ["mode"] = "wiremill",
@@ -9786,7 +9864,8 @@ return {
       },
       ["requires"] = {"stick", "wire8"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire8.8f46c304cf"
+      ["id"] = "wiremill.stick_wire.wire8.8f46c304cf",
+      ["eut"] = 4
     },
     {
       ["mode"] = "coating",
@@ -9804,7 +9883,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.4397770550"
+      ["id"] = "coating.pps.cable12.4397770550",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9822,7 +9902,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.562e752ba1"
+      ["id"] = "coating.pps.cable12.562e752ba1",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9840,7 +9921,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.6e7782130e"
+      ["id"] = "coating.pps.cable12.6e7782130e",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9858,7 +9940,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.6f393da980"
+      ["id"] = "coating.pps.cable12.6f393da980",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9876,7 +9959,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.a6627abc32"
+      ["id"] = "coating.pps.cable12.a6627abc32",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9894,7 +9978,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.c4cd03a36d"
+      ["id"] = "coating.pps.cable12.c4cd03a36d",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9912,7 +9997,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.e398090aad"
+      ["id"] = "coating.pps.cable12.e398090aad",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9930,7 +10016,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable12.ef4cf9544e"
+      ["id"] = "coating.pps.cable12.ef4cf9544e",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -9947,7 +10034,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.057835494d"
+      ["id"] = "coating.standard.cable12.057835494d",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9964,7 +10052,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.1ada4dd15e"
+      ["id"] = "coating.standard.cable12.1ada4dd15e",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9981,7 +10070,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.39a7bab580"
+      ["id"] = "coating.standard.cable12.39a7bab580",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -9998,7 +10088,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.514643af2e"
+      ["id"] = "coating.standard.cable12.514643af2e",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10015,7 +10106,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.68a5d158fd"
+      ["id"] = "coating.standard.cable12.68a5d158fd",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10032,7 +10124,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.cfdc8a7eea"
+      ["id"] = "coating.standard.cable12.cfdc8a7eea",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10049,7 +10142,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.cfe0ee7b52"
+      ["id"] = "coating.standard.cable12.cfe0ee7b52",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10066,7 +10160,8 @@ return {
       ["requires"] = {"cable12", "wire12"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable12.fdf3186251"
+      ["id"] = "coating.standard.cable12.fdf3186251",
+      ["eut"] = 7
     },
     {
       ["mode"] = "wiremill",
@@ -10081,7 +10176,8 @@ return {
       },
       ["requires"] = {"dust", "wire12"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire12.7c43c98f55"
+      ["id"] = "wiremill.dust_wire.wire12.7c43c98f55",
+      ["eut"] = 2
     },
     {
       ["mode"] = "wiremill",
@@ -10096,7 +10192,8 @@ return {
       },
       ["requires"] = {"ingot", "wire12"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire12.d74e8dcc01"
+      ["id"] = "wiremill.ingot_wire.wire12.d74e8dcc01",
+      ["eut"] = 4
     },
     {
       ["mode"] = "wiremill",
@@ -10111,7 +10208,8 @@ return {
       },
       ["requires"] = {"stick", "wire12"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire12.70da819047"
+      ["id"] = "wiremill.stick_wire.wire12.70da819047",
+      ["eut"] = 4
     },
     {
       ["mode"] = "coating",
@@ -10129,7 +10227,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.516b2796dd"
+      ["id"] = "coating.pps.cable16.516b2796dd",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -10147,7 +10246,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.6251100a87"
+      ["id"] = "coating.pps.cable16.6251100a87",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -10165,7 +10265,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.6e4d6d22a8"
+      ["id"] = "coating.pps.cable16.6e4d6d22a8",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -10183,7 +10284,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pvc",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.9e0efc8508"
+      ["id"] = "coating.pps.cable16.9e0efc8508",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -10201,7 +10303,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.a1316634fb"
+      ["id"] = "coating.pps.cable16.a1316634fb",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -10219,7 +10322,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.a269e66c80"
+      ["id"] = "coating.pps.cable16.a269e66c80",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -10237,7 +10341,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pdms",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.a5498ab241"
+      ["id"] = "coating.pps.cable16.a5498ab241",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -10255,7 +10360,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "pps",
-      ["id"] = "coating.pps.cable16.f2fcdabd5e"
+      ["id"] = "coating.pps.cable16.f2fcdabd5e",
+      ["eut"] = 8
     },
     {
       ["mode"] = "coating",
@@ -10272,7 +10378,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.2539f48420"
+      ["id"] = "coating.standard.cable16.2539f48420",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10289,7 +10396,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.4115128c15"
+      ["id"] = "coating.standard.cable16.4115128c15",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10306,7 +10414,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.78fb30ac82"
+      ["id"] = "coating.standard.cable16.78fb30ac82",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10323,7 +10432,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pdmsSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.9efe8d5550"
+      ["id"] = "coating.standard.cable16.9efe8d5550",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10340,7 +10450,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.c135f2ea77"
+      ["id"] = "coating.standard.cable16.c135f2ea77",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10357,7 +10468,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pvc",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.deae378e5e"
+      ["id"] = "coating.standard.cable16.deae378e5e",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10374,7 +10486,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pvcSmall",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.f512b7978b"
+      ["id"] = "coating.standard.cable16.f512b7978b",
+      ["eut"] = 7
     },
     {
       ["mode"] = "coating",
@@ -10391,7 +10504,8 @@ return {
       ["requires"] = {"cable16", "wire16"},
       ["polymer"] = "pdms",
       ["coating"] = "standard",
-      ["id"] = "coating.standard.cable16.fd140272f5"
+      ["id"] = "coating.standard.cable16.fd140272f5",
+      ["eut"] = 7
     },
     {
       ["mode"] = "wiremill",
@@ -10406,7 +10520,8 @@ return {
       },
       ["requires"] = {"dust", "wire16"},
       ["process"] = "dust_wire",
-      ["id"] = "wiremill.dust_wire.wire16.c8aea7612d"
+      ["id"] = "wiremill.dust_wire.wire16.c8aea7612d",
+      ["eut"] = 2
     },
     {
       ["mode"] = "wiremill",
@@ -10421,7 +10536,8 @@ return {
       },
       ["requires"] = {"ingot", "wire16"},
       ["process"] = "ingot_wire",
-      ["id"] = "wiremill.ingot_wire.wire16.5eac4c037a"
+      ["id"] = "wiremill.ingot_wire.wire16.5eac4c037a",
+      ["eut"] = 4
     },
     {
       ["mode"] = "wiremill",
@@ -10436,7 +10552,8 @@ return {
       },
       ["requires"] = {"stick", "wire16"},
       ["process"] = "stick_wire",
-      ["id"] = "wiremill.stick_wire.wire16.b20dbeb901"
+      ["id"] = "wiremill.stick_wire.wire16.b20dbeb901",
+      ["eut"] = 4
     },
     {
       ["mode"] = "bender",
@@ -10451,7 +10568,8 @@ return {
       },
       ["requires"] = {"ingot", "plate"},
       ["process"] = "ingot_plate",
-      ["id"] = "bender.ingot_plate.plate.854883d2eb"
+      ["id"] = "bender.ingot_plate.plate.854883d2eb",
+      ["eut"] = 24
     },
     {
       ["mode"] = "solidifier",
@@ -10466,7 +10584,8 @@ return {
       },
       ["requires"] = {"plate"},
       ["process"] = "molten_plate",
-      ["id"] = "solidifier.molten_plate.plate.fdaeb4f530"
+      ["id"] = "solidifier.molten_plate.plate.fdaeb4f530",
+      ["eut"] = 8
     },
     {
       ["mode"] = "bender",
@@ -10481,7 +10600,8 @@ return {
       },
       ["requires"] = {"ingot", "plateDouble"},
       ["process"] = "ingot_plateDouble",
-      ["id"] = "bender.ingot_plateDouble.plateDouble.b28b2b706b"
+      ["id"] = "bender.ingot_plateDouble.plateDouble.b28b2b706b",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10496,7 +10616,8 @@ return {
       },
       ["requires"] = {"plate", "plateDouble"},
       ["process"] = "plate_plateDouble",
-      ["id"] = "bender.plate_plateDouble.plateDouble.508efe6041"
+      ["id"] = "bender.plate_plateDouble.plateDouble.508efe6041",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10511,7 +10632,8 @@ return {
       },
       ["requires"] = {"ingot", "plateTriple"},
       ["process"] = "ingot_plateTriple",
-      ["id"] = "bender.ingot_plateTriple.plateTriple.0bf73900c8"
+      ["id"] = "bender.ingot_plateTriple.plateTriple.0bf73900c8",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10526,7 +10648,8 @@ return {
       },
       ["requires"] = {"plate", "plateTriple"},
       ["process"] = "plate_plateTriple",
-      ["id"] = "bender.plate_plateTriple.plateTriple.6de6feb2ec"
+      ["id"] = "bender.plate_plateTriple.plateTriple.6de6feb2ec",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10541,7 +10664,8 @@ return {
       },
       ["requires"] = {"ingot", "plateQuadruple"},
       ["process"] = "ingot_plateQuadruple",
-      ["id"] = "bender.ingot_plateQuadruple.plateQuadruple.7ca0918c60"
+      ["id"] = "bender.ingot_plateQuadruple.plateQuadruple.7ca0918c60",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10556,7 +10680,8 @@ return {
       },
       ["requires"] = {"plate", "plateQuadruple"},
       ["process"] = "plate_plateQuadruple",
-      ["id"] = "bender.plate_plateQuadruple.plateQuadruple.6c5071866f"
+      ["id"] = "bender.plate_plateQuadruple.plateQuadruple.6c5071866f",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10571,7 +10696,8 @@ return {
       },
       ["requires"] = {"ingot", "plateQuintuple"},
       ["process"] = "ingot_plateQuintuple",
-      ["id"] = "bender.ingot_plateQuintuple.plateQuintuple.9bf6b1aa8b"
+      ["id"] = "bender.ingot_plateQuintuple.plateQuintuple.9bf6b1aa8b",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10586,7 +10712,8 @@ return {
       },
       ["requires"] = {"plate", "plateQuintuple"},
       ["process"] = "plate_plateQuintuple",
-      ["id"] = "bender.plate_plateQuintuple.plateQuintuple.a98e9b47da"
+      ["id"] = "bender.plate_plateQuintuple.plateQuintuple.a98e9b47da",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10601,7 +10728,8 @@ return {
       },
       ["requires"] = {"ingot", "plateDense"},
       ["process"] = "ingot_plateDense",
-      ["id"] = "bender.ingot_plateDense.plateDense.53cc662013"
+      ["id"] = "bender.ingot_plateDense.plateDense.53cc662013",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10616,7 +10744,8 @@ return {
       },
       ["requires"] = {"plate", "plateDense"},
       ["process"] = "plate_plateDense",
-      ["id"] = "bender.plate_plateDense.plateDense.f3a69bc58d"
+      ["id"] = "bender.plate_plateDense.plateDense.f3a69bc58d",
+      ["eut"] = 96
     },
     {
       ["mode"] = "bender",
@@ -10631,7 +10760,8 @@ return {
       },
       ["requires"] = {"foil", "ingot"},
       ["process"] = "ingot_foil",
-      ["id"] = "bender.ingot_foil.foil.90ab7fe11a"
+      ["id"] = "bender.ingot_foil.foil.90ab7fe11a",
+      ["eut"] = 24
     },
     {
       ["mode"] = "bender",
@@ -10646,7 +10776,8 @@ return {
       },
       ["requires"] = {"foil", "plate"},
       ["process"] = "plate_foil",
-      ["id"] = "bender.plate_foil.foil.c4eb1f2b49"
+      ["id"] = "bender.plate_foil.foil.c4eb1f2b49",
+      ["eut"] = 24
     },
     {
       ["mode"] = "bender",
@@ -10661,7 +10792,8 @@ return {
       },
       ["requires"] = {"plate", "sheetmetal"},
       ["process"] = "plate_sheetmetal",
-      ["id"] = "bender.plate_sheetmetal.sheetmetal.4233425553"
+      ["id"] = "bender.plate_sheetmetal.sheetmetal.4233425553",
+      ["eut"] = 30
     },
     {
       ["mode"] = "bender",
@@ -10676,7 +10808,8 @@ return {
       },
       ["requires"] = {"springSmall", "stick"},
       ["process"] = "stick_springSmall_yield1",
-      ["id"] = "bender.stick_springSmall_yield1.springSmall.6b22a56906"
+      ["id"] = "bender.stick_springSmall_yield1.springSmall.6b22a56906",
+      ["eut"] = 15
     },
     {
       ["mode"] = "bender",
@@ -10691,7 +10824,8 @@ return {
       },
       ["requires"] = {"springSmall", "stick"},
       ["process"] = "stick_springSmall_yield2",
-      ["id"] = "bender.stick_springSmall_yield2.springSmall.624aa435da"
+      ["id"] = "bender.stick_springSmall_yield2.springSmall.624aa435da",
+      ["eut"] = 8
     },
     {
       ["mode"] = "bender",
@@ -10706,7 +10840,8 @@ return {
       },
       ["requires"] = {"springSmall", "wire1"},
       ["process"] = "wire1_springSmall",
-      ["id"] = "bender.wire1_springSmall.springSmall.560a7364ce"
+      ["id"] = "bender.wire1_springSmall.springSmall.560a7364ce",
+      ["eut"] = 8
     },
     {
       ["mode"] = "bender",
@@ -10721,7 +10856,8 @@ return {
       },
       ["requires"] = {"spring", "stickLong"},
       ["process"] = "stickLong_spring",
-      ["id"] = "bender.stickLong_spring.spring.ce12cff1ef"
+      ["id"] = "bender.stickLong_spring.spring.ce12cff1ef",
+      ["eut"] = 16
     },
     {
       ["mode"] = "solidifier",
@@ -10736,7 +10872,8 @@ return {
       },
       ["requires"] = {"bolt"},
       ["process"] = "molten_bolt",
-      ["id"] = "solidifier.molten_bolt.bolt.0561145022"
+      ["id"] = "solidifier.molten_bolt.bolt.0561145022",
+      ["eut"] = 30
     },
     {
       ["mode"] = "solidifier",
@@ -10751,7 +10888,8 @@ return {
       },
       ["requires"] = {"gearGt"},
       ["process"] = "molten_gearGt",
-      ["id"] = "solidifier.molten_gearGt.gearGt.43b38fa938"
+      ["id"] = "solidifier.molten_gearGt.gearGt.43b38fa938",
+      ["eut"] = 8
     },
     {
       ["mode"] = "solidifier",
@@ -10766,7 +10904,8 @@ return {
       },
       ["requires"] = {"gearGtSmall"},
       ["process"] = "molten_gearGtSmall",
-      ["id"] = "solidifier.molten_gearGtSmall.gearGtSmall.037921c1ff"
+      ["id"] = "solidifier.molten_gearGtSmall.gearGtSmall.037921c1ff",
+      ["eut"] = 8
     },
     {
       ["mode"] = "solidifier",
@@ -10781,7 +10920,8 @@ return {
       },
       ["requires"] = {"ingot"},
       ["process"] = "molten_ingot",
-      ["id"] = "solidifier.molten_ingot.ingot.4f51d57a17"
+      ["id"] = "solidifier.molten_ingot.ingot.4f51d57a17",
+      ["eut"] = 8
     },
     {
       ["mode"] = "solidifier",
@@ -10796,7 +10936,8 @@ return {
       },
       ["requires"] = {"itemCasing"},
       ["process"] = "molten_itemCasing",
-      ["id"] = "solidifier.molten_itemCasing.itemCasing.c6dda8851b"
+      ["id"] = "solidifier.molten_itemCasing.itemCasing.c6dda8851b",
+      ["eut"] = 8
     },
     {
       ["mode"] = "solidifier",
@@ -10811,7 +10952,8 @@ return {
       },
       ["requires"] = {"nugget"},
       ["process"] = "molten_nugget",
-      ["id"] = "solidifier.molten_nugget.nugget.3db43184b9"
+      ["id"] = "solidifier.molten_nugget.nugget.3db43184b9",
+      ["eut"] = 4
     },
     {
       ["mode"] = "solidifier",
@@ -10826,7 +10968,8 @@ return {
       },
       ["requires"] = {"pipeFluidHuge"},
       ["process"] = "molten_pipeFluidHuge",
-      ["id"] = "solidifier.molten_pipeFluidHuge.pipeFluidHuge.bab06c751a"
+      ["id"] = "solidifier.molten_pipeFluidHuge.pipeFluidHuge.bab06c751a",
+      ["eut"] = 480
     },
     {
       ["mode"] = "solidifier",
@@ -10841,7 +10984,8 @@ return {
       },
       ["requires"] = {"pipeFluidLarge"},
       ["process"] = "molten_pipeFluidLarge",
-      ["id"] = "solidifier.molten_pipeFluidLarge.pipeFluidLarge.29fb800626"
+      ["id"] = "solidifier.molten_pipeFluidLarge.pipeFluidLarge.29fb800626",
+      ["eut"] = 480
     },
     {
       ["mode"] = "solidifier",
@@ -10856,7 +11000,8 @@ return {
       },
       ["requires"] = {"pipeFluidMedium"},
       ["process"] = "molten_pipeFluidMedium",
-      ["id"] = "solidifier.molten_pipeFluidMedium.pipeFluidMedium.3b4eadf361"
+      ["id"] = "solidifier.molten_pipeFluidMedium.pipeFluidMedium.3b4eadf361",
+      ["eut"] = 480
     },
     {
       ["mode"] = "solidifier",
@@ -10871,7 +11016,8 @@ return {
       },
       ["requires"] = {"pipeFluidSmall"},
       ["process"] = "molten_pipeFluidSmall",
-      ["id"] = "solidifier.molten_pipeFluidSmall.pipeFluidSmall.42289d2294"
+      ["id"] = "solidifier.molten_pipeFluidSmall.pipeFluidSmall.42289d2294",
+      ["eut"] = 480
     },
     {
       ["mode"] = "solidifier",
@@ -10886,7 +11032,8 @@ return {
       },
       ["requires"] = {"pipeFluidTiny"},
       ["process"] = "molten_pipeFluidTiny",
-      ["id"] = "solidifier.molten_pipeFluidTiny.pipeFluidTiny.9b4eb75565"
+      ["id"] = "solidifier.molten_pipeFluidTiny.pipeFluidTiny.9b4eb75565",
+      ["eut"] = 480
     },
     {
       ["mode"] = "solidifier",
@@ -10901,7 +11048,8 @@ return {
       },
       ["requires"] = {"pipeItemHuge"},
       ["process"] = "molten_pipeItemHuge",
-      ["id"] = "solidifier.molten_pipeItemHuge.pipeItemHuge.a0d98b4cd0"
+      ["id"] = "solidifier.molten_pipeItemHuge.pipeItemHuge.a0d98b4cd0",
+      ["eut"] = 120
     },
     {
       ["mode"] = "solidifier",
@@ -10916,7 +11064,8 @@ return {
       },
       ["requires"] = {"pipeItemLarge"},
       ["process"] = "molten_pipeItemLarge",
-      ["id"] = "solidifier.molten_pipeItemLarge.pipeItemLarge.20792bf03b"
+      ["id"] = "solidifier.molten_pipeItemLarge.pipeItemLarge.20792bf03b",
+      ["eut"] = 120
     },
     {
       ["mode"] = "solidifier",
@@ -10931,7 +11080,8 @@ return {
       },
       ["requires"] = {"pipeItemMedium"},
       ["process"] = "molten_pipeItemMedium",
-      ["id"] = "solidifier.molten_pipeItemMedium.pipeItemMedium.53c6729aa7"
+      ["id"] = "solidifier.molten_pipeItemMedium.pipeItemMedium.53c6729aa7",
+      ["eut"] = 120
     },
     {
       ["mode"] = "solidifier",
@@ -10946,7 +11096,8 @@ return {
       },
       ["requires"] = {"pipeItemSmall"},
       ["process"] = "molten_pipeItemSmall",
-      ["id"] = "solidifier.molten_pipeItemSmall.pipeItemSmall.965741f08a"
+      ["id"] = "solidifier.molten_pipeItemSmall.pipeItemSmall.965741f08a",
+      ["eut"] = 120
     },
     {
       ["mode"] = "solidifier",
@@ -10961,7 +11112,8 @@ return {
       },
       ["requires"] = {"pipeItemTiny"},
       ["process"] = "molten_pipeItemTiny",
-      ["id"] = "solidifier.molten_pipeItemTiny.pipeItemTiny.fdf630fa8e"
+      ["id"] = "solidifier.molten_pipeItemTiny.pipeItemTiny.fdf630fa8e",
+      ["eut"] = 120
     },
     {
       ["mode"] = "solidifier",
@@ -10976,7 +11128,8 @@ return {
       },
       ["requires"] = {"ring"},
       ["process"] = "molten_ring",
-      ["id"] = "solidifier.molten_ring.ring.e85454b6e3"
+      ["id"] = "solidifier.molten_ring.ring.e85454b6e3",
+      ["eut"] = 60
     },
     {
       ["mode"] = "solidifier",
@@ -10991,7 +11144,8 @@ return {
       },
       ["requires"] = {"rotor"},
       ["process"] = "molten_rotor",
-      ["id"] = "solidifier.molten_rotor.rotor.cb0495bc4b"
+      ["id"] = "solidifier.molten_rotor.rotor.cb0495bc4b",
+      ["eut"] = 24
     },
     {
       ["mode"] = "solidifier",
@@ -11006,7 +11160,8 @@ return {
       },
       ["requires"] = {"round"},
       ["process"] = "molten_round",
-      ["id"] = "solidifier.molten_round.round.774d0c0d01"
+      ["id"] = "solidifier.molten_round.round.774d0c0d01",
+      ["eut"] = 30
     },
     {
       ["mode"] = "solidifier",
@@ -11021,7 +11176,8 @@ return {
       },
       ["requires"] = {"screw"},
       ["process"] = "molten_screw",
-      ["id"] = "solidifier.molten_screw.screw.7b5081e5ad"
+      ["id"] = "solidifier.molten_screw.screw.7b5081e5ad",
+      ["eut"] = 30
     },
     {
       ["mode"] = "solidifier",
@@ -11036,7 +11192,8 @@ return {
       },
       ["requires"] = {"stick"},
       ["process"] = "molten_stick",
-      ["id"] = "solidifier.molten_stick.stick.18d6b5458b"
+      ["id"] = "solidifier.molten_stick.stick.18d6b5458b",
+      ["eut"] = 120
     },
     {
       ["mode"] = "solidifier",
@@ -11051,7 +11208,8 @@ return {
       },
       ["requires"] = {"stickLong"},
       ["process"] = "molten_stickLong",
-      ["id"] = "solidifier.molten_stickLong.stickLong.06fe17957b"
+      ["id"] = "solidifier.molten_stickLong.stickLong.06fe17957b",
+      ["eut"] = 120
     },
     {
       ["mode"] = "solidifier",
@@ -11066,7 +11224,8 @@ return {
       },
       ["requires"] = {"toolHeadDrill"},
       ["process"] = "molten_toolHeadDrill",
-      ["id"] = "solidifier.molten_toolHeadDrill.toolHeadDrill.46763180da"
+      ["id"] = "solidifier.molten_toolHeadDrill.toolHeadDrill.46763180da",
+      ["eut"] = 120
     },
     {
       ["mode"] = "solidifier",
@@ -11081,7 +11240,8 @@ return {
       },
       ["requires"] = {"turbineBlade"},
       ["process"] = "molten_turbineBlade",
-      ["id"] = "solidifier.molten_turbineBlade.turbineBlade.590ff97267"
+      ["id"] = "solidifier.molten_turbineBlade.turbineBlade.590ff97267",
+      ["eut"] = 120
     },
     {
       ["mode"] = "wiremill",
@@ -11096,7 +11256,8 @@ return {
       },
       ["requires"] = {"ingot", "wireFine"},
       ["process"] = "ingot_wireFine",
-      ["id"] = "wiremill.ingot_wireFine.wireFine.29fa961f96"
+      ["id"] = "wiremill.ingot_wireFine.wireFine.29fa961f96",
+      ["eut"] = 4
     },
     {
       ["mode"] = "wiremill",
@@ -11111,7 +11272,8 @@ return {
       },
       ["requires"] = {"stick", "wireFine"},
       ["process"] = "stick_wireFine",
-      ["id"] = "wiremill.stick_wireFine.wireFine.44296339ea"
+      ["id"] = "wiremill.stick_wireFine.wireFine.44296339ea",
+      ["eut"] = 4
     },
     {
       ["mode"] = "wiremill",
@@ -11126,8 +11288,1459 @@ return {
       },
       ["requires"] = {"wire1", "wireFine"},
       ["process"] = "wire1_wireFine",
-      ["id"] = "wiremill.wire1_wireFine.wireFine.6dd71a5172"
+      ["id"] = "wiremill.wire1_wireFine.wireFine.6dd71a5172",
+      ["eut"] = 8
     }
+  },
+  ["voltages"] = {
+    {
+      [140] = 120,
+      [141] = 120,
+      [142] = 120,
+      [143] = 120,
+      [144] = 120
+    },
+    {
+      [134] = 120,
+      [150] = 240,
+      [152] = 120,
+      [153] = 120,
+      [154] = 480,
+      [155] = 480
+    },
+    {
+      [134] = 120,
+      [150] = 240,
+      [152] = 120,
+      [153] = 120,
+      [154] = 480,
+      [155] = 480,
+      [157] = 480
+    },
+    {
+      [134] = 120,
+      [145] = 480,
+      [146] = 480,
+      [147] = 480,
+      [148] = 480,
+      [149] = 480,
+      [150] = 240,
+      [152] = 120,
+      [153] = 120,
+      [154] = 480,
+      [155] = 480,
+      [157] = 480
+    },
+    {
+      [115] = 491520,
+      [116] = 491520,
+      [117] = 491520,
+      [118] = 491520,
+      [125] = 491520,
+      [126] = 491520,
+      [127] = 491520,
+      [128] = 491520,
+      [131] = 491520,
+      [133] = 491520,
+      [134] = 491520,
+      [135] = 491520,
+      [136] = 491520,
+      [137] = 491520,
+      [138] = 491520,
+      [139] = 491520,
+      [150] = 491520,
+      [151] = 491520,
+      [152] = 491520,
+      [153] = 491520,
+      [154] = 491520,
+      [155] = 491520,
+      [156] = 491520,
+      [157] = 491520,
+      [158] = 491520,
+      [159] = 491520
+    },
+    {
+      [115] = 30720,
+      [116] = 30720,
+      [117] = 30720,
+      [118] = 30720,
+      [119] = 30720,
+      [120] = 30720,
+      [121] = 30720,
+      [122] = 30720,
+      [123] = 30720,
+      [124] = 30720,
+      [125] = 30720,
+      [126] = 30720,
+      [127] = 30720,
+      [128] = 30720,
+      [131] = 30720,
+      [133] = 30720,
+      [134] = 30720,
+      [135] = 30720,
+      [136] = 30720,
+      [137] = 30720,
+      [138] = 30720,
+      [139] = 30720,
+      [140] = 30720,
+      [141] = 30720,
+      [142] = 30720,
+      [143] = 30720,
+      [144] = 30720,
+      [150] = 30720,
+      [151] = 30720,
+      [152] = 30720,
+      [153] = 30720,
+      [154] = 30720,
+      [155] = 30720,
+      [156] = 30720,
+      [157] = 30720,
+      [158] = 30720,
+      [159] = 30720
+    },
+    {
+      [18] = 1966080,
+      [19] = 1966080,
+      [37] = 1966080,
+      [38] = 1966080,
+      [56] = 1966080,
+      [57] = 1966080,
+      [75] = 1966080,
+      [76] = 1966080,
+      [94] = 1966080,
+      [95] = 1966080,
+      [113] = 1966080,
+      [114] = 1966080,
+      [115] = 1966080,
+      [116] = 1966080,
+      [117] = 1966080,
+      [118] = 1966080,
+      [125] = 1966080,
+      [126] = 1966080,
+      [127] = 1966080,
+      [128] = 1966080,
+      [131] = 1966080,
+      [132] = 1966080,
+      [133] = 1966080,
+      [134] = 1966080,
+      [137] = 1966080,
+      [138] = 1966080,
+      [139] = 1966080,
+      [150] = 1966080,
+      [152] = 1966080,
+      [153] = 1966080,
+      [154] = 1966080,
+      [155] = 1966080,
+      [158] = 1966080,
+      [159] = 1966080,
+      [160] = 1966080
+    },
+    {
+      [18] = 7864320,
+      [19] = 7864320,
+      [37] = 7864320,
+      [38] = 7864320,
+      [56] = 7864320,
+      [57] = 7864320,
+      [75] = 7864320,
+      [76] = 7864320,
+      [94] = 7864320,
+      [95] = 7864320,
+      [113] = 7864320,
+      [114] = 7864320,
+      [115] = 7864320,
+      [116] = 7864320,
+      [117] = 7864320,
+      [118] = 7864320,
+      [125] = 7864320,
+      [126] = 7864320,
+      [127] = 7864320,
+      [128] = 7864320,
+      [131] = 7864320,
+      [132] = 7864320,
+      [133] = 7864320,
+      [134] = 7864320,
+      [137] = 7864320,
+      [138] = 7864320,
+      [139] = 7864320,
+      [150] = 7864320,
+      [152] = 7864320,
+      [153] = 7864320,
+      [154] = 7864320,
+      [155] = 7864320,
+      [158] = 7864320,
+      [159] = 7864320,
+      [160] = 7864320
+    },
+    {
+      [115] = 503316480,
+      [116] = 503316480,
+      [117] = 503316480,
+      [118] = 503316480,
+      [125] = 503316480,
+      [126] = 503316480,
+      [127] = 503316480,
+      [128] = 503316480,
+      [131] = 503316480,
+      [133] = 503316480,
+      [134] = 503316480,
+      [135] = 503316480,
+      [136] = 503316480,
+      [137] = 503316480,
+      [138] = 503316480,
+      [139] = 503316480,
+      [150] = 503316480,
+      [151] = 503316480,
+      [152] = 503316480,
+      [153] = 503316480,
+      [154] = 503316480,
+      [155] = 503316480,
+      [156] = 503316480,
+      [157] = 503316480,
+      [158] = 503316480,
+      [159] = 503316480
+    },
+    {
+      [115] = 125829120,
+      [116] = 125829120,
+      [117] = 125829120,
+      [118] = 125829120,
+      [125] = 125829120,
+      [126] = 125829120,
+      [127] = 125829120,
+      [128] = 125829120,
+      [131] = 125829120,
+      [133] = 125829120,
+      [134] = 125829120,
+      [135] = 125829120,
+      [136] = 125829120,
+      [137] = 125829120,
+      [138] = 125829120,
+      [139] = 125829120,
+      [150] = 125829120,
+      [151] = 125829120,
+      [152] = 125829120,
+      [153] = 125829120,
+      [154] = 125829120,
+      [155] = 125829120,
+      [156] = 125829120,
+      [157] = 125829120,
+      [158] = 125829120,
+      [159] = 125829120
+    },
+    {
+      [115] = 7864320,
+      [116] = 7864320,
+      [117] = 7864320,
+      [118] = 7864320,
+      [125] = 7864320,
+      [126] = 7864320,
+      [127] = 7864320,
+      [128] = 7864320,
+      [131] = 7864320,
+      [133] = 7864320,
+      [134] = 7864320,
+      [135] = 7864320,
+      [136] = 7864320,
+      [137] = 7864320,
+      [138] = 7864320,
+      [139] = 7864320,
+      [150] = 7864320,
+      [151] = 7864320,
+      [152] = 7864320,
+      [153] = 7864320,
+      [154] = 7864320,
+      [155] = 7864320,
+      [156] = 7864320,
+      [157] = 7864320
+    },
+    {
+      [115] = 7864320,
+      [116] = 7864320,
+      [117] = 7864320,
+      [118] = 7864320,
+      [125] = 7864320,
+      [126] = 7864320,
+      [127] = 7864320,
+      [128] = 7864320,
+      [131] = 7864320,
+      [133] = 7864320,
+      [134] = 7864320,
+      [135] = 7864320,
+      [136] = 7864320,
+      [137] = 7864320,
+      [138] = 7864320,
+      [139] = 7864320,
+      [150] = 7864320,
+      [151] = 7864320,
+      [152] = 7864320,
+      [153] = 7864320,
+      [154] = 7864320,
+      [155] = 7864320,
+      [156] = 7864320,
+      [157] = 7864320,
+      [158] = 7864320,
+      [159] = 7864320
+    },
+    {
+      [115] = 122880,
+      [116] = 122880,
+      [117] = 122880,
+      [118] = 122880,
+      [125] = 122880,
+      [126] = 122880,
+      [127] = 122880,
+      [128] = 122880,
+      [131] = 122880,
+      [133] = 122880,
+      [134] = 122880,
+      [137] = 122880,
+      [138] = 122880,
+      [139] = 122880,
+      [150] = 122880,
+      [152] = 122880,
+      [153] = 122880,
+      [154] = 122880,
+      [155] = 122880
+    },
+    {
+      [115] = 122880,
+      [116] = 122880,
+      [117] = 122880,
+      [118] = 122880,
+      [119] = 122880,
+      [120] = 122880,
+      [121] = 122880,
+      [122] = 122880,
+      [123] = 122880,
+      [124] = 122880,
+      [125] = 122880,
+      [126] = 122880,
+      [127] = 122880,
+      [128] = 122880,
+      [131] = 122880,
+      [133] = 122880,
+      [134] = 122880,
+      [135] = 122880,
+      [136] = 122880,
+      [137] = 122880,
+      [138] = 122880,
+      [139] = 122880,
+      [150] = 122880,
+      [151] = 122880,
+      [152] = 122880,
+      [153] = 122880,
+      [154] = 122880,
+      [155] = 122880,
+      [158] = 122880,
+      [159] = 122880
+    },
+    {
+      [115] = 491520,
+      [116] = 491520,
+      [117] = 491520,
+      [118] = 491520,
+      [119] = 491520,
+      [120] = 491520,
+      [121] = 491520,
+      [122] = 491520,
+      [123] = 491520,
+      [124] = 491520,
+      [125] = 491520,
+      [126] = 491520,
+      [127] = 491520,
+      [128] = 491520,
+      [131] = 491520,
+      [133] = 491520,
+      [134] = 491520,
+      [135] = 491520,
+      [136] = 491520,
+      [137] = 491520,
+      [138] = 491520,
+      [139] = 491520,
+      [150] = 491520,
+      [151] = 491520,
+      [152] = 491520,
+      [153] = 491520,
+      [154] = 491520,
+      [155] = 491520,
+      [156] = 491520,
+      [157] = 491520,
+      [158] = 491520,
+      [159] = 491520
+    },
+    {
+      [1] = 1920,
+      [2] = 1920,
+      [3] = 1920,
+      [4] = 1920,
+      [5] = 1920,
+      [6] = 1920,
+      [7] = 1920,
+      [8] = 1920,
+      [18] = 1920,
+      [19] = 1920,
+      [20] = 1920,
+      [21] = 1920,
+      [22] = 1920,
+      [23] = 1920,
+      [24] = 1920,
+      [25] = 1920,
+      [26] = 1920,
+      [27] = 1920,
+      [37] = 1920,
+      [38] = 1920,
+      [39] = 1920,
+      [40] = 1920,
+      [41] = 1920,
+      [42] = 1920,
+      [43] = 1920,
+      [44] = 1920,
+      [45] = 1920,
+      [46] = 1920,
+      [56] = 1920,
+      [57] = 1920,
+      [58] = 1920,
+      [59] = 1920,
+      [60] = 1920,
+      [61] = 1920,
+      [62] = 1920,
+      [63] = 1920,
+      [64] = 1920,
+      [65] = 1920,
+      [75] = 1920,
+      [76] = 1920,
+      [77] = 1920,
+      [78] = 1920,
+      [79] = 1920,
+      [80] = 1920,
+      [81] = 1920,
+      [82] = 1920,
+      [83] = 1920,
+      [84] = 1920,
+      [94] = 1920,
+      [95] = 1920,
+      [96] = 1920,
+      [97] = 1920,
+      [98] = 1920,
+      [99] = 1920,
+      [100] = 1920,
+      [101] = 1920,
+      [102] = 1920,
+      [103] = 1920,
+      [113] = 1920,
+      [114] = 1920,
+      [115] = 1920,
+      [116] = 1920,
+      [117] = 1920,
+      [118] = 1920,
+      [125] = 1920,
+      [126] = 1920,
+      [127] = 1920,
+      [128] = 1920,
+      [131] = 1920,
+      [132] = 1920,
+      [133] = 1920,
+      [134] = 1920,
+      [137] = 1920,
+      [138] = 1920,
+      [139] = 1920,
+      [145] = 1920,
+      [146] = 1920,
+      [147] = 1920,
+      [148] = 1920,
+      [149] = 1920,
+      [150] = 1920,
+      [152] = 1920,
+      [153] = 1920,
+      [154] = 1920,
+      [155] = 1920,
+      [158] = 1920,
+      [159] = 1920,
+      [160] = 1920
+    },
+    {
+      [18] = 491520,
+      [19] = 491520,
+      [37] = 491520,
+      [38] = 491520,
+      [56] = 491520,
+      [57] = 491520,
+      [75] = 491520,
+      [76] = 491520,
+      [94] = 491520,
+      [95] = 491520,
+      [113] = 491520,
+      [114] = 491520,
+      [115] = 491520,
+      [116] = 491520,
+      [117] = 491520,
+      [118] = 491520,
+      [119] = 491520,
+      [120] = 491520,
+      [121] = 491520,
+      [122] = 491520,
+      [123] = 491520,
+      [124] = 491520,
+      [125] = 491520,
+      [126] = 491520,
+      [127] = 491520,
+      [128] = 491520,
+      [131] = 491520,
+      [132] = 491520,
+      [133] = 491520,
+      [134] = 491520,
+      [135] = 491520,
+      [136] = 491520,
+      [137] = 491520,
+      [138] = 491520,
+      [139] = 491520,
+      [140] = 491520,
+      [141] = 491520,
+      [142] = 491520,
+      [143] = 491520,
+      [144] = 491520,
+      [150] = 491520,
+      [151] = 491520,
+      [152] = 491520,
+      [153] = 491520,
+      [154] = 491520,
+      [155] = 491520,
+      [156] = 491520,
+      [157] = 491520,
+      [158] = 491520,
+      [159] = 491520,
+      [160] = 491520
+    },
+    {
+      [134] = 6,
+      [150] = 12,
+      [152] = 6,
+      [153] = 6,
+      [154] = 24,
+      [155] = 24
+    },
+    {[126] = 90},
+    {
+      [115] = 1966080,
+      [116] = 1966080,
+      [117] = 1966080,
+      [118] = 1966080,
+      [125] = 1966080,
+      [126] = 1966080,
+      [127] = 1966080,
+      [128] = 1966080,
+      [131] = 1966080,
+      [133] = 1966080,
+      [134] = 1966080,
+      [135] = 1966080,
+      [136] = 1966080,
+      [137] = 1966080,
+      [138] = 1966080,
+      [139] = 1966080,
+      [140] = 1966080,
+      [141] = 1966080,
+      [142] = 1966080,
+      [143] = 1966080,
+      [144] = 1966080,
+      [150] = 1966080,
+      [151] = 1966080,
+      [152] = 1966080,
+      [153] = 1966080,
+      [154] = 1966080,
+      [155] = 1966080,
+      [156] = 1966080,
+      [157] = 1966080,
+      [158] = 1966080,
+      [159] = 1966080
+    },
+    {
+      [115] = 503316480,
+      [116] = 503316480,
+      [117] = 503316480,
+      [118] = 503316480,
+      [125] = 503316480,
+      [126] = 503316480,
+      [127] = 503316480,
+      [128] = 503316480,
+      [131] = 503316480,
+      [133] = 503316480,
+      [134] = 503316480,
+      [135] = 503316480,
+      [136] = 503316480,
+      [137] = 503316480,
+      [138] = 503316480,
+      [139] = 503316480,
+      [150] = 503316480,
+      [151] = 503316480,
+      [152] = 503316480,
+      [153] = 503316480,
+      [154] = 503316480,
+      [155] = 503316480,
+      [156] = 503316480,
+      [157] = 503316480
+    },
+    {
+      [18] = 7864320,
+      [19] = 7864320,
+      [37] = 7864320,
+      [38] = 7864320,
+      [56] = 7864320,
+      [57] = 7864320,
+      [75] = 7864320,
+      [76] = 7864320,
+      [94] = 7864320,
+      [95] = 7864320,
+      [113] = 7864320,
+      [114] = 7864320,
+      [115] = 7864320,
+      [116] = 7864320,
+      [117] = 7864320,
+      [118] = 7864320,
+      [125] = 7864320,
+      [126] = 7864320,
+      [127] = 7864320,
+      [128] = 7864320,
+      [131] = 7864320,
+      [132] = 7864320,
+      [133] = 7864320,
+      [134] = 7864320,
+      [135] = 7864320,
+      [136] = 7864320,
+      [137] = 7864320,
+      [138] = 7864320,
+      [139] = 7864320,
+      [140] = 7864320,
+      [141] = 7864320,
+      [142] = 7864320,
+      [143] = 7864320,
+      [144] = 7864320,
+      [150] = 7864320,
+      [151] = 7864320,
+      [152] = 7864320,
+      [153] = 7864320,
+      [154] = 7864320,
+      [155] = 7864320,
+      [156] = 7864320,
+      [157] = 7864320
+    },
+    {
+      [125] = 120,
+      [126] = 120,
+      [134] = 6,
+      [150] = 12,
+      [152] = 6,
+      [153] = 6,
+      [154] = 24
+    },
+    {
+      [133] = 15,
+      [134] = 6,
+      [150] = 12,
+      [152] = 6,
+      [153] = 6,
+      [154] = 24,
+      [155] = 24
+    },
+    {
+      [18] = 491520,
+      [19] = 491520,
+      [37] = 491520,
+      [38] = 491520,
+      [56] = 491520,
+      [57] = 491520,
+      [75] = 491520,
+      [76] = 491520,
+      [94] = 491520,
+      [95] = 491520,
+      [113] = 491520,
+      [114] = 491520,
+      [115] = 491520,
+      [116] = 491520,
+      [117] = 491520,
+      [118] = 491520,
+      [125] = 491520,
+      [126] = 491520,
+      [127] = 491520,
+      [128] = 491520,
+      [131] = 491520,
+      [132] = 491520,
+      [133] = 491520,
+      [134] = 491520,
+      [137] = 491520,
+      [138] = 491520,
+      [139] = 491520,
+      [150] = 491520,
+      [152] = 491520,
+      [153] = 491520,
+      [154] = 491520,
+      [155] = 491520,
+      [158] = 491520,
+      [159] = 491520,
+      [160] = 491520
+    },
+    {
+      [115] = 122880,
+      [116] = 122880,
+      [117] = 122880,
+      [118] = 122880,
+      [119] = 122880,
+      [120] = 122880,
+      [121] = 122880,
+      [122] = 122880,
+      [123] = 122880,
+      [124] = 122880,
+      [125] = 122880,
+      [126] = 122880,
+      [127] = 122880,
+      [128] = 122880,
+      [131] = 122880,
+      [133] = 122880,
+      [134] = 122880,
+      [135] = 122880,
+      [136] = 122880,
+      [137] = 122880,
+      [138] = 122880,
+      [139] = 122880,
+      [150] = 122880,
+      [151] = 122880,
+      [152] = 122880,
+      [153] = 122880,
+      [154] = 122880,
+      [155] = 122880,
+      [156] = 122880,
+      [157] = 122880,
+      [158] = 122880,
+      [159] = 122880
+    },
+    {
+      [18] = 122880,
+      [19] = 122880,
+      [37] = 122880,
+      [38] = 122880,
+      [56] = 122880,
+      [57] = 122880,
+      [75] = 122880,
+      [76] = 122880,
+      [94] = 122880,
+      [95] = 122880,
+      [113] = 122880,
+      [114] = 122880,
+      [115] = 122880,
+      [116] = 122880,
+      [117] = 122880,
+      [118] = 122880,
+      [125] = 122880,
+      [126] = 122880,
+      [127] = 122880,
+      [128] = 122880,
+      [131] = 122880,
+      [132] = 122880,
+      [133] = 122880,
+      [134] = 122880,
+      [137] = 122880,
+      [138] = 122880,
+      [139] = 122880,
+      [150] = 122880,
+      [152] = 122880,
+      [153] = 122880,
+      [154] = 122880,
+      [155] = 122880,
+      [158] = 122880,
+      [159] = 122880,
+      [160] = 122880
+    },
+    {
+      [18] = 30720,
+      [19] = 30720,
+      [37] = 30720,
+      [38] = 30720,
+      [56] = 30720,
+      [57] = 30720,
+      [75] = 30720,
+      [76] = 30720,
+      [94] = 30720,
+      [95] = 30720,
+      [113] = 30720,
+      [114] = 30720,
+      [115] = 30720,
+      [116] = 30720,
+      [117] = 30720,
+      [118] = 30720,
+      [125] = 30720,
+      [126] = 30720,
+      [127] = 30720,
+      [128] = 30720,
+      [131] = 30720,
+      [132] = 30720,
+      [133] = 30720,
+      [134] = 30720,
+      [137] = 30720,
+      [138] = 30720,
+      [139] = 30720,
+      [150] = 30720,
+      [152] = 30720,
+      [153] = 30720,
+      [154] = 30720,
+      [155] = 30720,
+      [158] = 30720,
+      [159] = 30720,
+      [160] = 30720
+    },
+    {
+      [115] = 1920,
+      [116] = 1920,
+      [127] = 1920,
+      [128] = 1920,
+      [133] = 15,
+      [134] = 1920,
+      [135] = 1920,
+      [136] = 1920,
+      [137] = 1920,
+      [139] = 1920,
+      [150] = 1920,
+      [151] = 1920,
+      [153] = 1920,
+      [154] = 1920,
+      [155] = 1920,
+      [158] = 1920,
+      [159] = 1920
+    },
+    {
+      [115] = 1920,
+      [116] = 1920,
+      [117] = 1920,
+      [118] = 1920,
+      [125] = 1920,
+      [126] = 1920,
+      [127] = 1920,
+      [128] = 1920,
+      [133] = 15,
+      [134] = 1920,
+      [135] = 1920,
+      [136] = 1920,
+      [137] = 1920,
+      [139] = 1920,
+      [150] = 1920,
+      [151] = 1920,
+      [153] = 1920,
+      [154] = 1920,
+      [155] = 1920,
+      [157] = 1920,
+      [158] = 1920,
+      [159] = 1920
+    },
+    {[133] = 15},
+    {
+      [115] = 30720,
+      [116] = 30720,
+      [117] = 30720,
+      [118] = 30720,
+      [125] = 30720,
+      [126] = 30720,
+      [127] = 30720,
+      [128] = 30720,
+      [133] = 15,
+      [134] = 30720,
+      [135] = 30720,
+      [136] = 30720,
+      [137] = 30720,
+      [139] = 30720,
+      [150] = 30720,
+      [151] = 30720,
+      [153] = 30720,
+      [154] = 30720,
+      [155] = 30720,
+      [157] = 30720,
+      [158] = 30720,
+      [159] = 30720
+    },
+    {
+      [115] = 7680,
+      [116] = 7680,
+      [117] = 7680,
+      [118] = 7680,
+      [125] = 7680,
+      [126] = 7680,
+      [127] = 7680,
+      [128] = 7680,
+      [133] = 15,
+      [134] = 7680,
+      [135] = 7680,
+      [136] = 7680,
+      [137] = 7680,
+      [139] = 7680,
+      [150] = 7680,
+      [151] = 7680,
+      [153] = 7680,
+      [154] = 7680,
+      [155] = 7680,
+      [157] = 7680,
+      [158] = 7680,
+      [159] = 7680
+    },
+    {
+      [133] = 15,
+      [134] = 120,
+      [150] = 240,
+      [153] = 120,
+      [154] = 480,
+      [155] = 480,
+      [158] = 480,
+      [159] = 480
+    },
+    {
+      [133] = 15,
+      [134] = 120,
+      [140] = 30,
+      [141] = 30,
+      [142] = 30,
+      [143] = 30,
+      [144] = 30,
+      [150] = 240,
+      [153] = 120,
+      [154] = 480,
+      [155] = 480,
+      [158] = 480,
+      [159] = 480
+    },
+    {
+      [115] = 122880,
+      [116] = 122880,
+      [117] = 122880,
+      [118] = 122880,
+      [125] = 122880,
+      [126] = 122880,
+      [127] = 122880,
+      [128] = 122880,
+      [133] = 15,
+      [134] = 122880,
+      [135] = 122880,
+      [136] = 122880,
+      [137] = 122880,
+      [139] = 122880,
+      [150] = 122880,
+      [151] = 122880,
+      [153] = 122880,
+      [154] = 122880,
+      [155] = 122880,
+      [157] = 122880,
+      [158] = 122880,
+      [159] = 122880
+    },
+    {
+      [115] = 1966080,
+      [116] = 1966080,
+      [117] = 1966080,
+      [118] = 1966080,
+      [125] = 1966080,
+      [126] = 1966080,
+      [127] = 1966080,
+      [128] = 1966080,
+      [133] = 15,
+      [134] = 1966080,
+      [135] = 1966080,
+      [136] = 1966080,
+      [137] = 1966080,
+      [139] = 1966080,
+      [150] = 1966080,
+      [151] = 1966080,
+      [153] = 1966080,
+      [154] = 1966080,
+      [155] = 1966080,
+      [157] = 1966080,
+      [158] = 1966080,
+      [159] = 1966080
+    },
+    {
+      [115] = 7864320,
+      [116] = 7864320,
+      [117] = 7864320,
+      [118] = 7864320,
+      [125] = 7864320,
+      [126] = 7864320,
+      [127] = 7864320,
+      [128] = 7864320,
+      [133] = 15,
+      [134] = 7864320,
+      [135] = 7864320,
+      [136] = 7864320,
+      [137] = 7864320,
+      [139] = 7864320,
+      [150] = 7864320,
+      [151] = 7864320,
+      [153] = 7864320,
+      [154] = 7864320,
+      [155] = 7864320,
+      [157] = 7864320,
+      [158] = 7864320,
+      [159] = 7864320
+    },
+    {
+      [115] = 125829120,
+      [116] = 125829120,
+      [117] = 125829120,
+      [118] = 125829120,
+      [119] = 125829120,
+      [120] = 125829120,
+      [125] = 125829120,
+      [126] = 125829120,
+      [127] = 125829120,
+      [128] = 125829120,
+      [133] = 15,
+      [134] = 125829120,
+      [135] = 125829120,
+      [136] = 125829120,
+      [137] = 125829120,
+      [139] = 125829120,
+      [150] = 125829120,
+      [151] = 125829120,
+      [153] = 125829120,
+      [154] = 125829120,
+      [155] = 125829120,
+      [157] = 125829120,
+      [158] = 125829120,
+      [159] = 125829120
+    },
+    {
+      [115] = 1920,
+      [117] = 1920,
+      [118] = 1920,
+      [125] = 1920,
+      [126] = 1920,
+      [127] = 1920,
+      [128] = 1920,
+      [133] = 15,
+      [158] = 1920,
+      [159] = 1920
+    },
+    {
+      [115] = 1966080,
+      [116] = 1966080,
+      [117] = 1966080,
+      [118] = 1966080,
+      [125] = 1966080,
+      [126] = 1966080,
+      [134] = 1966080,
+      [135] = 1966080,
+      [137] = 1966080,
+      [139] = 1966080,
+      [150] = 1966080,
+      [151] = 1966080,
+      [153] = 1966080,
+      [154] = 1966080,
+      [155] = 1966080
+    },
+    {
+      [115] = 491520,
+      [116] = 491520,
+      [117] = 491520,
+      [118] = 491520,
+      [127] = 491520,
+      [128] = 491520,
+      [137] = 491520,
+      [139] = 491520
+    },
+    {[154] = 16, [155] = 16},
+    {
+      [115] = 16,
+      [116] = 16,
+      [117] = 16,
+      [118] = 16,
+      [137] = 16,
+      [139] = 16
+    },
+    {
+      [115] = 7680,
+      [116] = 7680,
+      [117] = 7680,
+      [118] = 7680,
+      [125] = 7680,
+      [126] = 7680,
+      [134] = 7680,
+      [135] = 7680,
+      [137] = 7680,
+      [139] = 7680,
+      [150] = 7680,
+      [151] = 7680,
+      [153] = 7680,
+      [154] = 7680,
+      [155] = 7680
+    },
+    {
+      [115] = 122880,
+      [116] = 122880,
+      [117] = 122880,
+      [118] = 122880,
+      [125] = 122880,
+      [126] = 122880,
+      [127] = 122880,
+      [128] = 122880,
+      [134] = 122880,
+      [135] = 122880,
+      [137] = 122880,
+      [139] = 122880,
+      [150] = 122880,
+      [151] = 122880,
+      [153] = 122880,
+      [154] = 122880,
+      [155] = 122880
+    },
+    {
+      [115] = 1966080,
+      [116] = 1966080,
+      [117] = 1966080,
+      [118] = 1966080,
+      [125] = 1966080,
+      [126] = 1966080,
+      [127] = 1966080,
+      [128] = 1966080,
+      [134] = 1966080,
+      [135] = 1966080,
+      [137] = 1966080,
+      [139] = 1966080,
+      [150] = 1966080,
+      [151] = 1966080,
+      [153] = 1966080,
+      [154] = 1966080,
+      [155] = 1966080
+    },
+    {
+      [115] = 120,
+      [116] = 120,
+      [117] = 120,
+      [118] = 120,
+      [125] = 120,
+      [126] = 120,
+      [134] = 120,
+      [135] = 120,
+      [137] = 120,
+      [139] = 120,
+      [150] = 120,
+      [151] = 120,
+      [153] = 120
+    },
+    {
+      [115] = 491520,
+      [116] = 491520,
+      [117] = 491520,
+      [118] = 491520,
+      [125] = 491520,
+      [126] = 491520,
+      [127] = 491520,
+      [128] = 491520,
+      [134] = 491520,
+      [135] = 491520,
+      [137] = 491520,
+      [139] = 491520,
+      [150] = 491520,
+      [151] = 491520,
+      [153] = 491520,
+      [154] = 491520,
+      [155] = 491520
+    },
+    {[137] = 30, [139] = 30, [154] = 30, [155] = 30},
+    {
+      [115] = 7864320,
+      [116] = 7864320,
+      [117] = 7864320,
+      [118] = 7864320,
+      [125] = 7864320,
+      [126] = 7864320,
+      [134] = 7864320,
+      [135] = 7864320,
+      [137] = 7864320,
+      [139] = 7864320,
+      [150] = 7864320,
+      [151] = 7864320,
+      [153] = 7864320,
+      [154] = 7864320,
+      [155] = 7864320
+    },
+    {
+      [115] = 30,
+      [116] = 30,
+      [117] = 30,
+      [118] = 30,
+      [125] = 30,
+      [126] = 30,
+      [135] = 30,
+      [137] = 30,
+      [139] = 30,
+      [150] = 30,
+      [151] = 30,
+      [154] = 30,
+      [155] = 30
+    },
+    {
+      [115] = 1920,
+      [116] = 1920,
+      [117] = 1920,
+      [118] = 1920,
+      [125] = 1920,
+      [126] = 1920,
+      [134] = 1920,
+      [135] = 1920,
+      [137] = 1920,
+      [139] = 1920,
+      [150] = 1920,
+      [151] = 1920,
+      [153] = 1920,
+      [154] = 1920,
+      [155] = 1920
+    },
+    {
+      [115] = 16,
+      [116] = 16,
+      [117] = 16,
+      [118] = 16,
+      [125] = 16,
+      [126] = 16,
+      [134] = 16,
+      [135] = 16,
+      [137] = 16,
+      [139] = 16,
+      [150] = 16,
+      [151] = 16,
+      [153] = 16,
+      [154] = 16,
+      [155] = 16
+    },
+    {
+      [115] = 30720,
+      [116] = 30720,
+      [117] = 30720,
+      [118] = 30720,
+      [137] = 30720,
+      [139] = 30720
+    },
+    {
+      [115] = 480,
+      [116] = 480,
+      [117] = 480,
+      [118] = 480,
+      [125] = 480,
+      [126] = 480,
+      [134] = 480,
+      [135] = 480,
+      [137] = 480,
+      [139] = 480,
+      [150] = 480,
+      [151] = 480,
+      [153] = 480,
+      [154] = 480,
+      [155] = 480
+    },
+    {
+      [115] = 30720,
+      [116] = 30720,
+      [117] = 30720,
+      [118] = 30720,
+      [125] = 30720,
+      [126] = 30720,
+      [134] = 30720,
+      [135] = 30720,
+      [137] = 30720,
+      [139] = 30720,
+      [150] = 30720,
+      [151] = 30720,
+      [153] = 30720,
+      [154] = 30720,
+      [155] = 30720
+    },
+    {
+      [115] = 7864320,
+      [116] = 7864320,
+      [117] = 7864320,
+      [118] = 7864320,
+      [125] = 7864320,
+      [126] = 7864320,
+      [127] = 7864320,
+      [128] = 7864320,
+      [134] = 7864320,
+      [135] = 7864320,
+      [136] = 7864320,
+      [137] = 7864320,
+      [139] = 7864320,
+      [150] = 7864320,
+      [151] = 7864320,
+      [153] = 7864320,
+      [154] = 7864320,
+      [155] = 7864320,
+      [160] = 7
+    },
+    {
+      [115] = 7680,
+      [116] = 7680,
+      [117] = 7680,
+      [118] = 7680,
+      [137] = 7680,
+      [139] = 7680
+    },
+    {
+      [115] = 30720,
+      [116] = 30720,
+      [117] = 30720,
+      [118] = 30720,
+      [125] = 30720,
+      [126] = 30720,
+      [127] = 30720,
+      [128] = 30720,
+      [134] = 30720,
+      [135] = 30720,
+      [137] = 30720,
+      [139] = 30720,
+      [150] = 30720,
+      [151] = 30720,
+      [153] = 30720,
+      [154] = 30720,
+      [155] = 30720
+    },
+    {
+      [115] = 120,
+      [116] = 120,
+      [117] = 120,
+      [118] = 120,
+      [125] = 120,
+      [126] = 120,
+      [134] = 120,
+      [135] = 120,
+      [137] = 120,
+      [139] = 120,
+      [140] = 120,
+      [141] = 120,
+      [142] = 120,
+      [143] = 120,
+      [144] = 120,
+      [150] = 120,
+      [151] = 120,
+      [153] = 120
+    },
+    {[137] = 16, [139] = 16, [154] = 16, [155] = 16},
+    {
+      [115] = 7680,
+      [116] = 7680,
+      [117] = 7680,
+      [118] = 7680,
+      [125] = 7680,
+      [126] = 7680,
+      [127] = 7680,
+      [128] = 7680,
+      [134] = 7680,
+      [135] = 7680,
+      [137] = 7680,
+      [139] = 7680,
+      [150] = 7680,
+      [151] = 7680,
+      [153] = 7680,
+      [154] = 7680,
+      [155] = 7680
+    },
+    {
+      [115] = 30,
+      [116] = 30,
+      [117] = 30,
+      [118] = 30,
+      [125] = 30,
+      [126] = 30,
+      [135] = 30,
+      [137] = 30,
+      [139] = 30,
+      [140] = 24,
+      [141] = 24,
+      [142] = 24,
+      [143] = 24,
+      [144] = 24,
+      [150] = 30,
+      [151] = 30,
+      [154] = 30,
+      [155] = 30
+    },
+    {
+      [115] = 7864320,
+      [116] = 7864320,
+      [117] = 7864320,
+      [118] = 7864320,
+      [125] = 7864320,
+      [126] = 7864320,
+      [127] = 7864320,
+      [128] = 7864320,
+      [134] = 7864320,
+      [135] = 7864320,
+      [137] = 7864320,
+      [139] = 7864320,
+      [150] = 7864320,
+      [151] = 7864320,
+      [153] = 7864320,
+      [154] = 7864320,
+      [155] = 7864320
+    },
+    {
+      [115] = 1966080,
+      [116] = 1966080,
+      [117] = 1966080,
+      [118] = 1966080,
+      [127] = 1966080,
+      [128] = 1966080,
+      [135] = 1966080,
+      [137] = 1966080,
+      [139] = 1966080
+    },
+    {
+      [115] = 122880,
+      [116] = 122880,
+      [117] = 122880,
+      [118] = 122880,
+      [137] = 122880,
+      [139] = 122880
+    },
+    {[115] = 120, [116] = 120, [137] = 120, [139] = 120},
+    {
+      [115] = 1920,
+      [116] = 1920,
+      [117] = 1920,
+      [118] = 1920,
+      [137] = 1920,
+      [139] = 1920
+    },
+    {
+      [115] = 30720,
+      [116] = 30720,
+      [117] = 30720,
+      [118] = 30720,
+      [125] = 30720,
+      [126] = 30720,
+      [134] = 30720,
+      [135] = 30720,
+      [137] = 30720,
+      [139] = 30720,
+      [140] = 30720,
+      [141] = 30720,
+      [142] = 30720,
+      [143] = 30720,
+      [144] = 30720,
+      [150] = 30720,
+      [151] = 30720,
+      [153] = 30720,
+      [154] = 30720,
+      [155] = 30720
+    },
+    {
+      [115] = 30,
+      [116] = 30,
+      [137] = 30,
+      [139] = 30,
+      [154] = 30,
+      [155] = 30
+    },
+    {
+      [140] = 24,
+      [141] = 24,
+      [142] = 24,
+      [143] = 24,
+      [144] = 24
+    },
+    {[145] = 24, [146] = 24, [147] = 24}
   },
   ["usage"] = {
     {},
@@ -14828,6 +16441,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "abyssalalloy",
       ["molten"] = "molten.abyssalalloy",
+      ["v"] = 41,
       ["u"] = 170,
       ["a"] = 183,
       ["p"] = 75
@@ -14914,6 +16528,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 319,
       ["molten"] = "molten.adamantium",
+      ["v"] = 3,
       ["u"] = 73,
       ["a"] = 33,
       ["p"] = 18
@@ -14923,6 +16538,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10085,
       ["molten"] = "molten.adamantium alloy",
+      ["v"] = 36,
       ["u"] = 20,
       ["a"] = 175,
       ["p"] = 67
@@ -14932,6 +16548,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 96,
       ["molten"] = "molten.ademic steel",
+      ["v"] = 33,
       ["u"] = 132,
       ["a"] = 175,
       ["p"] = 67
@@ -14941,6 +16558,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "advancednitinol",
       ["molten"] = "molten.advancednitinol",
+      ["v"] = 42,
       ["u"] = 2,
       ["a"] = 184,
       ["p"] = 76
@@ -15025,6 +16643,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 485,
       ["molten"] = "molten.alduorite",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 103,
       ["p"] = 9
@@ -15064,6 +16683,7 @@ return {
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5721},
       ["coating"] = "standard",
       ["molten"] = "molten.aluminium",
+      ["tier"] = "LV",
       ["u"] = 6,
       ["a"] = 10,
       ["p"] = 5
@@ -15094,6 +16714,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 400,
       ["molten"] = "molten.alumite",
+      ["tier"] = "ULV",
       ["u"] = 20,
       ["a"] = 39,
       ["p"] = 9
@@ -15124,6 +16745,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 103,
       ["molten"] = "molten.americium",
+      ["tier"] = "ZPM",
       ["u"] = 40,
       ["a"] = 9,
       ["p"] = 4
@@ -15154,6 +16776,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "ammoniumbifluoride",
       ["molten"] = "molten.ammoniumbifluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -15177,6 +16800,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "ancientgranite",
       ["molten"] = "molten.ancientgranite",
+      ["v"] = 44,
       ["u"] = 8,
       ["a"] = 186,
       ["overrides"] = {
@@ -15203,6 +16827,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1380},
       ["coating"] = "standard",
       ["molten"] = "molten.annealedcopper",
+      ["tier"] = "LV",
       ["u"] = 86,
       ["a"] = 92,
       ["p"] = 34
@@ -15226,6 +16851,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 58,
       ["molten"] = "molten.antimony",
+      ["tier"] = "LV",
       ["u"] = 8,
       ["a"] = 22,
       ["p"] = 6
@@ -15291,6 +16917,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "arcanite",
       ["molten"] = "molten.arcanite",
+      ["v"] = 45,
       ["u"] = 170,
       ["a"] = 187,
       ["p"] = 75
@@ -15300,6 +16927,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "arceusalloy2b",
       ["molten"] = "molten.arceusalloy2b",
+      ["v"] = 46,
       ["u"] = 171,
       ["a"] = 188,
       ["p"] = 79
@@ -15325,6 +16953,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 39,
       ["molten"] = "molten.arsenic",
+      ["tier"] = "LV",
       ["u"] = 8,
       ["a"] = 23,
       ["p"] = 1
@@ -15348,6 +16977,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10102,
       ["molten"] = "molten.artherium-sn",
+      ["v"] = 34,
       ["u"] = 161,
       ["a"] = 178,
       ["p"] = 66
@@ -15387,6 +17017,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "astraltitanium",
       ["molten"] = "molten.astraltitanium",
+      ["v"] = 47,
       ["u"] = 172,
       ["a"] = 189,
       ["p"] = 79
@@ -15403,6 +17034,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10022,
       ["molten"] = "molten.atomic separation catalyst",
+      ["v"] = 33,
       ["u"] = 20,
       ["a"] = 175,
       ["p"] = 67
@@ -15412,6 +17044,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "babbitalloy",
       ["molten"] = "molten.babbitalloy",
+      ["v"] = 44,
       ["u"] = 2,
       ["a"] = 190,
       ["p"] = 78
@@ -15523,6 +17156,7 @@ return {
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5675},
       ["coating"] = "pps",
       ["molten"] = "molten.bedrockium",
+      ["v"] = 16,
       ["u"] = 109,
       ["a"] = 108,
       ["p"] = 40
@@ -15555,6 +17189,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "berylliumfluoride",
       ["molten"] = "molten.berylliumfluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -15564,6 +17199,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "berylliumhydroxide",
       ["molten"] = "molten.berylliumhydroxide",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -15677,6 +17313,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 586,
       ["molten"] = "molten.blackdwarfmatter",
+      ["v"] = 9,
       ["u"] = 125,
       ["a"] = 137,
       ["p"] = 9
@@ -15686,6 +17323,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "blackmetal",
       ["molten"] = "molten.blackmetal",
+      ["v"] = 48,
       ["u"] = 173,
       ["a"] = 191,
       ["p"] = 75
@@ -15698,6 +17336,7 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5660},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5665},
       ["molten"] = "molten.blackplutonium",
+      ["v"] = 4,
       ["u"] = 104,
       ["a"] = 105,
       ["p"] = 17
@@ -15718,6 +17357,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "blacktitanium",
       ["molten"] = "molten.blacktitanium",
+      ["v"] = 42,
       ["u"] = 2,
       ["a"] = 192,
       ["p"] = 76
@@ -15754,6 +17394,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "bloodsteel",
       ["molten"] = "molten.bloodsteel",
+      ["v"] = 48,
       ["u"] = 18,
       ["a"] = 191,
       ["p"] = 75
@@ -15774,6 +17415,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 349,
       ["molten"] = "molten.bluesteel",
+      ["tier"] = "EV",
       ["u"] = 85,
       ["a"] = 47,
       ["p"] = 9
@@ -15828,6 +17470,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 611,
       ["molten"] = "molten.borosilicateglass",
+      ["v"] = 18,
       ["u"] = 128,
       ["a"] = 139,
       ["p"] = 50
@@ -15837,6 +17480,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "botmium",
       ["molten"] = "molten.botmium",
+      ["v"] = 49,
       ["u"] = 172,
       ["a"] = 193,
       ["p"] = 79
@@ -15855,6 +17499,7 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5600},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5603},
       ["molten"] = "molten.brass",
+      ["tier"] = "MV",
       ["u"] = 58,
       ["a"] = 67,
       ["overrides"] = {
@@ -15886,6 +17531,8 @@ return {
       ["dsf"] = 300,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5120},
       ["molten"] = "molten.bronze",
+      ["tier"] = "ULV",
+      ["v"] = 1,
       ["u"] = 57,
       ["a"] = 66,
       ["p"] = 21
@@ -16076,6 +17723,7 @@ return {
       ["dsf"] = 304,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5260},
       ["molten"] = "molten.castiron",
+      ["tier"] = "ULV",
       ["u"] = 26,
       ["a"] = 69,
       ["p"] = 29
@@ -16085,6 +17733,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "celestialtungsten",
       ["molten"] = "molten.celestialtungsten",
+      ["v"] = 47,
       ["u"] = 174,
       ["a"] = 194,
       ["p"] = 80
@@ -16117,6 +17766,7 @@ return {
       ["name"] = "CertusQuartz",
       ["family"] = "gt",
       ["dsf"] = 516,
+      ["tier"] = "LV",
       ["u"] = 115,
       ["a"] = 123
     },
@@ -16137,6 +17787,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 952,
       ["molten"] = "molten.ceruclase",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 103,
       ["p"] = 9
@@ -16152,6 +17803,7 @@ return {
       ["name"] = "Charcoal",
       ["family"] = "gt",
       ["dsf"] = 536,
+      ["tier"] = "ULV",
       ["u"] = 1,
       ["a"] = 131,
       ["overrides"] = {
@@ -16247,6 +17899,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "chromaticglass",
       ["molten"] = "molten.chromaticglass",
+      ["v"] = 47,
       ["u"] = 175,
       ["a"] = 195,
       ["p"] = 80
@@ -16295,6 +17948,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 912,
       ["molten"] = "molten.chrysotile",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 103,
       ["p"] = 9
@@ -16304,6 +17958,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 190,
       ["molten"] = "molten.churitsu",
+      ["tier"] = "UIV",
+      ["v"] = 14,
       ["u"] = 54,
       ["a"] = 57,
       ["p"] = 24
@@ -16320,6 +17976,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "cinobitea243",
       ["molten"] = "molten.cinobitea243",
+      ["v"] = 46,
       ["u"] = 172,
       ["a"] = 188,
       ["p"] = 79
@@ -16372,6 +18029,7 @@ return {
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5711},
       ["coating"] = "standard",
       ["molten"] = "molten.cobalt",
+      ["tier"] = "LV",
       ["u"] = 13,
       ["a"] = 19,
       ["p"] = 5
@@ -16498,6 +18156,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 369,
       ["molten"] = "molten.conductiveiron",
+      ["tier"] = "MV",
       ["u"] = 95,
       ["a"] = 101,
       ["p"] = 22
@@ -16524,6 +18183,8 @@ return {
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5110},
       ["coating"] = "standard",
       ["molten"] = "molten.copper",
+      ["tier"] = "ULV",
+      ["v"] = 1,
       ["u"] = 15,
       ["a"] = 20,
       ["p"] = 11
@@ -16554,6 +18215,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 982,
       ["molten"] = "molten.cosmicneutronium",
+      ["tier"] = "UV",
+      ["v"] = 26,
       ["u"] = 148,
       ["a"] = 169,
       ["overrides"] = {
@@ -16566,6 +18229,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 149,
       ["molten"] = "molten.creon",
+      ["v"] = 12,
       ["u"] = 49,
       ["a"] = 48,
       ["p"] = 9
@@ -16640,6 +18304,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 403,
       ["molten"] = "molten.crystallinealloy",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 47,
       ["p"] = 9
@@ -16649,6 +18314,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 406,
       ["molten"] = "molten.crystallinepinkslime",
+      ["v"] = 3,
       ["u"] = 39,
       ["a"] = 113,
       ["p"] = 42
@@ -16690,6 +18356,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "curium",
       ["molten"] = "molten.curium",
+      ["v"] = 50,
       ["u"] = 8,
       ["a"] = 196,
       ["p"] = 81
@@ -16720,6 +18387,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10104,
       ["molten"] = "molten.dalisenite",
+      ["v"] = 34,
       ["u"] = 163,
       ["a"] = 178,
       ["p"] = 66
@@ -16748,6 +18416,8 @@ return {
       ["dsf"] = 364,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30760},
       ["molten"] = "molten.darksteel",
+      ["tier"] = "MV",
+      ["v"] = 1,
       ["u"] = 11,
       ["a"] = 98,
       ["overrides"] = {
@@ -16767,6 +18437,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 829,
       ["molten"] = "molten.deepiron",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 84,
       ["p"] = 2
@@ -16841,6 +18512,7 @@ return {
       ["name"] = "Diamond",
       ["family"] = "gt",
       ["dsf"] = 500,
+      ["tier"] = "ULV",
       ["u"] = 115,
       ["a"] = 118,
       ["overrides"] = {
@@ -17022,6 +18694,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11330},
       ["coating"] = "pps",
       ["molten"] = "molten.draconium",
+      ["v"] = 3,
       ["u"] = 145,
       ["a"] = 165,
       ["p"] = 38
@@ -17033,6 +18706,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11410},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5240},
       ["molten"] = "molten.draconiumawakened",
+      ["v"] = 3,
       ["u"] = 146,
       ["a"] = 166,
       ["p"] = 60
@@ -17042,6 +18716,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "dragonblood",
       ["molten"] = "molten.dragonblood",
+      ["v"] = 51,
       ["u"] = 176,
       ["a"] = 197,
       ["p"] = 82
@@ -17143,6 +18818,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "eglinsteel",
       ["molten"] = "molten.eglinsteel",
+      ["v"] = 52,
       ["u"] = 170,
       ["a"] = 191,
       ["p"] = 75
@@ -17161,6 +18837,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11490},
       ["coating"] = "standard",
       ["molten"] = "molten.electricalsteel",
+      ["tier"] = "MV",
       ["u"] = 20,
       ["a"] = 99,
       ["p"] = 38
@@ -17200,6 +18877,7 @@ return {
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5655},
       ["coating"] = "pps",
       ["molten"] = "molten.electrumflux",
+      ["v"] = 4,
       ["u"] = 74,
       ["a"] = 80,
       ["p"] = 28
@@ -17209,6 +18887,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 203,
       ["molten"] = "molten.elvenelementium",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 60,
       ["overrides"] = {
@@ -17221,6 +18900,7 @@ return {
       ["name"] = "Emerald",
       ["family"] = "gt",
       ["dsf"] = 501,
+      ["tier"] = "MV",
       ["u"] = 87,
       ["a"] = 119,
       ["overrides"] = {
@@ -17248,6 +18928,7 @@ return {
       ["name"] = "EnderEye",
       ["family"] = "gt",
       ["dsf"] = 533,
+      ["tier"] = "HV",
       ["u"] = 115,
       ["a"] = 129,
       ["overrides"] = {
@@ -17260,6 +18941,7 @@ return {
       ["dsf"] = 321,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5190},
       ["molten"] = "molten.enderium",
+      ["v"] = 3,
       ["u"] = 75,
       ["a"] = 81,
       ["p"] = 31
@@ -17269,6 +18951,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 380,
       ["molten"] = "molten.enderiumbase",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 47,
       ["p"] = 9
@@ -17302,6 +18985,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1860},
       ["coating"] = "pps",
       ["molten"] = "molten.endsteel",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 100,
       ["p"] = 32
@@ -17320,6 +19004,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11510},
       ["coating"] = "standard",
       ["molten"] = "molten.energeticalloy",
+      ["tier"] = "HV",
       ["u"] = 92,
       ["a"] = 100,
       ["p"] = 32
@@ -17338,6 +19023,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "energycrystal",
       ["molten"] = "molten.energycrystal",
+      ["v"] = 53,
       ["u"] = 173,
       ["a"] = 187,
       ["p"] = 75
@@ -17368,6 +19054,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 582,
       ["molten"] = "molten.enrichedholmium",
+      ["v"] = 2,
       ["u"] = 122,
       ["a"] = 96,
       ["p"] = 6
@@ -17377,6 +19064,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10110,
       ["molten"] = "molten.enriched naquadah alloy",
+      ["v"] = 36,
       ["u"] = 167,
       ["a"] = 175,
       ["p"] = 67
@@ -17414,6 +19102,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 470,
       ["molten"] = "molten.epoxid",
+      ["tier"] = "EV",
       ["u"] = 20,
       ["a"] = 62,
       ["p"] = 25
@@ -17423,6 +19112,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 610,
       ["molten"] = "molten.epoxidfiberreinforced",
+      ["tier"] = "EV",
       ["u"] = 20,
       ["a"] = 62,
       ["p"] = 25
@@ -17441,6 +19131,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 141,
       ["molten"] = "molten.eternity",
+      ["v"] = 10,
       ["u"] = 46,
       ["a"] = 45,
       ["p"] = 22
@@ -17521,6 +19212,8 @@ return {
       ["dsf"] = 70,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30720},
       ["molten"] = "molten.europium",
+      ["tier"] = "LuV",
+      ["v"] = 1,
       ["u"] = 28,
       ["a"] = 29,
       ["p"] = 16
@@ -17575,6 +19268,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10024,
       ["molten"] = "molten.extremely unstable naquadah",
+      ["v"] = 32,
       ["u"] = 20,
       ["a"] = 175,
       ["p"] = 67
@@ -17605,6 +19299,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "fermium",
       ["molten"] = "molten.fermium",
+      ["v"] = 50,
       ["u"] = 8,
       ["a"] = 196,
       ["p"] = 81
@@ -17777,6 +19472,7 @@ return {
       ["name"] = "Fluorophlogopite",
       ["family"] = "bw",
       ["dsf"] = 104,
+      ["tier"] = "HV",
       ["u"] = 2,
       ["a"] = 140,
       ["p"] = 69
@@ -17920,6 +19616,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 384,
       ["molten"] = "molten.galgadorian",
+      ["v"] = 3,
       ["u"] = 103,
       ["a"] = 60,
       ["p"] = 23
@@ -17929,6 +19626,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 385,
       ["molten"] = "molten.enhancedgalgadorian",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 60,
       ["p"] = 23
@@ -18041,6 +19739,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "germanium",
       ["molten"] = "molten.germanium",
+      ["v"] = 54,
       ["u"] = 8,
       ["a"] = 199,
       ["p"] = 75
@@ -18115,6 +19814,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1420},
       ["coating"] = "standard",
       ["molten"] = "molten.gold",
+      ["tier"] = "ULV",
       ["u"] = 37,
       ["a"] = 18,
       ["overrides"] = {
@@ -18275,6 +19975,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "grisium",
       ["molten"] = "molten.grisium",
+      ["v"] = 53,
       ["u"] = 177,
       ["a"] = 200,
       ["p"] = 82
@@ -18321,6 +20022,7 @@ return {
       ["name"] = "Hafnium",
       ["family"] = "bw",
       ["dsf"] = 11000,
+      ["tier"] = "IV",
       ["u"] = 8,
       ["a"] = 182,
       ["overrides"] = {
@@ -18341,6 +20043,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "hastelloyc276",
       ["molten"] = "molten.hastelloyc276",
+      ["v"] = 53,
       ["u"] = 179,
       ["a"] = 187,
       ["p"] = 75
@@ -18350,6 +20053,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "hastelloyn",
       ["molten"] = "molten.hastelloyn",
+      ["v"] = 53,
       ["u"] = 180,
       ["a"] = 187,
       ["p"] = 75
@@ -18359,6 +20063,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "hastelloyw",
       ["molten"] = "molten.hastelloyw",
+      ["v"] = 56,
       ["u"] = 181,
       ["a"] = 187,
       ["p"] = 75
@@ -18369,6 +20074,7 @@ return {
       ["dsf"] = "hastelloyx",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30750},
       ["molten"] = "molten.hastelloyx",
+      ["v"] = 56,
       ["u"] = 182,
       ["a"] = 201,
       ["p"] = 84
@@ -18406,6 +20112,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "helicopter",
       ["molten"] = "molten.helicopter",
+      ["v"] = 57,
       ["u"] = 183,
       ["a"] = 187,
       ["p"] = 75
@@ -18429,6 +20136,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 125,
       ["molten"] = "molten.hellishmetal",
+      ["tier"] = "LuV",
       ["u"] = 8,
       ["a"] = 40,
       ["p"] = 20
@@ -18451,6 +20159,7 @@ return {
       ["name"] = "Hexanite",
       ["family"] = "gt",
       ["dsf"] = 174,
+      ["tier"] = "UMV",
       ["u"] = 52,
       ["a"] = 56
     },
@@ -18459,6 +20168,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "hg1223",
       ["molten"] = "molten.hg1223",
+      ["v"] = 55,
       ["u"] = 178,
       ["a"] = 190,
       ["p"] = 83
@@ -18490,6 +20200,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 92,
       ["molten"] = "molten.high durability compound steel",
+      ["v"] = 32,
       ["u"] = 156,
       ["a"] = 175,
       ["p"] = 67
@@ -18499,6 +20210,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10105,
       ["molten"] = "molten.hikarium",
+      ["v"] = 34,
       ["u"] = 164,
       ["a"] = 178,
       ["p"] = 66
@@ -18567,6 +20279,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "hs188a",
       ["molten"] = "molten.hs188a",
+      ["v"] = 45,
       ["u"] = 177,
       ["a"] = 187,
       ["p"] = 75
@@ -18578,6 +20291,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11590},
       ["coating"] = "pps",
       ["molten"] = "molten.hsse",
+      ["v"] = 3,
       ["u"] = 98,
       ["a"] = 83,
       ["p"] = 32
@@ -18589,6 +20303,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1700},
       ["coating"] = "pps",
       ["molten"] = "molten.hssg",
+      ["tier"] = "EV",
+      ["v"] = 3,
       ["u"] = 97,
       ["a"] = 78,
       ["p"] = 10
@@ -18600,6 +20316,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11470},
       ["coating"] = "pps",
       ["molten"] = "molten.hsss",
+      ["tier"] = "IV",
+      ["v"] = 3,
       ["u"] = 99,
       ["a"] = 78,
       ["p"] = 10
@@ -18673,6 +20391,8 @@ return {
       ["dsf"] = "hypogen",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30585},
       ["molten"] = "molten.hypogen",
+      ["tier"] = "UEV",
+      ["v"] = 58,
       ["u"] = 184,
       ["a"] = 202,
       ["p"] = 85
@@ -18690,6 +20410,7 @@ return {
       ["dsf"] = 978,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2600},
       ["molten"] = "molten.ichorium",
+      ["v"] = 3,
       ["u"] = 147,
       ["a"] = 167,
       ["p"] = 38
@@ -18742,6 +20463,7 @@ return {
       ["dsf"] = 10084,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30995},
       ["molten"] = "molten.incoloy-903",
+      ["v"] = 35,
       ["u"] = 158,
       ["a"] = 179,
       ["p"] = 71
@@ -18751,6 +20473,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "incoloy020",
       ["molten"] = "molten.incoloy020",
+      ["v"] = 56,
       ["u"] = 31,
       ["a"] = 187,
       ["p"] = 75
@@ -18760,6 +20483,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "incoloyds",
       ["molten"] = "molten.incoloyds",
+      ["v"] = 56,
       ["u"] = 185,
       ["a"] = 187,
       ["p"] = 75
@@ -18769,6 +20493,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "incoloyma956",
       ["molten"] = "molten.incoloyma956",
+      ["v"] = 53,
       ["u"] = 181,
       ["a"] = 187,
       ["p"] = 75
@@ -18778,6 +20503,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "inconel625",
       ["molten"] = "molten.inconel625",
+      ["v"] = 48,
       ["u"] = 185,
       ["a"] = 187,
       ["p"] = 75
@@ -18788,6 +20514,7 @@ return {
       ["dsf"] = "inconel690",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30740},
       ["molten"] = "molten.inconel690",
+      ["v"] = 56,
       ["u"] = 170,
       ["a"] = 201,
       ["p"] = 84
@@ -18798,6 +20525,7 @@ return {
       ["dsf"] = "inconel792",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30745},
       ["molten"] = "molten.inconel792",
+      ["v"] = 56,
       ["u"] = 186,
       ["a"] = 201,
       ["p"] = 84
@@ -18807,6 +20535,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "indalloy140",
       ["molten"] = "molten.indalloy140",
+      ["v"] = 59,
       ["u"] = 8,
       ["a"] = 203,
       ["p"] = 78
@@ -18864,6 +20593,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11430},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5250},
       ["molten"] = "molten.infinity",
+      ["tier"] = "UHV",
+      ["v"] = 17,
       ["u"] = 110,
       ["a"] = 110,
       ["overrides"] = {
@@ -18876,6 +20607,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 394,
       ["molten"] = "molten.infinitycatalyst",
+      ["v"] = 15,
       ["u"] = 108,
       ["a"] = 33,
       ["p"] = 18
@@ -18945,6 +20677,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "iodine",
       ["molten"] = "molten.iodine",
+      ["v"] = 54,
       ["u"] = 8,
       ["a"] = 199,
       ["p"] = 75
@@ -18969,6 +20702,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 84,
       ["molten"] = "molten.iridium",
+      ["v"] = 3,
       ["u"] = 35,
       ["a"] = 33,
       ["p"] = 18
@@ -19001,6 +20735,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1300},
       ["coating"] = "standard",
       ["molten"] = "molten.iron",
+      ["tier"] = "ULV",
       ["u"] = 12,
       ["a"] = 18,
       ["overrides"] = {
@@ -19105,6 +20840,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1400},
       ["coating"] = "standard",
       ["molten"] = "molten.kanthal",
+      ["tier"] = "MV",
       ["u"] = 68,
       ["a"] = 75,
       ["p"] = 30
@@ -19136,6 +20872,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 765,
       ["molten"] = "molten.kevlar",
+      ["tier"] = "UV",
+      ["v"] = 18,
       ["u"] = 131,
       ["a"] = 142,
       ["p"] = 45
@@ -19196,6 +20934,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "lafiumcompound",
       ["molten"] = "molten.lafiumcompound",
+      ["v"] = 60,
       ["u"] = 187,
       ["a"] = 188,
       ["p"] = 79
@@ -19273,6 +21012,8 @@ return {
       ["name"] = "Lapis",
       ["family"] = "gt",
       ["dsf"] = 526,
+      ["tier"] = "ULV",
+      ["v"] = 19,
       ["u"] = 117,
       ["a"] = 127,
       ["overrides"] = {
@@ -19286,6 +21027,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "laurenium",
       ["molten"] = "molten.laurenium",
+      ["v"] = 46,
       ["u"] = 188,
       ["a"] = 193,
       ["p"] = 79
@@ -19327,6 +21069,7 @@ return {
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30770},
       ["coating"] = "standard",
       ["molten"] = "molten.lead",
+      ["v"] = 1,
       ["u"] = 38,
       ["a"] = 35,
       ["p"] = 8
@@ -19387,6 +21130,7 @@ return {
       ["name"] = "Lignite",
       ["family"] = "gt",
       ["dsf"] = 538,
+      ["tier"] = "ULV",
       ["u"] = 1,
       ["a"] = 125
     },
@@ -19439,6 +21183,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "lithium7",
       ["molten"] = "molten.lithium7",
+      ["v"] = 44,
       ["u"] = 8,
       ["a"] = 204,
       ["p"] = 78
@@ -19457,6 +21202,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "lithiumfluoride",
       ["molten"] = "molten.lithiumfluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -19549,6 +21295,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 32737},
       ["coating"] = "pps",
       ["molten"] = "molten.lumiium",
+      ["v"] = 34,
       ["u"] = 160,
       ["a"] = 180,
       ["deny"] = {["wiremill.stick_wire.wire16.b20dbeb901"] = true},
@@ -19575,6 +21322,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 143,
       ["molten"] = "molten.magmatter",
+      ["v"] = 10,
       ["u"] = 47,
       ["a"] = 45,
       ["p"] = 22
@@ -19584,6 +21332,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 313,
       ["molten"] = "molten.magnalium",
+      ["tier"] = "LV",
       ["u"] = 20,
       ["a"] = 39,
       ["p"] = 9
@@ -19697,6 +21446,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 386,
       ["molten"] = "molten.manyullyn",
+      ["v"] = 3,
       ["u"] = 95,
       ["a"] = 103,
       ["p"] = 9
@@ -19706,6 +21456,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10097,
       ["molten"] = "molten.mar-ce-m200 steel",
+      ["v"] = 33,
       ["u"] = 85,
       ["a"] = 175,
       ["p"] = 67
@@ -19715,6 +21466,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10096,
       ["molten"] = "molten.mar-m200 steel",
+      ["v"] = 30,
       ["u"] = 159,
       ["a"] = 175,
       ["p"] = 67
@@ -19724,6 +21476,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "maragingsteel250",
       ["molten"] = "molten.maragingsteel250",
+      ["v"] = 48,
       ["u"] = 170,
       ["a"] = 187,
       ["p"] = 75
@@ -19734,6 +21487,7 @@ return {
       ["dsf"] = "maragingsteel300",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30730},
       ["molten"] = "molten.maragingsteel300",
+      ["v"] = 61,
       ["u"] = 189,
       ["a"] = 201,
       ["p"] = 84
@@ -19744,6 +21498,7 @@ return {
       ["dsf"] = "maragingsteel350",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30735},
       ["molten"] = "molten.maragingsteel350",
+      ["v"] = 61,
       ["u"] = 170,
       ["a"] = 201,
       ["p"] = 84
@@ -19788,6 +21543,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 148,
       ["molten"] = "molten.mellion",
+      ["v"] = 12,
       ["u"] = 47,
       ["a"] = 47,
       ["p"] = 9
@@ -19799,6 +21555,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11550},
       ["coating"] = "pps",
       ["molten"] = "molten.melodicalloy",
+      ["v"] = 3,
       ["u"] = 39,
       ["a"] = 78,
       ["p"] = 10
@@ -19836,6 +21593,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10111,
       ["molten"] = "molten.metastable oganesson",
+      ["v"] = 38,
       ["u"] = 167,
       ["a"] = 175,
       ["p"] = 67
@@ -19941,6 +21699,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 331,
       ["molten"] = "molten.mithril",
+      ["v"] = 3,
       ["u"] = 73,
       ["a"] = 88,
       ["p"] = 19
@@ -20000,6 +21759,7 @@ return {
       ["name"] = "Mu-metal",
       ["family"] = "bw",
       ["dsf"] = 11351,
+      ["v"] = 40,
       ["u"] = 169,
       ["a"] = 175,
       ["p"] = 74
@@ -20017,6 +21777,7 @@ return {
       ["dsf"] = 398,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5230},
       ["molten"] = "molten.mysteriouscrystal",
+      ["v"] = 3,
       ["u"] = 111,
       ["a"] = 111,
       ["p"] = 41
@@ -20026,6 +21787,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 387,
       ["molten"] = "molten.mytryl",
+      ["v"] = 3,
       ["u"] = 73,
       ["a"] = 104,
       ["p"] = 39
@@ -20052,6 +21814,8 @@ return {
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5200},
       ["coating"] = "pps",
       ["molten"] = "molten.naquadah",
+      ["tier"] = "IV",
+      ["v"] = 3,
       ["u"] = 77,
       ["a"] = 82,
       ["p"] = 8
@@ -20077,6 +21841,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1800},
       ["coating"] = "pps",
       ["molten"] = "molten.naquadahalloy",
+      ["tier"] = "LuV",
+      ["v"] = 3,
       ["u"] = 78,
       ["a"] = 83,
       ["p"] = 32
@@ -20184,6 +21950,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 326,
       ["molten"] = "molten.naquadahenriched",
+      ["v"] = 3,
       ["u"] = 79,
       ["a"] = 84,
       ["p"] = 2
@@ -20228,6 +21995,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 327,
       ["molten"] = "molten.naquadria",
+      ["v"] = 3,
       ["u"] = 80,
       ["a"] = 85,
       ["p"] = 19
@@ -20313,6 +22081,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "neptunium",
       ["molten"] = "molten.neptunium",
+      ["v"] = 62,
       ["u"] = 8,
       ["a"] = 196,
       ["p"] = 81
@@ -20322,6 +22091,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "neptuniumhexafluoride",
       ["molten"] = "neptuniumhexafluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -20344,6 +22114,7 @@ return {
       ["name"] = "Netherite",
       ["family"] = "gt",
       ["dsf"] = 132,
+      ["tier"] = "LuV",
       ["u"] = 43,
       ["a"] = 43
     },
@@ -20351,6 +22122,7 @@ return {
       ["name"] = "NetherQuartz",
       ["family"] = "gt",
       ["dsf"] = 522,
+      ["tier"] = "ULV",
       ["u"] = 87,
       ["a"] = 123,
       ["overrides"] = {
@@ -20391,6 +22163,8 @@ return {
       ["dsf"] = 129,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5210},
       ["molten"] = "molten.neutronium",
+      ["tier"] = "ZPM",
+      ["v"] = 6,
       ["u"] = 41,
       ["a"] = 41,
       ["p"] = 21
@@ -20473,6 +22247,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "niobiumcarbide",
       ["molten"] = "molten.niobiumcarbide",
+      ["v"] = 48,
       ["u"] = 2,
       ["a"] = 187,
       ["p"] = 75
@@ -20494,6 +22269,8 @@ return {
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5180},
       ["coating"] = "pps",
       ["molten"] = "molten.niobiumtitanium",
+      ["tier"] = "EV",
+      ["v"] = 2,
       ["u"] = 90,
       ["a"] = 97,
       ["p"] = 36
@@ -20510,6 +22287,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "nitinol60",
       ["molten"] = "molten.nitinol60",
+      ["v"] = 63,
       ["u"] = 189,
       ["a"] = 188,
       ["p"] = 79
@@ -20596,6 +22374,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 804,
       ["molten"] = "molten.obsidian",
+      ["v"] = 23,
       ["u"] = 133,
       ["a"] = 146,
       ["overrides"] = {
@@ -20615,6 +22394,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "octiron",
       ["molten"] = "molten.octiron",
+      ["v"] = 41,
       ["u"] = 19,
       ["a"] = 187,
       ["p"] = 75
@@ -20708,6 +22488,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 966,
       ["molten"] = "molten.orichalcum",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 103,
       ["p"] = 9
@@ -20717,6 +22498,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 393,
       ["molten"] = "molten.oriharukon",
+      ["v"] = 3,
       ["u"] = 73,
       ["a"] = 107,
       ["p"] = 39
@@ -20735,6 +22517,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11610},
       ["coating"] = "pps",
       ["molten"] = "molten.osmiridium",
+      ["tier"] = "IV",
+      ["v"] = 3,
       ["u"] = 72,
       ["a"] = 78,
       ["p"] = 10
@@ -20748,6 +22532,7 @@ return {
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5633},
       ["coating"] = "pps",
       ["molten"] = "molten.osmium",
+      ["v"] = 4,
       ["u"] = 34,
       ["a"] = 32,
       ["overrides"] = {
@@ -20825,6 +22610,7 @@ return {
       ["name"] = "Paper",
       ["family"] = "gt",
       ["dsf"] = 879,
+      ["tier"] = "ULV",
       ["u"] = 139,
       ["a"] = 161,
       ["overrides"] = {
@@ -20843,6 +22629,7 @@ return {
       ["family"] = "literal",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5280},
       ["molten"] = "molten.polybenzimidazole",
+      ["v"] = 72,
       ["u"] = 204,
       ["a"] = 215,
       ["overrides"] = {
@@ -20972,6 +22759,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "pikyonium64b",
       ["molten"] = "molten.pikyonium64b",
+      ["v"] = 46,
       ["u"] = 190,
       ["a"] = 188,
       ["p"] = 79
@@ -20995,6 +22783,7 @@ return {
       ["family"] = "literal",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5170},
       ["molten"] = "molten.plastic",
+      ["v"] = 72,
       ["u"] = 204,
       ["a"] = 215,
       ["p"] = 88
@@ -21008,6 +22797,7 @@ return {
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5623},
       ["coating"] = "pps",
       ["molten"] = "molten.platinum",
+      ["tier"] = "EV",
       ["u"] = 36,
       ["a"] = 34,
       ["overrides"] = {
@@ -21065,6 +22855,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "plutonium238",
       ["molten"] = "molten.plutonium238",
+      ["v"] = 62,
       ["u"] = 8,
       ["a"] = 196,
       ["p"] = 81
@@ -21125,6 +22916,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "polonium",
       ["molten"] = "molten.polonium",
+      ["v"] = 62,
       ["u"] = 8,
       ["a"] = 196,
       ["p"] = 81
@@ -21141,6 +22933,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 599,
       ["molten"] = "molten.polybenzimidazole",
+      ["tier"] = "IV",
+      ["v"] = 18,
       ["u"] = 127,
       ["a"] = 116,
       ["p"] = 45
@@ -21150,6 +22944,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 472,
       ["molten"] = "molten.polycaprolactam",
+      ["tier"] = "MV",
       ["u"] = 113,
       ["a"] = 115,
       ["p"] = 44
@@ -21181,6 +22976,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 874,
       ["molten"] = "molten.plastic",
+      ["tier"] = "MV",
+      ["v"] = 24,
       ["u"] = 138,
       ["a"] = 114,
       ["p"] = 58
@@ -21190,6 +22987,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 631,
       ["molten"] = "molten.polyphenylenesulfide",
+      ["tier"] = "EV",
+      ["v"] = 18,
       ["u"] = 17,
       ["a"] = 141,
       ["p"] = 51
@@ -21199,6 +22998,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 636,
       ["molten"] = "molten.polystyrene",
+      ["tier"] = "HV",
+      ["v"] = 18,
       ["u"] = 2,
       ["a"] = 114,
       ["p"] = 43
@@ -21208,6 +23009,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 473,
       ["molten"] = "molten.polytetrafluoroethylene",
+      ["tier"] = "HV",
+      ["v"] = 18,
       ["u"] = 114,
       ["a"] = 116,
       ["p"] = 45
@@ -21231,6 +23034,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 649,
       ["molten"] = "molten.polyvinylchloride",
+      ["tier"] = "MV",
+      ["v"] = 18,
       ["u"] = 130,
       ["a"] = 114,
       ["p"] = 43
@@ -21320,6 +23125,7 @@ return {
       ["dsf"] = "potin",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30725},
       ["molten"] = "molten.potin",
+      ["v"] = 64,
       ["u"] = 189,
       ["a"] = 205,
       ["p"] = 84
@@ -21359,6 +23165,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10109,
       ["molten"] = "molten.precious metals alloy",
+      ["v"] = 37,
       ["u"] = 166,
       ["a"] = 175,
       ["p"] = 67
@@ -21417,6 +23224,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 163,
       ["molten"] = "molten.prismaticnaquadah",
+      ["v"] = 13,
       ["u"] = 31,
       ["a"] = 54,
       ["p"] = 1
@@ -21456,6 +23264,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "protactinium",
       ["molten"] = "molten.protactinium",
+      ["v"] = 50,
       ["u"] = 8,
       ["a"] = 196,
       ["p"] = 81
@@ -21464,6 +23273,7 @@ return {
       ["name"] = "ProtoHalkonite",
       ["family"] = "gt",
       ["dsf"] = 154,
+      ["tier"] = "UIV",
       ["u"] = 51,
       ["a"] = 51,
       ["overrides"] = {
@@ -21482,6 +23292,7 @@ return {
       ["family"] = "literal",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5680},
       ["molten"] = "molten.polytetrafluoroethylene",
+      ["v"] = 72,
       ["u"] = 204,
       ["a"] = 215,
       ["p"] = 88
@@ -21491,6 +23302,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 378,
       ["molten"] = "molten.pulsatingiron",
+      ["tier"] = "MV",
       ["u"] = 100,
       ["a"] = 101,
       ["p"] = 22
@@ -21508,6 +23320,7 @@ return {
       ["pipeItem"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5688},
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5691},
       ["molten"] = "molten.polyvinylchloride",
+      ["v"] = 73,
       ["u"] = 207,
       ["a"] = 216,
       ["p"] = 89
@@ -21556,6 +23369,7 @@ return {
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5735},
       ["coating"] = "pps",
       ["molten"] = "molten.quantium",
+      ["v"] = 4,
       ["u"] = 107,
       ["a"] = 32,
       ["p"] = 17
@@ -21565,6 +23379,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "quantum",
       ["molten"] = "molten.quantum",
+      ["v"] = 65,
       ["u"] = 191,
       ["a"] = 206,
       ["p"] = 79
@@ -21624,6 +23439,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "radium",
       ["molten"] = "molten.radium",
+      ["v"] = 62,
       ["u"] = 8,
       ["a"] = 196,
       ["p"] = 81
@@ -21641,6 +23457,8 @@ return {
       ["dsf"] = 979,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5760},
       ["molten"] = "molten.radoxpoly",
+      ["tier"] = "UHV",
+      ["v"] = 1,
       ["u"] = 124,
       ["a"] = 168,
       ["p"] = 61
@@ -21755,6 +23573,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2000},
       ["coating"] = "standard",
       ["molten"] = "molten.redalloy",
+      ["tier"] = "ULV",
       ["u"] = 64,
       ["a"] = 73,
       ["p"] = 12
@@ -21815,6 +23634,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30645},
       ["coating"] = "standard",
       ["molten"] = "molten.redstonealloy",
+      ["tier"] = "LV",
       ["u"] = 102,
       ["a"] = 99,
       ["p"] = 38
@@ -21878,6 +23698,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "rhenium",
       ["molten"] = "molten.rhenium",
+      ["v"] = 56,
       ["u"] = 8,
       ["a"] = 199,
       ["p"] = 75
@@ -21887,6 +23708,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 78,
       ["molten"] = "molten.rhodium",
+      ["v"] = 29,
       ["u"] = 2,
       ["a"] = 174,
       ["overrides"] = {
@@ -21900,6 +23722,8 @@ return {
       ["family"] = "bw",
       ["dsf"] = 88,
       ["molten"] = "molten.rhodium-plated palladium",
+      ["tier"] = "IV",
+      ["v"] = 30,
       ["u"] = 154,
       ["a"] = 175,
       ["p"] = 67
@@ -21965,6 +23789,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "rhugnor",
       ["molten"] = "molten.rhugnor",
+      ["v"] = 66,
       ["u"] = 192,
       ["a"] = 207,
       ["p"] = 86
@@ -22077,6 +23902,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 880,
       ["molten"] = "molten.rubber",
+      ["tier"] = "ULV",
+      ["v"] = 18,
       ["u"] = 140,
       ["a"] = 114,
       ["p"] = 43
@@ -22093,6 +23920,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 471,
       ["molten"] = "molten.silicone",
+      ["tier"] = "HV",
+      ["v"] = 18,
       ["u"] = 112,
       ["a"] = 114,
       ["p"] = 43
@@ -22134,6 +23963,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "runite",
       ["molten"] = "molten.runite",
+      ["v"] = 67,
       ["u"] = 8,
       ["a"] = 208,
       ["overrides"] = {
@@ -22151,6 +23981,8 @@ return {
       ["family"] = "bw",
       ["dsf"] = 90,
       ["molten"] = "molten.ruridit",
+      ["tier"] = "IV",
+      ["v"] = 30,
       ["u"] = 155,
       ["a"] = 175,
       ["p"] = 67
@@ -22160,6 +23992,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 64,
       ["molten"] = "molten.ruthenium",
+      ["v"] = 29,
       ["u"] = 23,
       ["a"] = 174,
       ["overrides"] = {
@@ -22337,6 +24170,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "selenium",
       ["molten"] = "molten.selenium",
+      ["v"] = 54,
       ["u"] = 8,
       ["a"] = 199,
       ["p"] = 75
@@ -22353,6 +24187,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "seleniumhexafluoride",
       ["molten"] = "seleniumhexafluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -22371,6 +24206,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 336,
       ["molten"] = "molten.shadowiron",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 84,
       ["p"] = 2
@@ -22389,6 +24225,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 189,
       ["molten"] = "molten.shijima",
+      ["tier"] = "UIV",
+      ["v"] = 14,
       ["u"] = 53,
       ["a"] = 57,
       ["p"] = 24
@@ -22398,6 +24236,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10112,
       ["molten"] = "molten.shirabon",
+      ["v"] = 39,
       ["u"] = 168,
       ["a"] = 181,
       ["p"] = 73
@@ -22409,6 +24248,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 32749},
       ["coating"] = "pps",
       ["molten"] = "molten.signalium",
+      ["v"] = 34,
       ["u"] = 23,
       ["a"] = 180,
       ["deny"] = {["wiremill.stick_wire.wire16.b20dbeb901"] = true},
@@ -22443,6 +24283,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "siliconcarbide",
       ["molten"] = "molten.siliconcarbide",
+      ["v"] = 52,
       ["u"] = 189,
       ["a"] = 191,
       ["p"] = 75
@@ -22466,6 +24307,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 856,
       ["molten"] = "molten.siliconsolargrade",
+      ["tier"] = "MV",
       ["u"] = 2,
       ["a"] = 158,
       ["p"] = 57
@@ -22498,6 +24340,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1460},
       ["coating"] = "standard",
       ["molten"] = "molten.silver",
+      ["tier"] = "HV",
       ["u"] = 22,
       ["a"] = 18,
       ["p"] = 10
@@ -22507,6 +24350,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 147,
       ["molten"] = "molten.sixphasedcopper",
+      ["v"] = 11,
       ["u"] = 48,
       ["a"] = 46,
       ["p"] = 23
@@ -22723,6 +24567,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 379,
       ["molten"] = "molten.soularium",
+      ["tier"] = "MV",
       ["u"] = 101,
       ["a"] = 59,
       ["p"] = 23
@@ -22748,6 +24593,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2606},
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5300},
       ["molten"] = "molten.spacetime",
+      ["tier"] = "UIV",
+      ["v"] = 22,
       ["u"] = 126,
       ["a"] = 138,
       ["p"] = 49
@@ -22803,6 +24650,7 @@ return {
       ["dsf"] = "staballoy",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30700},
       ["molten"] = "molten.staballoy",
+      ["v"] = 56,
       ["u"] = 193,
       ["a"] = 209,
       ["p"] = 84
@@ -22820,6 +24668,8 @@ return {
       ["dsf"] = 306,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5140},
       ["molten"] = "molten.stainlesssteel",
+      ["tier"] = "MV",
+      ["v"] = 1,
       ["u"] = 62,
       ["a"] = 71,
       ["p"] = 21
@@ -22846,6 +24696,8 @@ return {
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5130},
       ["coating"] = "standard",
       ["molten"] = "molten.steel",
+      ["tier"] = "ULV",
+      ["v"] = 1,
       ["u"] = 61,
       ["a"] = 70,
       ["p"] = 8
@@ -22865,6 +24717,7 @@ return {
       ["name"] = "SteelMagnetic",
       ["family"] = "gt",
       ["dsf"] = 355,
+      ["tier"] = "LV",
       ["u"] = 26,
       ["a"] = 39,
       ["p"] = 33
@@ -22876,6 +24729,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11570},
       ["coating"] = "pps",
       ["molten"] = "molten.stellaralloy",
+      ["tier"] = "UV",
+      ["v"] = 3,
       ["u"] = 3,
       ["a"] = 112,
       ["p"] = 38
@@ -22885,6 +24740,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "stellite",
       ["molten"] = "molten.stellite",
+      ["v"] = 53,
       ["u"] = 181,
       ["a"] = 187,
       ["p"] = 75
@@ -22951,6 +24807,8 @@ return {
       ["family"] = "gt",
       ["dsf"] = 635,
       ["molten"] = "molten.styrenebutadienerubber",
+      ["tier"] = "HV",
+      ["v"] = 18,
       ["u"] = 112,
       ["a"] = 114,
       ["p"] = 43
@@ -23033,6 +24891,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 318,
       ["molten"] = "molten.sunnarium",
+      ["v"] = 3,
       ["u"] = 39,
       ["a"] = 79,
       ["p"] = 18
@@ -23041,6 +24900,7 @@ return {
       ["name"] = "Superconductor EV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2360},
+      ["tier"] = "EV",
       ["u"] = 201,
       ["a"] = 212
     },
@@ -23048,6 +24908,7 @@ return {
       ["name"] = "Superconductor HV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2340},
+      ["tier"] = "HV",
       ["u"] = 203,
       ["a"] = 212
     },
@@ -23055,6 +24916,7 @@ return {
       ["name"] = "Superconductor IV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2380},
+      ["tier"] = "IV",
       ["u"] = 203,
       ["a"] = 212
     },
@@ -23062,6 +24924,7 @@ return {
       ["name"] = "Superconductor LuV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2400},
+      ["tier"] = "LuV",
       ["u"] = 200,
       ["a"] = 212
     },
@@ -23069,6 +24932,7 @@ return {
       ["name"] = "Superconductor MV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2320},
+      ["tier"] = "MV",
       ["u"] = 203,
       ["a"] = 212
     },
@@ -23076,6 +24940,7 @@ return {
       ["name"] = "Superconductor UEV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2026},
+      ["tier"] = "UEV",
       ["u"] = 201,
       ["a"] = 212
     },
@@ -23083,6 +24948,7 @@ return {
       ["name"] = "Superconductor UHV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2020},
+      ["tier"] = "UHV",
       ["u"] = 200,
       ["a"] = 212
     },
@@ -23090,6 +24956,7 @@ return {
       ["name"] = "Superconductor UIV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2081},
+      ["tier"] = "UIV",
       ["u"] = 202,
       ["a"] = 212
     },
@@ -23097,6 +24964,7 @@ return {
       ["name"] = "Superconductor UMV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2089},
+      ["tier"] = "UMV",
       ["u"] = 202,
       ["a"] = 212
     },
@@ -23104,6 +24972,7 @@ return {
       ["name"] = "Superconductor UV",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2440},
+      ["tier"] = "UV",
       ["u"] = 201,
       ["a"] = 212
     },
@@ -23111,6 +24980,7 @@ return {
       ["name"] = "Superconductor ZPM",
       ["family"] = "literal",
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2420},
+      ["tier"] = "ZPM",
       ["u"] = 201,
       ["a"] = 212
     },
@@ -23120,6 +24990,7 @@ return {
       ["dsf"] = 989,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2240},
       ["molten"] = "molten.uraniumtriplatinid",
+      ["v"] = 2,
       ["u"] = 150,
       ["a"] = 42,
       ["p"] = 12
@@ -23130,6 +25001,7 @@ return {
       ["dsf"] = 988,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2220},
       ["molten"] = "molten.titaniumonabariumdecacoppereikosaoxid",
+      ["v"] = 2,
       ["u"] = 151,
       ["a"] = 42,
       ["p"] = 12
@@ -23140,6 +25012,7 @@ return {
       ["dsf"] = 990,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2260},
       ["molten"] = "molten.vanadiumtriindinid",
+      ["v"] = 2,
       ["u"] = 152,
       ["a"] = 42,
       ["p"] = 12
@@ -23150,6 +25023,7 @@ return {
       ["dsf"] = 991,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2280},
       ["molten"] = "molten.tetraindiumditindibariumtitaniumheptacoppertetrakaidekaoxid",
+      ["v"] = 2,
       ["u"] = 153,
       ["a"] = 42,
       ["p"] = 12
@@ -23170,6 +25044,7 @@ return {
       ["dsf"] = 974,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2032},
       ["molten"] = "molten.superconductoruevbase",
+      ["v"] = 25,
       ["u"] = 144,
       ["a"] = 42,
       ["p"] = 12
@@ -23180,6 +25055,7 @@ return {
       ["dsf"] = 985,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2520},
       ["molten"] = "molten.longasssuperconductornameforuhvwire",
+      ["v"] = 27,
       ["u"] = 149,
       ["a"] = 42,
       ["p"] = 12
@@ -23190,6 +25066,7 @@ return {
       ["dsf"] = 131,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2052},
       ["molten"] = "molten.superconductoruivbase",
+      ["v"] = 7,
       ["u"] = 42,
       ["a"] = 42,
       ["p"] = 12
@@ -23200,6 +25077,7 @@ return {
       ["dsf"] = 134,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2072},
       ["molten"] = "molten.superconductorumvbase",
+      ["v"] = 8,
       ["u"] = 44,
       ["a"] = 42,
       ["p"] = 12
@@ -23210,6 +25088,7 @@ return {
       ["dsf"] = 986,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2500},
       ["molten"] = "molten.longasssuperconductornameforuvwire",
+      ["v"] = 28,
       ["u"] = 42,
       ["a"] = 42,
       ["p"] = 12
@@ -23220,6 +25099,7 @@ return {
       ["dsf"] = 992,
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 2300},
       ["molten"] = "molten.tetranaquadahdiindiumhexaplatiumosminid",
+      ["v"] = 2,
       ["u"] = 42,
       ["a"] = 42,
       ["p"] = 12
@@ -23236,6 +25116,8 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10106,
       ["molten"] = "molten.tairitsu",
+      ["tier"] = "UIV",
+      ["v"] = 36,
       ["u"] = 165,
       ["a"] = 175,
       ["p"] = 67
@@ -23252,6 +25134,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "talonite",
       ["molten"] = "molten.talonite",
+      ["v"] = 56,
       ["u"] = 189,
       ["a"] = 187,
       ["p"] = 75
@@ -23261,6 +25144,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10103,
       ["molten"] = "molten.tanmolyium beta-c",
+      ["v"] = 34,
       ["u"] = 162,
       ["a"] = 178,
       ["p"] = 66
@@ -23278,6 +25162,7 @@ return {
       ["dsf"] = "tantalloy60",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30705},
       ["molten"] = "molten.tantalloy60",
+      ["v"] = 56,
       ["u"] = 189,
       ["a"] = 201,
       ["p"] = 84
@@ -23288,6 +25173,7 @@ return {
       ["dsf"] = "tantalloy61",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30710},
       ["molten"] = "molten.tantalloy61",
+      ["v"] = 56,
       ["u"] = 194,
       ["a"] = 201,
       ["p"] = 84
@@ -23297,6 +25183,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 80,
       ["molten"] = "molten.tantalum",
+      ["v"] = 2,
       ["u"] = 32,
       ["a"] = 11,
       ["p"] = 6
@@ -23306,6 +25193,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "tantalumcarbide",
       ["molten"] = "molten.tantalumcarbide",
+      ["v"] = 56,
       ["u"] = 170,
       ["a"] = 187,
       ["p"] = 75
@@ -23338,6 +25226,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 956,
       ["molten"] = "molten.tartarite",
+      ["v"] = 2,
       ["u"] = 1,
       ["a"] = 15,
       ["p"] = 6
@@ -23347,6 +25236,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "technetium",
       ["molten"] = "molten.technetium",
+      ["v"] = 68,
       ["u"] = 8,
       ["a"] = 210,
       ["p"] = 87
@@ -23356,6 +25246,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "technetiumhexafluoride",
       ["molten"] = "technetiumhexafluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -23389,6 +25280,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 112,
       ["molten"] = "molten.tengamattuned",
+      ["v"] = 5,
       ["u"] = 26,
       ["a"] = 39,
       ["p"] = 9
@@ -23398,6 +25290,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 111,
       ["molten"] = "molten.tengampurified",
+      ["v"] = 5,
       ["u"] = 26,
       ["a"] = 39,
       ["p"] = 9
@@ -23444,6 +25337,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 202,
       ["molten"] = "molten.terrasteel",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 60,
       ["overrides"] = {
@@ -23478,6 +25372,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "thallium",
       ["molten"] = "molten.thallium",
+      ["v"] = 54,
       ["u"] = 8,
       ["a"] = 199,
       ["p"] = 75
@@ -23573,6 +25468,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "thoriumhexafluoride",
       ["molten"] = "molten.thoriumhexafluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -23610,6 +25506,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "thoriumtetrafluoride",
       ["molten"] = "molten.thoriumtetrafluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -23627,6 +25524,7 @@ return {
       ["name"] = "Tiberium",
       ["family"] = "bw",
       ["dsf"] = 89,
+      ["v"] = 31,
       ["u"] = 55,
       ["a"] = 176,
       ["p"] = 68
@@ -23647,6 +25545,7 @@ return {
       ["pipeItemRestrictive"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5594},
       ["coating"] = "standard",
       ["molten"] = "molten.tin",
+      ["tier"] = "ULV",
       ["u"] = 24,
       ["a"] = 26,
       ["p"] = 14
@@ -23683,6 +25582,8 @@ return {
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5150},
       ["coating"] = "standard",
       ["molten"] = "molten.titanium",
+      ["tier"] = "HV",
+      ["v"] = 1,
       ["u"] = 9,
       ["a"] = 16,
       ["p"] = 8
@@ -23706,6 +25607,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "titansteel",
       ["molten"] = "molten.titansteel",
+      ["v"] = 49,
       ["u"] = 195,
       ["a"] = 188,
       ["p"] = 79
@@ -23731,6 +25633,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1840},
       ["coating"] = "standard",
       ["molten"] = "molten.tpvalloy",
+      ["v"] = 3,
       ["u"] = 120,
       ["a"] = 83,
       ["p"] = 32
@@ -23741,6 +25644,8 @@ return {
       ["dsf"] = 581,
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5310},
       ["molten"] = "molten.transcendentmetal",
+      ["tier"] = "UEV",
+      ["v"] = 20,
       ["u"] = 121,
       ["a"] = 134,
       ["p"] = 31
@@ -23787,6 +25692,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11450},
       ["coating"] = "pps",
       ["molten"] = "molten.trinium",
+      ["v"] = 3,
       ["u"] = 137,
       ["a"] = 160,
       ["p"] = 10
@@ -23796,6 +25702,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "triniumnaquadahalloy",
       ["molten"] = "molten.triniumnaquadahalloy",
+      ["v"] = 69,
       ["u"] = 8,
       ["a"] = 203,
       ["p"] = 78
@@ -23806,6 +25713,7 @@ return {
       ["dsf"] = "triniumnaquadahcarbonite",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30500},
       ["molten"] = "molten.triniumnaquadahcarbonite",
+      ["v"] = 70,
       ["u"] = 196,
       ["a"] = 201,
       ["p"] = 84
@@ -23822,6 +25730,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "triniumtitaniumalloy",
       ["molten"] = "molten.triniumtitaniumalloy",
+      ["v"] = 53,
       ["u"] = 197,
       ["a"] = 187,
       ["p"] = 75
@@ -23838,6 +25747,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 329,
       ["molten"] = "molten.tritanium",
+      ["v"] = 3,
       ["u"] = 82,
       ["a"] = 86,
       ["p"] = 2
@@ -23861,6 +25771,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "tumbaga",
       ["molten"] = "molten.tumbaga",
+      ["v"] = 52,
       ["u"] = 181,
       ["a"] = 191,
       ["p"] = 75
@@ -23880,6 +25791,8 @@ return {
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30755},
       ["coating"] = "pps",
       ["molten"] = "molten.tungsten",
+      ["tier"] = "EV",
+      ["v"] = 3,
       ["u"] = 33,
       ["a"] = 31,
       ["p"] = 8
@@ -23901,6 +25814,8 @@ return {
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 5160},
       ["coating"] = "pps",
       ["molten"] = "molten.tungstensteel",
+      ["tier"] = "EV",
+      ["v"] = 3,
       ["u"] = 71,
       ["a"] = 77,
       ["overrides"] = {
@@ -23914,6 +25829,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "tungstentitaniumcarbide",
       ["molten"] = "molten.tungstentitaniumcarbide",
+      ["v"] = 53,
       ["u"] = 189,
       ["a"] = 187,
       ["p"] = 75
@@ -23946,6 +25862,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 139,
       ["molten"] = "molten.universium",
+      ["v"] = 9,
       ["u"] = 45,
       ["a"] = 44,
       ["p"] = 22
@@ -23981,6 +25898,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "uranium232",
       ["molten"] = "molten.uranium232",
+      ["v"] = 71,
       ["u"] = 8,
       ["a"] = 210,
       ["p"] = 87
@@ -23990,6 +25908,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "uranium233",
       ["molten"] = "molten.uranium233",
+      ["v"] = 71,
       ["u"] = 8,
       ["a"] = 210,
       ["p"] = 87
@@ -24036,6 +25955,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "uraniumhexafluoride",
       ["molten"] = "molten.uraniumhexafluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -24045,6 +25965,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "uraniumtetrafluoride",
       ["molten"] = "molten.uraniumtetrafluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 185,
       ["p"] = 77
@@ -24086,6 +26007,7 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1740},
       ["coating"] = "pps",
       ["molten"] = "molten.vanadiumgallium",
+      ["v"] = 2,
       ["u"] = 88,
       ["a"] = 94,
       ["p"] = 35
@@ -24109,6 +26031,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 371,
       ["molten"] = "molten.vanadiumsteel",
+      ["tier"] = "LV",
       ["u"] = 20,
       ["a"] = 47,
       ["p"] = 9
@@ -24127,6 +26050,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 11530},
       ["coating"] = "standard",
       ["molten"] = "molten.vibrantalloy",
+      ["tier"] = "HV",
+      ["v"] = 3,
       ["u"] = 93,
       ["a"] = 83,
       ["p"] = 32
@@ -24159,6 +26084,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 408,
       ["molten"] = "molten.vividalloy",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 47,
       ["p"] = 9
@@ -24182,6 +26108,7 @@ return {
       ["family"] = "literal",
       ["pipeFluid"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 30715},
       ["molten"] = "molten.void",
+      ["v"] = 1,
       ["u"] = 204,
       ["a"] = 213,
       ["p"] = 88
@@ -24198,6 +26125,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 489,
       ["molten"] = "molten.vulcanite",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 103,
       ["p"] = 9
@@ -24207,6 +26135,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 951,
       ["molten"] = "molten.vyroxeres",
+      ["v"] = 3,
       ["u"] = 20,
       ["a"] = 84,
       ["p"] = 2
@@ -24223,6 +26152,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "watertightsteel",
       ["molten"] = "molten.watertightsteel",
+      ["v"] = 48,
       ["u"] = 198,
       ["a"] = 187,
       ["p"] = 75
@@ -24239,6 +26169,7 @@ return {
       ["family"] = "gt",
       ["dsf"] = 585,
       ["molten"] = "molten.whitedwarfmatter",
+      ["v"] = 21,
       ["u"] = 124,
       ["a"] = 136,
       ["p"] = 25
@@ -24410,6 +26341,8 @@ return {
       ["conductor"] = {["name"] = "gregtech:gt.blockmachines", ["base"] = 1760},
       ["coating"] = "pps",
       ["molten"] = "molten.yttriumbariumcuprate",
+      ["tier"] = "IV",
+      ["v"] = 2,
       ["u"] = 89,
       ["a"] = 95,
       ["p"] = 12
@@ -24441,6 +26374,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "zeron100",
       ["molten"] = "molten.zeron100",
+      ["v"] = 57,
       ["u"] = 185,
       ["a"] = 187,
       ["p"] = 75
@@ -24497,6 +26431,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10083,
       ["molten"] = "molten.zircaloy-2",
+      ["v"] = 34,
       ["u"] = 157,
       ["a"] = 178,
       ["p"] = 66
@@ -24506,6 +26441,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10082,
       ["molten"] = "molten.zircaloy-4",
+      ["v"] = 34,
       ["u"] = 2,
       ["a"] = 178,
       ["p"] = 66
@@ -24529,6 +26465,7 @@ return {
       ["name"] = "Zirconium",
       ["family"] = "bw",
       ["dsf"] = 3,
+      ["tier"] = "IV",
       ["u"] = 29,
       ["a"] = 170,
       ["overrides"] = {
@@ -24543,6 +26480,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "zirconiumcarbide",
       ["molten"] = "molten.zirconiumcarbide",
+      ["v"] = 52,
       ["u"] = 199,
       ["a"] = 191,
       ["p"] = 75
@@ -24552,6 +26490,7 @@ return {
       ["family"] = "gtpp",
       ["dsf"] = "zirconiumtetrafluoride",
       ["molten"] = "zirconiumtetrafluoride",
+      ["v"] = 43,
       ["u"] = 1,
       ["a"] = 144,
       ["p"] = 77
@@ -24606,6 +26545,7 @@ return {
       ["family"] = "bw",
       ["dsf"] = 10053,
       ["molten"] = "molten.zn-th alloy",
+      ["tier"] = "IV",
       ["u"] = 8,
       ["a"] = 177,
       ["p"] = 64

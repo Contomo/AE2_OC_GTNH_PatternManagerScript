@@ -25,7 +25,7 @@ local function multiplier()
   return field(
     'multiplier',
     'Pattern multiplier',
-    'Whole-number batch multiplier. 1 keeps the selected recipe batch; 256 makes it 256 times larger.',
+    'Fixed: recipe batch x this value. Tiered: global tier budget x this value, capped by global quantity limits.',
     '1',
     'positiveInteger'
   )
@@ -69,13 +69,7 @@ local function formSwitches(choices, label, help, hidden, default)
   for _, option in ipairs(choices) do
     names[#names + 1] = option[1]
   end
-  local f = field(
-    'forms',
-    label,
-    help,
-    default or table.concat(names, ','),
-    'multiToggle'
-  )
+  local f = field('forms', label, help, default or table.concat(names, ','), 'multiToggle')
   f.choices = choices
   f.hidden = hidden
   return f
@@ -89,8 +83,11 @@ local shaperOutputs = {}
 local shaperFields = {}
 for _, entry in ipairs(shaperForms) do
   local key, label = entry[1], entry[2]
-  shaperFields[#shaperFields + 1] = enabledDestination(key, label .. ' interface name',
-    'Destination for ' .. label:lower() .. ' patterns; keep its mold stocked in the machine.')
+  shaperFields[#shaperFields + 1] = enabledDestination(
+    key,
+    label .. ' interface name',
+    'Destination for ' .. label:lower() .. ' patterns; keep its mold stocked in the machine.'
+  )
   if key:match('^pipe') then
     local size = key:sub(5)
     shaperOutputs['pipeFluid' .. size] = key
@@ -99,10 +96,13 @@ for _, entry in ipairs(shaperForms) do
     shaperOutputs[key] = key
   end
 end
-shaperFields[#shaperFields + 1] = formSwitches(shaperForms,
+shaperFields[#shaperFields + 1] = formSwitches(
+  shaperForms,
   'Enabled Fluid Shaper molds',
   'Only verified Fluid Solidifier routes are included. The reusable mold stays in the machine.',
-  true, 'plate,turbineBlade')
+  true,
+  'plate,turbineBlade'
+)
 shaperFields[#shaperFields + 1] = multiplier()
 M.list = {
   {
@@ -261,8 +261,11 @@ M.list = {
         'text',
         true
       ),
-      formSwitches(benderForms, 'Enabled bending outputs',
-        'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.'),
+      formSwitches(
+        benderForms,
+        'Enabled bending outputs',
+        'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.'
+      ),
       field(
         'spring',
         'Spring interface name',

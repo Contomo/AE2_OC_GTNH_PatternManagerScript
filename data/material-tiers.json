@@ -1,0 +1,695 @@
+{
+  "policy": "first-solid-task-v1",
+  "packVersion": "2.9.0-beta-3",
+  "source": "https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/tree/27e61fbea6e245df80839885460994aa0ef9da9f/config/betterquesting/DefaultQuests",
+  "commit": "27e61fbea6e245df80839885460994aa0ef9da9f",
+  "archiveSha256": "7ecab6aa97080c5a662fd5e91b73b6ae034b8105296c60a52da21ef0b12480ce",
+  "materials": {
+    "bronze": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/MultipleQuestLine/GT6StyledPipes-AAAAAAAAAAAAAAAAAAAEeg==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 5122,
+      "form": "pipeFluidMedium"
+    },
+    "stellaralloy": {
+      "tier": "UV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/MultipleQuestLine/NanoForgeTier1-AAAAAAAAAAAAAAAAAAAMzw==.json",
+      "item": "gregtech:gt.blockframes",
+      "damage": 405,
+      "form": "frameGt"
+    },
+    "silver": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/MultipleQuestLine/SendingthePowerB-AAAAAAAAAAAAAAAAAAAEeQ==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 1466,
+      "form": "cable1"
+    },
+    "redalloy": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/AVeryImportantAl-AAAAAAAAAAAAAAAAAAAAMA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11308,
+      "form": "ingot"
+    },
+    "tin": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/BasicCraftingRot-AAAAAAAAAAAAAAAAAAAASA==.json",
+      "item": "gregtech:gt.metaitem.02",
+      "damage": 21057,
+      "form": "rotor"
+    },
+    "castiron": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/BetterThanIron-AAAAAAAAAAAAAAAAAAADtA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11304,
+      "form": "ingot"
+    },
+    "steel": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/Blastoff-AAAAAAAAAAAAAAAAAAAAQQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11305,
+      "form": "ingot"
+    },
+    "gold": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/ExtraModifier-AAAAAAAAAAAAAAAAAAAEag==.json",
+      "item": "minecraft:gold_block",
+      "damage": 0,
+      "form": "block"
+    },
+    "diamond": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/ExtraModifier-AAAAAAAAAAAAAAAAAAAEag==.json",
+      "item": "minecraft:diamond",
+      "damage": 0,
+      "form": "gem"
+    },
+    "lapis": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/LapisLucky-AAAAAAAAAAAAAAAAAAAEaA==.json",
+      "item": "minecraft:dye",
+      "damage": 4,
+      "form": "gem"
+    },
+    "netherquartz": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/NetherQuartzShar-AAAAAAAAAAAAAAAAAAAEbA==.json",
+      "item": "minecraft:quartz",
+      "damage": 0,
+      "form": "gem"
+    },
+    "alumite": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/Obzinite-AAAAAAAAAAAAAAAAAAAEZg==.json",
+      "item": "tconstruct:materials",
+      "damage": 15,
+      "form": "ingot"
+    },
+    "rubber": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/PollutionWhat-AAAAAAAAAAAAAAAAAAACFg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17880,
+      "form": "plate"
+    },
+    "iron": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/TheIronGuy-AAAAAAAAAAAAAAAAAAAEUw==.json",
+      "item": "minecraft:iron_block",
+      "damage": 0,
+      "form": "block"
+    },
+    "copper": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier05Steam-AAAAAAAAAAAAAAAAAAAAAg==/WiredWeird-AAAAAAAAAAAAAAAAAAAAQw==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 1360,
+      "form": "wire1"
+    },
+    "lignite": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier0StoneAge-AAAAAAAAAAAAAAAAAAAAAQ==/AnotherFuelSourc-AAAAAAAAAAAAAAAAAAAAHQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 8538,
+      "form": "gem"
+    },
+    "paper": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier0StoneAge-AAAAAAAAAAAAAAAAAAAAAQ==/BookParts-AAAAAAAAAAAAAAAAAAAAIA==.json",
+      "item": "minecraft:paper",
+      "damage": 0,
+      "form": "plate"
+    },
+    "charcoal": {
+      "tier": "ULV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier0StoneAge-AAAAAAAAAAAAAAAAAAAAAQ==/FinallySomePower-AAAAAAAAAAAAAAAAAAAAGw==.json",
+      "item": "minecraft:coal",
+      "damage": 1,
+      "form": "gem"
+    },
+    "naquadahalloy": {
+      "tier": "LuV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier6LuV-AAAAAAAAAAAAAAAAAAAACA==/NaquadahAlloy-AAAAAAAAAAAAAAAAAAAKLw==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11325,
+      "form": "ingot"
+    },
+    "titanium": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/Rutile-AAAAAAAAAAAAAAAAAAAD9A==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 12028,
+      "form": "ingotHot"
+    },
+    "transcendentmetal": {
+      "tier": "UEV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier10UEV-D_aFb1hFQH2PDkN0_KvAEQ==/HahaSpinnyIngot-Jk9jZtb6SXSLNX9SND_J0A==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11581,
+      "form": "ingot"
+    },
+    "hypogen": {
+      "tier": "UEV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier10UEV-D_aFb1hFQH2PDkN0_KvAEQ==/Hypogen-AAAAAAAAAAAAAAAAAAAKGA==.json",
+      "item": "miscutils:itemingothypogen",
+      "damage": 0,
+      "form": "ingot"
+    },
+    "superconductoruev": {
+      "tier": "UEV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier10UEV-D_aFb1hFQH2PDkN0_KvAEQ==/UEVSuperconducto-s6BLu9oMS86AXyR1FQ1imA==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2026,
+      "form": "wire1"
+    },
+    "protohalkonite": {
+      "tier": "UIV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier11UIV-ytf2QCzUSk6ihcYeRbwblw==/AnotherTypeofSte-8OMu4RdgQhyZqXRid6n-Wg==.json",
+      "item": "gregtech:gt.metaitem.02",
+      "damage": 19154,
+      "form": "wireFine"
+    },
+    "tairitsu": {
+      "tier": "UIV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier11UIV-ytf2QCzUSk6ihcYeRbwblw==/SistersInArms-cmR_3Et6RMyXYfHzRf3Qjg==.json",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 10106,
+      "form": "ingot"
+    },
+    "shijima": {
+      "tier": "UIV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier11UIV-ytf2QCzUSk6ihcYeRbwblw==/SistersInArms-cmR_3Et6RMyXYfHzRf3Qjg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11189,
+      "form": "ingot"
+    },
+    "churitsu": {
+      "tier": "UIV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier11UIV-ytf2QCzUSk6ihcYeRbwblw==/SistersInArms-cmR_3Et6RMyXYfHzRf3Qjg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11190,
+      "form": "ingot"
+    },
+    "superconductoruiv": {
+      "tier": "UIV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier11UIV-ytf2QCzUSk6ihcYeRbwblw==/UIVSuperconducto-kvqtI5rrRrOhi5jhPR-s4A==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2081,
+      "form": "wire1"
+    },
+    "spacetime": {
+      "tier": "UIV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier11UIV-ytf2QCzUSk6ihcYeRbwblw==/YourFirstSpaceTi-q5Gvvfe5Tm2gxZfi7VIgpg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11588,
+      "form": "ingot"
+    },
+    "superconductorumv": {
+      "tier": "UMV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier12UMV-l37V2WvbSHGZQ5oMgAfBuw==/UMVSuperconducto-sKLPeimGTFS6_hIyc-SOXA==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2089,
+      "form": "wire1"
+    },
+    "hexanite": {
+      "tier": "UMV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier12UMV-l37V2WvbSHGZQ5oMgAfBuw==/WhatisthisTekxit-C0erucWORuCA_neG7VCkvg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17174,
+      "form": "plate"
+    },
+    "magnalium": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/ANewAlloyMagnali-AAAAAAAAAAAAAAAAAAAEfQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11313,
+      "form": "ingot"
+    },
+    "antimony": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/Antimony-AAAAAAAAAAAAAAAAAAACVg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11058,
+      "form": "ingot"
+    },
+    "annealedcopper": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/CheaperAnnealedP-AAAAAAAAAAAAAAAAAAAElA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11345,
+      "form": "ingot"
+    },
+    "cobalt": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/CobaltandArsenic-AAAAAAAAAAAAAAAAAAALYg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11033,
+      "form": "ingot"
+    },
+    "arsenic": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/CobaltandArsenic-AAAAAAAAAAAAAAAAAAALYg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11039,
+      "form": "ingot"
+    },
+    "vanadiumsteel": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/CraftsmanUsedtoM-AAAAAAAAAAAAAAAAAAAHdw==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11371,
+      "form": "ingot"
+    },
+    "aluminium": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/GettingReadyforT-AAAAAAAAAAAAAAAAAAAAZw==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11019,
+      "form": "ingot"
+    },
+    "redstonealloy": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/LosslessLVCables-AAAAAAAAAAAAAAAAAAAEcA==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 30645,
+      "form": "wire1"
+    },
+    "steelmagnetic": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/MagnetizeYourRod-AAAAAAAAAAAAAAAAAAACSw==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 23355,
+      "form": "stick"
+    },
+    "certusquartz": {
+      "tier": "LV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/ProcessSomeCertu-AAAAAAAAAAAAAAAAAAACzA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 8516,
+      "form": "gem"
+    },
+    "soularium": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/ANewAlloySoulari-AAAAAAAAAAAAAAAAAAAApg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11379,
+      "form": "ingot"
+    },
+    "darksteel": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/CometotheDarkSid-AAAAAAAAAAAAAAAAAAAAig==.json",
+      "item": "enderio:itemalloy",
+      "damage": 6,
+      "form": "ingot"
+    },
+    "emerald": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/DoYouFeelUnlucky-AAAAAAAAAAAAAAAAAAAHeg==.json",
+      "item": "minecraft:emerald",
+      "damage": 0,
+      "form": "gem"
+    },
+    "kanthal": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/FirstKanthal-AAAAAAAAAAAAAAAAAAAMAA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11312,
+      "form": "ingot"
+    },
+    "electricalsteel": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/IOIOItsOfftoEnde-AAAAAAAAAAAAAAAAAAAAgA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11365,
+      "form": "ingot"
+    },
+    "conductiveiron": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/IOIOItsOfftoEnde-AAAAAAAAAAAAAAAAAAAAgA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11369,
+      "form": "ingot"
+    },
+    "pulsatingiron": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/IOIOItsOfftoEnde-AAAAAAAAAAAAAAAAAAAAgA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11378,
+      "form": "ingot"
+    },
+    "superconductormv": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/MVSuperconductor-AAAAAAAAAAAAAAAAAAAFfA==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2320,
+      "form": "wire1"
+    },
+    "polyethylene": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/MoltenPlastic-AAAAAAAAAAAAAAAAAAAC7g==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17874,
+      "form": "plate"
+    },
+    "polyvinylchloride": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/PVCSheets-AAAAAAAAAAAAAAAAAAAHUg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17649,
+      "form": "plate"
+    },
+    "brass": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/PipesPipesEveryw-AAAAAAAAAAAAAAAAAAAGyA==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 5601,
+      "form": "pipeItemSmall"
+    },
+    "siliconsg": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/SiliconPlate-AAAAAAAAAAAAAAAAAAAC8A==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17856,
+      "form": "plate"
+    },
+    "stainlesssteel": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/StainlessSteelEB-AAAAAAAAAAAAAAAAAAAC8Q==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11306,
+      "form": "ingot"
+    },
+    "polycaprolactam": {
+      "tier": "MV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/StringTheory-kz0dyVKfTm6PuIWsz3CYvQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11472,
+      "form": "ingot"
+    },
+    "endereye": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/EnderEyes-AAAAAAAAAAAAAAAAAAAE0Q==.json",
+      "item": "minecraft:ender_eye",
+      "damage": 0,
+      "form": "gem"
+    },
+    "energeticalloy": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/EnergeticAlloy-AAAAAAAAAAAAAAAAAAAD3g==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11366,
+      "form": "ingot"
+    },
+    "superconductorhv": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/HVSuperconductor-AAAAAAAAAAAAAAAAAAAFfQ==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2340,
+      "form": "wire1"
+    },
+    "fluorophlogopite": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/MeltingandRefree-RSeerR8bQ6advk1NkOU8NQ==.json",
+      "item": "bartworks:gt.bwmetageneratedplate",
+      "damage": 104,
+      "form": "plate"
+    },
+    "polystyrene": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/Polystyrene-AAAAAAAAAAAAAAAAAAAKBQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17636,
+      "form": "plate"
+    },
+    "polytetrafluoroethylene": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/Polytetrafluoroe-AAAAAAAAAAAAAAAAAAAHFg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17473,
+      "form": "plate"
+    },
+    "rubbersilicone": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/SiliconeRubberSh-AAAAAAAAAAAAAAAAAAAGgA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17471,
+      "form": "plate"
+    },
+    "styrenebutadienerubber": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/StyreneButadiene-AAAAAAAAAAAAAAAAAAAGfA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17635,
+      "form": "plate"
+    },
+    "vibrantalloy": {
+      "tier": "HV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/VibrantAlloy-AAAAAAAAAAAAAAAAAAAD3Q==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11367,
+      "form": "ingot"
+    },
+    "bluesteel": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/BlueSteel-AAAAAAAAAAAAAAAAAAAE7w==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11349,
+      "form": "ingot"
+    },
+    "superconductorev": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/EVSuperconductor-AAAAAAAAAAAAAAAAAAAFgA==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2360,
+      "form": "wire1"
+    },
+    "epoxid": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/Epoxid-AAAAAAAAAAAAAAAAAAAEyA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17470,
+      "form": "plate"
+    },
+    "epoxidfiberreinforced": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/FiberReinforcedE-AAAAAAAAAAAAAAAAAAAGjA==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17610,
+      "form": "plate"
+    },
+    "hssg": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/HSSG-AAAAAAAAAAAAAAAAAAAF0w==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11372,
+      "form": "ingot"
+    },
+    "tungsten": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/HigherTierCables-AAAAAAAAAAAAAAAAAAAJkg==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 1686,
+      "form": "cable1"
+    },
+    "platinum": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/HigherTierCables-AAAAAAAAAAAAAAAAAAAJkg==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 1646,
+      "form": "cable1"
+    },
+    "tungstensteel": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/JustEnoughTungst-AAAAAAAAAAAAAAAAAAAJVg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11316,
+      "form": "ingot"
+    },
+    "niobiumtitanium": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/NiobiumTitanium-EYcEN-yhRDyXfOGtQjWyLg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11360,
+      "form": "ingot"
+    },
+    "polyphenylenesulfide": {
+      "tier": "EV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PolyphenyleneSul-AAAAAAAAAAAAAAAAAAAJkQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17631,
+      "form": "plate"
+    },
+    "hafnium": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/FinallyActualHaf-AAAAAAAAAAAAAAAAAAAL7A==.json",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 11000,
+      "form": "ingot"
+    },
+    "hsss": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/HSSS-AAAAAAAAAAAAAAAAAAAGgQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11374,
+      "form": "ingot"
+    },
+    "superconductoriv": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/IVSuperconductor-AAAAAAAAAAAAAAAAAAAFgQ==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2380,
+      "form": "wire1"
+    },
+    "znthalloy": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/Longtermplanner-fvz-5lJaRAqfsM1hcAYOng==.json",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 10053,
+      "form": "ingot"
+    },
+    "osmiridium": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/Osmiridium-AAAAAAAAAAAAAAAAAAAJGw==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11317,
+      "form": "ingot"
+    },
+    "polybenzimidazole": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/Polybenzimidazol-AAAAAAAAAAAAAAAAAAAGoQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17599,
+      "form": "plate"
+    },
+    "rhodiumplatedpalladium": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/RhodiumPlatedPal-AAAAAAAAAAAAAAAAAAAJGQ==.json",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 88,
+      "form": "ingot"
+    },
+    "ruridit": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/RuriRuridididi-AAAAAAAAAAAAAAAAAAAJGg==.json",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 90,
+      "form": "ingot"
+    },
+    "naquadah": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/YourFirstNaquada-AAAAAAAAAAAAAAAAAAAGgw==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11324,
+      "form": "ingot"
+    },
+    "yttriumbariumcuprate": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/YttriumBariumCup-AAAAAAAAAAAAAAAAAAAGtg==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11358,
+      "form": "ingot"
+    },
+    "zirconium": {
+      "tier": "IV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/ZirconiumIngots-AAAAAAAAAAAAAAAAAAAL6g==.json",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 3,
+      "form": "ingot"
+    },
+    "netherite": {
+      "tier": "LuV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier6LuV-AAAAAAAAAAAAAAAAAAAACA==/DenseNetheritePl-4v3YtOxvT8aWIwy7NEJNhw==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 22132,
+      "form": "plateDense"
+    },
+    "europium": {
+      "tier": "LuV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier6LuV-AAAAAAAAAAAAAAAAAAAACA==/GettingEuropium-AAAAAAAAAAAAAAAAAAAEvQ==.json",
+      "item": "gregtech:gt.blockmetal3",
+      "damage": 3,
+      "form": "block"
+    },
+    "hellishmetal": {
+      "tier": "LuV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier6LuV-AAAAAAAAAAAAAAAAAAAACA==/HellishMetal-JVZjTR4hRSaeaoXPvBcG9w==.json",
+      "item": "gregtech:gt.blockmetal9",
+      "damage": 12,
+      "form": "block"
+    },
+    "superconductorluv": {
+      "tier": "LuV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier6LuV-AAAAAAAAAAAAAAAAAAAACA==/LuVSuperconducto-AAAAAAAAAAAAAAAAAAAGrw==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2400,
+      "form": "wire1"
+    },
+    "americium": {
+      "tier": "ZPM",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier7ZPM-AAAAAAAAAAAAAAAAAAAAHg==/MakingAmericium-AAAAAAAAAAAAAAAAAAAErw==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11103,
+      "form": "ingot"
+    },
+    "neutronium": {
+      "tier": "ZPM",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier7ZPM-AAAAAAAAAAAAAAAAAAAAHg==/WasntThisOnlyFou-AAAAAAAAAAAAAAAAAAAKbQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11129,
+      "form": "ingot"
+    },
+    "superconductorzpm": {
+      "tier": "ZPM",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier7ZPM-AAAAAAAAAAAAAAAAAAAAHg==/ZPMSuperconducto-AAAAAAAAAAAAAAAAAAAKOw==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2420,
+      "form": "wire1"
+    },
+    "kevlar": {
+      "tier": "UV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier8UV-AAAAAAAAAAAAAAAAAAAALQ==/Kevlar-AAAAAAAAAAAAAAAAAAAM0g==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17765,
+      "form": "plate"
+    },
+    "cosmicneutronium": {
+      "tier": "UV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier8UV-AAAAAAAAAAAAAAAAAAAALQ==/NeutronsFromSpac-AAAAAAAAAAAAAAAAAAAKcQ==.json",
+      "item": "avaritia:resource",
+      "damage": 4,
+      "form": "ingot"
+    },
+    "superconductoruv": {
+      "tier": "UV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier8UV-AAAAAAAAAAAAAAAAAAAALQ==/UVSuperconductor-AAAAAAAAAAAAAAAAAAAKPA==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2440,
+      "form": "wire1"
+    },
+    "infinity": {
+      "tier": "UHV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier9UHV-AAAAAAAAAAAAAAAAAAAALg==/InfinityInfrastr-AAAAAAAAAAAAAAAAAAAKFg==.json",
+      "item": "avaritia:resource_block",
+      "damage": 1,
+      "form": "block"
+    },
+    "superconductoruhv": {
+      "tier": "UHV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier9UHV-AAAAAAAAAAAAAAAAAAAALg==/UHVSuperconducto-AAAAAAAAAAAAAAAAAAAKPQ==.json",
+      "item": "gregtech:gt.blockmachines",
+      "damage": 2020,
+      "form": "wire1"
+    },
+    "radoxpolymer": {
+      "tier": "UHV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier9UHV-AAAAAAAAAAAAAAAAAAAALg==/WaitPBIwasntthel-AAAAAAAAAAAAAAAAAAAMsQ==.json",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 17979,
+      "form": "plate"
+    }
+  }
+}

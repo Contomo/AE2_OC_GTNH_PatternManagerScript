@@ -72,6 +72,7 @@ ore dictionary. `source/tools/compile_matrix.py` emits matrix schema **2**:
 - `materials`: name, resolver family/suffix, shared capability-set index (`a`),
   shared production-flag set (`p`), verified molten-fluid ID where applicable,
   optional conductor/pipe bases, coating class,
+  optional quest progression tier and shared voltage-exception index (`v`),
   and form overrides or rare rule exclusions. There are **no recipe lists** here.
 - `capabilities`: deduplicated sets of registered semantic forms. These cover gears,
   rods, rings, bolts, screws, rotors, springs, casings, all registered plate variants,
@@ -84,8 +85,12 @@ ore dictionary. `source/tools/compile_matrix.py` emits matrix schema **2**:
 - `usage`: shared sets of output forms with a path to a non-recycling product
   in the full recipe export. Each material stores only a shared set index (`u`).
   No per-material recipe lists or manual inclusion switches are needed.
+- `voltages`: deduplicated sparse maps overriding common rule EU/t. These
+  metadata indexes never select recipes; eligibility still uses semantic flags.
 - `rules`: material-neutral transformations with required forms and a production
-  flag or coating class. The **21 wiremill rules** include one
+  flag or coating class, plus the most common scraped recipe EU/t. Material
+  exceptions override EU/t without splitting the semantic recipe.
+  The **21 wiremill rules** include one
   `1 ingot(material) -> 2 wire1(material)`, and shared larger-wire/fine-wire routes.
   The **96 coating rules** serve two shared classes (`standard` and `pps`);
   each class is selected once per material, rather than repeating its recipe list.
@@ -105,7 +110,7 @@ ore dictionary. `source/tools/compile_matrix.py` emits matrix schema **2**:
 The matrix covers **1,162 materials**, including materials without a currently
 implemented production mode. Identical availability and production flags are
 stored once. Only **two explicit recipe exclusions** are needed to reproduce
-unusual source behavior. No material contains numeric foreign keys into recipes. The current modes
+unusual source behavior. No material contains a recipe-selection list. The current modes
 select one polymer route per material/size; 183 of the 306 scraped
 material/size combinations reach a non-recycling product. The four
 scraped consumed-polymer routes are normal/small PVC and normal/small PDMS.
@@ -181,10 +186,43 @@ python source/tools/compile_matrix.py .research\pattern-catalog-with-shaper.json
   --ore-resources ..\OreDictScript\data\ores.json.gz `
   --registry-names data\registry-names.json `
   --usage .research\usage.json `
+  --material-tiers data\material-tiers.json `
   --compatible-target 2.9.0-beta-3 `
   --compatibility-basis "User confirmed recipes unchanged from beta 2 to beta 3"
 npm run build
 ```
+
+Build material-tier provenance from the pack's pinned beta-3 questbook archive:
+
+```powershell
+Invoke-WebRequest https://codeload.github.com/GTNewHorizons/GT-New-Horizons-Modpack/zip/27e61fbea6e245df80839885460994aa0ef9da9f -OutFile .research\pack-beta3.zip
+python source/tools/build_tiers.py .research\pack-beta3.zip `
+  --registry ..\OreDictScript\data\registry-rules.json `
+  --resources ..\OreDictScript\research\resource-index.json.gz `
+  --ore-resources ..\OreDictScript\data\ores.json.gz `
+  --recipes ..\OreDictScript\research\recipes.json.gz `
+  --pack-version 2.9.0-beta-3 --commit 27e61fbea6e245df80839885460994aa0ef9da9f `
+  --output data\material-tiers.json
+```
+
+Run this before the matrix command above when rebuilding the evidence. The
+policy uses the earliest tier-chapter task requiring a solid material form.
+Dust, tool heads, icons, rewards, optional ingredients, "any one" tasks and side
+chapters do not classify a material. Untagged storage blocks can be linked by
+actual compression recipes with matching material labels. It covers
+98 materials; all others remain unclassified and use the global fallback.
+Quest progression is not asserted to be exact earliest obtainable availability.
+The spreadsheet's GT Tiers sheet provides only representative metals and is
+not used to invent mappings for the rest of the matrix.
+
+The shared batching implementation is `source/lib/batch.lua`. Its voltage
+thresholds come from `source/data/tiers.json`, sourced from pinned GTValues.
+Relative budget steps saturate after seven tiers, while optional absolute tier
+overrides remain fixed when current progression changes. The optional voltage
+budget is a constraint, not an amplification. Program multipliers apply before
+the final multiplier and per-ingredient item/fluid limits. Stocked ingredients
+are never multiplied or included in those limits. Existing settings migrate to
+Fixed so updating does not silently change existing batches.
 
 The importer streams the large scrape on the desktop. The expanded export stays
 on the desktop; it is not a runtime library. The compiler selects a primary item

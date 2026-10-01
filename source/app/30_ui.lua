@@ -58,8 +58,17 @@ local function runUI()
     end
     s = unicode.sub(tostring(s or ''):gsub('\194\167.', ''):gsub('[%c]', ' '), 1, width)
     local key = x .. ':' .. y
-    local value = width .. ':' .. s .. ':' .. tostring(tone) .. ':' .. tostring(bg)
-      .. ':' .. tostring(guideWidth) .. ':' .. tostring(guideTone)
+    local value = width
+      .. ':'
+      .. s
+      .. ':'
+      .. tostring(tone)
+      .. ':'
+      .. tostring(bg)
+      .. ':'
+      .. tostring(guideWidth)
+      .. ':'
+      .. tostring(guideTone)
     if paintCache[key] == value then
       return
     end
@@ -122,16 +131,25 @@ local function runUI()
     invalidate()
   end
   local function fields()
-    local definitions = state.settings == 'shared' and Config.fields
-      or Programs.byId[state.settings].fields
+    local definitions = Config.section(state.settings).fields
     local visible = {}
     for _, f in ipairs(definitions) do
-      if not f.hidden then visible[#visible + 1] = f end
+      if not f.hidden then
+        visible[#visible + 1] = f
+      end
     end
     return visible
   end
   local function values()
     return Config.values(cfg, state.settings)
+  end
+  local function chooseValue(key, value)
+    commitEdit()
+    local trial = U.clone(cfg)
+    Config.values(trial, state.settings)[key] = value
+    saveConfig(trial)
+    state.choice = nil
+    status('Settings saved.', 'green')
   end
   commitEdit = function()
     if not edit then
@@ -175,7 +193,14 @@ local function runUI()
         .. unicode.sub(edit.value, edit.cursor)
       text(x, y, value, width, edit.selectAll and 'yellow' or 'blue', 'panel')
     else
-      text(x, y, value == '' and '(not configured)' or value, width, 'text', 'panel')
+      text(
+        x,
+        y,
+        value == '' and (f.placeholder or '(not configured)') or value,
+        width,
+        'text',
+        'panel'
+      )
     end
     if state.busy then
       return
@@ -257,7 +282,9 @@ local function runUI()
       add('Run program opens the chooser. Select a program and press Preview selected.')
       add('Review changes, required interfaces, existing-pattern sorting and donors.')
       add('Verify destination interfaces have all 36 slots available, then Execute preview.')
-      add('Assembly line, insulator, wiremill, bender and Fluid Shaper share the editor and recovery.')
+      add(
+        'Assembly line, insulator, wiremill, bender and Fluid Shaper share the editor and recovery.'
+      )
       add('Wire combining remains unavailable until its recipes have been verified.')
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
@@ -284,9 +311,11 @@ local function runUI()
         local program = Programs.byId[preview.id]
         for _, recipe in ipairs(preview.manifest.recipes) do
           local key = Programs.switchKey(program, recipe.outputForm)
-          stocked[key] = stocked[key] or {
-            label = recipe.outputLabel, items = recipe.stock or {}
-          }
+          stocked[key] = stocked[key]
+            or {
+              label = recipe.outputLabel,
+              items = recipe.stock or {},
+            }
         end
         for _, entry in ipairs(program.formChoices) do
           local group = stocked[entry[1]]
@@ -294,11 +323,14 @@ local function runUI()
             local names = {}
             for _, item in ipairs(group.items) do
               names[#names + 1] = item.name == 'gregtech:gt.integrated_circuit'
-                and ('circuit ' .. item.damage)
+                  and ('circuit ' .. item.damage)
                 or tostring(item.label or item.name)
             end
-            add((program.switchByDestination and entry[2] or group.label or entry[2])
-              .. ': ' .. table.concat(names, ', '))
+            add(
+              (program.switchByDestination and entry[2] or group.label or entry[2])
+                .. ': '
+                .. table.concat(names, ', ')
+            )
           end
         end
         add('')
@@ -394,7 +426,10 @@ local function runUI()
             count = width
           end
           contentRows[#contentRows + 1] = {
-            unicode.sub(remaining, 1, count), r[2], math.min(guideWidth, count), r[4]
+            unicode.sub(remaining, 1, count),
+            r[2],
+            math.min(guideWidth, count),
+            r[4],
           }
           guideWidth = 0
           remaining = unicode.sub(remaining, count + 1):gsub('^%s+', '')
@@ -406,8 +441,7 @@ local function runUI()
     state.offset = math.max(0, math.min(state.offset, math.max(0, #rows - room)))
     for n = 1, room do
       local r = rows[state.offset + n]
-      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text',
-        nil, r and r[3], r and r[4])
+      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text', nil, r and r[3], r and r[4])
     end
     local maximum = math.max(0, #rows - room)
     local thumb = maximum == 0 and room or math.max(1, math.floor(room * room / #rows))
@@ -448,6 +482,7 @@ local function runUI()
     local key = state.page
       .. state.settings
       .. tostring(state.settingsPage)
+      .. tostring(state.choice)
       .. tostring(state.selected)
       .. state.section
       .. tostring(state.preview)
@@ -494,7 +529,10 @@ local function runUI()
       end)
     end
     if state.page == 'settings' then
-      text(3, 22, 'SETTINGS SECTIONS', 26, 'muted')
+      text(3, 20, 'SETTINGS SECTIONS', 26, 'muted')
+      nav(22, 'Tier multipliers', state.settings == 'batch', function()
+        navigate('settings', 'batch')
+      end)
       nav(25, 'Shared interfaces', state.settings == 'shared', function()
         navigate('settings', 'shared')
       end)
@@ -504,18 +542,30 @@ local function runUI()
           navigate('settings', id)
         end)
       end
-      local name = state.settings == 'shared' and 'Shared interfaces'
-        or Programs.byId[state.settings].name
-      text(34, 7, 'SETTINGS / ' .. name, 124, 'blue')
+      local section = Config.section(state.settings)
+      local pages = { {} }
+      for _, f in ipairs(fields()) do
+        local page = pages[#pages]
+        if #page > 0 and (#page >= (section.pageSize or 8) or page[1].group ~= f.group) then
+          page = {}
+          pages[#pages + 1] = page
+        end
+        page[#page + 1] = f
+      end
+      state.settingsPage = math.min(state.settingsPage, #pages)
+      local page = pages[state.settingsPage]
+      text(
+        34,
+        7,
+        'SETTINGS / '
+          .. section.name
+          .. (page[1] and page[1].group and (' / ' .. page[1].group) or ''),
+        124,
+        'blue'
+      )
       text(34, 8, 'Changes save when you accept a field or navigate away.', 124, 'muted')
-      local allFields = fields()
-      local pageSize = 8
-      local pages = math.max(1, math.ceil(#allFields / pageSize))
-      state.settingsPage = math.min(state.settingsPage, pages)
-      local y = 11
-      for index = (state.settingsPage - 1) * pageSize + 1,
-        math.min(state.settingsPage * pageSize, #allFields) do
-        local f = allFields[index]
+      local y = section.pageSize == 9 and 10 or 11
+      for _, f in ipairs(page) do
         local helpY, height = y + 2, 4
         text(34, y, f.label, 124, 'blue')
         if f.kind == 'multiToggle' then
@@ -539,16 +589,24 @@ local function runUI()
             toggleForm(program.formSwitch, program.formChoices, choice)
           end, true, selected[choice])
           editorRow(42, y + 1, 116, f)
+        elseif f.kind == 'select' then
+          local label, selected = values()[f.key], 1
+          for n, option in ipairs(f.choices) do
+            if option[1] == values()[f.key] then
+              label, selected = option[2], n
+            end
+          end
+          button(34, y + 1, label .. ' v', function()
+            commitEdit()
+            state.choice =
+              { key = f.key, label = f.label, choices = f.choices, selected = selected }
+          end)
         elseif f.choices then
           local x = 34
           for _, option in ipairs(f.choices) do
             local key, value = f.key, option[1]
             x = button(x, y + 1, option[2], function()
-              commitEdit()
-              local trial = U.clone(cfg)
-              Config.values(trial, state.settings)[key] = value
-              saveConfig(trial)
-              status('Settings saved.', 'green')
+              chooseValue(key, value)
             end, true, values()[key] == value)
           end
         elseif f.kind == 'toggle' then
@@ -566,20 +624,27 @@ local function runUI()
         text(34, helpY, f.help, 124, 'muted')
         y = y + height
       end
-      if pages > 1 then
-        text(34, 44, 'Settings page ' .. state.settingsPage .. '/' .. pages, 30, 'muted')
-        button(111, 44, 'Previous', function()
+      if #pages > 1 then
+        local pageRow = section.pageSize == 9 and 45 or 44
+        text(34, pageRow, 'Settings page ' .. state.settingsPage .. '/' .. #pages, 30, 'muted')
+        button(111, pageRow, 'Previous', function()
           commitEdit()
           state.settingsPage = state.settingsPage - 1
         end, state.settingsPage > 1)
-        button(133, 44, 'Next', function()
+        button(133, pageRow, 'Next', function()
           commitEdit()
           state.settingsPage = state.settingsPage + 1
-        end, state.settingsPage < pages)
+        end, state.settingsPage < #pages)
       end
       button(34, 47, 'Run program', function()
         navigate('programs')
       end)
+      if state.settings == 'batch' then
+        button(54, 47, 'Effective tiers', function()
+          commitEdit()
+          state.choice = { label = 'Material budgets at ' .. cfg.batch.currentTier, budgets = true }
+        end)
+      end
     elseif state.page == 'programs' then
       text(34, 7, 'RUN A PROGRAM', 124, 'blue')
       text(
@@ -655,11 +720,24 @@ local function runUI()
         else
           text(113, 13, #(p.existing or {}) .. ' existing patterns scanned', 45, 'muted')
           text(113, 14, p.reused .. ' reused patterns recipes', 45, 'green')
-          text(113, 15, p.resizeCount .. ' reused patterns to resize', 45,
-                        p.resizeCount > 0 and 'yellow_lighter1' or 'muted')
+          text(
+            113,
+            15,
+            p.resizeCount .. ' reused patterns to resize',
+            45,
+            p.resizeCount > 0 and 'yellow_lighter1' or 'muted'
+          )
           text(113, 16, #p.preserved .. ' unrelated kept', 45, 'muted')
-          text(113, 18, p.required.processing .. '/' .. p.available.processing .. ' proc/ultimate pattern donors to be used', 45,
-                        p.required.processing < p.available.processing and 'green' or 'red')
+          text(
+            113,
+            18,
+            p.required.processing
+              .. '/'
+              .. p.available.processing
+              .. ' proc/ultimate pattern donors to be used',
+            45,
+            p.required.processing < p.available.processing and 'green' or 'red'
+          )
           text(113, 20, #p.moves .. ' sorting moves first', 45)
         end
         local y = 22
@@ -717,8 +795,10 @@ local function runUI()
             local closed, closeError = file:close()
             U.check(written and closed, writeError or closeError or 'Cannot save report')
           end)
-          status(ok and 'Saved preview report to ' .. path or 'Report export failed: ' .. tostring(why),
-            ok and 'green' or 'red')
+          status(
+            ok and 'Saved preview report to ' .. path or 'Report export failed: ' .. tostring(why),
+            ok and 'green' or 'red'
+          )
         end, not state.busy)
       end
     else
@@ -746,6 +826,44 @@ local function runUI()
     text(3, 49, state.status, 155, state.tone)
     if fs.exists(paths.pending) then
       text(3, 43, 'Pending operation: Recover', 26, 'red')
+    end
+    if state.choice then
+      -- Modal controls replace the underlying hit areas, so clicks cannot leak
+      -- through to settings or Execute. Closing it repaints the underlying page.
+      buttons = {}
+      scrollbar = nil
+      if not state.choice.painted then
+        gpu.setBackground(colors.panel)
+        gpu.fill(48, 9, 104, 29, ' ')
+        state.choice.painted = true
+      end
+      text(51, 10, state.choice.label, 98, 'blue', 'panel')
+      text(
+        51,
+        12,
+        state.choice.budgets
+            and 'Material budgets before voltage, program factor and quantity limits.'
+          or 'Choose a tier. Escape cancels.',
+        98,
+        'muted',
+        'panel'
+      )
+      local entries = state.choice.choices or Batch.tiers
+      for n, entry in ipairs(entries) do
+        local x = n <= 9 and 51 or 101
+        local y = 14 + ((n - 1) % 9) * 2
+        if state.choice.budgets then
+          text(x, y, entry .. '  ' .. Batch.budget(cfg.batch, entry) .. 'x', 45, 'text', 'panel')
+        else
+          local value, label = entry[1], entry[2]
+          button(x, y, label, function()
+            chooseValue(state.choice.key, value)
+          end, true, state.choice.selected == n)
+        end
+      end
+      button(51, 35, 'Close', function()
+        state.choice = nil
+      end)
     end
   end
   local lastProgress, lastPoll = 0, -math.huge
@@ -857,6 +975,26 @@ local function runUI()
       and d.section == state.section
   end
   handle = function(e)
+    if state.choice then
+      if e[1] == 'key_down' then
+        local key = e[4]
+        if key == 1 then
+          state.choice = nil
+        elseif state.choice.choices then
+          if key == 200 or key == 208 then
+            state.choice.selected = math.max(
+              1,
+              math.min(#state.choice.choices, state.choice.selected + (key == 200 and -1 or 1))
+            )
+          elseif key == 28 or key == 0x9C then
+            chooseValue(state.choice.key, state.choice.choices[state.choice.selected][1])
+          end
+        end
+        return
+      elseif e[1] ~= 'touch' and e[1] ~= 'interrupted' then
+        return
+      end
+    end
     if e[1] == 'interrupted' then
       state.cancelled = true
       state.running = false

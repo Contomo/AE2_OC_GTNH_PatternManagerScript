@@ -16,11 +16,19 @@ function checksum(data) {
   return b.toString(16).padStart(4,'0')+a.toString(16).padStart(4,'0');
 }
 const section = file => '-- Source: '+file+'\n'+read(file);
+const lua = value => typeof value === 'string' ? JSON.stringify(value)
+  : Array.isArray(value) ? '{'+value.map(lua).join(',')+'}'
+  : value && typeof value === 'object' ? '{'+Object.entries(value).map(([k,v])=>'['+lua(k)+']='+lua(v)).join(',')+'}'
+  : String(value);
+const tierDefinitions = '-- Source: source/data/tiers.json\nreturn '+lua(JSON.parse(read('source/data/tiers.json')))+'\n';
 const inline = source => source.replaceAll("require('assline_util')",'U')
+  .replaceAll("require('assline_tier_definitions')",'TierDefinitions')
+  .replaceAll("require('assline_batch')",'Batch')
   .replaceAll("require('assline_programs')",'Programs').replaceAll("require('assline_config')",'Config')
   .replaceAll("require('assline_planner')",'Planner').replaceAll("require('assline_modes')",'Modes');
 const pure = (name,file) => 'local '+name+'=(function()\n'+inline(section(file))+'\nend)()\n';
-const body = pure('U','source/lib/util.lua')+pure('Programs','source/lib/programs.lua')+pure('Config','source/lib/config.lua')+
+const body = pure('U','source/lib/util.lua')+'local TierDefinitions=(function()\n'+tierDefinitions+'end)()\n'+
+  pure('Batch','source/lib/batch.lua')+pure('Programs','source/lib/programs.lua')+pure('Config','source/lib/config.lua')+
   inline(['source/app/00_core.lua','source/app/10_plan.lua','source/app/20_apply.lua'].map(section).join('\n'))+'\n'+
   pure('Planner','source/lib/planner.lua')+pure('Modes','source/lib/modes.lua')+
   pure('Preview','source/lib/preview.lua')+
@@ -49,7 +57,8 @@ if args[1]~='--test' then unload() end
 if not ok then error(result,0) end
 return result
 `;
-for (const [name,file] of [['util','source/lib/util.lua'],['programs','source/lib/programs.lua'],['config','source/lib/config.lua'],['planner','source/lib/planner.lua'],['modes','source/lib/modes.lua'],['preview','source/lib/preview.lua']]) {
+emit('tests/lib/assline_tier_definitions.lua',tierDefinitions,true);
+for (const [name,file] of [['util','source/lib/util.lua'],['batch','source/lib/batch.lua'],['programs','source/lib/programs.lua'],['config','source/lib/config.lua'],['planner','source/lib/planner.lua'],['modes','source/lib/modes.lua'],['preview','source/lib/preview.lua']]) {
   emit('tests/lib/assline_'+name+'.lua',read(file),true);
 }
 // Remove obsolete artifacts owned by the previous single-line/chunked build.

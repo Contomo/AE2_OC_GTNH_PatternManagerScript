@@ -1,11 +1,14 @@
 -- One renderer for maker previews, on screen and in exported reports.
 local U = require('assline_util')
 local Planner = require('assline_planner')
+local Batch = require('assline_batch')
 local M = {}
 local interfaceTone = 'muted'
 
 local function spacer(rows, add)
-  if #rows > 0 and rows[#rows][1] ~= '' then add('') end
+  if #rows > 0 and rows[#rows][1] ~= '' then
+    add('')
+  end
 end
 
 local function treeRow(rows, add, prefix, content, tone)
@@ -21,13 +24,41 @@ function M.planRows(plan, manifest)
     details[recipe.key or Planner.recipeKey(recipe)] = recipe
   end
   add('PATTERN PLAN', 'blue')
-  add(string.format('%d reuse   |   %d new   |   %d other patterns kept',
-    plan.reused, plan.required.processing + plan.required.crafting, #plan.preserved), 'green')
+  add(
+    string.format(
+      '%d reuse   |   %d new   |   %d other patterns kept',
+      plan.reused,
+      plan.required.processing + plan.required.crafting,
+      #plan.preserved
+    ),
+    'green'
+  )
+  if manifest.policy and manifest.policy.batch and manifest.policy.batch.mode == 'tiered' then
+    add(
+      'Tiered batches at '
+        .. manifest.policy.batch.currentTier
+        .. '; material tiers follow quest progression.',
+      'muted'
+    )
+    add(
+      (manifest.unclassifiedRecipes or 0)
+        .. ' recipes have unclassified materials; fallback '
+        .. manifest.policy.batch.unknownMultiplier
+        .. 'x before other limits.',
+      'muted'
+    )
+  end
   if manifest.source.usagePolicy then
-    add(manifest.unusedExcluded .. ' recipe routes skipped: output has no non-recycling use.', 'muted')
+    add(
+      manifest.unusedExcluded .. ' recipe routes skipped: output has no non-recycling use.',
+      'muted'
+    )
   end
   if plan.resizeCount > 0 then
-    add(plan.resizeCount .. ' reused patterns will be resized to the configured batch.', 'yellow_lighter1')
+    add(
+      plan.resizeCount .. ' reused patterns will be resized to the configured batch.',
+      'yellow_lighter1'
+    )
   end
   local group, bank, material
   for _, entry in ipairs(plan.layout) do
@@ -39,11 +70,15 @@ function M.planRows(plan, manifest)
     end
     local location = entry.destination and U.where(entry.destination) or 'needs space'
     if bank ~= location then
-      if bank then spacer(rows, add) end
+      if bank then
+        spacer(rows, add)
+      end
       bank, material = location, nil
-      add('  +-- Interface '
-        .. (entry.destination and U.locationText(entry.destination) or '(needs space)'),
-        interfaceTone)
+      add(
+        '  +-- Interface '
+          .. (entry.destination and U.locationText(entry.destination) or '(needs space)'),
+        interfaceTone
+      )
     else
       add('  |', interfaceTone)
     end
@@ -52,18 +87,29 @@ function M.planRows(plan, manifest)
       material = currentMaterial
       treeRow(rows, add, '  |  ', material, 'blue')
     end
-    treeRow(rows, add, '  |    ',
+    treeRow(
+      rows,
+      add,
+      '  |    ',
       (entry.resize and 'RESIZE  ' or entry.existing and 'REUSE   ' or 'CREATE  ')
-      .. (recipe.outputLabel or recipe.outputForm or '')
-      .. (entry.destination and ('   slot ' .. entry.destination.slot) or '   needs space'),
-      entry.resize and 'yellow_lighter1' or entry.existing and 'green' or 'yellow')
+        .. (recipe.outputLabel or recipe.outputForm or '')
+        .. (entry.destination and ('   slot ' .. entry.destination.slot) or '   needs space'),
+      entry.resize and 'yellow_lighter1' or entry.existing and 'green' or 'yellow'
+    )
     if entry.resize then
-      treeRow(rows, add, '  |      ',
+      treeRow(
+        rows,
+        add,
+        '  |      ',
         'Multiply current quantities by ' .. entry.newScale .. ' / ' .. entry.oldScale,
-        'yellow_lighter1')
+        'yellow_lighter1'
+      )
     end
     treeRow(rows, add, '  |      ', U.ingredientSummary(recipe.inputs))
     treeRow(rows, add, '  |      ', '-> ' .. U.ingredientSummary(recipe.outputs), 'green')
+    if recipe.batch then
+      treeRow(rows, add, '  |      ', Batch.describe(recipe.batch), 'muted')
+    end
   end
   return rows
 end
@@ -80,15 +126,24 @@ function M.capacityRows(plan)
   spacer(rows, add)
   add('Every matching interface is included, ordered by location.', 'muted')
   add('Existing unrelated patterns count toward required space.', 'muted')
-  for _, err in ipairs(plan.errors or {}) do add('BLOCKED: ' .. err, 'red') end
+  for _, err in ipairs(plan.errors or {}) do
+    add('BLOCKED: ' .. err, 'red')
+  end
   return rows
 end
 
 function M.existingRows(plan)
   local rows, add = U.rows()
   add('EXISTING DESTINATION PATTERNS', 'blue')
-  add(#(plan.existing or {}) .. ' occupied; ' .. plan.reused .. ' reused; '
-    .. #plan.preserved .. ' kept.', 'muted')
+  add(
+    #(plan.existing or {})
+      .. ' occupied; '
+      .. plan.reused
+      .. ' reused; '
+      .. #plan.preserved
+      .. ' kept.',
+    'muted'
+  )
   local group, bank
   for _, entry in ipairs(plan.existing or {}) do
     local location = U.where(entry.from)
@@ -98,15 +153,23 @@ function M.existingRows(plan)
       add('DESTINATION: ' .. group, 'blue')
     end
     if bank ~= location then
-      if bank then spacer(rows, add) end
+      if bank then
+        spacer(rows, add)
+      end
       bank = location
       add('  +-- Interface ' .. U.locationText(entry.from), interfaceTone)
     else
       add('  |', interfaceTone)
     end
-    treeRow(rows, add, '  |  ', entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
+    treeRow(
+      rows,
+      add,
+      '  |  ',
+      entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
       entry.status == 'RESIZE' and 'yellow_lighter1'
-        or entry.status == 'KEEP' and 'yellow' or 'green')
+        or entry.status == 'KEEP' and 'yellow'
+        or 'green'
+    )
     treeRow(rows, add, '  |    ', entry.reason, 'muted')
     if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
       treeRow(rows, add, '  |    ', 'Encoded inputs: ' .. entry.inputs, 'muted')
@@ -115,27 +178,50 @@ function M.existingRows(plan)
       treeRow(rows, add, '  |    ', 'Requested inputs: ' .. entry.requestedInputs, 'muted')
     end
     if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
-      treeRow(rows, add, '  |    ',
-        'Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot, 'muted')
+      treeRow(
+        rows,
+        add,
+        '  |    ',
+        'Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot,
+        'muted'
+      )
     end
   end
-  if #(plan.existing or {}) == 0 then add('No patterns in the selected destination interfaces.', 'muted') end
+  if #(plan.existing or {}) == 0 then
+    add('No patterns in the selected destination interfaces.', 'muted')
+  end
   spacer(rows, add)
   add('SORTING MOVES', 'blue')
   for n, move in ipairs(plan.moves) do
-    add(n .. '/' .. #plan.moves .. '  '
-      .. ((plan.moveLabels or {})[move.fingerprint] or 'Pattern'), 'yellow')
-    add('  ' .. U.locationText(move.from) .. ' slot ' .. move.from.slot
-      .. ' -> ' .. U.locationText(move.to) .. ' slot ' .. move.to.slot, 'muted')
+    add(
+      n .. '/' .. #plan.moves .. '  ' .. ((plan.moveLabels or {})[move.fingerprint] or 'Pattern'),
+      'yellow'
+    )
+    add(
+      '  '
+        .. U.locationText(move.from)
+        .. ' slot '
+        .. move.from.slot
+        .. ' -> '
+        .. U.locationText(move.to)
+        .. ' slot '
+        .. move.to.slot,
+      'muted'
+    )
   end
-  if #plan.moves == 0 then add('No sorting moves needed.', 'muted') end
+  if #plan.moves == 0 then
+    add('No sorting moves needed.', 'muted')
+  end
   return rows
 end
 
 function M.excludedRows(manifest)
   local rows, add = U.rows()
   add('EXCLUDED BY RECIPE USE', 'blue')
-  add(#(manifest.skipped or {}) .. ' output forms have no path to a non-recycling product.', 'muted')
+  add(
+    #(manifest.skipped or {}) .. ' output forms have no path to a non-recycling product.',
+    'muted'
+  )
   add('Existing patterns for these outputs are kept; see Existing.', 'muted')
   local material
   for _, item in ipairs(manifest.skipped or {}) do
@@ -153,21 +239,31 @@ function M.excludedRows(manifest)
 end
 
 function M.rows(section, plan, manifest)
-  if section == 'existing' then return M.existingRows(plan) end
-  if section == 'skipped' then return M.excludedRows(manifest) end
-  if section == 'capacity' then return M.capacityRows(plan) end
+  if section == 'existing' then
+    return M.existingRows(plan)
+  end
+  if section == 'skipped' then
+    return M.excludedRows(manifest)
+  end
+  if section == 'capacity' then
+    return M.capacityRows(plan)
+  end
   return M.planRows(plan, manifest)
 end
 
 function M.report(plan, manifest)
   local lines = {}
   local function append(rows)
-    for _, row in ipairs(rows) do lines[#lines + 1] = row[1] end
+    for _, row in ipairs(rows) do
+      lines[#lines + 1] = row[1]
+    end
     lines[#lines + 1] = ''
   end
   append(M.capacityRows(plan))
   append(M.planRows(plan, manifest))
-  for _, warning in ipairs(plan.warnings) do lines[#lines + 1] = 'NOTE: ' .. warning end
+  for _, warning in ipairs(plan.warnings) do
+    lines[#lines + 1] = 'NOTE: ' .. warning
+  end
   lines[#lines + 1] = ''
   append(M.existingRows(plan))
   append(M.excludedRows(manifest))

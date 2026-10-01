@@ -194,6 +194,207 @@ end
 return M
 
 end)()
+local TierDefinitions=(function()
+-- Source: source/data/tiers.json
+return {["source"]="https://github.com/GTNewHorizons/GT5-Unofficial/blob/5.09.54.133/src/main/java/gregtech/api/enums/GTValues.java",["names"]={"ULV","LV","MV","HV","EV","IV","LuV","ZPM","UV","UHV","UEV","UIV","UMV","UXV","OpV","MAX"},["voltages"]={8,32,128,512,2048,8192,32768,131072,524288,2097152,8388608,33554432,134217728,536870912,2147483640,8589934592}}
+end)()
+local Batch=(function()
+-- Source: source/lib/batch.lua
+-- Shared batch policy. Tier definitions are built from source/data/tiers.json.
+local U = U
+local Tiers = TierDefinitions
+local M = { tiers = Tiers.names, fields = {} }
+local index = {}
+for n, name in ipairs(M.tiers) do
+  index[name] = n
+end
+
+function M.voltageTier(eut)
+  if type(eut) ~= 'number' or eut < 0 then
+    return nil
+  end
+  for n, voltage in ipairs(Tiers.voltages) do
+    if eut <= voltage then
+      return M.tiers[n]
+    end
+  end
+  return 'MAX'
+end
+
+local group = 'Policy'
+local function field(key, label, default, help, kind, choices)
+  M.fields[#M.fields + 1] = {
+    key = key,
+    label = label,
+    default = default,
+    help = help,
+    kind = kind or 'positiveInteger',
+    choices = choices,
+    group = group,
+    placeholder = kind == 'optionalPositiveInteger' and 'Follow relative curve' or nil,
+  }
+end
+local tierChoices = {}
+for _, name in ipairs(M.tiers) do
+  tierChoices[#tierChoices + 1] = { name, name }
+end
+local voltageChoices = { { 'current', 'Current progression tier' } }
+for _, option in ipairs(tierChoices) do
+  voltageChoices[#voltageChoices + 1] = option
+end
+field(
+  'mode',
+  'Batch policy',
+  'tiered',
+  'Fixed uses each program multiplier. Tiered applies the shared curve and quantity limits.',
+  'choice',
+  { { 'fixed', 'Fixed' }, { 'tiered', 'Tiered' } }
+)
+field(
+  'currentTier',
+  'Current progression tier',
+  'LuV',
+  'Changing this tier shifts the relative material curve automatically.',
+  'select',
+  tierChoices
+)
+field(
+  'voltagePolicy',
+  'Recipe voltage constraint',
+  'cap',
+  'Cap limits the material budget by recipe voltage. It never increases an expensive material batch.',
+  'choice',
+  { { 'off', 'Ignore voltage' }, { 'cap', 'Cap by voltage' } }
+)
+field(
+  'voltageTier',
+  'Voltage reference tier',
+  'current',
+  'Machine voltage used for the voltage constraint; Current follows your progression tier.',
+  'select',
+  voltageChoices
+)
+field(
+  'maxMultiplier',
+  'Maximum tiered multiplier',
+  '512',
+  'Final ceiling after the tier curve and program multiplier are applied.'
+)
+field(
+  'itemLimit',
+  'Maximum items per pattern ingredient',
+  '4096',
+  'Tiered batches shrink to keep every requested item input and output at or below this amount.'
+)
+field(
+  'fluidLimit',
+  'Maximum fluid per pattern ingredient (mB)',
+  '589824',
+  'Tiered fluid limit. 589824 mB equals 4096 standard ingots; all quantities shrink together.'
+)
+field(
+  'unknownMultiplier',
+  'Unclassified material multiplier',
+  '1',
+  'Fallback when the questbook provides no material progression tier. Never guesses from low EU/t.'
+)
+field(
+  'aboveMultiplier',
+  'Materials above your tier',
+  '1',
+  'Budget for materials in later chapters. This does not exclude their recipes.'
+)
+local preset = { 4, 32, 64, 256, 320, 400, 448, 512 }
+group = 'Relative curve'
+for gap = 0, 7 do
+  local label = gap == 0 and 'Material at your tier'
+    or gap == 7 and 'Material seven or more tiers below'
+    or 'Material ' .. gap .. ' tier(s) below'
+  field(
+    'below' .. gap,
+    label,
+    tostring(preset[gap + 1]),
+    'Relative multiplier. Also used by the optional recipe-voltage constraint.'
+  )
+end
+group = 'Tier overrides'
+for _, name in ipairs(M.tiers) do
+  field(
+    'override' .. name,
+    name .. ' material multiplier override',
+    '',
+    'Blank follows the relative curve. A number fixes this material-tier budget as you advance.',
+    'optionalPositiveInteger'
+  )
+end
+
+function M.validate(values)
+  U.check(index[values.currentTier], 'Unknown progression tier')
+  U.check(
+    values.voltageTier == 'current' or index[values.voltageTier],
+    'Unknown voltage reference tier'
+  )
+  for _, f in ipairs(M.fields) do
+    if
+      f.kind == 'positiveInteger' or f.kind == 'optionalPositiveInteger' and values[f.key] ~= ''
+    then
+      local value = tonumber(values[f.key])
+      U.check(U.integer(value) and value > 0, f.label .. ' must be a positive whole number')
+    end
+  end
+end
+
+local function relative(values, current, tier)
+  local gap = index[current] - index[tier]
+  return tonumber(values[gap < 0 and 'aboveMultiplier' or 'below' .. math.min(gap, 7)])
+end
+
+function M.budget(values, tier)
+  if not index[tier] then
+    return tonumber(values.unknownMultiplier)
+  end
+  return tonumber(values['override' .. tier]) or relative(values, values.currentTier, tier)
+end
+
+-- Called once per requested recipe, before its items/fluids are resolved.
+-- Stocked circuits, molds and omitted insulation solids do not constrain a batch.
+function M.resolve(values, materialTier, eut, factor, quantities)
+  factor = factor or 1
+  U.check(U.integer(factor) and factor > 0, 'Pattern multiplier must be a positive whole number')
+  local recipeTier = M.voltageTier(eut)
+  local detail = { materialTier = materialTier, recipeTier = recipeTier, eut = eut }
+  if not values or values.mode == 'fixed' then
+    detail.multiplier = factor
+    return factor, detail
+  end
+  M.validate(values)
+  detail.materialBudget = M.budget(values, materialTier)
+  local target = detail.materialBudget
+  if values.voltagePolicy == 'cap' then
+    local reference = values.voltageTier == 'current' and values.currentTier or values.voltageTier
+    detail.voltageBudget = recipeTier and relative(values, reference, recipeTier)
+      or tonumber(values.unknownMultiplier)
+    target = math.min(target, detail.voltageBudget)
+  end
+  target = math.min(target * factor, tonumber(values.maxMultiplier))
+  for _, q in ipairs(quantities or {}) do
+    local limit = tonumber(values[q.type == 'fluid' and 'fluidLimit' or 'itemLimit'])
+    target = math.min(target, math.floor(limit / q.size))
+  end
+  U.check(target >= 1, 'One recipe batch exceeds the configured item/fluid limit')
+  detail.multiplier = target
+  return target, detail
+end
+
+function M.describe(detail)
+  local material = detail.materialTier or 'unclassified'
+  local voltage = detail.recipeTier and (detail.recipeTier .. ' / ' .. detail.eut .. ' EU/t')
+    or 'unknown voltage'
+  return 'Batch ' .. detail.multiplier .. 'x  |  Material ' .. material .. '  |  Recipe ' .. voltage
+end
+return M
+
+end)()
 local Programs=(function()
 -- Source: source/lib/programs.lua
 -- Program definitions shared by configuration, navigation and execution.
@@ -223,7 +424,7 @@ local function multiplier()
   return field(
     'multiplier',
     'Pattern multiplier',
-    'Whole-number batch multiplier. 1 keeps the selected recipe batch; 256 makes it 256 times larger.',
+    'Fixed: recipe batch x this value. Tiered: global tier budget x this value, capped by global quantity limits.',
     '1',
     'positiveInteger'
   )
@@ -267,13 +468,7 @@ local function formSwitches(choices, label, help, hidden, default)
   for _, option in ipairs(choices) do
     names[#names + 1] = option[1]
   end
-  local f = field(
-    'forms',
-    label,
-    help,
-    default or table.concat(names, ','),
-    'multiToggle'
-  )
+  local f = field('forms', label, help, default or table.concat(names, ','), 'multiToggle')
   f.choices = choices
   f.hidden = hidden
   return f
@@ -287,8 +482,11 @@ local shaperOutputs = {}
 local shaperFields = {}
 for _, entry in ipairs(shaperForms) do
   local key, label = entry[1], entry[2]
-  shaperFields[#shaperFields + 1] = enabledDestination(key, label .. ' interface name',
-    'Destination for ' .. label:lower() .. ' patterns; keep its mold stocked in the machine.')
+  shaperFields[#shaperFields + 1] = enabledDestination(
+    key,
+    label .. ' interface name',
+    'Destination for ' .. label:lower() .. ' patterns; keep its mold stocked in the machine.'
+  )
   if key:match('^pipe') then
     local size = key:sub(5)
     shaperOutputs['pipeFluid' .. size] = key
@@ -297,10 +495,13 @@ for _, entry in ipairs(shaperForms) do
     shaperOutputs[key] = key
   end
 end
-shaperFields[#shaperFields + 1] = formSwitches(shaperForms,
+shaperFields[#shaperFields + 1] = formSwitches(
+  shaperForms,
   'Enabled Fluid Shaper molds',
   'Only verified Fluid Solidifier routes are included. The reusable mold stays in the machine.',
-  true, 'plate,turbineBlade')
+  true,
+  'plate,turbineBlade'
+)
 shaperFields[#shaperFields + 1] = multiplier()
 M.list = {
   {
@@ -459,8 +660,11 @@ M.list = {
         'text',
         true
       ),
-      formSwitches(benderForms, 'Enabled bending outputs',
-        'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.'),
+      formSwitches(
+        benderForms,
+        'Enabled bending outputs',
+        'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.'
+      ),
       field(
         'spring',
         'Spring interface name',
@@ -513,6 +717,7 @@ local Config=(function()
 -- One configuration for the application: shared hardware and per-program fields.
 local U = U
 local Programs = Programs
+local Batch = Batch
 local M = {}
 M.destinationSlots = 36
 function M.selected(value, choices)
@@ -586,9 +791,19 @@ M.fields = {
     default = '75',
   },
 }
-M.defaults = { version = 2, shared = {}, programs = {} }
+M.defaults = { version = 2, shared = {}, batch = {}, programs = {} }
 for _, f in ipairs(M.fields) do
   M.defaults.shared[f.key] = f.default
+end
+for _, f in ipairs(Batch.fields) do
+  M.defaults.batch[f.key] = f.default
+end
+M.sections = {
+  shared = { name = 'Shared interfaces', fields = M.fields },
+  batch = { name = 'Tier multipliers', fields = Batch.fields, pageSize = 9 },
+}
+function M.section(id)
+  return U.check(M.sections[id] or Programs.byId[id], 'Unknown settings section')
 end
 for _, p in ipairs(Programs.list) do
   local values = {}
@@ -638,6 +853,8 @@ function M.validate(c)
     end
   end
   fields(c.shared, M.fields)
+  fields(c.batch, Batch.fields)
+  Batch.validate(c.batch)
   for _, p in ipairs(Programs.list) do
     fields(c.programs[p.id], p.fields)
   end
@@ -664,6 +881,14 @@ function M.migrate(old)
   U.check(type(old) == 'table', 'Invalid saved configuration')
   U.check(old.version == nil or old.version == 2, 'Unsupported saved configuration version')
   if old.version == 2 then
+    if not old.batch then
+      c.batch.mode = 'fixed'
+    end
+    for _, f in ipairs(Batch.fields) do
+      if old.batch and old.batch[f.key] ~= nil then
+        c.batch[f.key] = old.batch[f.key]
+      end
+    end
     for _, f in ipairs(M.fields) do
       if old.shared and old.shared[f.key] ~= nil then
         c.shared[f.key] = old.shared[f.key]
@@ -678,6 +903,7 @@ function M.migrate(old)
       end
     end
   else
+    c.batch.mode = 'fixed'
     -- The old "buffer" was actually the directly connected editor.
     local shared = {
       editor = 'buffer',
@@ -732,7 +958,7 @@ function M.capacityReport(groups)
   return result
 end
 function M.values(c, section)
-  return section == 'shared' and c.shared
+  return M.sections[section] and c[section]
     or U.check(c.programs[section], 'Unknown settings section')
 end
 function M.requireProgram(c, id)
@@ -2360,6 +2586,7 @@ local Modes=(function()
 -- Eligibility uses form capabilities, production flags and rare exceptions.
 local U = U
 local Planner = Planner
+local Batch = Batch
 local M = {}
 local aliases = {
   rod = 'stick',
@@ -2403,8 +2630,12 @@ local labels = {
 }
 local function formLabel(form)
   local pipeKind, pipeSize = form:match('^pipe(Fluid)(%a+)$')
-  if not pipeKind then pipeKind, pipeSize = form:match('^pipe(Item)(%a+)$') end
-  if pipeKind then return pipeSize .. ' ' .. pipeKind:lower() .. ' pipe' end
+  if not pipeKind then
+    pipeKind, pipeSize = form:match('^pipe(Item)(%a+)$')
+  end
+  if pipeKind then
+    return pipeSize .. ' ' .. pipeKind:lower() .. ' pipe'
+  end
   local kind, size = form:match('^(%a+)(%d+)$')
   if kind == 'wire' or kind == 'cable' then
     return size .. 'x ' .. (kind == 'wire' and 'Wire' or 'Cable')
@@ -2481,7 +2712,9 @@ function M.eligible(data, material, rule)
       return false
     end
   end
-  if data.usage and data.source.usagePolicy
+  if
+    data.usage
+    and data.source.usagePolicy
     and not (data.usage[material.u] or {})[rule.outputs[1].f]
   then
     return false, 'unused'
@@ -2518,9 +2751,11 @@ function M.compile(data, mode, options, checkpoint)
       pps = options.pps ~= false,
       sources = U.clone(options.sources),
       multiplier = multiplier,
+      batch = U.clone(options.batch),
     },
     recipes = {},
     unusedExcluded = 0,
+    unclassifiedRecipes = 0,
     skipped = {},
   }
   local seen, unresolved, skipped = {}, {}, {}
@@ -2529,7 +2764,7 @@ function M.compile(data, mode, options, checkpoint)
     if checkpoint then
       checkpoint()
     end
-    for _, rule in ipairs(data.rules) do
+    for ruleIndex, rule in ipairs(data.rules) do
       if
         rule.mode == mode
         and (not options.forms or options.forms[rule.outputs[1].f])
@@ -2554,14 +2789,42 @@ function M.compile(data, mode, options, checkpoint)
           end
         end
         if eligible then
+          if not material.tier then
+            manifest.unclassifiedRecipes = manifest.unclassifiedRecipes + 1
+          end
+          local quantities = {}
+          for _, side in ipairs({ 'inputs', 'outputs' }) do
+            for _, e in ipairs(rule[side]) do
+              local shared = e.i and data.items[e.i]
+              if not shared or not shared.option or options[shared.option] ~= false then
+                quantities[#quantities + 1] = { type = e.fluid and 'fluid' or 'item', size = e.n }
+              end
+            end
+          end
+          local voltage = data.voltages and data.voltages[material.v] or {}
+          local eut = voltage[ruleIndex]
+          if eut == nil then
+            eut = rule.eut
+          elseif eut == false then
+            eut = nil
+          end
+          local recipeMultiplier, batch =
+            Batch.resolve(options.batch, material.tier, eut, multiplier, quantities)
           local function resolve(e, stocked)
             if e.fluid == 'material' then
-              local fluid = U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
-              local size = e.n * (stocked and 1 or multiplier)
-              U.check(U.integer(size) and size > 0,
-                'Pattern multiplier exceeds the supported fluid quantity')
-              return { type = 'fluid', name = fluid, label = 'Molten ' .. material.name,
-                size = size }
+              local fluid =
+                U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
+              local size = e.n * (stocked and 1 or recipeMultiplier)
+              U.check(
+                U.integer(size) and size > 0,
+                'Pattern multiplier exceeds the supported fluid quantity'
+              )
+              return {
+                type = 'fluid',
+                name = fluid,
+                label = 'Molten ' .. material.name,
+                size = size,
+              }
             end
             local item
             if e.f then
@@ -2575,7 +2838,7 @@ function M.compile(data, mode, options, checkpoint)
             end
             item.option = nil
             item.type = 'item'
-            item.size = e.n * (stocked and 1 or multiplier)
+            item.size = e.n * (stocked and 1 or recipeMultiplier)
             U.check(
               U.integer(item.size) and item.size > 0,
               'Pattern multiplier exceeds the supported ingredient quantity'
@@ -2605,6 +2868,7 @@ function M.compile(data, mode, options, checkpoint)
             outputs = {},
             label = material.name .. ' / ' .. label .. route,
             stock = {},
+            batch = batch,
           }
           for _, which in ipairs({ 'inputs', 'outputs' }) do
             for _, e in ipairs(rule[which]) do
@@ -2644,11 +2908,14 @@ local Preview=(function()
 -- One renderer for maker previews, on screen and in exported reports.
 local U = U
 local Planner = Planner
+local Batch = Batch
 local M = {}
 local interfaceTone = 'muted'
 
 local function spacer(rows, add)
-  if #rows > 0 and rows[#rows][1] ~= '' then add('') end
+  if #rows > 0 and rows[#rows][1] ~= '' then
+    add('')
+  end
 end
 
 local function treeRow(rows, add, prefix, content, tone)
@@ -2664,13 +2931,41 @@ function M.planRows(plan, manifest)
     details[recipe.key or Planner.recipeKey(recipe)] = recipe
   end
   add('PATTERN PLAN', 'blue')
-  add(string.format('%d reuse   |   %d new   |   %d other patterns kept',
-    plan.reused, plan.required.processing + plan.required.crafting, #plan.preserved), 'green')
+  add(
+    string.format(
+      '%d reuse   |   %d new   |   %d other patterns kept',
+      plan.reused,
+      plan.required.processing + plan.required.crafting,
+      #plan.preserved
+    ),
+    'green'
+  )
+  if manifest.policy and manifest.policy.batch and manifest.policy.batch.mode == 'tiered' then
+    add(
+      'Tiered batches at '
+        .. manifest.policy.batch.currentTier
+        .. '; material tiers follow quest progression.',
+      'muted'
+    )
+    add(
+      (manifest.unclassifiedRecipes or 0)
+        .. ' recipes have unclassified materials; fallback '
+        .. manifest.policy.batch.unknownMultiplier
+        .. 'x before other limits.',
+      'muted'
+    )
+  end
   if manifest.source.usagePolicy then
-    add(manifest.unusedExcluded .. ' recipe routes skipped: output has no non-recycling use.', 'muted')
+    add(
+      manifest.unusedExcluded .. ' recipe routes skipped: output has no non-recycling use.',
+      'muted'
+    )
   end
   if plan.resizeCount > 0 then
-    add(plan.resizeCount .. ' reused patterns will be resized to the configured batch.', 'yellow_lighter1')
+    add(
+      plan.resizeCount .. ' reused patterns will be resized to the configured batch.',
+      'yellow_lighter1'
+    )
   end
   local group, bank, material
   for _, entry in ipairs(plan.layout) do
@@ -2682,11 +2977,15 @@ function M.planRows(plan, manifest)
     end
     local location = entry.destination and U.where(entry.destination) or 'needs space'
     if bank ~= location then
-      if bank then spacer(rows, add) end
+      if bank then
+        spacer(rows, add)
+      end
       bank, material = location, nil
-      add('  +-- Interface '
-        .. (entry.destination and U.locationText(entry.destination) or '(needs space)'),
-        interfaceTone)
+      add(
+        '  +-- Interface '
+          .. (entry.destination and U.locationText(entry.destination) or '(needs space)'),
+        interfaceTone
+      )
     else
       add('  |', interfaceTone)
     end
@@ -2695,18 +2994,29 @@ function M.planRows(plan, manifest)
       material = currentMaterial
       treeRow(rows, add, '  |  ', material, 'blue')
     end
-    treeRow(rows, add, '  |    ',
+    treeRow(
+      rows,
+      add,
+      '  |    ',
       (entry.resize and 'RESIZE  ' or entry.existing and 'REUSE   ' or 'CREATE  ')
-      .. (recipe.outputLabel or recipe.outputForm or '')
-      .. (entry.destination and ('   slot ' .. entry.destination.slot) or '   needs space'),
-      entry.resize and 'yellow_lighter1' or entry.existing and 'green' or 'yellow')
+        .. (recipe.outputLabel or recipe.outputForm or '')
+        .. (entry.destination and ('   slot ' .. entry.destination.slot) or '   needs space'),
+      entry.resize and 'yellow_lighter1' or entry.existing and 'green' or 'yellow'
+    )
     if entry.resize then
-      treeRow(rows, add, '  |      ',
+      treeRow(
+        rows,
+        add,
+        '  |      ',
         'Multiply current quantities by ' .. entry.newScale .. ' / ' .. entry.oldScale,
-        'yellow_lighter1')
+        'yellow_lighter1'
+      )
     end
     treeRow(rows, add, '  |      ', U.ingredientSummary(recipe.inputs))
     treeRow(rows, add, '  |      ', '-> ' .. U.ingredientSummary(recipe.outputs), 'green')
+    if recipe.batch then
+      treeRow(rows, add, '  |      ', Batch.describe(recipe.batch), 'muted')
+    end
   end
   return rows
 end
@@ -2723,15 +3033,24 @@ function M.capacityRows(plan)
   spacer(rows, add)
   add('Every matching interface is included, ordered by location.', 'muted')
   add('Existing unrelated patterns count toward required space.', 'muted')
-  for _, err in ipairs(plan.errors or {}) do add('BLOCKED: ' .. err, 'red') end
+  for _, err in ipairs(plan.errors or {}) do
+    add('BLOCKED: ' .. err, 'red')
+  end
   return rows
 end
 
 function M.existingRows(plan)
   local rows, add = U.rows()
   add('EXISTING DESTINATION PATTERNS', 'blue')
-  add(#(plan.existing or {}) .. ' occupied; ' .. plan.reused .. ' reused; '
-    .. #plan.preserved .. ' kept.', 'muted')
+  add(
+    #(plan.existing or {})
+      .. ' occupied; '
+      .. plan.reused
+      .. ' reused; '
+      .. #plan.preserved
+      .. ' kept.',
+    'muted'
+  )
   local group, bank
   for _, entry in ipairs(plan.existing or {}) do
     local location = U.where(entry.from)
@@ -2741,15 +3060,23 @@ function M.existingRows(plan)
       add('DESTINATION: ' .. group, 'blue')
     end
     if bank ~= location then
-      if bank then spacer(rows, add) end
+      if bank then
+        spacer(rows, add)
+      end
       bank = location
       add('  +-- Interface ' .. U.locationText(entry.from), interfaceTone)
     else
       add('  |', interfaceTone)
     end
-    treeRow(rows, add, '  |  ', entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
+    treeRow(
+      rows,
+      add,
+      '  |  ',
+      entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
       entry.status == 'RESIZE' and 'yellow_lighter1'
-        or entry.status == 'KEEP' and 'yellow' or 'green')
+        or entry.status == 'KEEP' and 'yellow'
+        or 'green'
+    )
     treeRow(rows, add, '  |    ', entry.reason, 'muted')
     if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
       treeRow(rows, add, '  |    ', 'Encoded inputs: ' .. entry.inputs, 'muted')
@@ -2758,27 +3085,50 @@ function M.existingRows(plan)
       treeRow(rows, add, '  |    ', 'Requested inputs: ' .. entry.requestedInputs, 'muted')
     end
     if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
-      treeRow(rows, add, '  |    ',
-        'Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot, 'muted')
+      treeRow(
+        rows,
+        add,
+        '  |    ',
+        'Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot,
+        'muted'
+      )
     end
   end
-  if #(plan.existing or {}) == 0 then add('No patterns in the selected destination interfaces.', 'muted') end
+  if #(plan.existing or {}) == 0 then
+    add('No patterns in the selected destination interfaces.', 'muted')
+  end
   spacer(rows, add)
   add('SORTING MOVES', 'blue')
   for n, move in ipairs(plan.moves) do
-    add(n .. '/' .. #plan.moves .. '  '
-      .. ((plan.moveLabels or {})[move.fingerprint] or 'Pattern'), 'yellow')
-    add('  ' .. U.locationText(move.from) .. ' slot ' .. move.from.slot
-      .. ' -> ' .. U.locationText(move.to) .. ' slot ' .. move.to.slot, 'muted')
+    add(
+      n .. '/' .. #plan.moves .. '  ' .. ((plan.moveLabels or {})[move.fingerprint] or 'Pattern'),
+      'yellow'
+    )
+    add(
+      '  '
+        .. U.locationText(move.from)
+        .. ' slot '
+        .. move.from.slot
+        .. ' -> '
+        .. U.locationText(move.to)
+        .. ' slot '
+        .. move.to.slot,
+      'muted'
+    )
   end
-  if #plan.moves == 0 then add('No sorting moves needed.', 'muted') end
+  if #plan.moves == 0 then
+    add('No sorting moves needed.', 'muted')
+  end
   return rows
 end
 
 function M.excludedRows(manifest)
   local rows, add = U.rows()
   add('EXCLUDED BY RECIPE USE', 'blue')
-  add(#(manifest.skipped or {}) .. ' output forms have no path to a non-recycling product.', 'muted')
+  add(
+    #(manifest.skipped or {}) .. ' output forms have no path to a non-recycling product.',
+    'muted'
+  )
   add('Existing patterns for these outputs are kept; see Existing.', 'muted')
   local material
   for _, item in ipairs(manifest.skipped or {}) do
@@ -2796,21 +3146,31 @@ function M.excludedRows(manifest)
 end
 
 function M.rows(section, plan, manifest)
-  if section == 'existing' then return M.existingRows(plan) end
-  if section == 'skipped' then return M.excludedRows(manifest) end
-  if section == 'capacity' then return M.capacityRows(plan) end
+  if section == 'existing' then
+    return M.existingRows(plan)
+  end
+  if section == 'skipped' then
+    return M.excludedRows(manifest)
+  end
+  if section == 'capacity' then
+    return M.capacityRows(plan)
+  end
   return M.planRows(plan, manifest)
 end
 
 function M.report(plan, manifest)
   local lines = {}
   local function append(rows)
-    for _, row in ipairs(rows) do lines[#lines + 1] = row[1] end
+    for _, row in ipairs(rows) do
+      lines[#lines + 1] = row[1]
+    end
     lines[#lines + 1] = ''
   end
   append(M.capacityRows(plan))
   append(M.planRows(plan, manifest))
-  for _, warning in ipairs(plan.warnings) do lines[#lines + 1] = 'NOTE: ' .. warning end
+  for _, warning in ipairs(plan.warnings) do
+    lines[#lines + 1] = 'NOTE: ' .. warning
+  end
   lines[#lines + 1] = ''
   append(M.existingRows(plan))
   append(M.excludedRows(manifest))
@@ -3035,10 +3395,9 @@ local function scanManifest(c, manifest, routing, progress, control, started)
           for _, index in ipairs(U.keys(p.inputs)) do
             local input = p.inputs[index]
             if U.exists(input) then
-              inputLabels[#inputLabels + 1] = tostring(U.patternCount(
-                input, U.patternEntry(root, 'inputs', index)) or '?')
-                .. ' x '
-                .. tostring(input.label or input.name)
+              inputLabels[#inputLabels + 1] = tostring(
+                U.patternCount(input, U.patternEntry(root, 'inputs', index)) or '?'
+              ) .. ' x ' .. tostring(input.label or input.name)
             end
           end
           value.inputSummary = table.concat(inputLabels, ', ')
@@ -3140,6 +3499,7 @@ local function programRouting(c, id)
     {
       polymer = values.polymer,
       multiplier = tonumber(values.multiplier),
+      batch = c.batch,
       pps = values.pps ~= 'off',
       forms = forms,
       sources = sources,
@@ -3400,8 +3760,17 @@ local function runUI()
     end
     s = unicode.sub(tostring(s or ''):gsub('\194\167.', ''):gsub('[%c]', ' '), 1, width)
     local key = x .. ':' .. y
-    local value = width .. ':' .. s .. ':' .. tostring(tone) .. ':' .. tostring(bg)
-      .. ':' .. tostring(guideWidth) .. ':' .. tostring(guideTone)
+    local value = width
+      .. ':'
+      .. s
+      .. ':'
+      .. tostring(tone)
+      .. ':'
+      .. tostring(bg)
+      .. ':'
+      .. tostring(guideWidth)
+      .. ':'
+      .. tostring(guideTone)
     if paintCache[key] == value then
       return
     end
@@ -3464,16 +3833,25 @@ local function runUI()
     invalidate()
   end
   local function fields()
-    local definitions = state.settings == 'shared' and Config.fields
-      or Programs.byId[state.settings].fields
+    local definitions = Config.section(state.settings).fields
     local visible = {}
     for _, f in ipairs(definitions) do
-      if not f.hidden then visible[#visible + 1] = f end
+      if not f.hidden then
+        visible[#visible + 1] = f
+      end
     end
     return visible
   end
   local function values()
     return Config.values(cfg, state.settings)
+  end
+  local function chooseValue(key, value)
+    commitEdit()
+    local trial = U.clone(cfg)
+    Config.values(trial, state.settings)[key] = value
+    saveConfig(trial)
+    state.choice = nil
+    status('Settings saved.', 'green')
   end
   commitEdit = function()
     if not edit then
@@ -3517,7 +3895,14 @@ local function runUI()
         .. unicode.sub(edit.value, edit.cursor)
       text(x, y, value, width, edit.selectAll and 'yellow' or 'blue', 'panel')
     else
-      text(x, y, value == '' and '(not configured)' or value, width, 'text', 'panel')
+      text(
+        x,
+        y,
+        value == '' and (f.placeholder or '(not configured)') or value,
+        width,
+        'text',
+        'panel'
+      )
     end
     if state.busy then
       return
@@ -3599,7 +3984,9 @@ local function runUI()
       add('Run program opens the chooser. Select a program and press Preview selected.')
       add('Review changes, required interfaces, existing-pattern sorting and donors.')
       add('Verify destination interfaces have all 36 slots available, then Execute preview.')
-      add('Assembly line, insulator, wiremill, bender and Fluid Shaper share the editor and recovery.')
+      add(
+        'Assembly line, insulator, wiremill, bender and Fluid Shaper share the editor and recovery.'
+      )
       add('Wire combining remains unavailable until its recipes have been verified.')
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
@@ -3626,9 +4013,11 @@ local function runUI()
         local program = Programs.byId[preview.id]
         for _, recipe in ipairs(preview.manifest.recipes) do
           local key = Programs.switchKey(program, recipe.outputForm)
-          stocked[key] = stocked[key] or {
-            label = recipe.outputLabel, items = recipe.stock or {}
-          }
+          stocked[key] = stocked[key]
+            or {
+              label = recipe.outputLabel,
+              items = recipe.stock or {},
+            }
         end
         for _, entry in ipairs(program.formChoices) do
           local group = stocked[entry[1]]
@@ -3636,11 +4025,14 @@ local function runUI()
             local names = {}
             for _, item in ipairs(group.items) do
               names[#names + 1] = item.name == 'gregtech:gt.integrated_circuit'
-                and ('circuit ' .. item.damage)
+                  and ('circuit ' .. item.damage)
                 or tostring(item.label or item.name)
             end
-            add((program.switchByDestination and entry[2] or group.label or entry[2])
-              .. ': ' .. table.concat(names, ', '))
+            add(
+              (program.switchByDestination and entry[2] or group.label or entry[2])
+                .. ': '
+                .. table.concat(names, ', ')
+            )
           end
         end
         add('')
@@ -3736,7 +4128,10 @@ local function runUI()
             count = width
           end
           contentRows[#contentRows + 1] = {
-            unicode.sub(remaining, 1, count), r[2], math.min(guideWidth, count), r[4]
+            unicode.sub(remaining, 1, count),
+            r[2],
+            math.min(guideWidth, count),
+            r[4],
           }
           guideWidth = 0
           remaining = unicode.sub(remaining, count + 1):gsub('^%s+', '')
@@ -3748,8 +4143,7 @@ local function runUI()
     state.offset = math.max(0, math.min(state.offset, math.max(0, #rows - room)))
     for n = 1, room do
       local r = rows[state.offset + n]
-      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text',
-        nil, r and r[3], r and r[4])
+      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text', nil, r and r[3], r and r[4])
     end
     local maximum = math.max(0, #rows - room)
     local thumb = maximum == 0 and room or math.max(1, math.floor(room * room / #rows))
@@ -3790,6 +4184,7 @@ local function runUI()
     local key = state.page
       .. state.settings
       .. tostring(state.settingsPage)
+      .. tostring(state.choice)
       .. tostring(state.selected)
       .. state.section
       .. tostring(state.preview)
@@ -3836,7 +4231,10 @@ local function runUI()
       end)
     end
     if state.page == 'settings' then
-      text(3, 22, 'SETTINGS SECTIONS', 26, 'muted')
+      text(3, 20, 'SETTINGS SECTIONS', 26, 'muted')
+      nav(22, 'Tier multipliers', state.settings == 'batch', function()
+        navigate('settings', 'batch')
+      end)
       nav(25, 'Shared interfaces', state.settings == 'shared', function()
         navigate('settings', 'shared')
       end)
@@ -3846,18 +4244,30 @@ local function runUI()
           navigate('settings', id)
         end)
       end
-      local name = state.settings == 'shared' and 'Shared interfaces'
-        or Programs.byId[state.settings].name
-      text(34, 7, 'SETTINGS / ' .. name, 124, 'blue')
+      local section = Config.section(state.settings)
+      local pages = { {} }
+      for _, f in ipairs(fields()) do
+        local page = pages[#pages]
+        if #page > 0 and (#page >= (section.pageSize or 8) or page[1].group ~= f.group) then
+          page = {}
+          pages[#pages + 1] = page
+        end
+        page[#page + 1] = f
+      end
+      state.settingsPage = math.min(state.settingsPage, #pages)
+      local page = pages[state.settingsPage]
+      text(
+        34,
+        7,
+        'SETTINGS / '
+          .. section.name
+          .. (page[1] and page[1].group and (' / ' .. page[1].group) or ''),
+        124,
+        'blue'
+      )
       text(34, 8, 'Changes save when you accept a field or navigate away.', 124, 'muted')
-      local allFields = fields()
-      local pageSize = 8
-      local pages = math.max(1, math.ceil(#allFields / pageSize))
-      state.settingsPage = math.min(state.settingsPage, pages)
-      local y = 11
-      for index = (state.settingsPage - 1) * pageSize + 1,
-        math.min(state.settingsPage * pageSize, #allFields) do
-        local f = allFields[index]
+      local y = section.pageSize == 9 and 10 or 11
+      for _, f in ipairs(page) do
         local helpY, height = y + 2, 4
         text(34, y, f.label, 124, 'blue')
         if f.kind == 'multiToggle' then
@@ -3881,16 +4291,24 @@ local function runUI()
             toggleForm(program.formSwitch, program.formChoices, choice)
           end, true, selected[choice])
           editorRow(42, y + 1, 116, f)
+        elseif f.kind == 'select' then
+          local label, selected = values()[f.key], 1
+          for n, option in ipairs(f.choices) do
+            if option[1] == values()[f.key] then
+              label, selected = option[2], n
+            end
+          end
+          button(34, y + 1, label .. ' v', function()
+            commitEdit()
+            state.choice =
+              { key = f.key, label = f.label, choices = f.choices, selected = selected }
+          end)
         elseif f.choices then
           local x = 34
           for _, option in ipairs(f.choices) do
             local key, value = f.key, option[1]
             x = button(x, y + 1, option[2], function()
-              commitEdit()
-              local trial = U.clone(cfg)
-              Config.values(trial, state.settings)[key] = value
-              saveConfig(trial)
-              status('Settings saved.', 'green')
+              chooseValue(key, value)
             end, true, values()[key] == value)
           end
         elseif f.kind == 'toggle' then
@@ -3908,20 +4326,27 @@ local function runUI()
         text(34, helpY, f.help, 124, 'muted')
         y = y + height
       end
-      if pages > 1 then
-        text(34, 44, 'Settings page ' .. state.settingsPage .. '/' .. pages, 30, 'muted')
-        button(111, 44, 'Previous', function()
+      if #pages > 1 then
+        local pageRow = section.pageSize == 9 and 45 or 44
+        text(34, pageRow, 'Settings page ' .. state.settingsPage .. '/' .. #pages, 30, 'muted')
+        button(111, pageRow, 'Previous', function()
           commitEdit()
           state.settingsPage = state.settingsPage - 1
         end, state.settingsPage > 1)
-        button(133, 44, 'Next', function()
+        button(133, pageRow, 'Next', function()
           commitEdit()
           state.settingsPage = state.settingsPage + 1
-        end, state.settingsPage < pages)
+        end, state.settingsPage < #pages)
       end
       button(34, 47, 'Run program', function()
         navigate('programs')
       end)
+      if state.settings == 'batch' then
+        button(54, 47, 'Effective tiers', function()
+          commitEdit()
+          state.choice = { label = 'Material budgets at ' .. cfg.batch.currentTier, budgets = true }
+        end)
+      end
     elseif state.page == 'programs' then
       text(34, 7, 'RUN A PROGRAM', 124, 'blue')
       text(
@@ -3997,11 +4422,24 @@ local function runUI()
         else
           text(113, 13, #(p.existing or {}) .. ' existing patterns scanned', 45, 'muted')
           text(113, 14, p.reused .. ' reused patterns recipes', 45, 'green')
-          text(113, 15, p.resizeCount .. ' reused patterns to resize', 45,
-                        p.resizeCount > 0 and 'yellow_lighter1' or 'muted')
+          text(
+            113,
+            15,
+            p.resizeCount .. ' reused patterns to resize',
+            45,
+            p.resizeCount > 0 and 'yellow_lighter1' or 'muted'
+          )
           text(113, 16, #p.preserved .. ' unrelated kept', 45, 'muted')
-          text(113, 18, p.required.processing .. '/' .. p.available.processing .. ' proc/ultimate pattern donors to be used', 45,
-                        p.required.processing < p.available.processing and 'green' or 'red')
+          text(
+            113,
+            18,
+            p.required.processing
+              .. '/'
+              .. p.available.processing
+              .. ' proc/ultimate pattern donors to be used',
+            45,
+            p.required.processing < p.available.processing and 'green' or 'red'
+          )
           text(113, 20, #p.moves .. ' sorting moves first', 45)
         end
         local y = 22
@@ -4059,8 +4497,10 @@ local function runUI()
             local closed, closeError = file:close()
             U.check(written and closed, writeError or closeError or 'Cannot save report')
           end)
-          status(ok and 'Saved preview report to ' .. path or 'Report export failed: ' .. tostring(why),
-            ok and 'green' or 'red')
+          status(
+            ok and 'Saved preview report to ' .. path or 'Report export failed: ' .. tostring(why),
+            ok and 'green' or 'red'
+          )
         end, not state.busy)
       end
     else
@@ -4088,6 +4528,44 @@ local function runUI()
     text(3, 49, state.status, 155, state.tone)
     if fs.exists(paths.pending) then
       text(3, 43, 'Pending operation: Recover', 26, 'red')
+    end
+    if state.choice then
+      -- Modal controls replace the underlying hit areas, so clicks cannot leak
+      -- through to settings or Execute. Closing it repaints the underlying page.
+      buttons = {}
+      scrollbar = nil
+      if not state.choice.painted then
+        gpu.setBackground(colors.panel)
+        gpu.fill(48, 9, 104, 29, ' ')
+        state.choice.painted = true
+      end
+      text(51, 10, state.choice.label, 98, 'blue', 'panel')
+      text(
+        51,
+        12,
+        state.choice.budgets
+            and 'Material budgets before voltage, program factor and quantity limits.'
+          or 'Choose a tier. Escape cancels.',
+        98,
+        'muted',
+        'panel'
+      )
+      local entries = state.choice.choices or Batch.tiers
+      for n, entry in ipairs(entries) do
+        local x = n <= 9 and 51 or 101
+        local y = 14 + ((n - 1) % 9) * 2
+        if state.choice.budgets then
+          text(x, y, entry .. '  ' .. Batch.budget(cfg.batch, entry) .. 'x', 45, 'text', 'panel')
+        else
+          local value, label = entry[1], entry[2]
+          button(x, y, label, function()
+            chooseValue(state.choice.key, value)
+          end, true, state.choice.selected == n)
+        end
+      end
+      button(51, 35, 'Close', function()
+        state.choice = nil
+      end)
     end
   end
   local lastProgress, lastPoll = 0, -math.huge
@@ -4199,6 +4677,26 @@ local function runUI()
       and d.section == state.section
   end
   handle = function(e)
+    if state.choice then
+      if e[1] == 'key_down' then
+        local key = e[4]
+        if key == 1 then
+          state.choice = nil
+        elseif state.choice.choices then
+          if key == 200 or key == 208 then
+            state.choice.selected = math.max(
+              1,
+              math.min(#state.choice.choices, state.choice.selected + (key == 200 and -1 or 1))
+            )
+          elseif key == 28 or key == 0x9C then
+            chooseValue(state.choice.key, state.choice.choices[state.choice.selected][1])
+          end
+        end
+        return
+      elseif e[1] ~= 'touch' and e[1] ~= 'interrupted' then
+        return
+      end
+    end
     if e[1] == 'interrupted' then
       state.cancelled = true
       state.running = false

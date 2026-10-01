@@ -46,6 +46,34 @@ Wiremill, the insulator and the bending machine each have a **Pattern multiplier
 `1`. Enter a positive whole number: `256` makes a 1-ingot → 2-wire recipe request
 256 ingots and produce 512 wires. The multiplier applies to every encoded input
 and output in the selected recipe, including requested polymer/PPS.
+**Settings > Tier multipliers** adds a shared tiered policy for every recipe
+program. New installs start at LuV; existing installations keep **Fixed** until
+you enable **Tiered**. Current progression and voltage reference tiers have
+popup selectors covering ULV through MAX, including OpV.
+
+The relative material curve defaults to 4x at your tier, then 32x, 64x, 256x,
+320x, 400x, 448x and 512x as materials get older. Later or unclassified materials
+default to 1x. Every step is editable. Changing your current tier shifts this
+curve automatically; an optional absolute override for any material tier stays
+fixed. The program's multiplier scales the resulting budget. The optional
+voltage constraint takes the smaller of the material and recipe-voltage budgets,
+so cheap processing never increases the budget for an expensive material.
+Its reference can follow your current tier or use a separately selected voltage.
+
+Tiered batches are capped at 512x by default, with 4096 items or 589824 mB per
+requested input/output ingredient. All three limits are editable. The whole
+batch shrinks together, preserving the recipe ratio; molds, circuits and omitted
+supplies do not consume that budget. **Effective tiers** displays the material
+curve before program factors and other constraints. Patterns show their actual
+multiplier, material tier and recipe EU/t.
+
+Material tiers currently use the earliest solid-form requirement in a tier
+chapter of the beta-3 questbook: **98 of 1162 materials** have evidence. Optional
+ingredients and ambiguous "any one" tasks are excluded. This is
+progression guidance, not a proof of earliest accessibility. Missing materials
+use the configurable fallback, rather than inheriting a large batch from low
+recipe voltage. `data/material-tiers.json` retains the source quest/item for
+every classification. Recipe EU/t comes directly from the recipe export.
 The insulator selects PVC pulp, small PVC pulp, PDMS pulp, small PDMS pulp, or
 nothing. PPS sheets have a separate toggle. Normal piles use the scraped
 four-cable batches; small piles and nothing use single-cable batches. The scrape

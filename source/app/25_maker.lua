@@ -212,10 +212,9 @@ local function scanManifest(c, manifest, routing, progress, control, started)
           for _, index in ipairs(U.keys(p.inputs)) do
             local input = p.inputs[index]
             if U.exists(input) then
-              inputLabels[#inputLabels + 1] = tostring(U.patternCount(
-                input, U.patternEntry(root, 'inputs', index)) or '?')
-                .. ' x '
-                .. tostring(input.label or input.name)
+              inputLabels[#inputLabels + 1] = tostring(
+                U.patternCount(input, U.patternEntry(root, 'inputs', index)) or '?'
+              ) .. ' x ' .. tostring(input.label or input.name)
             end
           end
           value.inputSummary = table.concat(inputLabels, ', ')
@@ -317,6 +316,7 @@ local function programRouting(c, id)
     {
       polymer = values.polymer,
       multiplier = tonumber(values.multiplier),
+      batch = c.batch,
       pps = values.pps ~= 'off',
       forms = forms,
       sources = sources,
