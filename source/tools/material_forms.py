@@ -42,7 +42,19 @@ def registry_forms(registry, resources):
         if family == 'gt' and row['family'] != 'gt':
             row['family'], row['dsf'], row['name'] = family, suffix, label
 
-    for family, names in [('gt', registry['materials']), ('bw', registry.get('bwMaterials', {}))]:
+    # The pinned BartWorks enum does not enumerate every registered Werkstoff.
+    # Recover omitted suffixes from two actual registered forms, never from a
+    # guessed material name or a recipe that might refer to an absent item.
+    bw_materials = dict(registry.get('bwMaterials', {}))
+    for rid, resource in resources.items():
+        match = re.fullmatch(r'bartworks:gt\.bwmetageneratedingot@(\d+)', rid)
+        if not match or match[1] in bw_materials:
+            continue
+        label = re.fullmatch(r'(.+) Ingot', resource.get('displayName', ''))
+        if label and f'bartworks:gt.bwmetageneratedplate@{match[1]}' in resources:
+            bw_materials[match[1]] = label[1]
+
+    for family, names in [('gt', registry['materials']), ('bw', bw_materials)]:
         for suffix, label in names.items():
             for form, resolver in families[family].items():
                 rid = resolver['name'] + '@' + str(resolver['prefix'] + int(suffix))
@@ -54,7 +66,7 @@ def registry_forms(registry, resources):
             if rid in resources:
                 add(label, 'gtpp', normal(label), form, rid)
     names = {normal(label): (label, family, int(suffix)) for family, table in
-             [('bw', registry.get('bwMaterials', {})), ('gt', registry['materials'])]
+             [('bw', bw_materials), ('gt', registry['materials'])]
              for suffix, label in table.items()}
     names.update({normal(label): (label, 'gtpp', normal(label))
                   for label in registry.get('gtppMaterials', []) if normal(label) not in names})

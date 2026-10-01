@@ -119,6 +119,22 @@ function M.exists(x)
   return type(x) == 'table' and type(x.name) == 'string'
 end
 
+-- OC's pattern converter returns ItemStacks. Their count is `size`; an
+-- unrelated `amount` field can be zero on ordinary encoded patterns.
+function M.patternCount(stack)
+  return M.check(M.integer(stack.size) and stack.size > 0 and stack.size,
+    'Encoded pattern ingredient has no positive item stack size')
+end
+
+function M.ingredientSummary(list)
+  local out = {}
+  for _, item in ipairs(list or {}) do
+    out[#out + 1] = tostring(item.size or item.amount or 1)
+      .. ' x ' .. tostring(item.label or item.name)
+  end
+  return table.concat(out, ', ')
+end
+
 function M.largest(t)
   local n = 0
   for k in pairs(t or {}) do

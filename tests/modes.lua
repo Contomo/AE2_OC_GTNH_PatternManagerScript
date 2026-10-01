@@ -170,6 +170,22 @@ test('multipliers scale every encoded ingredient without changing recipe eligibi
     assert(not ok,'invalid/overflowing multiplier accepted')
   end
 end)
+test('Mu-metal plate is selected from scraped bender and use evidence',function()
+  local manifest=M.compile(data,'bender',{
+    forms={plate=true,foil=true},sources={plate='ingot',foil='plate'}})
+  local found=false
+  for _,r in ipairs(manifest.recipes) do
+    if r.material=='Mu-metal' and r.outputForm=='plate' then
+      assert(r.outputs[1].name==data.registryNames['bartworks:gt.bwmetageneratedplate'])
+      assert(r.outputs[1].damage==11351)
+      found=true
+    end
+  end
+  assert(found)
+  for _,r in ipairs(manifest.skipped) do
+    assert(not (r.material=='Mu-metal' and r.form=='plate'))
+  end
+end)
 
 test('bender compiles only scraped ingot routes, with source circuit selectors stocked',function()
   local forms={'plate','plateDouble','plateTriple','plateQuadruple','plateQuintuple','plateDense','foil'}

@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'source' / 'tools'))
 from compile_matrix import compile_matrix, descriptor
 from material_forms import resolve, registry_forms
 
@@ -228,6 +228,10 @@ class MatrixTests(unittest.TestCase):
         resources = {r['id']: r for r in json.load(gzip.open('../OreDictScript/research/resource-index.json.gz', 'rt'))['resources']}
         resources.update(json.load(gzip.open('../OreDictScript/data/ores.json.gz', 'rt'))['resources'])
         data = compile_matrix(catalog, registry, resources=resources)
+        mu = next(m for m in data['materials'] if m['name'] == 'Mu-metal')
+        self.assertEqual(mu['dsf'], 11351)
+        self.assertIn('plate', data['capabilities'][mu['a'] - 1])
+        self.assertIn('ingot_plate', data['production'][mu['p'] - 1])
 
         def ingredient(rid, amount):
             name, damage = descriptor(rid)

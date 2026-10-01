@@ -16,7 +16,7 @@ end
 package.path=directory..'?.lua;'..savedPath
 local ok,result=pcall(function(...)
 local U=(function()
--- Source: lib/util.lua
+-- Source: source/lib/util.lua
 local M = {}
 
 function M.check(ok, why)
@@ -138,6 +138,22 @@ function M.exists(x)
   return type(x) == 'table' and type(x.name) == 'string'
 end
 
+-- OC's pattern converter returns ItemStacks. Their count is `size`; an
+-- unrelated `amount` field can be zero on ordinary encoded patterns.
+function M.patternCount(stack)
+  return M.check(M.integer(stack.size) and stack.size > 0 and stack.size,
+    'Encoded pattern ingredient has no positive item stack size')
+end
+
+function M.ingredientSummary(list)
+  local out = {}
+  for _, item in ipairs(list or {}) do
+    out[#out + 1] = tostring(item.size or item.amount or 1)
+      .. ' x ' .. tostring(item.label or item.name)
+  end
+  return table.concat(out, ', ')
+end
+
 function M.largest(t)
   local n = 0
   for k in pairs(t or {}) do
@@ -167,7 +183,7 @@ return M
 
 end)()
 local Programs=(function()
--- Source: lib/programs.lua
+-- Source: source/lib/programs.lua
 -- Program definitions shared by configuration, navigation and execution.
 local M = {}
 local function field(key, label, help, default, kind, optional)
@@ -419,7 +435,7 @@ return M
 
 end)()
 local Config=(function()
--- Source: lib/config.lua
+-- Source: source/lib/config.lua
 -- One configuration for the application: shared hardware and per-program fields.
 local U = U
 local Programs = Programs
@@ -681,7 +697,7 @@ end
 return M
 
 end)()
--- Source: src/00_core.lua
+-- Source: source/app/00_core.lua
 -- GTNH 2.9 / OpenOS. Terminal pattern slots are ZERO based; direct slots ONE based.
 local component = require('component')
 local event = require('event')
@@ -1212,7 +1228,7 @@ C.capacity = capacity
 C.perfReport = perfReport
 C.releaseWork = releaseWork
 
--- Source: src/10_plan.lua
+-- Source: source/app/10_plan.lua
 local function item(s)
   return U.exists(s)
     and s.damage ~= nil
@@ -1459,7 +1475,7 @@ local function scan(c, progress, control)
 end
 C.scan = scan
 
--- Source: src/20_apply.lua
+-- Source: source/app/20_apply.lua
 -- One durable intent per moved pattern. Recovery completes only that operation;
 -- another scan is required before continuing the rest of a batch.
 local function rawList(data, p, which)
@@ -1824,7 +1840,7 @@ C.paths = paths
 C.finish = finish
 
 local Planner=(function()
--- Source: maker/planner.lua
+-- Source: source/lib/planner.lua
 -- Pure pattern placement planner. No component, filesystem or UI calls.
 -- Recipe modes provide an ordered manifest; adapters provide compact snapshots.
 local M = { version = 1 }
@@ -2232,7 +2248,7 @@ return M
 
 end)()
 local Modes=(function()
--- Source: maker/modes.lua
+-- Source: source/lib/modes.lua
 -- Compact runtime recipe compiler. This module has no component/UI calls.
 -- Eligibility uses form capabilities, production flags and rare exceptions.
 local U = U
@@ -2494,7 +2510,169 @@ end
 return M
 
 end)()
--- Source: maker/scan.lua
+local Preview=(function()
+-- Source: source/lib/preview.lua
+-- One renderer for maker previews, on screen and in exported reports.
+local U = U
+local Planner = Planner
+local M = {}
+
+local function spacer(rows, add)
+  if #rows > 0 and rows[#rows][1] ~= '' then add('') end
+end
+
+function M.planRows(plan, manifest)
+  local rows, add = U.rows()
+  local details = {}
+  for _, recipe in ipairs(manifest.recipes) do
+    details[recipe.key or Planner.recipeKey(recipe)] = recipe
+  end
+  add('PATTERN PLAN', 'blue')
+  add(string.format('%d reuse   |   %d new   |   %d other patterns kept',
+    plan.reused, plan.required.processing + plan.required.crafting, #plan.preserved), 'green')
+  if manifest.source.usagePolicy then
+    add(manifest.unusedExcluded .. ' recipe routes skipped: output has no non-recycling use.', 'muted')
+  end
+  if plan.resizeCount > 0 then
+    add(plan.resizeCount .. ' reused patterns will be resized to the configured batch.', 'yellow_lighter1')
+  end
+  local group, bank, material
+  for _, entry in ipairs(plan.layout) do
+    local recipe = details[entry.key]
+    if group ~= entry.group then
+      spacer(rows, add)
+      group, bank, material = entry.group, nil, nil
+      add('DESTINATION: ' .. tostring(group), 'blue')
+    end
+    local location = entry.destination and U.where(entry.destination)
+    if location and bank ~= location then
+      bank, material = location, nil
+      add('  +-- Interface ' .. U.locationText(entry.destination), 'muted')
+    end
+    local currentMaterial = recipe.material or recipe.label
+    if material ~= currentMaterial then
+      material = currentMaterial
+      add('  |  ' .. material, 'blue')
+    end
+    add('  |    ' .. (entry.resize and 'RESIZE  ' or entry.existing and 'REUSE   ' or 'CREATE  ')
+      .. (recipe.outputLabel or recipe.outputForm or '')
+      .. (entry.destination and ('   slot ' .. entry.destination.slot) or '   needs space'),
+      entry.resize and 'yellow_lighter1' or entry.existing and 'green' or 'yellow')
+    if entry.resize then
+      add('  |      Multiply current quantities by ' .. entry.newScale .. ' / ' .. entry.oldScale,
+        'yellow_lighter1')
+    end
+    add('  |      ' .. U.ingredientSummary(recipe.inputs))
+    add('  |      -> ' .. U.ingredientSummary(recipe.outputs), 'green')
+    add('')
+  end
+  return rows
+end
+
+function M.capacityRows(plan)
+  local rows, add = U.rows()
+  add('DESTINATION SPACE', 'blue')
+  add('Assuming 3 capacity cards per interface (36 slots).', 'muted')
+  spacer(rows, add)
+  for _, group in ipairs(plan.capacities or {}) do
+    add(group.name, 'blue')
+    add(group.interfaces .. ' interfaces (' .. group.patterns .. ' patterns)')
+  end
+  spacer(rows, add)
+  add('Every matching interface is included, ordered by location.', 'muted')
+  add('Existing unrelated patterns count toward required space.', 'muted')
+  for _, err in ipairs(plan.errors or {}) do add('BLOCKED: ' .. err, 'red') end
+  return rows
+end
+
+function M.existingRows(plan)
+  local rows, add = U.rows()
+  add('EXISTING DESTINATION PATTERNS', 'blue')
+  add(#(plan.existing or {}) .. ' occupied; ' .. plan.reused .. ' reused; '
+    .. #plan.preserved .. ' kept.', 'muted')
+  local bank
+  for _, entry in ipairs(plan.existing or {}) do
+    local location = U.where(entry.from)
+    if bank ~= location then
+      spacer(rows, add)
+      bank = location
+      add('DESTINATION: ' .. entry.interface, 'blue')
+      add('  +-- Interface ' .. U.locationText(entry.from), 'muted')
+    end
+    add('  |  ' .. entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
+      entry.status == 'RESIZE' and 'yellow_lighter1'
+        or entry.status == 'KEEP' and 'yellow' or 'green')
+    add('  |    ' .. entry.reason, 'muted')
+    if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
+      add('  |    Encoded inputs: ' .. entry.inputs, 'muted')
+    end
+    if entry.requestedInputs and entry.status == 'KEEP' then
+      add('  |    Requested inputs: ' .. entry.requestedInputs, 'muted')
+    end
+    if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
+      add('  |    Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot, 'muted')
+    end
+    add('')
+  end
+  if #(plan.existing or {}) == 0 then add('No patterns in the selected destination interfaces.', 'muted') end
+  spacer(rows, add)
+  add('SORTING MOVES', 'blue')
+  for n, move in ipairs(plan.moves) do
+    add(n .. '/' .. #plan.moves .. '  '
+      .. ((plan.moveLabels or {})[move.fingerprint] or 'Pattern'), 'yellow')
+    add('  ' .. U.locationText(move.from) .. ' slot ' .. move.from.slot
+      .. ' -> ' .. U.locationText(move.to) .. ' slot ' .. move.to.slot, 'muted')
+  end
+  if #plan.moves == 0 then add('No sorting moves needed.', 'muted') end
+  return rows
+end
+
+function M.excludedRows(manifest)
+  local rows, add = U.rows()
+  add('EXCLUDED BY RECIPE USE', 'blue')
+  add(#(manifest.skipped or {}) .. ' output forms have no path to a non-recycling product.', 'muted')
+  add('Existing patterns for these outputs are kept; see Existing.', 'muted')
+  local material
+  for _, item in ipairs(manifest.skipped or {}) do
+    if material ~= item.material then
+      spacer(rows, add)
+      material = item.material
+      add(material, 'blue')
+    end
+    add('  ' .. item.label .. '  (' .. item.name .. ':' .. item.damage .. ')', 'yellow')
+  end
+  if #(manifest.skipped or {}) == 0 then
+    add('No selected output forms excluded by the use check.', 'green')
+  end
+  return rows
+end
+
+function M.rows(section, plan, manifest)
+  if section == 'existing' then return M.existingRows(plan) end
+  if section == 'skipped' then return M.excludedRows(manifest) end
+  if section == 'capacity' then return M.capacityRows(plan) end
+  return M.planRows(plan, manifest)
+end
+
+function M.report(plan, manifest)
+  local lines = {}
+  local function append(rows)
+    for _, row in ipairs(rows) do lines[#lines + 1] = row[1] end
+    lines[#lines + 1] = ''
+  end
+  append(M.capacityRows(plan))
+  append(M.planRows(plan, manifest))
+  for _, warning in ipairs(plan.warnings) do lines[#lines + 1] = 'NOTE: ' .. warning end
+  lines[#lines + 1] = ''
+  append(M.existingRows(plan))
+  append(M.excludedRows(manifest))
+  return table.concat(lines, '\n') .. '\n'
+end
+
+return M
+
+end)()
+-- Source: source/app/25_maker.lua
 -- Shared named-interface adapter. Planning is read-only; execution uses the
 -- same editor, durable operations and recovery as the assembly-line program.
 -- Pattern reads are performed one interface at a time; metadata discovery never
@@ -2528,24 +2706,16 @@ local function patternRecipe(p, root)
       if U.exists(s) then
         U.check(not U.truth(s.hasTag) or type(s.tag) == 'string', 'Ingredient NBT hidden')
         r[which][index] = {
-          type = s.damage ~= nil and s.amount == nil and 'item' or 'fluid',
+          type = 'item',
           name = s.name,
           damage = s.damage,
-          size = s.amount or s.size,
+          size = U.patternCount(s),
           tag = s.tag,
         }
       end
     end
   end
   return r
-end
-local function ingredientSummary(list)
-  local out = {}
-  for _, item in ipairs(list or {}) do
-    out[#out + 1] = tostring(item.size or item.amount or 1)
-      .. ' x ' .. tostring(item.label or item.name)
-  end
-  return table.concat(out, ', ')
 end
 local function explainExisting(plan, snapshot, request, manifest)
   local function itemKey(item)
@@ -2565,7 +2735,7 @@ local function explainExisting(plan, snapshot, request, manifest)
       wantedOutputs[itemKey(output)] = {
         label = recipe.label,
         destination = desired.destination,
-        inputs = ingredientSummary(recipe.inputs),
+        inputs = U.ingredientSummary(recipe.inputs),
       }
     end
   end
@@ -2705,7 +2875,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
             value.output = {
               name = output.name,
               damage = output.damage,
-              size = output.amount or output.size,
+              size = U.patternCount(output),
               label = output.label,
             }
           end
@@ -2713,7 +2883,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
           for _, index in ipairs(U.keys(p.inputs)) do
             local input = p.inputs[index]
             if U.exists(input) then
-              inputLabels[#inputLabels + 1] = tostring(input.amount or input.size or 1)
+              inputLabels[#inputLabels + 1] = tostring(U.patternCount(input))
                 .. ' x '
                 .. tostring(input.label or input.name)
             end
@@ -2771,113 +2941,11 @@ local function scanManifest(c, manifest, routing, progress, control, started)
   explainExisting(plan, snapshot, request, manifest)
   return plan, snapshot, request, labels
 end
-local function previewRows(plan, manifest, labels)
-  local rows, add = U.rows()
-  local details = {}
-  for _, recipe in ipairs(manifest.recipes) do
-    details[recipe.key or Planner.recipeKey(recipe)] = recipe
-  end
-  add('PATTERN PLAN', 'blue')
-  add(
-    string.format(
-      '%d reuse   |   %d new   |   %d other patterns kept',
-      plan.reused,
-      plan.required.processing + plan.required.crafting,
-      #plan.preserved
-    ),
-    'green'
-  )
-  if manifest.source.usagePolicy then
-    add(manifest.unusedExcluded .. ' recipe routes skipped: output has no non-recycling use.', 'muted')
-  end
-  add('')
-  if plan.resizeCount > 0 then
-    add(plan.resizeCount .. ' reused patterns will be resized to the configured batch.', 'yellow')
-    add('')
-  end
-  local group, bank, material
-  for _, r in ipairs(plan.layout) do
-    local recipe = details[r.key]
-    if group ~= r.group then
-      group = r.group
-      bank = nil
-      material = nil
-      add('')
-      add('DESTINATION: ' .. tostring(group), 'blue')
-    end
-    local location = r.destination and where(r.destination)
-    if location and bank ~= location then
-      bank = location
-      add('Interface: ' .. U.locationText(r.destination), 'muted')
-    end
-    if material ~= (recipe.material or recipe.label) then
-      material = recipe.material or recipe.label
-      add('')
-      add(material, 'blue')
-    end
-    add(
-      (r.resize and 'RESIZE  ' or r.existing and 'REUSE   ' or 'CREATE  ')
-        .. (recipe.outputLabel or recipe.outputForm or '')
-        .. (r.destination and ('   slot ' .. r.destination.slot) or '   needs space'),
-      r.existing and not r.resize and 'green' or 'yellow'
-    )
-    if r.resize then
-      add('  Multiply current quantities by ' .. r.newScale .. ' / ' .. r.oldScale, 'muted')
-    end
-    add('  ' .. ingredientSummary(recipe.inputs))
-    add('  -> ' .. ingredientSummary(recipe.outputs), 'green')
-    add('')
-  end
-  return rows
-end
-local function previewReport(plan, manifest, labels)
-  local lines = {}
-  for _, r in ipairs(previewRows(plan, manifest, labels)) do
-    lines[#lines + 1] = r[1]
-  end
-  for _, err in ipairs(plan.errors) do
-    lines[#lines + 1] = 'BLOCKED: ' .. err
-  end
-  for _, warning in ipairs(plan.warnings) do
-    lines[#lines + 1] = 'NOTE: ' .. warning
-  end
-  lines[#lines + 1] = ''
-  lines[#lines + 1] = 'EXISTING DESTINATION PATTERNS'
-  for _, entry in ipairs(plan.existing or {}) do
-    lines[#lines + 1] = entry.interface .. ' / ' .. U.locationText(entry.from)
-      .. ' slot ' .. entry.from.slot .. '  ' .. entry.status .. '  ' .. entry.label
-    lines[#lines + 1] = '  ' .. entry.reason
-    if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
-      lines[#lines + 1] = '  Encoded inputs: ' .. entry.inputs
-    end
-    if entry.requestedInputs and entry.status == 'KEEP' then
-      lines[#lines + 1] = '  Requested inputs: ' .. entry.requestedInputs
-    end
-    if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
-      lines[#lines + 1] = '  Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot
-    end
-  end
-  lines[#lines + 1] = ''
-  lines[#lines + 1] = 'EXCLUDED BY RECIPE USE'
-  for _, item in ipairs(manifest.skipped or {}) do
-    lines[#lines + 1] = item.label .. '  (' .. item.name .. ':' .. item.damage .. ')'
-  end
-  lines[#lines + 1] = ''
-  lines[#lines + 1] = 'SORTING MOVES'
-  for n, move in ipairs(plan.moves) do
-    lines[#lines + 1] = n .. '/' .. #plan.moves .. '  '
-      .. ((plan.moveLabels or {})[move.fingerprint] or 'Pattern')
-      .. '  ' .. U.locationText(move.from) .. ' slot ' .. move.from.slot
-      .. ' -> ' .. U.locationText(move.to) .. ' slot ' .. move.to.slot
-  end
-  return table.concat(lines, '\n') .. '\n'
-end
-
 C.maker = {
   planner = Planner,
   scan = scanManifest,
-  report = previewReport,
-  rows = previewRows,
+  report = Preview.report,
+  rows = Preview.planRows,
   discover = discover,
 }
 local function programRouting(c, id)
@@ -2941,15 +3009,7 @@ function C.maker.preview(c, id, progress, control)
     groups[name] = groups[name] + 1
   end
   plan.capacities = Config.capacityReport(groups)
-  local report = previewReport(plan, manifest, labels)
-  for _, g in ipairs(plan.capacities) do
-    report = string.format(
-      '%s: %d total slots needed; at least %d fully expanded interface(s).\n',
-      g.name,
-      g.patterns,
-      g.interfaces
-    ) .. report
-  end
+  local report = Preview.report(plan, manifest)
   return plan, report, manifest
 end
 
@@ -3121,7 +3181,7 @@ function C.runner.execute(c, preview, progress, control)
   end
 end
 
--- Source: src/30_ui.lua
+-- Source: source/app/30_ui.lua
 local function runUI()
   local gpu = component.gpu
   U.check(gpu, 'GPU required')
@@ -3129,7 +3189,7 @@ local function runUI()
   local oldW, oldH = gpu.getResolution()
   local oldFG, oldBG = gpu.getForeground(), gpu.getBackground()
   local maxW, maxH = gpu.maxResolution()
-  U.check(maxW >= 160 and maxH >= 50, 'Use a tier 3 GPU and screen with 160x50 resolution')
+  U.check(maxW >= 160 and maxH >= 50, 'Use a tier 3 GPU and screen with 160x50 resolution') -- the fuck
   local w, h = 160, 50
   -- OC can report char=0 for keypad keys (notably with Num Lock off).
   -- The physical key code still identifies the intended digit.
@@ -3155,6 +3215,7 @@ local function runUI()
     blue = 0x5AC8FA,
     green = 0x72D69A,
     yellow = 0xFFD277,
+    yellow_lighter1 = 0xFFF09E,
     red = 0xFF8585,
     button = 0x27465E,
     selected = 0x246B47,
@@ -3374,56 +3435,9 @@ local function runUI()
           or 'Choose a program to build a preview.',
         'muted'
       )
-    elseif state.section == 'existing' and preview.manifest then
-      add('EXISTING DESTINATION PATTERNS', 'blue')
-      add(#(p.existing or {}) .. ' occupied; ' .. p.reused .. ' reused; ' .. #p.preserved .. ' kept.', 'muted')
-      local bank
-      for _, entry in ipairs(p.existing or {}) do
-        local location = U.locationText(entry.from)
-        if bank ~= location then
-          bank = location
-          add('')
-          add(entry.interface .. ' / ' .. location, 'blue')
-        end
-        add(entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
-          entry.status == 'KEEP' and 'yellow' or 'green')
-        add('  ' .. entry.reason, 'muted')
-        if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
-          add('  Encoded inputs: ' .. entry.inputs, 'muted')
-        end
-        if entry.requestedInputs and entry.status == 'KEEP' then
-          add('  Requested inputs: ' .. entry.requestedInputs, 'muted')
-        end
-        if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
-          add('  Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot, 'muted')
-        end
-      end
-      if #(p.existing or {}) == 0 then
-        add('No patterns in the selected destination interfaces.', 'muted')
-      end
-      add('')
-      add('SORTING MOVES', 'blue')
-      for n, move in ipairs(p.moves) do
-        add(n .. '/' .. #p.moves .. '  ' .. ((p.moveLabels or {})[move.fingerprint] or 'Pattern'), 'yellow')
-        add('  ' .. U.locationText(move.from) .. ' slot ' .. move.from.slot
-          .. ' -> ' .. U.locationText(move.to) .. ' slot ' .. move.to.slot, 'muted')
-      end
-      if #p.moves == 0 then add('No sorting moves needed.', 'muted') end
-    elseif state.section == 'skipped' and preview.manifest then
-      add('EXCLUDED BY RECIPE USE', 'blue')
-      add(#(preview.manifest.skipped or {}) .. ' output forms have no path to a non-recycling product.', 'muted')
-      add('Existing patterns for these outputs are kept; see Existing.', 'muted')
-      local material
-      for _, item in ipairs(preview.manifest.skipped or {}) do
-        if material ~= item.material then
-          material = item.material
-          add('')
-          add(material, 'blue')
-        end
-        add('  ' .. item.label .. '  (' .. item.name .. ':' .. item.damage .. ')', 'yellow')
-      end
-      if #(preview.manifest.skipped or {}) == 0 then
-        add('No selected output forms excluded by the use check.', 'green')
+    elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
+      for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
+        add(row[1], row[2])
       end
     elseif state.section == 'details' and preview.manifest then
       if preview.id == 'bender' then
@@ -3481,26 +3495,11 @@ local function runUI()
         add('Registry spelling still unresolved: ' .. name, 'red')
       end
     elseif state.section == 'capacity' then
-      add('DESTINATION SPACE', 'blue')
-      add('Assuming 36 usable slots per destination interface.', 'yellow')
-      add('')
-      for _, g in ipairs(p.capacities or {}) do
-        add(g.name, 'blue')
-        add(
-          g.patterns
-            .. ' total slots needed; at least '
-            .. g.interfaces
-            .. ' fully expanded interface(s).'
-        )
-      end
-      add('')
-      add('Every matching interface is included, ordered by location.', 'muted')
-      add('Existing unrelated patterns count toward required space.', 'muted')
-      for _, err in ipairs(p.errors) do
-        add('BLOCKED: ' .. err, 'red')
+      for _, row in ipairs(Preview.capacityRows(p)) do
+        add(row[1], row[2])
       end
     elseif preview.id ~= 'assline' then
-      for _, row in ipairs(C.maker.rows(p, preview.manifest)) do
+      for _, row in ipairs(Preview.planRows(p, preview.manifest)) do
         add(row[1], row[2])
       end
     elseif state.section == 'recipes' then
@@ -3750,7 +3749,7 @@ local function runUI()
       local preview = state.preview
       local p = preview and preview.plan
       local current = preview and preview.id or state.selected
-      text(34, 7, 'PREVIEW / ' .. (current and Programs.byId[current].name or ''), 124, 'blue')
+      text(34, 7, 'Preview - ' .. (current and Programs.byId[current].name or ''), 124, 'blue')
       local x = 34
       local tabs = preview
           and preview.id == 'assline'
@@ -3777,31 +3776,26 @@ local function runUI()
         end)
       end
       scrollRows(34, 12, 74, 31)
-      text(113, 12, 'WHAT WILL HAPPEN', 45, 'blue')
+      text(113, 12, 'Summary', 45, 'blue')
       if p then
         if preview.id == 'assline' then
-          text(113, 14, p.scanned .. ' patterns scanned', 45)
-          text(113, 15, #p.changes .. ' patterns to update', 45, 'green')
+          --todo remove and unify this
+          text(113, 14, p.scanned .. 'existing patterns scanned', 45)
+          text(113, 15, #p.changes .. 'existing patterns to update', 45, 'green')
           text(113, 16, p.newRecipes .. ' donor patterns needed', 45, 'yellow')
           text(113, 17, (#p.recipes - p.newRecipes) .. ' rename recipes reused', 45, 'green')
           text(113, 18, p.available .. ' processing donors available', 45, 'muted')
         else
           text(113, 13, #(p.existing or {}) .. ' existing patterns scanned', 45, 'muted')
-          text(113, 14, p.reused .. ' match requested recipes', 45, 'green')
-          text(113, 15, p.required.processing .. ' new patterns needed', 45, 'yellow')
-          text(113, 16, #p.moves .. ' sorting moves first', 45)
-          text(113, 17, p.available.processing .. ' processing donors available', 45, 'muted')
-          text(113, 18, p.donorBanks .. ' buffer interfaces found via terminal', 45, 'muted')
-          text(113, 19, #p.preserved .. ' existing unmatched; kept', 45, 'yellow')
-          text(
-            113,
-            20,
-            p.resizeCount .. ' reused patterns to resize',
-            45,
-            p.resizeCount > 0 and 'yellow' or 'muted'
-          )
+          text(113, 14, p.reused .. ' reused patterns recipes', 45, 'green')
+          text(113, 15, p.resizeCount .. ' reused patterns to resize', 45,
+                        p.resizeCount > 0 and 'yellow_lighter1' or 'muted')
+          text(113, 16, #p.preserved .. ' unrelated kept', 45, 'muted')
+          text(113, 18, p.required.processing .. '/' .. p.available.processing .. ' proc/ultimate pattern donors to be used', 45,
+                        p.required.processing < p.available.processing and 'green' or 'red')
+          text(113, 20, #p.moves .. ' sorting moves first', 45)
         end
-        local y = 21
+        local y = 22
         text(
           113,
           y,
@@ -4139,7 +4133,7 @@ local function runUI()
 end
 C.runUI = runUI
 
--- Source: src/90_main.lua
+-- Source: source/app/90_main.lua
 if ... == '--test' then
   return C
 end

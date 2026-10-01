@@ -5,7 +5,7 @@ local function runUI()
   local oldW, oldH = gpu.getResolution()
   local oldFG, oldBG = gpu.getForeground(), gpu.getBackground()
   local maxW, maxH = gpu.maxResolution()
-  U.check(maxW >= 160 and maxH >= 50, 'Use a tier 3 GPU and screen with 160x50 resolution')
+  U.check(maxW >= 160 and maxH >= 50, 'Use a tier 3 GPU and screen with 160x50 resolution') -- the fuck
   local w, h = 160, 50
   -- OC can report char=0 for keypad keys (notably with Num Lock off).
   -- The physical key code still identifies the intended digit.
@@ -31,6 +31,7 @@ local function runUI()
     blue = 0x5AC8FA,
     green = 0x72D69A,
     yellow = 0xFFD277,
+    yellow_lighter1 = 0xFFF09E,
     red = 0xFF8585,
     button = 0x27465E,
     selected = 0x246B47,
@@ -250,56 +251,9 @@ local function runUI()
           or 'Choose a program to build a preview.',
         'muted'
       )
-    elseif state.section == 'existing' and preview.manifest then
-      add('EXISTING DESTINATION PATTERNS', 'blue')
-      add(#(p.existing or {}) .. ' occupied; ' .. p.reused .. ' reused; ' .. #p.preserved .. ' kept.', 'muted')
-      local bank
-      for _, entry in ipairs(p.existing or {}) do
-        local location = U.locationText(entry.from)
-        if bank ~= location then
-          bank = location
-          add('')
-          add(entry.interface .. ' / ' .. location, 'blue')
-        end
-        add(entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
-          entry.status == 'KEEP' and 'yellow' or 'green')
-        add('  ' .. entry.reason, 'muted')
-        if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
-          add('  Encoded inputs: ' .. entry.inputs, 'muted')
-        end
-        if entry.requestedInputs and entry.status == 'KEEP' then
-          add('  Requested inputs: ' .. entry.requestedInputs, 'muted')
-        end
-        if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
-          add('  Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot, 'muted')
-        end
-      end
-      if #(p.existing or {}) == 0 then
-        add('No patterns in the selected destination interfaces.', 'muted')
-      end
-      add('')
-      add('SORTING MOVES', 'blue')
-      for n, move in ipairs(p.moves) do
-        add(n .. '/' .. #p.moves .. '  ' .. ((p.moveLabels or {})[move.fingerprint] or 'Pattern'), 'yellow')
-        add('  ' .. U.locationText(move.from) .. ' slot ' .. move.from.slot
-          .. ' -> ' .. U.locationText(move.to) .. ' slot ' .. move.to.slot, 'muted')
-      end
-      if #p.moves == 0 then add('No sorting moves needed.', 'muted') end
-    elseif state.section == 'skipped' and preview.manifest then
-      add('EXCLUDED BY RECIPE USE', 'blue')
-      add(#(preview.manifest.skipped or {}) .. ' output forms have no path to a non-recycling product.', 'muted')
-      add('Existing patterns for these outputs are kept; see Existing.', 'muted')
-      local material
-      for _, item in ipairs(preview.manifest.skipped or {}) do
-        if material ~= item.material then
-          material = item.material
-          add('')
-          add(material, 'blue')
-        end
-        add('  ' .. item.label .. '  (' .. item.name .. ':' .. item.damage .. ')', 'yellow')
-      end
-      if #(preview.manifest.skipped or {}) == 0 then
-        add('No selected output forms excluded by the use check.', 'green')
+    elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
+      for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
+        add(row[1], row[2])
       end
     elseif state.section == 'details' and preview.manifest then
       if preview.id == 'bender' then
@@ -357,26 +311,11 @@ local function runUI()
         add('Registry spelling still unresolved: ' .. name, 'red')
       end
     elseif state.section == 'capacity' then
-      add('DESTINATION SPACE', 'blue')
-      add('Assuming 36 usable slots per destination interface.', 'yellow')
-      add('')
-      for _, g in ipairs(p.capacities or {}) do
-        add(g.name, 'blue')
-        add(
-          g.patterns
-            .. ' total slots needed; at least '
-            .. g.interfaces
-            .. ' fully expanded interface(s).'
-        )
-      end
-      add('')
-      add('Every matching interface is included, ordered by location.', 'muted')
-      add('Existing unrelated patterns count toward required space.', 'muted')
-      for _, err in ipairs(p.errors) do
-        add('BLOCKED: ' .. err, 'red')
+      for _, row in ipairs(Preview.capacityRows(p)) do
+        add(row[1], row[2])
       end
     elseif preview.id ~= 'assline' then
-      for _, row in ipairs(C.maker.rows(p, preview.manifest)) do
+      for _, row in ipairs(Preview.planRows(p, preview.manifest)) do
         add(row[1], row[2])
       end
     elseif state.section == 'recipes' then
@@ -626,7 +565,7 @@ local function runUI()
       local preview = state.preview
       local p = preview and preview.plan
       local current = preview and preview.id or state.selected
-      text(34, 7, 'PREVIEW / ' .. (current and Programs.byId[current].name or ''), 124, 'blue')
+      text(34, 7, 'Preview - ' .. (current and Programs.byId[current].name or ''), 124, 'blue')
       local x = 34
       local tabs = preview
           and preview.id == 'assline'
@@ -653,31 +592,26 @@ local function runUI()
         end)
       end
       scrollRows(34, 12, 74, 31)
-      text(113, 12, 'WHAT WILL HAPPEN', 45, 'blue')
+      text(113, 12, 'Summary', 45, 'blue')
       if p then
         if preview.id == 'assline' then
-          text(113, 14, p.scanned .. ' patterns scanned', 45)
-          text(113, 15, #p.changes .. ' patterns to update', 45, 'green')
+          --todo remove and unify this
+          text(113, 14, p.scanned .. 'existing patterns scanned', 45)
+          text(113, 15, #p.changes .. 'existing patterns to update', 45, 'green')
           text(113, 16, p.newRecipes .. ' donor patterns needed', 45, 'yellow')
           text(113, 17, (#p.recipes - p.newRecipes) .. ' rename recipes reused', 45, 'green')
           text(113, 18, p.available .. ' processing donors available', 45, 'muted')
         else
           text(113, 13, #(p.existing or {}) .. ' existing patterns scanned', 45, 'muted')
-          text(113, 14, p.reused .. ' match requested recipes', 45, 'green')
-          text(113, 15, p.required.processing .. ' new patterns needed', 45, 'yellow')
-          text(113, 16, #p.moves .. ' sorting moves first', 45)
-          text(113, 17, p.available.processing .. ' processing donors available', 45, 'muted')
-          text(113, 18, p.donorBanks .. ' buffer interfaces found via terminal', 45, 'muted')
-          text(113, 19, #p.preserved .. ' existing unmatched; kept', 45, 'yellow')
-          text(
-            113,
-            20,
-            p.resizeCount .. ' reused patterns to resize',
-            45,
-            p.resizeCount > 0 and 'yellow' or 'muted'
-          )
+          text(113, 14, p.reused .. ' reused patterns recipes', 45, 'green')
+          text(113, 15, p.resizeCount .. ' reused patterns to resize', 45,
+                        p.resizeCount > 0 and 'yellow_lighter1' or 'muted')
+          text(113, 16, #p.preserved .. ' unrelated kept', 45, 'muted')
+          text(113, 18, p.required.processing .. '/' .. p.available.processing .. ' proc/ultimate pattern donors to be used', 45,
+                        p.required.processing < p.available.processing and 'green' or 'red')
+          text(113, 20, #p.moves .. ' sorting moves first', 45)
         end
-        local y = 21
+        local y = 22
         text(
           113,
           y,

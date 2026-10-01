@@ -58,8 +58,8 @@ patterns; crafting-grid execution remains a future capability.
 
 ## Compact data model
 
-`tools/material_forms.py` reads the full registered resource index and source-annotated
-ore dictionary. `tools/compile_matrix.py` emits matrix schema **2**:
+`source/tools/material_forms.py` reads the full registered resource index and source-annotated
+ore dictionary. `source/tools/compile_matrix.py` emits matrix schema **2**:
 
 - `materials`: name, resolver family/suffix, shared capability-set index (`a`),
   shared production-flag set (`p`), optional conductor/pipe bases, coating class,
@@ -89,7 +89,7 @@ ore dictionary. `tools/compile_matrix.py` emits matrix schema **2**:
 - `source`: recipe provenance, registry version, compatibility evidence and
   unsupported-recipe counts.
 
-The matrix covers **1,159 materials**, including materials without a currently
+The matrix covers **1,162 materials**, including materials without a currently
 implemented production mode. Identical availability and production flags are
 stored once. Only **two explicit recipe exclusions** are needed to reproduce
 unusual source behavior. No material contains numeric foreign keys into recipes. The current modes
@@ -102,7 +102,7 @@ PPS can independently be requested or omitted. Batch quantities, including PPS,
 come from the source recipes. The 44 recipes with unsupported output forms are
 recorded by output name in provenance and shown in Details.
 
-`maker/modes.lua` owns `supports`, `resolve` and `eligible`. Future modes should
+`source/lib/modes.lua` owns `supports`, `resolve` and `eligible`. Future modes should
 call those services. Nonstandard item IDs are discovered from scraped ore tags;
 the primary item in an actual recipe selects among registered alternatives.
 The compiler compares that item with the family formula and generates a form
@@ -139,7 +139,7 @@ uses or recipes missing from that export.
 The adjacent `OreDictScript/research/recipes.json.gz` is the recipe evidence.
 Its recorded version is beta 2; the user confirmed these recipes are unchanged
 in beta 3. That remains provenance, not a mismatch warning or preview blocker.
-The registry rules pin GT5 **5.09.54.133**. The normalized export lowercases IDs. `tools/import_registry_names.py` recovers their case from the pinned GT source archive (registration formulas and `getModItem` references), plus EnderIO registration declarations. It uses the existing scraped material names; no illustrative material examples are compiler overrides.
+The registry rules pin GT5 **5.09.54.133**. The normalized export lowercases IDs. `source/tools/import_registry_names.py` recovers their case from the pinned GT source archive (registration formulas and `getModItem` references), plus EnderIO registration declarations. It uses the existing scraped material names; no illustrative material examples are compiler overrides. Missing BartWorks suffixes are recovered from matching registered ingot and plate items in the resource index; this includes Mu-metal.
 The optional `.research/hiddenitems.cfg` is downloaded from
 [GTNH's NEI item configuration at commit 9ad74ce](https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/blob/9ad74cedbe761bbd442451786eff7a14a644c3d5/config/NEI/hiddenitems.cfg).
 It supplies remaining case-sensitive Forge IDs, including `IC2:itemDensePlates`.
@@ -150,18 +150,18 @@ declarations take precedence if the configuration spells an ID differently.
 Invoke-WebRequest `
   https://raw.githubusercontent.com/GTNewHorizons/GT-New-Horizons-Modpack/9ad74cedbe761bbd442451786eff7a14a644c3d5/config/NEI/hiddenitems.cfg `
   -OutFile .research\hiddenitems.cfg
-python tools/import_catalog.py ..\OreDictScript\research\recipes.json.gz `
+python source/tools/import_catalog.py ..\OreDictScript\research\recipes.json.gz `
   --machine "Cable Coating" --machine "Wiremill" --machine "Bending Machine" `
-  --target-version 2.9.0-beta-3 --out .research\pattern-catalog.json.gz
-python tools/import_registry_names.py .research\gt-5.09.54.133.zip `
-  ..\OreDictScript\data\registry-rules.json .research\pattern-catalog.json.gz `
+  --target-version 2.9.0-beta-3 --out .research\pattern-catalog-with-bender.json.gz
+python source/tools/import_registry_names.py .research\gt-5.09.54.133.zip `
+  ..\OreDictScript\data\registry-rules.json .research\pattern-catalog-with-bender.json.gz `
   .research\EnderIO-ItemAlloy.java .research\EnderIO-ModObject.java data\registry-names.json `
   --item-registry .research\hiddenitems.cfg
-python tools/build_usage.py ..\OreDictScript\research\recipes.json.gz `
+python source/tools/build_usage.py ..\OreDictScript\research\recipes.json.gz `
   ..\OreDictScript\data\registry-rules.json `
   ..\OreDictScript\research\resource-index.json.gz `
   ..\OreDictScript\data\ores.json.gz .research\usage.json
-python tools/compile_matrix.py .research\pattern-catalog.json.gz `
+python source/tools/compile_matrix.py .research\pattern-catalog-with-bender.json.gz `
   ..\OreDictScript\data\registry-rules.json data\matrix.lua `
   --resources ..\OreDictScript\research\resource-index.json.gz `
   --ore-resources ..\OreDictScript\data\ores.json.gz `
@@ -169,7 +169,7 @@ python tools/compile_matrix.py .research\pattern-catalog.json.gz `
   --usage .research\usage.json `
   --compatible-target 2.9.0-beta-3 `
   --compatibility-basis "User confirmed recipes unchanged from beta 2 to beta 3"
-node build.js
+npm run build
 ```
 
 The importer streams the large scrape on the desktop. The expanded export stays
@@ -180,15 +180,16 @@ output families do not silently inherit rules from similar material names.
 
 ## Shared code and extension points
 
-`lib/programs.lua` owns program definitions and their fields. `lib/config.lua`
+`source/lib/programs.lua` owns program definitions and their fields. `source/lib/config.lua`
 owns schema migration, defaults and validation; UI and execution use those same
 definitions. `C.runner` dispatches the selected program through preview/execute.
 
-`lib/util.lua` owns copying, validation, canonical identities, interface endpoints
+`source/lib/util.lua` owns copying, validation, canonical identities, interface endpoints
 and numeric location order. Both the existing renamer and pure planner use it.
-`src/00_core.lua` owns component calls, discovery, fresh reads, NBT, energy and
-work controls. `maker/scan.lua` uses those services rather than copying them.
-`maker/modes.lua` expands the compact matrix; `maker/planner.lua` owns placement.
+`source/app/00_core.lua` owns component calls, discovery, fresh reads, NBT, energy and
+work controls. `source/app/25_maker.lua` uses those services rather than copying them.
+`source/lib/modes.lua` expands the compact matrix; `source/lib/planner.lua` owns placement.
+`source/lib/preview.lua` owns maker preview rows for both the UI and report.
 The build embeds each service once; pure tests load the same sources as modules.
 
 The scanner supplies compact pattern fingerprints and recipe identities. The
@@ -200,7 +201,7 @@ It returns no operations on a blocked plan. It sorts existing patterns before pr
 cycles use the empty workspace. Stale fingerprints, capacities, source data,
 external supplies and mode options invalidate a reviewed plan.
 Donor contents are live supply and can change after preview. Both executors use
-the shared donor pool in `src/20_apply.lua`; refill waits use the existing
+the shared donor pool in `source/app/20_apply.lua`; refill waits use the existing
 cooperative event handling. See [SOURCE_MAP.md](SOURCE_MAP.md) for source/output
 ownership and the limits of the simulated tests.
 

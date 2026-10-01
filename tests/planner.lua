@@ -1,5 +1,5 @@
 package.path='tests/lib/?.lua;'..package.path
-local P=assert(loadfile('maker/planner.lua'))()
+local P=assert(loadfile('source/lib/planner.lua'))()
 local function cp(t) if type(t)~='table' then return t end local r={};for k,v in pairs(t) do r[k]=cp(v) end;return r end
 local function pat(key,kind,donor) return {fingerprint='nbt:'..key,recipeKey=key,kind=kind or 'processing',donor=donor} end
 local function inv(name,x,role,cap,patterns)

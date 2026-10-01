@@ -359,15 +359,16 @@ field places the cursor; only Ctrl+A selects all its text.
 
 ## Build and tests
 
-Sources live in `src/`, `lib/` and `maker/`. `build.js` embeds each shared service
-once in readable `assline_app.lua`, copies the readable matrix and probe, and
-produces the **`dist/` download directory** and `deployment.json`. `install.lua`
-is both the wget bootstrap and the installed updater. `launcher.lua` is the
+All editable application and build sources live under `source/` (`app/`, `lib/`,
+`tools/`, installer and launcher). `source/build.js` embeds each shared service
+once in readable `assline_app.lua`, copies the generated matrix and probe, and
+produces the **`dist/` download directory** and `deployment.json`. `source/install.lua`
+is both the wget bootstrap and the installed updater. `source/launcher.lua` is the
 stable entry point. The combined application/library has an enforced **4 MB** cap.
 There is no luamin dependency and no 64 KB file restriction.
 
 ```powershell
-.\build.ps1
+.\source\build.ps1
 ```
 
 Or, with Node on PATH:

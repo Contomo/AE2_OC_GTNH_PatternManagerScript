@@ -31,24 +31,16 @@ local function patternRecipe(p, root)
       if U.exists(s) then
         U.check(not U.truth(s.hasTag) or type(s.tag) == 'string', 'Ingredient NBT hidden')
         r[which][index] = {
-          type = s.damage ~= nil and s.amount == nil and 'item' or 'fluid',
+          type = 'item',
           name = s.name,
           damage = s.damage,
-          size = s.amount or s.size,
+          size = U.patternCount(s),
           tag = s.tag,
         }
       end
     end
   end
   return r
-end
-local function ingredientSummary(list)
-  local out = {}
-  for _, item in ipairs(list or {}) do
-    out[#out + 1] = tostring(item.size or item.amount or 1)
-      .. ' x ' .. tostring(item.label or item.name)
-  end
-  return table.concat(out, ', ')
 end
 local function explainExisting(plan, snapshot, request, manifest)
   local function itemKey(item)
@@ -68,7 +60,7 @@ local function explainExisting(plan, snapshot, request, manifest)
       wantedOutputs[itemKey(output)] = {
         label = recipe.label,
         destination = desired.destination,
-        inputs = ingredientSummary(recipe.inputs),
+        inputs = U.ingredientSummary(recipe.inputs),
       }
     end
   end
@@ -208,7 +200,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
             value.output = {
               name = output.name,
               damage = output.damage,
-              size = output.amount or output.size,
+              size = U.patternCount(output),
               label = output.label,
             }
           end
@@ -216,7 +208,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
           for _, index in ipairs(U.keys(p.inputs)) do
             local input = p.inputs[index]
             if U.exists(input) then
-              inputLabels[#inputLabels + 1] = tostring(input.amount or input.size or 1)
+              inputLabels[#inputLabels + 1] = tostring(U.patternCount(input))
                 .. ' x '
                 .. tostring(input.label or input.name)
             end
@@ -274,113 +266,11 @@ local function scanManifest(c, manifest, routing, progress, control, started)
   explainExisting(plan, snapshot, request, manifest)
   return plan, snapshot, request, labels
 end
-local function previewRows(plan, manifest, labels)
-  local rows, add = U.rows()
-  local details = {}
-  for _, recipe in ipairs(manifest.recipes) do
-    details[recipe.key or Planner.recipeKey(recipe)] = recipe
-  end
-  add('PATTERN PLAN', 'blue')
-  add(
-    string.format(
-      '%d reuse   |   %d new   |   %d other patterns kept',
-      plan.reused,
-      plan.required.processing + plan.required.crafting,
-      #plan.preserved
-    ),
-    'green'
-  )
-  if manifest.source.usagePolicy then
-    add(manifest.unusedExcluded .. ' recipe routes skipped: output has no non-recycling use.', 'muted')
-  end
-  add('')
-  if plan.resizeCount > 0 then
-    add(plan.resizeCount .. ' reused patterns will be resized to the configured batch.', 'yellow')
-    add('')
-  end
-  local group, bank, material
-  for _, r in ipairs(plan.layout) do
-    local recipe = details[r.key]
-    if group ~= r.group then
-      group = r.group
-      bank = nil
-      material = nil
-      add('')
-      add('DESTINATION: ' .. tostring(group), 'blue')
-    end
-    local location = r.destination and where(r.destination)
-    if location and bank ~= location then
-      bank = location
-      add('Interface: ' .. U.locationText(r.destination), 'muted')
-    end
-    if material ~= (recipe.material or recipe.label) then
-      material = recipe.material or recipe.label
-      add('')
-      add(material, 'blue')
-    end
-    add(
-      (r.resize and 'RESIZE  ' or r.existing and 'REUSE   ' or 'CREATE  ')
-        .. (recipe.outputLabel or recipe.outputForm or '')
-        .. (r.destination and ('   slot ' .. r.destination.slot) or '   needs space'),
-      r.existing and not r.resize and 'green' or 'yellow'
-    )
-    if r.resize then
-      add('  Multiply current quantities by ' .. r.newScale .. ' / ' .. r.oldScale, 'muted')
-    end
-    add('  ' .. ingredientSummary(recipe.inputs))
-    add('  -> ' .. ingredientSummary(recipe.outputs), 'green')
-    add('')
-  end
-  return rows
-end
-local function previewReport(plan, manifest, labels)
-  local lines = {}
-  for _, r in ipairs(previewRows(plan, manifest, labels)) do
-    lines[#lines + 1] = r[1]
-  end
-  for _, err in ipairs(plan.errors) do
-    lines[#lines + 1] = 'BLOCKED: ' .. err
-  end
-  for _, warning in ipairs(plan.warnings) do
-    lines[#lines + 1] = 'NOTE: ' .. warning
-  end
-  lines[#lines + 1] = ''
-  lines[#lines + 1] = 'EXISTING DESTINATION PATTERNS'
-  for _, entry in ipairs(plan.existing or {}) do
-    lines[#lines + 1] = entry.interface .. ' / ' .. U.locationText(entry.from)
-      .. ' slot ' .. entry.from.slot .. '  ' .. entry.status .. '  ' .. entry.label
-    lines[#lines + 1] = '  ' .. entry.reason
-    if entry.inputs and entry.inputs ~= '' and entry.status == 'KEEP' then
-      lines[#lines + 1] = '  Encoded inputs: ' .. entry.inputs
-    end
-    if entry.requestedInputs and entry.status == 'KEEP' then
-      lines[#lines + 1] = '  Requested inputs: ' .. entry.requestedInputs
-    end
-    if U.where(entry.from) ~= U.where(entry.to) or entry.from.slot ~= entry.to.slot then
-      lines[#lines + 1] = '  Final: ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot
-    end
-  end
-  lines[#lines + 1] = ''
-  lines[#lines + 1] = 'EXCLUDED BY RECIPE USE'
-  for _, item in ipairs(manifest.skipped or {}) do
-    lines[#lines + 1] = item.label .. '  (' .. item.name .. ':' .. item.damage .. ')'
-  end
-  lines[#lines + 1] = ''
-  lines[#lines + 1] = 'SORTING MOVES'
-  for n, move in ipairs(plan.moves) do
-    lines[#lines + 1] = n .. '/' .. #plan.moves .. '  '
-      .. ((plan.moveLabels or {})[move.fingerprint] or 'Pattern')
-      .. '  ' .. U.locationText(move.from) .. ' slot ' .. move.from.slot
-      .. ' -> ' .. U.locationText(move.to) .. ' slot ' .. move.to.slot
-  end
-  return table.concat(lines, '\n') .. '\n'
-end
-
 C.maker = {
   planner = Planner,
   scan = scanManifest,
-  report = previewReport,
-  rows = previewRows,
+  report = Preview.report,
+  rows = Preview.planRows,
   discover = discover,
 }
 local function programRouting(c, id)
@@ -444,15 +334,7 @@ function C.maker.preview(c, id, progress, control)
     groups[name] = groups[name] + 1
   end
   plan.capacities = Config.capacityReport(groups)
-  local report = previewReport(plan, manifest, labels)
-  for _, g in ipairs(plan.capacities) do
-    report = string.format(
-      '%s: %d total slots needed; at least %d fully expanded interface(s).\n',
-      g.name,
-      g.patterns,
-      g.interfaces
-    ) .. report
-  end
+  local report = Preview.report(plan, manifest)
   return plan, report, manifest
 end
 

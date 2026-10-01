@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'source' / 'tools'))
 from build_usage import is_recycling, usage_index
 
 
@@ -76,6 +76,8 @@ class UsageTests(unittest.TestCase):
         self.assertNotIn('bartworks:gt.bwmetageneratedfoil@10098', useful)
         self.assertNotIn('bartworks:gt.bwmetageneratedplate@10098', useful)
         self.assertNotIn('gregtech:gt.metaitem.01@20599', useful)
+        self.assertIn('bartworks:gt.bwmetageneratedplate@11351', useful)
+        self.assertNotIn('bartworks:gt.bwmetageneratedfoil@11351', useful)
 
 
 if __name__ == '__main__':

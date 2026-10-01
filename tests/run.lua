@@ -719,6 +719,22 @@ test('generator starts short, waits between patterns and discovers a newly fille
     assert(api.runner.preview(cfg,'insulator').plan.reused==2)
   end)
 end)
+test('ordinary processing patterns use ItemStack size even when amount is zero',function()
+  local encoded=pattern({item('Red Steel Ingot',2048,11348)},
+    {item('Red Steel Plate',512,17348)})
+  encoded.inputs[1].amount=0
+  encoded.outputs[1].amount=0
+  refresh(encoded)
+  target.patterns={[0]=encoded}
+  local requested=pattern({item('Red Steel Ingot',4,11348)},
+    {item('Red Steel Plate',1,17348)})
+  local prof=manifestFor(requested)
+  local p=maker.scan(cfg,prof,{destination=cfg.programs.assline.target,
+    donors=cfg.shared.donors,workspace=cfg.shared.editor})
+  assert(p.reused==1 and p.resizeCount==1 and #p.creates==0)
+  assert(p.existing[1].status=='RESIZE')
+  assert(p.existing[1].inputs:find('2048 x Red Steel Ingot',1,true))
+end)
 
 test('donors can be replaced after preview without replanning destinations',function()
   withMatrix(function()
@@ -894,7 +910,7 @@ test('70 recipes require two 36-slot destination interfaces and donor slots need
     assert(#preview.plan.errors==0 and #preview.plan.creates==70)
     assert(preview.plan.capacities[1].patterns==70 and preview.plan.capacities[1].interfaces==2)
     assert(preview.plan.layout[37].destination.location.x==50 and preview.plan.layout[37].destination.slot==0)
-    assert(preview.report:find('at least 2 fully expanded interface',1,true) and mutations==0)
+    assert(preview.report:find('2 interfaces (70 patterns)',1,true) and mutations==0)
   end)
 end)
 
@@ -902,7 +918,7 @@ test('Run program chooser and insulator preview share the same settings and exec
   withMatrix(function()
     cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={};files[api.paths.config]=ser(cfg)
     queue(nav('History'),click('[ Run program ]',47),click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
-      assert(frame[7]:find('PREVIEW / Wire insulator',1,true) and mutations==0);snapshot('insulator_preview')
+      assert(frame[7]:find('Preview - Wire insulator',1,true) and mutations==0);snapshot('insulator_preview')
       return 'touch','screen',118,39,0
     end,click('[ Execute preview ]',47),function()
       assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
@@ -935,7 +951,7 @@ test('bender imprints ingot routes, stores circuits externally and switches 1x p
     assert(#preview.manifest.recipes[1].inputs==1 and preview.manifest.recipes[1].inputs[1].name=='gregtech:gt.metaitem.01')
     files[api.paths.config]=ser(cfg)
     queue(nav('Programs'),click('[ Bending machine ]'),click('[ Preview selected ]',47),function()
-      assert(frame[7]:find('PREVIEW / Bending machine',1,true))
+      assert(frame[7]:find('Preview - Bending machine',1,true))
       snapshot('bender_preview')
       return click('[ Details ]',9)()
     end,function()
@@ -1267,7 +1283,7 @@ test('insulator preview uses readable groups and contains no external-stock dump
     local preview=insulator();local report=preview.report
     assert(report:find('PVC Pulp',1,true) and not report:find('gregtech:',1,true))
     assert(not report:find('External',1,true) and not report:find('UNVERIFIED',1,true))
-    local count=0;for _ in report:gmatch('Interface:') do count=count+1 end;assert(count==1)
+    local count=0;for _ in report:gmatch('%+%-%- Interface') do count=count+1 end;assert(count==1)
     files[api.paths.config]=ser(cfg)
     queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
       snapshot('insulator_preview');return quit()
