@@ -2291,6 +2291,163 @@ test('Quit during Pause finishes the current transaction and leaves optional con
   end)
 end)
 
+test('donor cleanup previews every named remote bank and skips crafting and unsafe metadata without writes',function()
+  local other=iface(cfg.shared.donors,80,{[35]=cp(buffer.patterns[0])})
+  buffer.patterns[2]=pattern({item()},nil,true)
+  for slot,flag in pairs({[3]='substitute',[4]='InvalidPattern',[5]='tunnel'}) do
+    local p=cp(buffer.patterns[0]);local root=unser(p.tag)
+    root.__value[flag]=typed('byte',1);p.tag=ser(root);buffer.patterns[slot]=p
+  end
+  local before=ser(interfaces)
+  local preview=api.runner.preview(cfg,'donorCleanup')
+  assert(preview.plan.banks==2 and preview.plan.scanned==7)
+  assert(#preview.plan.cleanups==3 and preview.plan.skipped==4)
+  assert(ser(interfaces)==before and mutations==0)
+  assert(not api.runner.requiresVerification(preview) and api.runner.hasChanges(preview))
+  assert(preview.report:find('Crafting pattern',1,true) and preview.report:find('Input substitution enabled',1,true))
+  assert(preview.report:find('InvalidPattern',1,true) and preview.report:find('slot 35',1,true))
+  assert(other.patterns[35] and preview.plan.workspace.slot==0)
+end)
+
+test('cleanup retains ordinary ultimate and Count/Cnt fluid pattern items and never empties a recipe',function()
+  local ultimate=cp(buffer.patterns[0]);ultimate.name='appliedenergistics2:item.ItemEncodedUltimatePattern'
+  local root=unser(ultimate.tag);root.__value.crafting=nil;ultimate.tag=ser(root)
+  buffer.patterns[1]=ultimate
+  buffer.patterns[2]=newPattern({item('Large batch',1024,7)},{item('Large output',2048,8)})
+  local originals=cp(buffer.patterns)
+  local setters={}
+  for _,which in ipairs({'Input','Output'}) do
+    local method='setInterfacePattern'..which
+    setters[method]=proxies.direct[method]
+    proxies.direct[method]=function(...)
+      local result=setters[method](...)
+      local bank,slot=directArgs(...);local p=bank.patterns[slot]
+      -- AE helpers reject zero inputs/outputs. Check each intermediate write,
+      -- rather than making the mock silently accept a permanently invalid donor.
+      assert(next(p.inputs) and next(p.outputs),'Cleanup created an empty recipe')
+      return result
+    end
+  end
+  local ok,err=pcall(function()
+    api.runner.execute(cfg,api.runner.preview(cfg,'donorCleanup'))
+  end)
+  for method,setter in pairs(setters) do proxies.direct[method]=setter end
+  assert(ok,err)
+  for slot,p in pairs(buffer.patterns) do
+    assert(p.name==originals[slot].name and p.damage==originals[slot].damage)
+    assert(p.inputs[1].name=='minecraft:paper' and p.outputs[1].name=='minecraft:paper')
+    assert(not p.inputs[2] and not p.outputs[2])
+    assert(p.inputs[1].tag==p.outputs[1].tag)
+    local marker=unser(p.inputs[1].tag).__value
+    assert(marker.ae2ocDonor.__value=='parked-v1')
+    assert(marker.display.__value.Name.__value=='OC donor placeholder')
+    local before,after=unser(originals[slot].tag).__value,unser(p.tag).__value
+    before['in'],before.out,after['in'],after.out=nil,nil,nil,nil
+    assert(ser(before)==ser(after),'Pattern metadata changed')
+    if p.newEncoding then assert(p.rawCounts.inputs[1]==1 and p.rawCounts.outputs[1]==1)
+    else assert(p.inputs[1].size==1 and p.outputs[1].size==1) end
+  end
+  assert(next(editor.patterns)==nil and not api.runner.hasSaved())
+end)
+
+test('parked donors are an idempotent no-op and do not need a free workspace again',function()
+  api.runner.execute(cfg,api.runner.preview(cfg,'donorCleanup'))
+  for slot=0,8 do editor.patterns[slot]=pattern({item()}) end
+  local before=mutations
+  local preview=api.runner.preview(cfg,'donorCleanup')
+  assert(preview.plan.parked==2 and #preview.plan.cleanups==0 and #preview.plan.errors==0)
+  assert(not api.runner.hasChanges(preview) and mutations==before)
+end)
+
+test('normal maker donor discovery and imprinting consume parked donors without special cases',function()
+  withMatrix(function()
+    api.runner.execute(cfg,api.runner.preview(cfg,'donorCleanup'))
+    local preview=insulator()
+    assert(preview.plan.available.processing==2 and preview.plan.donorRejected==0)
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0] and target.patterns[1] and next(buffer.patterns)==nil)
+    assert(target.patterns[0].outputs[1].name=='gregtech:gt.blockmachines')
+    assert(not target.patterns[0].outputs[1].tag and not api.runner.hasSaved())
+  end)
+end)
+
+test('donor cleanup rejects stale contents before moving or editing anything',function()
+  local preview=api.runner.preview(cfg,'donorCleanup')
+  buffer.patterns[0]=pattern({item('Replacement',1,111)})
+  local before=ser(interfaces)
+  mustFail(function() api.runner.execute(cfg,preview) end,'changed since preview')
+  assert(mutations==0 and ser(interfaces)==before and not files[api.paths.pending])
+end)
+
+test('donor cleanup recovery returns partially parked patterns to their original slot and replans the rest',function()
+  for _,stage in ipairs({'send-after','set-after'}) do
+    reset()
+    local preview=api.runner.preview(cfg,'donorCleanup')
+    fail={label=stage}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    assert(files[api.paths.pending] and next(editor.patterns))
+    local remaining=api.runner.continue(cfg)
+    assert(remaining.id=='donorCleanup' and remaining.plan.parked==1 and #remaining.plan.cleanups==1)
+    assert(buffer.patterns[0] and next(editor.patterns)==nil)
+    api.runner.execute(cfg,remaining)
+    assert(api.runner.preview(cfg,'donorCleanup').plan.parked==2)
+    assert(not api.runner.hasSaved())
+  end
+end)
+
+test('donor cleanup Pause and Stop use the shared atomic boundary and Continue resumes remaining donors',function()
+  local preview=api.runner.preview(cfg,'donorCleanup')
+  local paused, polls=false,0
+  mustFail(function()
+    api.runner.execute(cfg,preview,nil,function(delay)
+      if (callCounts.setInterfacePatternInput or 0)>0 and not paused then
+        paused=mutations
+      end
+      if paused and polls<30 then
+        assert(mutations==paused)
+        polls=polls+1;now=now+delay
+        return {paused=true}
+      end
+      return {stop=paused~=false}
+    end)
+  end,'Work stopped')
+  assert(polls==30 and next(editor.patterns)==nil and not files[api.paths.pending])
+  local remaining=api.runner.continue(cfg)
+  assert(remaining.plan.parked==1 and #remaining.plan.cleanups==1)
+  api.runner.execute(cfg,remaining)
+  assert(api.runner.preview(cfg,'donorCleanup').plan.parked==2 and not api.runner.hasSaved())
+end)
+
+test('donor cleanup blocks missing banks and a full editor but skips crafting unchanged',function()
+  for slot=0,8 do editor.patterns[slot]=pattern({item()}) end
+  local preview=api.runner.preview(cfg,'donorCleanup')
+  assert(#preview.plan.errors==1 and preview.plan.errors[1]:find('one empty slot',1,true))
+  buffer.patterns={[0]=pattern({item()},nil,true)}
+  local before=ser(buffer.patterns)
+  preview=api.runner.preview(cfg,'donorCleanup')
+  assert(preview.plan.skipped==1 and #preview.plan.errors==0 and not api.runner.hasChanges(preview))
+  assert(ser(buffer.patterns)==before)
+  cfg.shared.donors='No matching banks'
+  preview=api.runner.preview(cfg,'donorCleanup')
+  assert(#preview.plan.errors==1 and preview.plan.errors[1]:find('No donor interfaces',1,true))
+end)
+
+test('program chooser pages expose cleanup without footer collisions or a 36-slot verification requirement',function()
+  files[api.paths.config]=ser(cfg)
+  queue(click('[ Next ]',45),click('[ Clean donor buffer ]'),click('[ Preview selected ]',47),function()
+    assert(frame[7]:find('Clean donor buffer',1,true))
+    assert(not frame[39]:find('Verify 36 slots',1,true))
+    assert(frame[9]:find('Details',1,true) and not frame[9]:find('Capacity',1,true))
+    snapshot('donor_cleanup_preview')
+    return click('[ Execute preview ]',47)()
+  end,function()
+    assert(buffer.patterns[0].outputs[1].name=='minecraft:paper')
+    assert(not api.runner.hasSaved())
+    return 'interrupted'
+  end)
+  api.runUI()
+end)
+
 if artifact=='assline_app.lua' then
   package.loaded.assline_data={};files[api.paths.config]=ser(cfg);events={{'interrupted'}}
   local before=package.path;assert(loadfile(artifact))();assert(package.path==before)

@@ -265,6 +265,18 @@ output families do not silently inherit rules from similar material names.
 
 ## Shared code and extension points
 
+`Clean donor buffer` is a maintenance program, not a material recipe mode.
+`source/app/26_donors.lua` scans all named donor banks, previews replacements and
+returns each rewritten pattern to its original slot. It uses the shared `park`
+transaction in `20_apply.lua`, whose ingredient replacement is the same as imprint
+and resize. The marker is tagged paper in/out, with no physical supply required.
+The marker preserves nonempty recipes and does not change pattern item types or
+behavior flags. Crafting and unsafe donors are skipped. `preview.lua` renders the
+cleanup screen and exported report from the same rows. Ordinary, ultimate and
+Count/Cnt fluid-pattern contract tests verify intermediate recipes stay nonempty,
+markers remain reusable, stale scans stop before mutation, and recovery/Pause/Stop
+use the existing control path. These are mocked OC tests, not an in-game run.
+
 `source/lib/programs.lua` owns program definitions and their fields. `source/lib/config.lua`
 owns schema migration, defaults and validation; UI and execution use those same
 definitions. `C.runner` dispatches the selected program through preview/execute.

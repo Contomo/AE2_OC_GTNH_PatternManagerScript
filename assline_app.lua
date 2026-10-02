@@ -898,9 +898,20 @@ M.list = {
     fields = shaperFields,
   },
 }
-M.byId = {}
+M.list[#M.list + 1] = {
+  id = 'donorCleanup',
+  name = 'Clean donor buffer',
+  description = 'Replace disposable processing recipes with a tagged donor placeholder.',
+  fields = {},
+  requiresCapacityVerification = false,
+  previewTabs = { { 'changes', 'Patterns' }, { 'details', 'Details' } },
+}
+M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
   M.byId[program.id] = program
+  if #program.fields > 0 then
+    M.settings[#M.settings + 1] = program
+  end
 end
 function M.switchKey(program, form)
   return program.switchByDestination and program.outputs[form] or form
@@ -2159,9 +2170,10 @@ local function rawList(data, p, which)
   U.check(t and t.__nbt_type == 'list', 'Unsupported encoded pattern layout')
   return t.__value
 end
+local recipeOperations = { recipe = true, imprint = true, resize = true, park = true }
 local function expected(data, op)
   local p = compact(effectivePattern(data, op.original))
-  if op.kind == 'recipe' or op.kind == 'imprint' or op.kind == 'resize' then
+  if recipeOperations[op.kind] then
     p.inputs = op.recipe and U.clone(op.recipe.inputs) or { [1] = op.input }
     p.outputs = op.recipe and U.clone(op.recipe.outputs) or { [1] = op.output }
   else
@@ -2314,7 +2326,7 @@ local function finish(hw, op, progress)
   if not U.exists(p) and U.exists(delivered) and semantic(hw, delivered, goal) then
     return -- A transfer succeeded immediately before the power loss.
   end
-  if (op.kind == 'edit' or op.kind == 'resize') and not U.exists(p) then
+  if (op.kind == 'edit' or op.kind == 'resize' or op.kind == 'park') and not U.exists(p) then
     U.check(patternEq(hw.data, delivered, op.original), 'Original target pattern changed')
     transfer(hw, op.destination, endpoint(op.buffer, op.slot))
     p = direct(hw, 'getInterfacePattern', op.slot)
@@ -2331,7 +2343,7 @@ local function finish(hw, op, progress)
   end
   allowedPartial(hw, p, op)
   local observed = effectivePattern(hw.data, p)
-  if op.kind == 'recipe' or op.kind == 'imprint' or op.kind == 'resize' then
+  if recipeOperations[op.kind] then
     -- Clearing removes an NBT list element: ALWAYS clear from the end.
     for _, which in ipairs({ 'inputs', 'outputs' }) do
       local desired = goal[which]
@@ -3602,7 +3614,68 @@ function M.excludedRows(manifest)
   return rows
 end
 
+function M.donorRows(plan, section)
+  local rows, add = U.rows()
+  add('DONOR BUFFER CLEANUP', 'blue')
+  add('Terminal name: "' .. plan.name .. '"', 'muted')
+  add(
+    #plan.cleanups
+      .. ' to park; '
+      .. plan.parked
+      .. ' already parked; '
+      .. plan.skipped
+      .. ' skipped.'
+  )
+  add('Replaces the old recipes. Patterns return to their original slots.', 'yellow')
+  if section == 'details' then
+    spacer(rows, add)
+    add('PARKING RECIPE', 'blue')
+    add('1 tagged paper -> 1 identical tagged paper')
+    add('Tag: ae2ocDonor = parked-v1; name: OC donor placeholder', 'muted')
+    add('The tag distinguishes it from ordinary paper; real recipes are removed.')
+    add('No paper or other item needs to be supplied. This edits the encoded recipe only.')
+    spacer(rows, add)
+    add('REUSABILITY', 'blue')
+    add('Processing, ultimate and supported fluid patterns retain their item type and metadata.')
+    add('The normal donor pool can imprint them again. Already parked patterns are left alone.')
+    add('Crafting, substitution, tunnel and invalid patterns are skipped with a reason.')
+    add('Empty recipes can acquire a persistent InvalidPattern flag, which this API cannot clear.')
+    add('Uses one empty editor slot, shared Pause / Resume / Stop and transaction recovery.')
+  else
+    local bank
+    for _, entry in ipairs(plan.entries) do
+      if bank ~= U.where(entry.from) then
+        spacer(rows, add)
+        bank = U.where(entry.from)
+        add('  +-- Interface ' .. U.locationText(entry.from), interfaceTone)
+      else
+        add('  |', interfaceTone)
+      end
+      local status = entry.status == 'park' and 'PARK'
+        or entry.status == 'parked' and 'ALREADY PARKED'
+        or 'SKIP'
+      treeRow(
+        rows,
+        add,
+        '  |  ',
+        status .. ' slot ' .. entry.from.slot .. '  ' .. entry.label,
+        entry.status == 'park' and 'yellow' or entry.status == 'parked' and 'green' or 'muted'
+      )
+      if entry.reason then
+        treeRow(rows, add, '  |    ', entry.reason, 'muted')
+      end
+    end
+  end
+  for _, err in ipairs(plan.errors) do
+    add('BLOCKED: ' .. err, 'red')
+  end
+  return rows
+end
+
 function M.rows(section, plan, manifest)
+  if plan.kind == 'donorCleanup' then
+    return M.donorRows(plan, section)
+  end
   if section == 'existing' then
     return M.existingRows(plan)
   end
@@ -3622,6 +3695,11 @@ function M.report(plan, manifest)
       lines[#lines + 1] = row[1]
     end
     lines[#lines + 1] = ''
+  end
+  if plan.kind == 'donorCleanup' then
+    append(M.donorRows(plan))
+    append(M.donorRows(plan, 'details'))
+    return table.concat(lines, '\n') .. '\n'
   end
   append(M.capacityRows(plan))
   append(M.planRows(plan, manifest))
@@ -4161,14 +4239,22 @@ end
 C.runner = {}
 function C.runner.hasChanges(preview)
   local plan = preview.plan
+  if plan.kind == 'donorCleanup' then
+    return #plan.cleanups > 0
+  end
   return preview.id == 'assline' and #plan.changes > 0
     or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
+end
+function C.runner.requiresVerification(preview)
+  return Programs.byId[preview.id].requiresCapacityVerification ~= false
 end
 function C.runner.preview(c, id, progress, control)
   Config.requireProgram(c, id)
   local preview = { id = id, configKey = U.canonical(c) }
   if id == 'assline' then
     preview.plan = scan(c, progress, control)
+  elseif id == 'donorCleanup' then
+    preview.plan, preview.report = C.donors.preview(c, progress, control)
   else
     preview.plan, preview.report, preview.manifest = C.maker.preview(c, id, progress, control)
   end
@@ -4181,6 +4267,8 @@ function C.runner.execute(c, preview, progress, control)
   writeFile(paths.run, { version = 1, program = preview.id, configKey = U.canonical(c) })
   if preview.id == 'assline' then
     apply(c, preview.plan, progress, control)
+  elseif preview.id == 'donorCleanup' then
+    C.donors.apply(c, preview.plan, progress, control)
   else
     C.maker.apply(c, preview.id, preview.plan, preview.manifest, progress, control)
   end
@@ -4231,6 +4319,152 @@ function C.runner.discard()
   for _, path in ipairs({ paths.pending, paths.cursor, paths.run }) do
     if fs.exists(path) then
       U.check(fs.remove(path), 'Cannot discard ' .. path)
+    end
+  end
+end
+
+-- Source: source/app/26_donors.lua
+-- Park disposable processing recipes in their original donor slots. Discovery,
+-- ingredient writes, journaling and recovery are the application's shared ones.
+C.donors = {}
+local function donorMarker(hw)
+  local root = {
+    __nbt_type = 'compound',
+    __value = {
+      ae2ocDonor = { __nbt_type = 'string', __value = 'parked-v1' },
+      display = {
+        __nbt_type = 'compound',
+        __value = { Name = { __nbt_type = 'string', __value = 'OC donor placeholder' } },
+      },
+    },
+  }
+  local tag = invoke(hw.data, 'encodeNBT', encodableNBT(root))
+  U.check(U.eq(nbt(hw.data, tag), root), 'Donor marker NBT round trip failed')
+  local marker = { type = 'item', name = 'minecraft:paper', damage = 0, size = 1, tag = tag }
+  return { kind = 'processing', inputs = { marker }, outputs = { U.clone(marker) } }
+end
+
+function C.donors.scan(c, progress, control)
+  local hw = connect(c, progress, control)
+  local recipe = donorMarker(hw)
+  local plan = {
+    kind = 'donorCleanup',
+    name = c.shared.donors,
+    banks = 0,
+    scanned = 0,
+    parked = 0,
+    skipped = 0,
+    cleanups = {},
+    entries = {},
+    errors = {},
+    warnings = {},
+    bindings = {
+      terminal = hw.terminal.address,
+      direct = hw.direct.address,
+      data = hw.data.address,
+    },
+  }
+  for _, ref in ipairs(discover(hw, c.shared.donors)) do
+    local bank = current(hw, ref)
+    U.check(bank.name == c.shared.donors, 'Donor interface renamed during scan')
+    U.check(where(bank) ~= where(hw.buffer), 'Donor interface overlaps the pattern editor')
+    plan.banks = plan.banks + 1
+    for _, slot in ipairs(U.keys(bank.patterns)) do
+      gate()
+      local p = bank.patterns[slot]
+      if U.exists(p) then
+        plan.scanned = plan.scanned + 1
+        local reason = donorIssue(hw.data, p)
+        if not reason and not processing(p) then
+          reason = 'Crafting pattern: the editor cannot change its crafting flag.'
+        end
+        local entry = {
+          from = endpoint(bank, slot),
+          fingerprint = p.tag and patternFingerprint(hw, p) or U.canonical(compact(p)),
+          label = p.label or p.name,
+          status = 'skip',
+          reason = reason,
+        }
+        if not reason then
+          local observed = effectivePattern(hw.data, p)
+          entry.label = U.ingredientSummary(observed.outputs)
+          if not next(observed.inputs) or not next(observed.outputs) then
+            entry.reason = 'Empty recipe: re-encode it manually before using it as a donor.'
+          else
+            local goal = compact(observed)
+            goal.inputs, goal.outputs = recipe.inputs, recipe.outputs
+            if semantic(hw, p, goal) then
+              entry.status = 'parked'
+              plan.parked = plan.parked + 1
+            else
+              entry.status = 'park'
+              plan.cleanups[#plan.cleanups + 1] = entry
+            end
+          end
+        end
+        if entry.status == 'skip' then
+          plan.skipped = plan.skipped + 1
+        end
+        plan.entries[#plan.entries + 1] = entry
+      end
+    end
+    if progress then
+      progress('Read donor bank at ' .. U.locationText(bank))
+    end
+  end
+  if plan.banks == 0 then
+    plan.errors[#plan.errors + 1] = 'No donor interfaces named "' .. c.shared.donors .. '".'
+  end
+  if #plan.cleanups > 0 then
+    for slot = 0, editorCapacity(hw) - 1 do
+      if not U.exists(direct(hw, 'getInterfacePattern', slot)) then
+        plan.workspace = endpoint(hw.buffer, slot)
+        break
+      end
+    end
+    if not plan.workspace then
+      plan.errors[#plan.errors + 1] = 'The pattern editor needs one empty slot.'
+    end
+  end
+  return plan, hw, recipe
+end
+
+function C.donors.preview(c, progress, control)
+  local plan = C.donors.scan(c, progress, control)
+  return plan, Preview.report(plan)
+end
+
+function C.donors.apply(c, plan, progress, control)
+  U.check(#plan.errors == 0, 'Resolve cleanup blockers first')
+  local fresh, hw, recipe = C.donors.scan(c, progress, control)
+  U.check(U.eq(fresh, plan), 'Donor banks or editor changed since preview. Scan again.')
+  writeFile(
+    paths.backup,
+    { config = U.clone(c), program = 'donorCleanup', cleaned = #plan.cleanups }
+  )
+  for n, entry in ipairs(plan.cleanups) do
+    gate()
+    local bank = current(hw, entry.from)
+    U.check(bank.name == plan.name, 'Donor interface renamed before cleanup')
+    local original = bank.patterns[entry.from.slot]
+    U.check(patternFingerprint(hw, original) == entry.fingerprint, 'Donor changed before cleanup')
+    U.check(safeDonor(hw.data, original), 'Donor is no longer editable')
+    U.check(
+      not U.exists(direct(hw, 'getInterfacePattern', plan.workspace.slot)),
+      'Pattern editor workspace occupied'
+    )
+    local op = {
+      kind = 'park',
+      slot = plan.workspace.slot,
+      destination = entry.from,
+      original = compact(original),
+      recipe = recipe,
+    }
+    saveOp(hw, op)
+    finish(hw, op, progress)
+    clearOp()
+    if progress then
+      progress('Parked donor ' .. n .. ' / ' .. #plan.cleanups)
     end
   end
 end
@@ -4546,6 +4780,10 @@ local function runUI()
           or 'Choose a program to build a preview.',
         'muted'
       )
+    elseif p.kind == 'donorCleanup' then
+      for _, row in ipairs(Preview.rows(state.section, p)) do
+        add(row[1], row[2], row[3], row[4], row[5])
+      end
     elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
       for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
         add(row[1], row[2], row[3], row[4], row[5])
@@ -4709,7 +4947,12 @@ local function runUI()
   end
   local function executable()
     local preview = state.preview
-    if not preview or state.busy or fs.exists(paths.pending) or not state.verified then
+    if
+      not preview
+      or state.busy
+      or fs.exists(paths.pending)
+      or (C.runner.requiresVerification(preview) and not state.verified)
+    then
       return false
     end
     local p = preview.plan
@@ -4725,6 +4968,7 @@ local function runUI()
       .. tostring(state.settingsPage)
       .. tostring(state.choice)
       .. tostring(state.selected)
+      .. tostring(state.programPage)
       .. state.section
       .. tostring(state.preview)
       .. tostring(state.busy)
@@ -4787,7 +5031,7 @@ local function runUI()
       nav(24, 'Shared interfaces', state.settings == 'shared', function()
         navigate('settings', 'shared')
       end)
-      for n, p in ipairs(Programs.list) do
+      for n, p in ipairs(Programs.settings) do
         local id = p.id
         nav(24 + n * 3, p.name, state.settings == id, function()
           navigate('settings', id)
@@ -4939,8 +5183,11 @@ local function runUI()
         124,
         'muted'
       )
-      for n, p in ipairs(Programs.list) do
-        local y = 11 + (n - 1) * 6
+      local pages = math.ceil(#Programs.list / 6)
+      state.programPage = math.min(state.programPage or 1, pages)
+      for n = 1 + (state.programPage - 1) * 6, math.min(#Programs.list, state.programPage * 6) do
+        local p = Programs.list[n]
+        local y = 11 + ((n - 1) % 6) * 6
         local id = p.id
         button(34, y, (state.selected == id and '* ' or '') .. p.name, function()
           commitEdit()
@@ -4949,29 +5196,37 @@ local function runUI()
         text(38, y + 1, p.description, 120, 'text')
         text(38, y + 2, p.unavailable or '', 120, p.unavailable and 'muted' or 'green')
       end
+      if pages > 1 then
+        text(34, 45, 'Programs ' .. state.programPage .. '/' .. pages, 40, 'muted')
+        button(111, 45, 'Previous', function()
+          state.programPage = state.programPage - 1
+        end, state.programPage > 1)
+        button(133, 45, 'Next', function()
+          state.programPage = state.programPage + 1
+        end, state.programPage < pages)
+      end
       local selected = state.selected and Programs.byId[state.selected]
       local x = button(34, 47, 'Preview selected', function()
         action('preview')
       end, selected ~= nil and not selected.unavailable)
       button(x, 47, 'Program settings', function()
         navigate('settings', state.selected)
-      end, selected ~= nil)
+      end, selected ~= nil and #selected.fields > 0)
     elseif state.page == 'preview' then
       local preview = state.preview
       local p = preview and preview.plan
       local current = preview and preview.id or state.selected
       text(34, 7, 'Preview - ' .. (current and Programs.byId[current].name or ''), 124, 'blue')
       local x = 34
-      local tabs = preview
-          and preview.id == 'assline'
-          and {
-            { 'changes', 'Input changes' },
-            { 'recipes', 'Rename recipes' },
-            {
-              'capacity',
-              'Capacity',
-            },
-          }
+      local tabs = current and Programs.byId[current].previewTabs
+        or preview and preview.id == 'assline' and {
+          { 'changes', 'Input changes' },
+          { 'recipes', 'Rename recipes' },
+          {
+            'capacity',
+            'Capacity',
+          },
+        }
         or {
           { 'changes', 'Patterns' },
           { 'existing', 'Existing' },
@@ -4989,7 +5244,13 @@ local function runUI()
       scrollRows(34, 12, 74, 31)
       text(113, 12, 'Summary', 45, 'blue')
       if p then
-        if preview.id == 'assline' then
+        if p.kind == 'donorCleanup' then
+          text(113, 14, p.banks .. ' donor interfaces', 45, 'muted')
+          text(113, 15, p.scanned .. ' encoded patterns scanned', 45)
+          text(113, 16, #p.cleanups .. ' recipes to park', 45, 'yellow')
+          text(113, 17, p.parked .. ' already parked', 45, 'green')
+          text(113, 18, p.skipped .. ' skipped; see Patterns', 45, 'muted')
+        elseif preview.id == 'assline' then
           --todo remove and unify this
           text(113, 14, p.scanned .. 'existing patterns scanned', 45)
           text(113, 15, #p.changes .. 'existing patterns to update', 45, 'green')
@@ -5052,11 +5313,16 @@ local function runUI()
         if preview.manifest and #preview.manifest.unresolved > 0 then
           text(113, 34, 'Registry names need verification.', 45, 'red')
         end
-        text(113, 36, 'Destination assumption: 36 slots each.', 45, 'yellow')
-        text(113, 37, 'Verify expanded interfaces in the game.', 45, 'muted')
-        button(113, 39, state.verified and '36 slots verified' or 'Verify 36 slots', function()
-          state.verified = not state.verified
-        end, not state.busy)
+        if C.runner.requiresVerification(preview) then
+          text(113, 36, 'Destination assumption: 36 slots each.', 45, 'yellow')
+          text(113, 37, 'Verify expanded interfaces in the game.', 45, 'muted')
+          button(113, 39, state.verified and '36 slots verified' or 'Verify 36 slots', function()
+            state.verified = not state.verified
+          end, not state.busy)
+        else
+          text(113, 36, 'Returns donors to their original slots.', 45, 'muted')
+          text(113, 37, 'Only the shared editor needs free space.', 45, 'muted')
+        end
       end
       local x = button(34, 47, 'Scan', function()
         action('preview')
@@ -5066,7 +5332,7 @@ local function runUI()
       end, executable())
       x = button(x, 47, 'Program settings', function()
         navigate('settings', preview.id)
-      end, not state.busy and preview ~= nil)
+      end, not state.busy and preview ~= nil and #Programs.byId[preview.id].fields > 0)
       button(x, 47, 'Run program', function()
         navigate('programs')
       end, not state.busy)
@@ -5258,7 +5524,9 @@ local function runUI()
         state.offset = 0
         state.preview = C.runner.preview(cfg, id, progress, control)
         status(
-          'Preview ready. Review the plan and verify destination capacity before Execute preview.',
+          C.runner.requiresVerification(state.preview)
+              and 'Preview ready. Review the plan and verify destination capacity before Execute preview.'
+            or 'Preview ready. Review which disposable donor recipes will be replaced before Execute preview.',
           'green'
         )
       elseif name == 'execute' then

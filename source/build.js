@@ -32,7 +32,7 @@ const body = pure('U','source/lib/util.lua')+'local TierDefinitions=(function()\
   inline(['source/app/00_core.lua','source/app/10_plan.lua','source/app/20_apply.lua'].map(section).join('\n'))+'\n'+
   pure('Planner','source/lib/planner.lua')+pure('Modes','source/lib/modes.lua')+
   pure('Preview','source/lib/preview.lua')+
-  inline(section('source/app/25_maker.lua'))+'\n'+section('source/app/30_ui.lua')+'\n'+section('source/app/90_main.lua');
+  inline(section('source/app/25_maker.lua'))+'\n'+section('source/app/26_donors.lua')+'\n'+section('source/app/30_ui.lua')+'\n'+section('source/app/90_main.lua');
 const entry = `-- Readable application bundle, generated from the source files named below.
 local savedPath=package.path
 local function unload()

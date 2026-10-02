@@ -6,9 +6,10 @@ local function rawList(data, p, which)
   U.check(t and t.__nbt_type == 'list', 'Unsupported encoded pattern layout')
   return t.__value
 end
+local recipeOperations = { recipe = true, imprint = true, resize = true, park = true }
 local function expected(data, op)
   local p = compact(effectivePattern(data, op.original))
-  if op.kind == 'recipe' or op.kind == 'imprint' or op.kind == 'resize' then
+  if recipeOperations[op.kind] then
     p.inputs = op.recipe and U.clone(op.recipe.inputs) or { [1] = op.input }
     p.outputs = op.recipe and U.clone(op.recipe.outputs) or { [1] = op.output }
   else
@@ -161,7 +162,7 @@ local function finish(hw, op, progress)
   if not U.exists(p) and U.exists(delivered) and semantic(hw, delivered, goal) then
     return -- A transfer succeeded immediately before the power loss.
   end
-  if (op.kind == 'edit' or op.kind == 'resize') and not U.exists(p) then
+  if (op.kind == 'edit' or op.kind == 'resize' or op.kind == 'park') and not U.exists(p) then
     U.check(patternEq(hw.data, delivered, op.original), 'Original target pattern changed')
     transfer(hw, op.destination, endpoint(op.buffer, op.slot))
     p = direct(hw, 'getInterfacePattern', op.slot)
@@ -178,7 +179,7 @@ local function finish(hw, op, progress)
   end
   allowedPartial(hw, p, op)
   local observed = effectivePattern(hw.data, p)
-  if op.kind == 'recipe' or op.kind == 'imprint' or op.kind == 'resize' then
+  if recipeOperations[op.kind] then
     -- Clearing removes an NBT list element: ALWAYS clear from the end.
     for _, which in ipairs({ 'inputs', 'outputs' }) do
       local desired = goal[which]

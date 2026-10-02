@@ -521,14 +521,22 @@ end
 C.runner = {}
 function C.runner.hasChanges(preview)
   local plan = preview.plan
+  if plan.kind == 'donorCleanup' then
+    return #plan.cleanups > 0
+  end
   return preview.id == 'assline' and #plan.changes > 0
     or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
+end
+function C.runner.requiresVerification(preview)
+  return Programs.byId[preview.id].requiresCapacityVerification ~= false
 end
 function C.runner.preview(c, id, progress, control)
   Config.requireProgram(c, id)
   local preview = { id = id, configKey = U.canonical(c) }
   if id == 'assline' then
     preview.plan = scan(c, progress, control)
+  elseif id == 'donorCleanup' then
+    preview.plan, preview.report = C.donors.preview(c, progress, control)
   else
     preview.plan, preview.report, preview.manifest = C.maker.preview(c, id, progress, control)
   end
@@ -541,6 +549,8 @@ function C.runner.execute(c, preview, progress, control)
   writeFile(paths.run, { version = 1, program = preview.id, configKey = U.canonical(c) })
   if preview.id == 'assline' then
     apply(c, preview.plan, progress, control)
+  elseif preview.id == 'donorCleanup' then
+    C.donors.apply(c, preview.plan, progress, control)
   else
     C.maker.apply(c, preview.id, preview.plan, preview.manifest, progress, control)
   end

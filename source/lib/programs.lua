@@ -303,9 +303,20 @@ M.list = {
     fields = shaperFields,
   },
 }
-M.byId = {}
+M.list[#M.list + 1] = {
+  id = 'donorCleanup',
+  name = 'Clean donor buffer',
+  description = 'Replace disposable processing recipes with a tagged donor placeholder.',
+  fields = {},
+  requiresCapacityVerification = false,
+  previewTabs = { { 'changes', 'Patterns' }, { 'details', 'Details' } },
+}
+M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
   M.byId[program.id] = program
+  if #program.fields > 0 then
+    M.settings[#M.settings + 1] = program
+  end
 end
 function M.switchKey(program, form)
   return program.switchByDestination and program.outputs[form] or form

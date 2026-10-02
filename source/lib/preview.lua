@@ -254,7 +254,68 @@ function M.excludedRows(manifest)
   return rows
 end
 
+function M.donorRows(plan, section)
+  local rows, add = U.rows()
+  add('DONOR BUFFER CLEANUP', 'blue')
+  add('Terminal name: "' .. plan.name .. '"', 'muted')
+  add(
+    #plan.cleanups
+      .. ' to park; '
+      .. plan.parked
+      .. ' already parked; '
+      .. plan.skipped
+      .. ' skipped.'
+  )
+  add('Replaces the old recipes. Patterns return to their original slots.', 'yellow')
+  if section == 'details' then
+    spacer(rows, add)
+    add('PARKING RECIPE', 'blue')
+    add('1 tagged paper -> 1 identical tagged paper')
+    add('Tag: ae2ocDonor = parked-v1; name: OC donor placeholder', 'muted')
+    add('The tag distinguishes it from ordinary paper; real recipes are removed.')
+    add('No paper or other item needs to be supplied. This edits the encoded recipe only.')
+    spacer(rows, add)
+    add('REUSABILITY', 'blue')
+    add('Processing, ultimate and supported fluid patterns retain their item type and metadata.')
+    add('The normal donor pool can imprint them again. Already parked patterns are left alone.')
+    add('Crafting, substitution, tunnel and invalid patterns are skipped with a reason.')
+    add('Empty recipes can acquire a persistent InvalidPattern flag, which this API cannot clear.')
+    add('Uses one empty editor slot, shared Pause / Resume / Stop and transaction recovery.')
+  else
+    local bank
+    for _, entry in ipairs(plan.entries) do
+      if bank ~= U.where(entry.from) then
+        spacer(rows, add)
+        bank = U.where(entry.from)
+        add('  +-- Interface ' .. U.locationText(entry.from), interfaceTone)
+      else
+        add('  |', interfaceTone)
+      end
+      local status = entry.status == 'park' and 'PARK'
+        or entry.status == 'parked' and 'ALREADY PARKED'
+        or 'SKIP'
+      treeRow(
+        rows,
+        add,
+        '  |  ',
+        status .. ' slot ' .. entry.from.slot .. '  ' .. entry.label,
+        entry.status == 'park' and 'yellow' or entry.status == 'parked' and 'green' or 'muted'
+      )
+      if entry.reason then
+        treeRow(rows, add, '  |    ', entry.reason, 'muted')
+      end
+    end
+  end
+  for _, err in ipairs(plan.errors) do
+    add('BLOCKED: ' .. err, 'red')
+  end
+  return rows
+end
+
 function M.rows(section, plan, manifest)
+  if plan.kind == 'donorCleanup' then
+    return M.donorRows(plan, section)
+  end
   if section == 'existing' then
     return M.existingRows(plan)
   end
@@ -274,6 +335,11 @@ function M.report(plan, manifest)
       lines[#lines + 1] = row[1]
     end
     lines[#lines + 1] = ''
+  end
+  if plan.kind == 'donorCleanup' then
+    append(M.donorRows(plan))
+    append(M.donorRows(plan, 'details'))
+    return table.concat(lines, '\n') .. '\n'
   end
   append(M.capacityRows(plan))
   append(M.planRows(plan, manifest))

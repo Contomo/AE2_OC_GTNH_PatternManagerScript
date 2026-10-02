@@ -308,6 +308,10 @@ local function runUI()
           or 'Choose a program to build a preview.',
         'muted'
       )
+    elseif p.kind == 'donorCleanup' then
+      for _, row in ipairs(Preview.rows(state.section, p)) do
+        add(row[1], row[2], row[3], row[4], row[5])
+      end
     elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
       for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
         add(row[1], row[2], row[3], row[4], row[5])
@@ -471,7 +475,12 @@ local function runUI()
   end
   local function executable()
     local preview = state.preview
-    if not preview or state.busy or fs.exists(paths.pending) or not state.verified then
+    if
+      not preview
+      or state.busy
+      or fs.exists(paths.pending)
+      or (C.runner.requiresVerification(preview) and not state.verified)
+    then
       return false
     end
     local p = preview.plan
@@ -487,6 +496,7 @@ local function runUI()
       .. tostring(state.settingsPage)
       .. tostring(state.choice)
       .. tostring(state.selected)
+      .. tostring(state.programPage)
       .. state.section
       .. tostring(state.preview)
       .. tostring(state.busy)
@@ -549,7 +559,7 @@ local function runUI()
       nav(24, 'Shared interfaces', state.settings == 'shared', function()
         navigate('settings', 'shared')
       end)
-      for n, p in ipairs(Programs.list) do
+      for n, p in ipairs(Programs.settings) do
         local id = p.id
         nav(24 + n * 3, p.name, state.settings == id, function()
           navigate('settings', id)
@@ -701,8 +711,11 @@ local function runUI()
         124,
         'muted'
       )
-      for n, p in ipairs(Programs.list) do
-        local y = 11 + (n - 1) * 6
+      local pages = math.ceil(#Programs.list / 6)
+      state.programPage = math.min(state.programPage or 1, pages)
+      for n = 1 + (state.programPage - 1) * 6, math.min(#Programs.list, state.programPage * 6) do
+        local p = Programs.list[n]
+        local y = 11 + ((n - 1) % 6) * 6
         local id = p.id
         button(34, y, (state.selected == id and '* ' or '') .. p.name, function()
           commitEdit()
@@ -711,29 +724,37 @@ local function runUI()
         text(38, y + 1, p.description, 120, 'text')
         text(38, y + 2, p.unavailable or '', 120, p.unavailable and 'muted' or 'green')
       end
+      if pages > 1 then
+        text(34, 45, 'Programs ' .. state.programPage .. '/' .. pages, 40, 'muted')
+        button(111, 45, 'Previous', function()
+          state.programPage = state.programPage - 1
+        end, state.programPage > 1)
+        button(133, 45, 'Next', function()
+          state.programPage = state.programPage + 1
+        end, state.programPage < pages)
+      end
       local selected = state.selected and Programs.byId[state.selected]
       local x = button(34, 47, 'Preview selected', function()
         action('preview')
       end, selected ~= nil and not selected.unavailable)
       button(x, 47, 'Program settings', function()
         navigate('settings', state.selected)
-      end, selected ~= nil)
+      end, selected ~= nil and #selected.fields > 0)
     elseif state.page == 'preview' then
       local preview = state.preview
       local p = preview and preview.plan
       local current = preview and preview.id or state.selected
       text(34, 7, 'Preview - ' .. (current and Programs.byId[current].name or ''), 124, 'blue')
       local x = 34
-      local tabs = preview
-          and preview.id == 'assline'
-          and {
-            { 'changes', 'Input changes' },
-            { 'recipes', 'Rename recipes' },
-            {
-              'capacity',
-              'Capacity',
-            },
-          }
+      local tabs = current and Programs.byId[current].previewTabs
+        or preview and preview.id == 'assline' and {
+          { 'changes', 'Input changes' },
+          { 'recipes', 'Rename recipes' },
+          {
+            'capacity',
+            'Capacity',
+          },
+        }
         or {
           { 'changes', 'Patterns' },
           { 'existing', 'Existing' },
@@ -751,7 +772,13 @@ local function runUI()
       scrollRows(34, 12, 74, 31)
       text(113, 12, 'Summary', 45, 'blue')
       if p then
-        if preview.id == 'assline' then
+        if p.kind == 'donorCleanup' then
+          text(113, 14, p.banks .. ' donor interfaces', 45, 'muted')
+          text(113, 15, p.scanned .. ' encoded patterns scanned', 45)
+          text(113, 16, #p.cleanups .. ' recipes to park', 45, 'yellow')
+          text(113, 17, p.parked .. ' already parked', 45, 'green')
+          text(113, 18, p.skipped .. ' skipped; see Patterns', 45, 'muted')
+        elseif preview.id == 'assline' then
           --todo remove and unify this
           text(113, 14, p.scanned .. 'existing patterns scanned', 45)
           text(113, 15, #p.changes .. 'existing patterns to update', 45, 'green')
@@ -814,11 +841,16 @@ local function runUI()
         if preview.manifest and #preview.manifest.unresolved > 0 then
           text(113, 34, 'Registry names need verification.', 45, 'red')
         end
-        text(113, 36, 'Destination assumption: 36 slots each.', 45, 'yellow')
-        text(113, 37, 'Verify expanded interfaces in the game.', 45, 'muted')
-        button(113, 39, state.verified and '36 slots verified' or 'Verify 36 slots', function()
-          state.verified = not state.verified
-        end, not state.busy)
+        if C.runner.requiresVerification(preview) then
+          text(113, 36, 'Destination assumption: 36 slots each.', 45, 'yellow')
+          text(113, 37, 'Verify expanded interfaces in the game.', 45, 'muted')
+          button(113, 39, state.verified and '36 slots verified' or 'Verify 36 slots', function()
+            state.verified = not state.verified
+          end, not state.busy)
+        else
+          text(113, 36, 'Returns donors to their original slots.', 45, 'muted')
+          text(113, 37, 'Only the shared editor needs free space.', 45, 'muted')
+        end
       end
       local x = button(34, 47, 'Scan', function()
         action('preview')
@@ -828,7 +860,7 @@ local function runUI()
       end, executable())
       x = button(x, 47, 'Program settings', function()
         navigate('settings', preview.id)
-      end, not state.busy and preview ~= nil)
+      end, not state.busy and preview ~= nil and #Programs.byId[preview.id].fields > 0)
       button(x, 47, 'Run program', function()
         navigate('programs')
       end, not state.busy)
@@ -1020,7 +1052,9 @@ local function runUI()
         state.offset = 0
         state.preview = C.runner.preview(cfg, id, progress, control)
         status(
-          'Preview ready. Review the plan and verify destination capacity before Execute preview.',
+          C.runner.requiresVerification(state.preview)
+              and 'Preview ready. Review the plan and verify destination capacity before Execute preview.'
+            or 'Preview ready. Review which disposable donor recipes will be replaced before Execute preview.',
           'green'
         )
       elseif name == 'execute' then

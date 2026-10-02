@@ -85,6 +85,21 @@ and other shapes can still use extracted fluid. Existing ingot patterns excluded
 by this check appear in Existing and must be removed manually to stop an already
 installed extract/solidify loop.
 
+**Clean donor buffer** is on the second page of Programs. Preview lists all
+occupied slots across interfaces matching the shared buffer name. Execute replaces
+editable processing/ultimate/fluid recipes with `1 tagged paper -> 1 identical
+tagged paper`, retaining the encoded pattern item and returning it to its original
+slot. The private donor NBT keeps the placeholder separate from ordinary paper;
+AE may list the placeholder, but the old products are no longer advertised.
+No real paper is required. One empty shared editor slot is needed; Pause, Stop and
+Continue use the same journal as other programs. Parked donors can be imprinted by
+the normal donor pool and repeated cleanup leaves them unchanged.
+
+Crafting and unsafe patterns are listed and skipped. The ingredient setters cannot
+change their crafting/substitution/tunnel flags or clear `InvalidPattern`. Empty
+recipes can acquire that invalid flag, so cleanup keeps nonempty ingredient lists.
+It replaces disposable recipes and does not provide undo.
+
 The preview uses labels such as `30,720 EU/t (LuV)` with tier-colored text
 blended at 50%, and explains exclusions in Excluded and Existing. Existing patterns
 excluded by settings are kept. Selecting no recipes gives a non-executable preview.

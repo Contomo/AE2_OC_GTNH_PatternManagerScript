@@ -12,6 +12,7 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/app/10_plan.lua` | Assembly-line scan and rename plan |
 | `source/app/20_apply.lua` | Shared donor supply, pattern editing, durable operation journal and recovery; assembly-line execution |
 | `source/app/25_maker.lua` | Recipe scan and execution adapter using the common OC services |
+| `source/app/26_donors.lua` | Donor cleanup preview and parking, using shared discovery, editing and recovery |
 | `source/app/30_ui.lua` | Common UI, buttons, scrolling, configuration and preview pages |
 | `source/app/90_main.lua` | Application entry point |
 | `source/lib/util.lua` | Shared value/collection helpers, identities, endpoints and text-row construction |
