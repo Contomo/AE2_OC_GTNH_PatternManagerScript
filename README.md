@@ -85,7 +85,7 @@ and other shapes can still use extracted fluid. Existing ingot patterns excluded
 by this check appear in Existing and must be removed manually to stop an already
 installed extract/solidify loop.
 
-**Clean donor buffer** is on the second page of Programs. Preview lists all
+**Clean donor buffer** is in Programs. Preview lists all
 occupied slots across interfaces matching the shared buffer name. Execute replaces
 editable processing/ultimate/fluid recipes with `1 tagged paper -> 1 identical
 tagged paper`, retaining the encoded pattern item and returning it to its original

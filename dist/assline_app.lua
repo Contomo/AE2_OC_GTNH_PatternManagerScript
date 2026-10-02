@@ -4968,7 +4968,6 @@ local function runUI()
       .. tostring(state.settingsPage)
       .. tostring(state.choice)
       .. tostring(state.selected)
-      .. tostring(state.programPage)
       .. state.section
       .. tostring(state.preview)
       .. tostring(state.busy)
@@ -5183,27 +5182,19 @@ local function runUI()
         124,
         'muted'
       )
-      local pages = math.ceil(#Programs.list / 6)
-      state.programPage = math.min(state.programPage or 1, pages)
-      for n = 1 + (state.programPage - 1) * 6, math.min(#Programs.list, state.programPage * 6) do
-        local p = Programs.list[n]
-        local y = 11 + ((n - 1) % 6) * 6
+      local y = 11
+      for _, p in ipairs(Programs.list) do
         local id = p.id
         button(34, y, (state.selected == id and '* ' or '') .. p.name, function()
           commitEdit()
           state.selected = id
         end)
         text(38, y + 1, p.description, 120, 'text')
-        text(38, y + 2, p.unavailable or '', 120, p.unavailable and 'muted' or 'green')
-      end
-      if pages > 1 then
-        text(34, 45, 'Programs ' .. state.programPage .. '/' .. pages, 40, 'muted')
-        button(111, 45, 'Previous', function()
-          state.programPage = state.programPage - 1
-        end, state.programPage > 1)
-        button(133, 45, 'Next', function()
-          state.programPage = state.programPage + 1
-        end, state.programPage < pages)
+        if p.unavailable then
+          text(38, y + 2, p.unavailable, 120, 'muted')
+          y = y + 1
+        end
+        y = y + 3
       end
       local selected = state.selected and Programs.byId[state.selected]
       local x = button(34, 47, 'Preview selected', function()

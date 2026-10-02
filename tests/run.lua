@@ -652,10 +652,10 @@ test('program selection is explicit and all operation controls are on the bottom
   queue(function()
     assert(frame[47]:find('[ Quit ]',1,true) and not frame[47]:find('[ Recover ]',1,true))
     assert(not frame[7]:find('[ Scan ]',1,true));snapshot('programs')
-    return 'touch','screen',38,17,0
+    return click('[ Wire insulator ]')()
   end,function()
     assert(mutations==0 and not callCounts.getInterfacesByName)
-    assert(frame[17]:find('* Wire insulator',1,true));return quit()
+    assert(frame[14]:find('* Wire insulator',1,true));return quit()
   end)
   api.runUI()
 end)
@@ -2432,9 +2432,9 @@ test('donor cleanup blocks missing banks and a full editor but skips crafting un
   assert(#preview.plan.errors==1 and preview.plan.errors[1]:find('No donor interfaces',1,true))
 end)
 
-test('program chooser pages expose cleanup without footer collisions or a 36-slot verification requirement',function()
+test('compact program chooser exposes cleanup without paging or a 36-slot verification requirement',function()
   files[api.paths.config]=ser(cfg)
-  queue(click('[ Next ]',45),click('[ Clean donor buffer ]'),click('[ Preview selected ]',47),function()
+  queue(click('[ Clean donor buffer ]'),click('[ Preview selected ]',47),function()
     assert(frame[7]:find('Clean donor buffer',1,true))
     assert(not frame[39]:find('Verify 36 slots',1,true))
     assert(frame[9]:find('Details',1,true) and not frame[9]:find('Capacity',1,true))
@@ -2443,6 +2443,31 @@ test('program chooser pages expose cleanup without footer collisions or a 36-slo
   end,function()
     assert(buffer.patterns[0].outputs[1].name=='minecraft:paper')
     assert(not api.runner.hasSaved())
+    return 'interrupted'
+  end)
+  api.runUI()
+end)
+
+test('saved continuation does not cover program choices and its right edge invokes Continue',function()
+  files[api.paths.config]=ser(cfg)
+  files[api.paths.run]=ser({version=1,program='donorCleanup',configKey=require('assline_util').canonical(cfg)})
+  queue(function()
+    local found={}
+    for y=11,43 do
+      for _,program in ipairs(api.programs.list) do
+        if frame[y]:find('[ '..program.name..' ]',1,true) then found[program.id]=y end
+      end
+    end
+    for _,program in ipairs(api.programs.list) do assert(found[program.id],program.name..' is hidden') end
+    assert(found.donorCleanup<=32,'Chooser still has excessive spacing')
+    assert(frame[45]:find('[ Continue last operation ]',1,true))
+    assert(not frame[45]:find('[ Next ]',1,true) and not frame[45]:find('[ Previous ]',1,true))
+    snapshot('compact_programs_saved')
+    -- The former Next button occupied this part of Continue's hit area.
+    return 'touch','screen',137,45,0
+  end,function()
+    assert(frame[7]:find('Preview - Clean donor buffer',1,true),'Continue was intercepted by another control')
+    assert(mutations==0)
     return 'interrupted'
   end)
   api.runUI()
