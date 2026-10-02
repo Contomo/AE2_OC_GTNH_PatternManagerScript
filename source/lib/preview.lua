@@ -233,7 +233,10 @@ end
 function M.excludedRows(manifest)
   local rows, add = U.rows()
   add('EXCLUDED OUTPUTS', 'blue')
-  add(#(manifest.skipped or {}) .. ' output forms excluded by use or tier settings.', 'muted')
+  add(
+    #(manifest.skipped or {}) .. ' output forms excluded by material, use or tier policy.',
+    'muted'
+  )
   add('Existing patterns for these outputs are kept; see Existing.', 'muted')
   local material
   for _, item in ipairs(manifest.skipped or {}) do

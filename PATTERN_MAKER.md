@@ -61,6 +61,14 @@ preview/execution controls remain disabled.
 Fluid Shaper uses the scraped Fluid Solidifier recipe map. The Extruder's
 ingot-to-part recipes are a separate future program, even when both routes
 make the same output.
+
+Magnetic and attuned material variants are excluded from Fluid Shaper for every
+shape. The material filter matches either end of the normalized name, covering
+matrix names such as `IronMagnetic` and `TengamAttuned` as well as prefixed display
+names. Magnetite is unaffected. The Excluded/Existing pages show the exclusion
+reason through the common skipped-output record; other programs retain their
+usual eligibility rules.
+
 Crafting donors are counted, but the current executable generators use processing
 patterns; crafting-grid execution remains a future capability.
 

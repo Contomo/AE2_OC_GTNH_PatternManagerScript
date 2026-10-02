@@ -3116,6 +3116,16 @@ function M.eligible(data, material, rule)
       return false
     end
   end
+  if rule.mode == 'solidifier' then
+    -- GT's matrix uses suffixes (IronMagnetic, TengamAttuned), while display
+    -- names can put these modifiers first. Match either end, not Magnetite.
+    local name = material.name:lower():gsub('[^a-z0-9]', '')
+    for _, modifier in ipairs({ 'magnetic', 'attuned' }) do
+      if name:sub(1, #modifier) == modifier or name:sub(-#modifier) == modifier then
+        return false, 'Fluid Shaper excludes ' .. modifier .. ' material variants.'
+      end
+    end
+  end
   if
     data.usage
     and data.source.usagePolicy
@@ -3165,6 +3175,22 @@ function M.compile(data, mode, options, checkpoint)
   }
   local seen, unresolved, skipped = {}, {}, {}
   manifest.unresolved = {}
+  local function exclude(material, rule, reason)
+    local out = rule.outputs[1]
+    local item = M.resolve(data, material, out.f)
+    local key = item.name .. ':' .. item.damage
+    if not skipped[key] then
+      skipped[key] = true
+      manifest.skipped[#manifest.skipped + 1] = {
+        material = material.name,
+        form = out.f,
+        label = material.name .. ' ' .. formLabel(out.f),
+        name = item.name,
+        damage = item.damage,
+        reason = reason,
+      }
+    end
+  end
   for _, material in ipairs(data.materials) do
     if checkpoint then
       checkpoint()
@@ -3179,19 +3205,9 @@ function M.compile(data, mode, options, checkpoint)
         local eligible, reason = M.eligible(data, material, rule)
         if reason == 'unused' then
           manifest.unusedExcluded = manifest.unusedExcluded + 1
-          local out = rule.outputs[1]
-          local item = M.resolve(data, material, out.f)
-          local key = item.name .. ':' .. item.damage
-          if not skipped[key] then
-            skipped[key] = true
-            manifest.skipped[#manifest.skipped + 1] = {
-              material = material.name,
-              form = out.f,
-              label = material.name .. ' ' .. formLabel(out.f),
-              name = item.name,
-              damage = item.damage,
-            }
-          end
+          exclude(material, rule)
+        elseif reason then
+          exclude(material, rule, reason)
         end
         if eligible then
           if not material.tier then
@@ -3223,20 +3239,7 @@ function M.compile(data, mode, options, checkpoint)
           )
           if recipeMultiplier == 0 then
             manifest.tierExcluded = manifest.tierExcluded + 1
-            local out = rule.outputs[1]
-            local item = M.resolve(data, material, out.f)
-            local key = item.name .. ':' .. item.damage
-            if not skipped[key] then
-              skipped[key] = true
-              manifest.skipped[#manifest.skipped + 1] = {
-                material = material.name,
-                form = out.f,
-                label = material.name .. ' ' .. formLabel(out.f),
-                name = item.name,
-                damage = item.damage,
-                reason = batch.excluded,
-              }
-            end
+            exclude(material, rule, batch.excluded)
           else
             local function resolve(e, stocked)
               if e.fluid == 'material' then
@@ -3569,7 +3572,10 @@ end
 function M.excludedRows(manifest)
   local rows, add = U.rows()
   add('EXCLUDED OUTPUTS', 'blue')
-  add(#(manifest.skipped or {}) .. ' output forms excluded by use or tier settings.', 'muted')
+  add(
+    #(manifest.skipped or {}) .. ' output forms excluded by material, use or tier policy.',
+    'muted'
+  )
   add('Existing patterns for these outputs are kept; see Existing.', 'muted')
   local material
   for _, item in ipairs(manifest.skipped or {}) do

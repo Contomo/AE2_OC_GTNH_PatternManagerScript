@@ -262,6 +262,51 @@ test('plate-fed bender routes, sheet metal and both spring inputs use source cir
   end
 end)
 
+test('Fluid Shaper excludes magnetic and attuned name modifiers for every selected shape only in that mode',function()
+  local fixture={version=2,source={recipeVersion='test',targetVersion='test'},
+    capabilities={{plate=true,gearGt=true}},production={{molten_plate=true,molten_gear=true,ingot_plate=true}},
+    families={gt={plate={name='gregtech:parts',prefix=1000},gearGt={name='gregtech:parts',prefix=2000}}},
+    materials={},items={},rules={
+      {id='plate',mode='solidifier',process='molten_plate',requires={'plate'},
+        inputs={{fluid='material',n=144}},outputs={{f='plate',n=1}},stock={}},
+      {id='gear',mode='solidifier',process='molten_gear',requires={'gearGt'},
+        inputs={{fluid='material',n=576}},outputs={{f='gearGt',n=1}},stock={}}}}
+  local blocked={'IronMagnetic','magneticIron','MAGNETIC Steel','TengamAttuned','Attuned Tengam'}
+  local allowed={'Iron','Magnetite','VanadiumMagnetite'}
+  for n,name in ipairs(blocked) do
+    fixture.materials[n]={name=name,family='gt',dsf=n,a=1,p=1,molten='molten.test'..n}
+    assert(M.eligible(fixture,fixture.materials[n],{id='other',mode='bender',process='ingot_plate',requires={'plate'},outputs={{f='plate',n=1}}}))
+  end
+  for _,name in ipairs(allowed) do
+    local n=#fixture.materials+1
+    fixture.materials[n]={name=name,family='gt',dsf=n,a=1,p=1,molten='molten.test'..n}
+  end
+  local manifest=M.compile(fixture,'solidifier')
+  assert(#manifest.recipes==#allowed*2 and #manifest.skipped==#blocked*2)
+  for _,item in ipairs(manifest.skipped) do assert(item.reason:find('Fluid Shaper excludes',1,true)) end
+  for _,recipe in ipairs(manifest.recipes) do
+    local found=false;for _,name in ipairs(allowed) do if name==recipe.material then found=true end end
+    assert(found)
+  end
+end)
+
+test('real Fluid Shaper matrix excludes magnetic metals and Attuned Tengam with preview reasons',function()
+  local manifest=M.compile(data,'solidifier')
+  local attuned=false
+  for _,recipe in ipairs(manifest.recipes) do
+    assert(not recipe.material:match('Magnetic$') and recipe.material~='TengamAttuned')
+  end
+  for _,item in ipairs(manifest.skipped) do
+    if item.material=='TengamAttuned' then
+      assert(item.reason=='Fluid Shaper excludes attuned material variants.')
+      attuned=true
+    elseif item.material:match('Magnetic$') then
+      assert(item.reason=='Fluid Shaper excludes magnetic material variants.')
+    end
+  end
+  assert(attuned,'Attuned Tengam missing from Excluded')
+end)
+
 test('Fluid Shaper compiles only verified molten plate and turbine-blade routes',function()
   local manifest=M.compile(data,'solidifier',
     {forms={plate=true,turbineBlade=true},multiplier=2})
