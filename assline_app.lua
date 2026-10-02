@@ -3125,6 +3125,15 @@ function M.eligible(data, material, rule)
         return false, 'Fluid Shaper excludes ' .. modifier .. ' material variants.'
       end
     end
+    if data.source.materialSourcePolicy and rule.outputs[1].f == 'ingot' then
+      local sources = (data.origins or {})[material.o] or {}
+      if not sources.native_molten then
+        if sources.native_ingot then
+          return false, 'Ingots have a direct solid route; no native liquid source.'
+        end
+        return false, 'No verified native liquid source for ingots.'
+      end
+    end
   end
   if
     data.usage

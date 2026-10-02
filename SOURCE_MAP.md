@@ -91,6 +91,15 @@ import discovers missing Werkstoff suffixes only when the full resource index
 has both an ingot with a material display name and a matching plate. This
 recovers Mu-metal (suffix 11351) and its scraped bending and use evidence.
 
+`source/tools/build_material_sources.py` streams the full recipe export to find
+direct ingot and native liquid production. Its recipe witnesses and rejected-route
+counts live in `data/material-sources.json`; they are desktop evidence, not OC data.
+`compile_matrix.py` embeds only shared `native_ingot`/`native_molten` flag sets in
+`origins`, indexed by a material's `o`. Keeping these separate avoids duplicating
+large process sets for each source classification. `modes.lua` excludes ingots without
+a native liquid source; plates and other shapes retain their existing rules.
+The compiler and source index share mold-route recognition in `material_forms.py`.
+
 ## Recipe proportions and configured batches
 
 `source/lib/planner.lua` owns recipe identity. For processing patterns it aggregates

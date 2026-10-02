@@ -75,6 +75,16 @@ shared component addresses display muted `auto`; they remain blank in saved sett
 Tiered batches default to limits of 4096 items or 589824 mB per ingredient. The
 whole batch shrinks together; stocked molds/circuits and omitted supplies do not
 consume those limits. Effective tiers shows material budgets before these caps.
+
+Fluid Shaper ingots require a native liquid-producing route in the full scrape.
+Alloy synthesis counts; fluid extraction, remelting finished parts and unpacking
+containers do not. Plasma cooling counts only with an independent liquid source.
+Materials with both solid and native liquid routes remain eligible. This is recipe
+evidence, not a check of which production routes your base has installed. Plates
+and other shapes can still use extracted fluid. Existing ingot patterns excluded
+by this check appear in Existing and must be removed manually to stop an already
+installed extract/solidify loop.
+
 The preview uses labels such as `30,720 EU/t (LuV)` with tier-colored text
 blended at 50%, and explains exclusions in Excluded and Existing. Existing patterns
 excluded by settings are kept. Selecting no recipes gives a non-executable preview.

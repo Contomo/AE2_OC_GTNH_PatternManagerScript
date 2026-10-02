@@ -307,6 +307,54 @@ test('real Fluid Shaper matrix excludes magnetic metals and Attuned Tengam with 
   assert(attuned,'Attuned Tengam missing from Excluded')
 end)
 
+test('Fluid Shaper ingots require native liquid production; solid-only and unknown sources stay excluded',function()
+  local fixture={version=2,source={recipeVersion='test',targetVersion='test',materialSourcePolicy='native-material-sources-v1'},
+    capabilities={{ingot=true,plate=true}},production={{molten_ingot=true,molten_plate=true}},
+    origins={{native_molten=true},{native_ingot=true},{native_ingot=true,native_molten=true},{}},
+    families={gt={ingot={name='gregtech:parts',prefix=1000},plate={name='gregtech:parts',prefix=2000}}},
+    materials={},items={},rules={
+      {id='ingot',mode='solidifier',process='molten_ingot',requires={'ingot'},
+        inputs={{fluid='material',n=144}},outputs={{f='ingot',n=1}},stock={}},
+      {id='plate',mode='solidifier',process='molten_plate',requires={'plate'},
+        inputs={{fluid='material',n=144}},outputs={{f='plate',n=1}},stock={}}}}
+  for n,name in ipairs({'LiquidOnly','SolidOnly','BothSources','Unknown'}) do
+    fixture.materials[n]={name=name,family='gt',dsf=n,a=1,p=1,o=n,molten='molten.test'..n}
+  end
+  local manifest=M.compile(fixture,'solidifier')
+  assert(#manifest.recipes==6 and #manifest.skipped==2)
+  local counts={}
+  for _,recipe in ipairs(manifest.recipes) do
+    counts[recipe.material]=(counts[recipe.material] or 0)+1
+  end
+  assert(counts.LiquidOnly==2 and counts.BothSources==2 and counts.SolidOnly==1 and counts.Unknown==1)
+  for _,item in ipairs(manifest.skipped) do
+    assert(item.form=='ingot')
+    assert(item.reason==(item.material=='SolidOnly'
+      and 'Ingots have a direct solid route; no native liquid source.'
+      or 'No verified native liquid source for ingots.'))
+  end
+end)
+
+test('scraped Vanadium Gallium ingots are excluded while its plates and native ABS ingots remain eligible',function()
+  local manifest=M.compile(data,'solidifier',{forms={ingot=true,plate=true}})
+  local vgPlate,absIngot,vgExcluded=false,false,false
+  for _,recipe in ipairs(manifest.recipes) do
+    if recipe.material=='VanadiumGallium' then
+      assert(recipe.outputForm~='ingot','Vanadium Gallium ingot re-melting cycle returned')
+      vgPlate=recipe.outputForm=='plate' or vgPlate
+    elseif recipe.material=='AbyssalAlloy' and recipe.outputForm=='ingot' then
+      absIngot=true
+    end
+  end
+  for _,item in ipairs(manifest.skipped) do
+    if item.material=='VanadiumGallium' and item.form=='ingot' then
+      assert(item.reason=='Ingots have a direct solid route; no native liquid source.')
+      vgExcluded=true
+    end
+  end
+  assert(vgPlate and absIngot and vgExcluded)
+end)
+
 test('Fluid Shaper compiles only verified molten plate and turbine-blade routes',function()
   local manifest=M.compile(data,'solidifier',
     {forms={plate=true,turbineBlade=true},multiplier=2})

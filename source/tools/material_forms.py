@@ -135,6 +135,26 @@ def registry_forms(registry, resources):
     return families, rows, reverse
 
 
+def solidifier_route(recipe, reverse):
+    """The supported, stocked-mold route shared by compilation and source checks."""
+    if recipe['machineType'] != 'Fluid Solidifier':
+        return None
+    consumed = [e for e in recipe['inputs'] if e.get('consumed', True)]
+    catalysts = [e for e in recipe['inputs'] if e.get('consumed') is False]
+    outputs = recipe['outputs']
+    if (len(consumed) != 1 or len(catalysts) != 1 or len(outputs) != 1 or
+            consumed[0].get('kind') != 'fluid' or
+            catalysts[0].get('kind') != 'item' or
+            catalysts[0].get('amount') != 1 or
+            not re.fullmatch(r'gregtech:gt\.metaitem\.01@323\d+', catalysts[0]['id']) or
+            outputs[0].get('kind') != 'item'):
+        return None
+    destination = reverse.get(outputs[0]['id'])
+    if not destination or destination[1] in ('dust', 'gem'):
+        return None
+    return destination[0], destination[1], consumed[0]['id']
+
+
 def resolve(families, material, form):
     if form in material.get('overrides', {}):
         item = material['overrides'][form]

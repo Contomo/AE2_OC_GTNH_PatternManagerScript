@@ -10,11 +10,18 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from material_forms import descriptor, registry_forms, resolve
+from material_forms import descriptor, registry_forms, resolve, solidifier_route
 TIER_NAMES = json.loads((Path(__file__).parents[1] / 'data' / 'tiers.json').read_text())['names']
 
 
-def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None, usage=None, material_tiers=None):
+def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None, usage=None, material_tiers=None, material_sources=None):
+    if material_sources:
+        if material_sources.get('policy') != 'native-material-sources-v1':
+            raise ValueError('Unsupported material source policy')
+        if material_sources.get('datasetVersionId') != catalog['source'].get('datasetId'):
+            raise ValueError('Material sources and recipe catalog came from different datasets')
+        if material_sources.get('recipeExportSha256') != catalog['source'].get('sha256'):
+            raise ValueError('Material sources and recipe catalog came from different exports')
     if material_tiers:
         if material_tiers.get('policy') not in ('first-solid-task-v1', 'quest-and-ore-access-v2', 'quest-and-ore-access-v3'):
             raise ValueError('Unsupported material tier policy')
@@ -100,31 +107,13 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
                 recipe['outputs'][0]['id'], consumed[0]['amount'],
                 recipe['outputs'][0]['amount'], catalysts[0]['id'])
 
-    def solidifier_route(recipe):
-        if recipe['machineType'] != 'Fluid Solidifier':
-            return None
-        consumed = [e for e in recipe['inputs'] if e.get('consumed', True)]
-        catalysts = [e for e in recipe['inputs'] if e.get('consumed') is False]
-        outputs = recipe['outputs']
-        if (len(consumed) != 1 or len(catalysts) != 1 or len(outputs) != 1 or
-                consumed[0].get('kind') != 'fluid' or
-                catalysts[0].get('kind') != 'item' or
-                catalysts[0].get('amount') != 1 or
-                not re.fullmatch(r'gregtech:gt\.metaitem\.01@323\d+', catalysts[0]['id']) or
-                outputs[0].get('kind') != 'item'):
-            return None
-        destination = reverse.get(outputs[0]['id'])
-        if not destination or destination[1] in ('dust', 'gem'):
-            return None
-        return destination[0], destination[1], consumed[0]['id']
-
     # Some routes offer alternate registered inputs or outputs for the same
     # material. Prefer the canonical output, then the canonical input. The
     # remaining selected item becomes a resolver override when needed.
     bender_variants = {}
     solidifier_fluids = defaultdict(Counter)
     for recipe in catalog['recipes']:
-        solidifier = solidifier_route(recipe)
+        solidifier = solidifier_route(recipe, reverse)
         if solidifier:
             solidifier_fluids[solidifier[0]][solidifier[2]] += 1
         route = bender_route(recipe)
@@ -158,7 +147,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             if route[3:5] != bender_variants[key][1:]:
                 continue
         if mode == 'solidifier':
-            route = solidifier_route(recipe)
+            route = solidifier_route(recipe, reverse)
             if not route or route[2] != primary_fluid[route[0]]:
                 continue
         output = reverse.get(recipe['outputs'][0]['id'])
@@ -275,6 +264,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             counts = voltage_counts[rule['id']]
             rule['eut'] = min(counts, key=lambda eut: (-counts[eut], eut))
     capabilities, cap_index, production, production_index = [], {}, [], {}
+    origins, origin_index = [], {}
     use_profiles, use_index = [], {}
     voltage_profiles, voltage_index = [], {}
     useful_items = set(usage['useful']) if usage else set()
@@ -327,6 +317,20 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
                     denied[rule['id']] = True
         if denied:
             row['deny'] = denied
+        if material_sources and row.get('molten'):
+            evidence = material_sources['materials'].get(key, {})
+            fluid = evidence.get('fluids', {}).get(row['molten'], {})
+            origin = {}
+            if fluid.get('native'):
+                origin['native_molten'] = True
+            if evidence.get('solid', {}).get('count', 0):
+                origin['native_ingot'] = True
+            if origin:
+                identity = tuple(sorted(origin))
+                if identity not in origin_index:
+                    origin_index[identity] = len(origins) + 1
+                    origins.append(origin)
+                row['o'] = origin_index[identity]
         processes = row.pop('processes', {})
         if processes:
             identity = tuple(sorted(processes))
@@ -346,9 +350,13 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
         source.update(materialTierPolicy=material_tiers['policy'],
                       materialTierSource=material_tiers['source'],
                       classifiedMaterials=sum('tier' in r for r in rows.values()))
+    if material_sources:
+        source.update(materialSourcePolicy=material_sources['policy'],
+                      materialSourceRecipeCount=material_sources['recipeCount'])
     return {'version': 2, 'source': source,
             'families': families, 'capabilities': capabilities, 'production': production, 'items': items, 'rules': rules,
             'voltages': voltage_profiles,
+            'origins': origins,
             'usage': use_profiles,
             'registryNames': registry_names or {},
             'materials': sorted(rows.values(), key=lambda row: row['name'].lower())}
@@ -387,6 +395,7 @@ if __name__ == '__main__':
     parser.add_argument('--registry-names', help='Case-preserving source registration import')
     parser.add_argument('--usage', required=True, help='Full-recipe direct-use index from build_usage.py')
     parser.add_argument('--material-tiers', help='Versioned questbook progression evidence from build_tiers.py')
+    parser.add_argument('--material-sources', required=True, help='Native solid/fluid production evidence from build_material_sources.py')
     args = parser.parse_args()
     catalog = json.load(gzip.open(args.catalog, 'rt', encoding='utf-8'))
     registry = json.loads(Path(args.registry).read_text(encoding='utf-8-sig'))
@@ -399,7 +408,8 @@ if __name__ == '__main__':
     names = json.loads(Path(args.registry_names).read_text())['names'] if args.registry_names else {}
     usage = json.loads(Path(args.usage).read_text())
     material_tiers = json.loads(Path(args.material_tiers).read_text()) if args.material_tiers else None
-    model = compile_matrix(catalog, registry, args.compatible_target, args.compatibility_basis, resources, names, usage, material_tiers)
+    material_sources = json.loads(Path(args.material_sources).read_text())
+    model = compile_matrix(catalog, registry, args.compatible_target, args.compatibility_basis, resources, names, usage, material_tiers, material_sources)
     content = 'return ' + lua(model) + '\n'
     if len(content.encode()) > 4 * 1024 * 1024:
         raise ValueError('Library exceeds the absolute 4 MB budget')

@@ -79,6 +79,7 @@ ore dictionary. `source/tools/compile_matrix.py` emits matrix schema **2**:
 
 - `materials`: name, resolver family/suffix, shared capability-set index (`a`),
   shared production-flag set (`p`), verified molten-fluid ID where applicable,
+  optional shared source-classification index (`o`),
   optional conductor/pipe bases, coating class,
   optional quest progression tier and shared voltage-exception index (`v`),
   and form overrides or rare rule exclusions. There are **no recipe lists** here.
@@ -90,6 +91,8 @@ ore dictionary. `source/tools/compile_matrix.py` emits matrix schema **2**:
   templates. They use separate material namespaces; BW IDs are not GT suffixes.
 - `production`: shared semantic route flags, such as `ingot_wire` or
   `stick_wireFine`. Registering forms does not grant a machine route.
+- `origins`: small shared sets of `native_ingot` and `native_molten` flags from
+  the full export. Source classification does not duplicate process sets.
 - `usage`: shared sets of output forms with a path to a non-recycling product
   in the full recipe export. Each material stores only a shared set index (`u`).
   No per-material recipe lists or manual inclusion switches are needed.
@@ -188,6 +191,11 @@ python source/tools/build_usage.py ..\OreDictScript\research\recipes.json.gz `
   ..\OreDictScript\data\registry-rules.json `
   ..\OreDictScript\research\resource-index.json.gz `
   ..\OreDictScript\data\ores.json.gz .research\usage.json
+python source/tools/build_material_sources.py ..\OreDictScript\research\recipes.json.gz `
+  .research\pattern-catalog-with-shaper.json.gz `
+  ..\OreDictScript\data\registry-rules.json `
+  ..\OreDictScript\research\resource-index.json.gz `
+  ..\OreDictScript\data\ores.json.gz data\material-sources.json
 python source/tools/compile_matrix.py .research\pattern-catalog-with-shaper.json.gz `
   ..\OreDictScript\data\registry-rules.json data\matrix.lua `
   --resources ..\OreDictScript\research\resource-index.json.gz `
@@ -195,6 +203,7 @@ python source/tools/compile_matrix.py .research\pattern-catalog-with-shaper.json
   --registry-names data\registry-names.json `
   --usage .research\usage.json `
   --material-tiers data\material-tiers.json `
+  --material-sources data\material-sources.json `
   --compatible-target 2.9.0-beta-3 `
   --compatibility-basis "User confirmed recipes unchanged from beta 2 to beta 3"
 npm run build
