@@ -297,7 +297,7 @@ test('tiered batches retain actual recipe voltage and the selected item proporti
   local batch=U.clone(cfg.defaults.batch)
   batch.currentTier='UHV'
   batch.overrideUHV='2'
-  batch.voltagePolicy='off'
+  batch.voltagePolicy='off';batch.abovePolicy='fixed'
   local fixed=M.compile(data,'wiremill',{forms={wireFine=true},sources={wireFine='ingot'}})
   local tiered=M.compile(data,'wiremill',{forms={wireFine=true},sources={wireFine='ingot'},batch=batch})
   assert(#fixed.recipes==#tiered.recipes)
@@ -318,6 +318,22 @@ test('tiered batches retain actual recipe voltage and the selected item proporti
     assert(U.eq(r.stock,original.stock))
   end
   assert(seen.infinity and seen.copper)
+end)
+
+test('Infinity foil shrinks independently of the retained fixed multiplier and future materials are skipped',function()
+  local cfg=require('assline_config');local batch=U.clone(cfg.defaults.batch)
+  batch.currentTier='UHV'
+  local result=M.compile(data,'bender',{forms={foil=true},sources={foil='plate'},batch=batch,multiplier=512})
+  local infinity
+  for _,r in ipairs(result.recipes) do if r.material=='Infinity' then infinity=r end end
+  assert(infinity and infinity.inputs[1].size==4 and infinity.outputs[1].size==16)
+  assert(infinity.batch.recipeTier=='UV' and infinity.batch.multiplier==4)
+  batch.currentTier='UV'
+  result=M.compile(data,'bender',{forms={foil=true},sources={foil='plate'},batch=batch,multiplier=512})
+  for _,r in ipairs(result.recipes) do assert(r.material~='Infinity') end
+  local excluded
+  for _,r in ipairs(result.skipped) do if r.material=='Infinity' then excluded=r end end
+  assert(excluded and excluded.reason:find('Material tier above'))
 end)
 
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

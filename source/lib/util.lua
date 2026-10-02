@@ -166,8 +166,8 @@ end
 -- Shared row construction for preview and UI text, with one default tone.
 function M.rows()
   local result = {}
-  local function add(text, tone, guideWidth, guideTone)
-    result[#result + 1] = { text, tone or 'text', guideWidth, guideTone }
+  local function add(text, tone, guideWidth, guideTone, accent)
+    result[#result + 1] = { text, tone or 'text', guideWidth, guideTone, accent }
   end
   return result, add
 end

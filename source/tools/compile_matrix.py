@@ -16,7 +16,7 @@ TIER_NAMES = json.loads((Path(__file__).parents[1] / 'data' / 'tiers.json').read
 
 def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None, usage=None, material_tiers=None):
     if material_tiers:
-        if material_tiers.get('policy') != 'first-solid-task-v1':
+        if material_tiers.get('policy') not in ('first-solid-task-v1', 'quest-and-ore-access-v2'):
             raise ValueError('Unsupported material tier policy')
         if material_tiers.get('packVersion') != catalog['source'].get('targetVersion'):
             raise ValueError('Material tiers and target pack version differ')
@@ -282,6 +282,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
     for key, row in rows.items():
         if material_tiers and key in material_tiers['materials']:
             row['tier'] = material_tiers['materials'][key]['tier']
+            row['tierSource'] = material_tiers['materials'][key].get('kind', 'quest item')
         overrides_eu = {n: voltages[key][r['id']] for n, r in enumerate(rules, 1)
                         if r['id'] in voltages[key] and voltages[key][r['id']] != r.get('eut', False)}
         if overrides_eu:

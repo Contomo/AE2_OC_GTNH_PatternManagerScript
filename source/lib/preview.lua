@@ -37,14 +37,21 @@ function M.planRows(plan, manifest)
     add(
       'Tiered batches at '
         .. manifest.policy.batch.currentTier
-        .. '; material tiers follow quest progression.',
+        .. '; fixed program multipliers do not apply.',
       'muted'
     )
     add(
       (manifest.unclassifiedRecipes or 0)
-        .. ' recipes have unclassified materials; fallback '
-        .. manifest.policy.batch.unknownMultiplier
-        .. 'x before other limits.',
+        .. ' unclassified recipes; policy: '
+        .. manifest.policy.batch.unknownPolicy
+        .. '.  '
+        .. (manifest.tierExcluded or 0)
+        .. ' routes excluded by tier settings.',
+      'muted'
+    )
+  elseif manifest.policy then
+    add(
+      'Batch policy: Fixed  |  Program multiplier ' .. (manifest.policy.multiplier or 1) .. 'x',
       'muted'
     )
   end
@@ -108,7 +115,15 @@ function M.planRows(plan, manifest)
     treeRow(rows, add, '  |      ', U.ingredientSummary(recipe.inputs))
     treeRow(rows, add, '  |      ', '-> ' .. U.ingredientSummary(recipe.outputs), 'green')
     if recipe.batch then
-      treeRow(rows, add, '  |      ', Batch.describe(recipe.batch), 'muted')
+      local description, voltage = Batch.describe(recipe.batch), Batch.voltageText(recipe.batch)
+      treeRow(rows, add, '  |      ', description, 'muted')
+      if recipe.batch.recipeTier then
+        rows[#rows][5] = {
+          from = 10 + #description - #voltage,
+          length = #voltage,
+          tier = recipe.batch.recipeTier,
+        }
+      end
     end
   end
   return rows
@@ -217,11 +232,8 @@ end
 
 function M.excludedRows(manifest)
   local rows, add = U.rows()
-  add('EXCLUDED BY RECIPE USE', 'blue')
-  add(
-    #(manifest.skipped or {}) .. ' output forms have no path to a non-recycling product.',
-    'muted'
-  )
+  add('EXCLUDED OUTPUTS', 'blue')
+  add(#(manifest.skipped or {}) .. ' output forms excluded by use or tier settings.', 'muted')
   add('Existing patterns for these outputs are kept; see Existing.', 'muted')
   local material
   for _, item in ipairs(manifest.skipped or {}) do
@@ -230,10 +242,11 @@ function M.excludedRows(manifest)
       material = item.material
       add(material, 'blue')
     end
-    add('  ' .. item.label .. '  (' .. item.name .. ':' .. item.damage .. ')', 'yellow')
+    add('  ' .. item.label, 'yellow')
+    add('    ' .. (item.reason or 'No path to a non-recycling product.'), 'muted')
   end
   if #(manifest.skipped or {}) == 0 then
-    add('No selected output forms excluded by the use check.', 'green')
+    add('No selected output forms excluded.', 'green')
   end
   return rows
 end

@@ -51,7 +51,7 @@ local function runUI()
   local buttonWidths, scrollbar = {}, nil
   local contentKey, contentRows
   local draw, handle, action, commitEdit, navigate
-  local function text(x, y, s, width, tone, bg, guideWidth, guideTone)
+  local function text(x, y, s, width, tone, bg, guideWidth, guideTone, accent)
     width = math.min(width or w - x + 1, w - x + 1)
     if width < 1 then
       return
@@ -69,6 +69,7 @@ local function runUI()
       .. tostring(guideWidth)
       .. ':'
       .. tostring(guideTone)
+      .. U.canonical(accent)
     if paintCache[key] == value then
       return
     end
@@ -79,6 +80,14 @@ local function runUI()
     if guideWidth and guideWidth > 0 then
       gpu.setForeground(colors[guideTone or tone or 'text'])
       gpu.set(x, y, unicode.sub(s, 1, guideWidth))
+    end
+    if accent then
+      local first, last = math.max(1, accent.from), math.min(width, accent.from + accent.length - 1)
+      if last >= first then
+        gpu.setForeground(colors.text)
+        gpu.setBackground(Batch.color(accent.tier, colors[bg or 'bg'], 0.5))
+        gpu.set(x + first - 1, y, unicode.sub(s, first, last))
+      end
     end
   end
   local function button(x, y, label, callback, enabled, selected)
@@ -131,14 +140,7 @@ local function runUI()
     invalidate()
   end
   local function fields()
-    local definitions = Config.section(state.settings).fields
-    local visible = {}
-    for _, f in ipairs(definitions) do
-      if not f.hidden then
-        visible[#visible + 1] = f
-      end
-    end
-    return visible
+    return Config.visibleFields(cfg, state.settings)
   end
   local function values()
     return Config.values(cfg, state.settings)
@@ -301,7 +303,7 @@ local function runUI()
       )
     elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
       for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
-        add(row[1], row[2], row[3], row[4])
+        add(row[1], row[2], row[3], row[4], row[5])
       end
     elseif state.section == 'details' and preview.manifest then
       if preview.id == 'bender' or preview.id == 'fluidShaper' then
@@ -369,11 +371,11 @@ local function runUI()
       end
     elseif state.section == 'capacity' then
       for _, row in ipairs(Preview.capacityRows(p)) do
-        add(row[1], row[2], row[3], row[4])
+        add(row[1], row[2], row[3], row[4], row[5])
       end
     elseif preview.id ~= 'assline' then
       for _, row in ipairs(Preview.planRows(p, preview.manifest)) do
-        add(row[1], row[2], row[3], row[4])
+        add(row[1], row[2], row[3], row[4], row[5])
       end
     elseif state.section == 'recipes' then
       for _, r in ipairs(p.recipes) do
@@ -416,8 +418,20 @@ local function runUI()
       contentKey = key
       contentRows = {}
       for _, r in ipairs(lines()) do
-        local remaining = r[1]
+        local remaining, consumed = r[1], 0
         local guideWidth = r[3] or 0
+        local function appendChunk(chunk)
+          local accent
+          if r[5] then
+            local first = math.max(1, r[5].from - consumed)
+            local last = math.min(unicode.len(chunk), r[5].from + r[5].length - 1 - consumed)
+            if first <= last then
+              accent = { from = first, length = last - first + 1, tier = r[5].tier }
+            end
+          end
+          contentRows[#contentRows + 1] =
+            { chunk, r[2], math.min(guideWidth, unicode.len(chunk)), r[4], accent }
+        end
         while unicode.len(remaining) > width do
           local prefix = unicode.sub(remaining, 1, width)
           local at = prefix:match('^.*()%s')
@@ -425,23 +439,30 @@ local function runUI()
           if count == 0 then
             count = width
           end
-          contentRows[#contentRows + 1] = {
-            unicode.sub(remaining, 1, count),
-            r[2],
-            math.min(guideWidth, count),
-            r[4],
-          }
+          appendChunk(unicode.sub(remaining, 1, count))
           guideWidth = 0
-          remaining = unicode.sub(remaining, count + 1):gsub('^%s+', '')
+          local tail = unicode.sub(remaining, count + 1)
+          remaining = tail:gsub('^%s+', '')
+          consumed = consumed + count + unicode.len(tail) - unicode.len(remaining)
         end
-        contentRows[#contentRows + 1] = { remaining, r[2], guideWidth, r[4] }
+        appendChunk(remaining)
       end
     end
     local rows = contentRows
     state.offset = math.max(0, math.min(state.offset, math.max(0, #rows - room)))
     for n = 1, room do
       local r = rows[state.offset + n]
-      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text', nil, r and r[3], r and r[4])
+      text(
+        x,
+        y + n - 1,
+        r and r[1] or '',
+        width,
+        r and r[2] or 'text',
+        nil,
+        r and r[3],
+        r and r[4],
+        r and r[5]
+      )
     end
     local maximum = math.max(0, #rows - room)
     local thumb = maximum == 0 and room or math.max(1, math.floor(room * room / #rows))
@@ -480,6 +501,7 @@ local function runUI()
   end
   draw = function()
     local key = state.page
+      .. tostring(cfg)
       .. state.settings
       .. tostring(state.settingsPage)
       .. tostring(state.choice)
@@ -546,7 +568,10 @@ local function runUI()
       local pages = { {} }
       for _, f in ipairs(fields()) do
         local page = pages[#pages]
-        if #page > 0 and (#page >= (section.pageSize or 8) or page[1].group ~= f.group) then
+        if
+          #page > 0
+          and (#page >= (f.compact and 16 or section.pageSize or 8) or page[1].group ~= f.group)
+        then
           page = {}
           pages[#pages + 1] = page
         end
@@ -563,66 +588,100 @@ local function runUI()
         124,
         'blue'
       )
-      text(34, 8, 'Changes save when you accept a field or navigate away.', 124, 'muted')
+      text(
+        34,
+        8,
+        'Accept a field or navigate away to save. Numbers accept k / M shorthand.',
+        124,
+        'muted'
+      )
       local y = section.pageSize == 9 and 10 or 11
-      for _, f in ipairs(page) do
-        local helpY, height = y + 2, 4
-        text(34, y, f.label, 124, 'blue')
-        if f.kind == 'multiToggle' then
-          local x, row = 34, y + 1
-          local selected = Config.selected(values()[f.key], f.choices)
-          for _, option in ipairs(f.choices) do
-            local key, choice = f.key, option[1]
-            if x + unicode.wlen('[ ' .. option[2] .. ' ]') - 1 > 157 then
-              x, row = 34, row + 1
-            end
-            x = button(x, row, option[2], function()
-              toggleForm(key, f.choices, choice)
-            end, true, selected[choice])
-          end
-          helpY, height = row + 1, row - y + 4
-        elseif f.enableForm then
-          local program = Programs.byId[state.settings]
-          local choice = f.enableForm
-          local selected = Config.selected(values()[program.formSwitch], program.formChoices)
-          button(34, y + 1, selected[choice] and 'X' or ' ', function()
-            toggleForm(program.formSwitch, program.formChoices, choice)
-          end, true, selected[choice])
-          editorRow(42, y + 1, 116, f)
-        elseif f.kind == 'select' then
-          local label, selected = values()[f.key], 1
-          for n, option in ipairs(f.choices) do
-            if option[1] == values()[f.key] then
-              label, selected = option[2], n
-            end
-          end
-          button(34, y + 1, label .. ' v', function()
-            commitEdit()
-            state.choice =
-              { key = f.key, label = f.label, choices = f.choices, selected = selected }
-          end)
-        elseif f.choices then
-          local x = 34
-          for _, option in ipairs(f.choices) do
-            local key, value = f.key, option[1]
-            x = button(x, y + 1, option[2], function()
-              chooseValue(key, value)
-            end, true, values()[key] == value)
-          end
-        elseif f.kind == 'toggle' then
-          button(34, y + 1, values()[f.key] == 'on' and 'On' or 'Off', function()
-            commitEdit()
-            local trial = U.clone(cfg)
-            local v = Config.values(trial, state.settings)
-            v[f.key] = v[f.key] == 'on' and 'off' or 'on'
-            saveConfig(trial)
-            status('Settings saved.', 'green')
-          end, true, values()[f.key] == 'on')
-        else
-          editorRow(34, y + 1, 124, f)
+      local compact = page[1] and page[1].compact
+      if compact then
+        local overrides = page[1].group == 'Tier overrides'
+        text(34, 10, overrides and 'MATERIAL TIER' or 'RELATIVE TIER', 42, 'blue')
+        text(80, 10, overrides and 'OVERRIDE' or 'MULTIPLIER', 22, 'blue')
+        if overrides then
+          text(115, 10, 'EFFECTIVE', 40, 'blue')
         end
-        text(34, helpY, f.help, 124, 'muted')
-        y = y + height
+        text(
+          34,
+          44,
+          overrides and 'Blank follows the curve. Later tiers remain skipped unless enabled.'
+            or 'One multiplier per relative tier. Maximum and quantity limits still apply.',
+          124,
+          'muted'
+        )
+        y = 12
+      end
+      for _, f in ipairs(page) do
+        if compact then
+          text(34, y, f.label, 42, 'text')
+          editorRow(80, y, 22, f)
+          if page[1].group == 'Tier overrides' then
+            local budget = Batch.budget(cfg.batch, f.label)
+            text(115, y, budget == 0 and 'Skipped' or budget .. 'x', 40, 'muted')
+          end
+          y = y + 2
+        else
+          local helpY, height = y + 2, 4
+          text(34, y, f.label, 124, 'blue')
+          if f.kind == 'multiToggle' then
+            local x, row = 34, y + 1
+            local selected = Config.selected(values()[f.key], f.choices)
+            for _, option in ipairs(f.choices) do
+              local key, choice = f.key, option[1]
+              if x + unicode.wlen('[ ' .. option[2] .. ' ]') - 1 > 157 then
+                x, row = 34, row + 1
+              end
+              x = button(x, row, option[2], function()
+                toggleForm(key, f.choices, choice)
+              end, true, selected[choice])
+            end
+            helpY, height = row + 1, row - y + 4
+          elseif f.enableForm then
+            local program = Programs.byId[state.settings]
+            local choice = f.enableForm
+            local selected = Config.selected(values()[program.formSwitch], program.formChoices)
+            button(34, y + 1, selected[choice] and 'X' or ' ', function()
+              toggleForm(program.formSwitch, program.formChoices, choice)
+            end, true, selected[choice])
+            editorRow(42, y + 1, 116, f)
+          elseif f.kind == 'select' then
+            local label, selected = values()[f.key], 1
+            for n, option in ipairs(f.choices) do
+              if option[1] == values()[f.key] then
+                label, selected = option[2], n
+              end
+            end
+            button(34, y + 1, label, function()
+              commitEdit()
+              state.choice =
+                { key = f.key, label = f.label, choices = f.choices, selected = selected }
+            end)
+          elseif f.choices then
+            local x = 34
+            for _, option in ipairs(f.choices) do
+              local key, value = f.key, option[1]
+              x = button(x, y + 1, option[2], function()
+                chooseValue(key, value)
+              end, true, values()[key] == value)
+            end
+          elseif f.kind == 'toggle' then
+            button(34, y + 1, values()[f.key] == 'on' and 'On' or 'Off', function()
+              commitEdit()
+              local trial = U.clone(cfg)
+              local v = Config.values(trial, state.settings)
+              v[f.key] = v[f.key] == 'on' and 'off' or 'on'
+              saveConfig(trial)
+              status('Settings saved.', 'green')
+            end, true, values()[f.key] == 'on')
+          else
+            editorRow(34, y + 1, 124, f)
+          end
+          text(34, helpY, f.help, 124, 'muted')
+          y = y + height
+        end
       end
       if #pages > 1 then
         local pageRow = section.pageSize == 9 and 45 or 44
@@ -639,7 +698,7 @@ local function runUI()
       button(34, 47, 'Run program', function()
         navigate('programs')
       end)
-      if state.settings == 'batch' then
+      if state.settings == 'batch' and cfg.batch.mode == 'tiered' then
         button(54, 47, 'Effective tiers', function()
           commitEdit()
           state.choice = { label = 'Material budgets at ' .. cfg.batch.currentTier, budgets = true }
@@ -662,13 +721,7 @@ local function runUI()
           state.selected = id
         end)
         text(38, y + 1, p.description, 120, 'text')
-        text(
-          38,
-          y + 2,
-          p.unavailable or 'Preview and execute',
-          120,
-          p.unavailable and 'muted' or 'green'
-        )
+        text(38, y + 2, p.unavailable or '', 120, p.unavailable and 'muted' or 'green')
       end
       local selected = state.selected and Programs.byId[state.selected]
       local x = button(34, 47, 'Preview selected', function()
@@ -841,8 +894,7 @@ local function runUI()
       text(
         51,
         12,
-        state.choice.budgets
-            and 'Material budgets before voltage, program factor and quantity limits.'
+        state.choice.budgets and 'Material budgets before recipe voltage and quantity limits.'
           or 'Choose a tier. Escape cancels.',
         98,
         'muted',
@@ -853,7 +905,18 @@ local function runUI()
         local x = n <= 9 and 51 or 101
         local y = 14 + ((n - 1) % 9) * 2
         if state.choice.budgets then
-          text(x, y, entry .. '  ' .. Batch.budget(cfg.batch, entry) .. 'x', 45, 'text', 'panel')
+          local budget = Batch.budget(cfg.batch, entry)
+          text(
+            x,
+            y,
+            entry .. '  ' .. (budget == 0 and 'Skipped' or budget .. 'x'),
+            45,
+            'text',
+            'panel',
+            nil,
+            nil,
+            { from = 1, length = #entry, tier = entry }
+          )
         else
           local value, label = entry[1], entry[2]
           button(x, y, label, function()

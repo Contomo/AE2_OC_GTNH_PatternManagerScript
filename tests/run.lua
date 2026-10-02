@@ -606,8 +606,11 @@ local function nav(label)
 end
 local function field(label)
   return function()
-    for y=10,40 do
-      if frame[y] and frame[y]:sub(34):find(label,1,true) then return 'touch','screen',34,y+1,0 end
+    for y=10,43 do
+      if frame[y] and frame[y]:sub(34):find(label,1,true) then
+        local compact=frame[10] and (frame[10]:find('MATERIAL TIER',1,true) or frame[10]:find('RELATIVE TIER',1,true))
+        return 'touch','screen',compact and 80 or 34,compact and y or y+1,0
+      end
     end
     error('Settings field missing: '..label)
   end
@@ -1325,13 +1328,15 @@ test('changing the global tier resizes reused patterns through the common editor
     cfg.programs.wiremill.wireFine='Fine wires'
     target.patterns={};local fine=iface('Fine wires',50)
     buffer.patterns[2]=cp(buffer.patterns[0]);buffer.patterns[3]=cp(buffer.patterns[0])
+    cfg.programs.wiremill.multiplier='512'
     api.runner.execute(cfg,api.runner.preview(cfg,'wiremill'))
+    assert(target.patterns[0].inputs[1].size==512)
     cfg.batch.mode='tiered';cfg.batch.voltagePolicy='off'
     local preview=api.runner.preview(cfg,'wiremill')
     assert(preview.plan.reused==4 and preview.plan.resizeCount==4 and #preview.plan.creates==0)
-    assert(preview.report:find('Batch 4x',1,true) and preview.report:find('Batch 32x',1,true))
+    assert(preview.report:find('Batch 4x',1,true) and preview.report:find('Batch 8x',1,true))
     api.runner.execute(cfg,preview)
-    assert(target.patterns[0].inputs[1].size==4 and target.patterns[1].inputs[1].size==32)
+    assert(target.patterns[0].inputs[1].size==4 and target.patterns[1].inputs[1].size==8)
     assert(fine.patterns[0].outputs[1].size==32 and next(buffer.patterns)==nil)
     preview=api.runner.preview(cfg,'wiremill')
     cfg.batch.currentTier='ZPM'
@@ -1339,8 +1344,8 @@ test('changing the global tier resizes reused patterns through the common editor
     preview=api.runner.preview(cfg,'wiremill')
     assert(preview.plan.resizeCount==4 and #preview.plan.creates==0)
     api.runner.execute(cfg,preview)
-    assert(target.patterns[0].inputs[1].size==32 and target.patterns[1].inputs[1].size==64)
-    assert(fine.patterns[0].outputs[1].size==256 and next(buffer.patterns)==nil)
+    assert(target.patterns[0].inputs[1].size==8 and target.patterns[1].inputs[1].size==16)
+    assert(fine.patterns[0].outputs[1].size==64 and next(buffer.patterns)==nil)
   end)
 end)
 
@@ -1388,7 +1393,7 @@ end)
 test('tier settings use a modal selector, save globally and show the shifted budgets',function()
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Tier multipliers'),click('[ Tiered ]'),
-    click('[ LuV v ]'),function()
+    click('[ LuV ]'),function()
       assert(frame[10]:find('Current progression tier',1,true))
       snapshot('tier_picker')
       -- Underlying Quit is inactive while the selector is open.
@@ -1399,27 +1404,82 @@ test('tier settings use a modal selector, save globally and show the shifted bud
     end,function()
       local c=unser(files[api.paths.config])
       assert(c.batch.mode=='tiered' and c.batch.currentTier=='UV')
-      assert(frame[15]:find('[ UV v ]',1,true))
+      assert(frame[15]:find('[ UV ]',1,true))
       snapshot('tier_settings')
       return click('[ Effective tiers ]',47)()
     end,function()
       assert(frame[10]:find('budgets at UV',1,true))
       assert(frame[30]:find('UV  4x',1,true))
-      assert(frame[28]:find('ZPM  32x',1,true))
+      assert(frame[28]:find('ZPM  8x',1,true))
       snapshot('tier_budgets')
       return 'key_down','kbd',0,1
-    end,click('[ Next ]',45),replace('Material 2 tier(s) below','96'),
+    end,click('[ Next ]',45),click('[ Custom table ]'),click('[ Next ]',45),replace('2 tiers below','96'),
     function()
       assert(unser(files[api.paths.config]).batch.below2=='96')
       return quit()
     end)
   api.runUI()
   queue(nav('Settings'),nav('Tier multipliers'),function()
-    assert(frame[15]:find('[ UV v ]',1,true))
+    assert(frame[15]:find('[ UV ]',1,true))
     assert(unser(files[api.paths.config]).batch.below2=='96')
     return quit()
   end)
   api.runUI()
+end)
+
+test('batch UI hides inactive controls and edits overrides in one compact table',function()
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),nav('Tier multipliers'),function()
+      assert(not table.concat(frame,'\n'):find('Current progression tier',1,true))
+      return click('[ Tiered ]')()
+    end,nav('Wiremill'),function()
+      assert(not table.concat(frame,'\n'):find('Pattern multiplier',1,true))
+      return nav('Tier multipliers')()
+    end,click('[ Next ]',45),function()
+      snapshot('tier_curve')
+      assert(table.concat(frame,'\n'):find('Tiers below until maximum',1,true))
+      return click('[ Next ]',45)()
+    end,replace('UHV','2'),function()
+      assert(unser(files[api.paths.config]).batch.overrideUHV=='2')
+      assert(frame[10]:find('MATERIAL TIER',1,true) and frame[10]:find('EFFECTIVE',1,true))
+      snapshot('tier_overrides')
+      return quit()
+    end)
+  api.runUI()
+end)
+
+test('all tier-excluded outputs remain visible as kept patterns with a no-op plan',function()
+  withMatrix(function()
+    cfg.programs.wiremill.wire1=cfg.programs.assline.target
+    cfg.programs.wiremill.wireFine='Fine wires';iface('Fine wires',50)
+    target.patterns={[3]=cp(buffer.patterns[0])}
+    cfg.batch.mode='tiered';cfg.batch.unknownPolicy='skip'
+    local p=api.runner.preview(cfg,'wiremill')
+    assert(#p.manifest.recipes==0 and #p.manifest.skipped==4)
+    assert(#p.plan.preserved==1 and #p.plan.moves==0 and #p.plan.creates==0 and #p.plan.resizes==0)
+    assert(p.plan.existing[1].status=='KEEP' and p.plan.existing[1].from.slot==3)
+  end)
+end)
+
+test('preview voltage badges group EU values and color only the voltage span',function()
+  withMatrix(function()
+    cfg.programs.wiremill.wire1=cfg.programs.assline.target
+    cfg.programs.wiremill.wireFine='Fine wires';iface('Fine wires',50)
+    for _,rule in ipairs(package.loaded.assline_data.rules) do rule.eut=30720 end
+    files[api.paths.config]=ser(cfg)
+    queue(nav('Programs'),click('[ Wiremill ]'),click('[ Preview selected ]',47),function()
+      local found
+      for y=10,42 do
+        local x=frame[y]:find('30,720 EU/t (LuV)',1,true)
+        if x then
+          assert(background[y][x]~=background[y][x-1] and background[y][x+15]==background[y][x])
+          found=true;break
+        end
+      end
+      assert(found);snapshot('voltage_badges');return quit()
+    end)
+    api.runUI()
+  end)
 end)
 
 test('multiplier settings default on migration, reject fractions and stay separate per program',function()
@@ -1441,12 +1501,12 @@ end)
 test('numeric settings expand shorthand on save and leave interface names untouched',function()
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),replace('New pattern buffer name','4k'),nav('Wiremill'),
-    replace('Pattern multiplier','1.5K'),nav('Tier multipliers'),
+    replace('Pattern multiplier','1.5K'),nav('Tier multipliers'),click('[ Tiered ]'),
     replace('Maximum items per pattern ingredient','4k'),replace('Maximum fluid per pattern ingredient (mB)','4M'),function()
       local c=unser(files[api.paths.config])
       assert(c.shared.donors=='4k' and c.programs.wiremill.multiplier=='1500')
       assert(c.batch.itemLimit=='4000' and c.batch.fluidLimit=='4000000')
-      assert(frame[31]:find('4000',1,true))
+      assert(frame[39]:find('4000',1,true))
       return quit()
     end)
   api.runUI()
@@ -1663,7 +1723,7 @@ test('preview identifies kept encoded outputs, excluded forms and labeled sortin
         return click('[ Excluded ]',9)()
       end,function()
         local screen=screenText()
-        assert(screen:find('EXCLUDED BY RECIPE USE',1,true))
+        assert(screen:find('EXCLUDED OUTPUTS',1,true))
         assert(screen:find('B 1x Cable',1,true))
         snapshot('diagnosis_excluded')
         return click('[ Export report ]',45)()

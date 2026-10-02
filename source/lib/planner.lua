@@ -130,7 +130,6 @@ function M.plan(request, snapshot, checkpoint)
     'Missing ordered recipe manifest'
   )
   sequence(request.recipes, 'Recipes')
-  need(#request.recipes > 0, 'Manifest contains no recipes')
   local interfaces = validateSnapshot(snapshot)
   local p = {
     version = 1,
@@ -297,6 +296,16 @@ function M.plan(request, snapshot, checkpoint)
           .. ', have '
           .. #g.slots
       )
+    end
+  end
+  -- Destinations containing only excluded outputs stay in place, but still
+  -- contribute to existing-pattern counts and capacity reports.
+  for _, g in pairs(groups) do
+    if #g.wanted == 0 then
+      for _, t in ipairs(g.tokens) do
+        p.preserved[#p.preserved + 1] =
+          { from = t.current, to = t.current, fingerprint = t.pattern.fingerprint }
+      end
     end
   end
   for kind, count in pairs(p.available) do

@@ -160,4 +160,10 @@ test('malformed sparse manifests and cancellation cannot return partial operatio
   fails(function() P.plan({recipes={recipe('A')}},s,function() error('cancelled') end) end,'cancelled')
   assert(s.interfaces[2].patterns[0].fingerprint=='nbt:donor1')
 end)
+test('all outputs excluded produces a no-op plan and counts preserved destination patterns',function()
+  local p=P.plan({recipes={}},fixture({[2]=pat('kept')},4))
+  assert(#p.layout==0 and #p.creates==0 and #p.resizes==0 and #p.moves==0 and #p.preserved==1)
+  assert(p.preserved[1].from.slot==2 and p.preserved[1].to.slot==2)
+end)
+
 print('SUCCESS: '..n..' tests (pure planner; includes 720 permutations)')

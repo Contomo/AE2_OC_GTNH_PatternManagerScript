@@ -54,29 +54,38 @@ program. New installs start at LuV; existing installations keep **Fixed** until
 you enable **Tiered**. Current progression and voltage reference tiers have
 popup selectors covering ULV through MAX, including OpV.
 
-The relative material curve defaults to 4x at your tier, then 32x, 64x, 256x,
-320x, 400x, 448x and 512x as materials get older. Later or unclassified materials
-default to 1x. Every step is editable. Changing your current tier shifts this
-curve automatically; an optional absolute override for any material tier stays
-fixed. The program's multiplier scales the resulting budget. The optional
-voltage constraint takes the smaller of the material and recipe-voltage budgets,
-so cheap processing never increases the budget for an expensive material.
-Its reference can follow your current tier or use a separately selected voltage.
+The shared policy is exclusive: **Fixed** exposes per-program multipliers;
+**Tiered** ignores those retained fixed values and exposes its curve and limits.
+The generated curve has a current-tier batch, a maximum, and a number of tier
+steps until that maximum. Choose geometric or logarithmic growth. The conservative
+preset grows from 4x to 512x over seven steps (4, 8, 16, 32, 64, 128, 256, 512).
+Changing your progression tier shifts the curve. The maximum is both its endpoint
+and the final ceiling. Custom points and optional absolute tier overrides use
+compact editable tables; blank overrides follow the curve.
 
-Tiered batches are capped at 512x by default, with 4096 items or 589824 mB per
-requested input/output ingredient. All three limits are editable. The whole
-batch shrinks together, preserving the recipe ratio; molds, circuits and omitted
-supplies do not consume that budget. **Effective tiers** displays the material
-curve before program factors and other constraints. Patterns show their actual
-multiplier, material tier and recipe EU/t.
+Materials above progression default to **Skip**. Unclassified materials can use
+**Recipe voltage**, **Fixed fallback**, or **Skip**. Voltage fallback is explicitly
+an estimate, not a claim of earliest material accessibility. Missing voltage uses
+the fallback multiplier. The separate voltage constraint can be disabled; when
+enabled it caps batches and skips recipes above the selected voltage reference.
+Cheap processing never increases a known high-tier material's budget.
 
-Material tiers currently use the earliest solid-form requirement in a tier
-chapter of the beta-3 questbook: **98 of 1162 materials** have evidence. Optional
-ingredients and ambiguous "any one" tasks are excluded. This is
-progression guidance, not a proof of earliest accessibility. Missing materials
-use the configurable fallback, rather than inheriting a large batch from low
-recipe voltage. `data/material-tiers.json` retains the source quest/item for
-every classification. Recipe EU/t comes directly from the recipe export.
+Tiered batches default to limits of 4096 items or 589824 mB per ingredient. The
+whole batch shrinks together; stocked molds/circuits and omitted supplies do not
+consume those limits. Effective tiers shows material budgets before these caps.
+The preview uses labels such as `30,720 EU/t (LuV)` with tier-colored backgrounds
+blended at 50%, and explains exclusions in Excluded and Existing. Existing patterns
+excluded by settings are kept. Selecting no recipes gives a non-executable preview.
+
+Material tiers come from the pinned beta-3 questbook's item/ingredient lists,
+side-chapter prerequisites and pinned GT ore placement rules. Dusts, ores,
+optional ingredient lists and alternative forms count; icons/rewards/tools do
+not. One-hop recipe evidence must be shared by all eligible alternative routes,
+and must have material-creation evidence; chance byproducts and recycling are
+excluded. These are availability estimates rather than an exact tech-tree solver.
+`data/material-tiers.json` retains paths, recipes, dimensions and production
+constraints for audit. Ore/recipe estimates are marked in the preview; remaining
+materials follow the chosen unclassified policy. EU/t comes from the recipe export.
 The insulator selects PVC pulp, small PVC pulp, PDMS pulp, small PDMS pulp, or
 nothing. PPS sheets have a separate toggle. Normal piles use the scraped
 four-cable batches; small piles and nothing use single-cable batches. The scrape

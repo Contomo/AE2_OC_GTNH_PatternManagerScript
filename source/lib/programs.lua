@@ -25,7 +25,7 @@ local function multiplier()
   return field(
     'multiplier',
     'Pattern multiplier',
-    'Fixed: recipe batch x this value. Tiered: global tier budget x this value, capped by global quantity limits.',
+    'Fixed policy only: multiply every requested recipe input and output by this amount.',
     '1',
     'positiveInteger'
   )

@@ -185,8 +185,8 @@ end
 -- Shared row construction for preview and UI text, with one default tone.
 function M.rows()
   local result = {}
-  local function add(text, tone, guideWidth, guideTone)
-    result[#result + 1] = { text, tone or 'text', guideWidth, guideTone }
+  local function add(text, tone, guideWidth, guideTone, accent)
+    result[#result + 1] = { text, tone or 'text', guideWidth, guideTone, accent }
   end
   return result, add
 end
@@ -196,7 +196,7 @@ return M
 end)()
 local TierDefinitions=(function()
 -- Source: source/data/tiers.json
-return {["source"]="https://github.com/GTNewHorizons/GT5-Unofficial/blob/5.09.54.133/src/main/java/gregtech/api/enums/GTValues.java",["names"]={"ULV","LV","MV","HV","EV","IV","LuV","ZPM","UV","UHV","UEV","UIV","UMV","UXV","OpV","MAX"},["voltages"]={8,32,128,512,2048,8192,32768,131072,524288,2097152,8388608,33554432,134217728,536870912,2147483640,8589934592}}
+return {["source"]="https://github.com/GTNewHorizons/GT5-Unofficial/blob/5.09.54.133/src/main/java/gregtech/api/enums/GTValues.java",["names"]={"ULV","LV","MV","HV","EV","IV","LuV","ZPM","UV","UHV","UEV","UIV","UMV","UXV","OpV","MAX"},["voltages"]={8,32,128,512,2048,8192,32768,131072,524288,2097152,8388608,33554432,134217728,536870912,2147483640,8589934592},["colorSource"]="RGB colors of pinned GTValues.TIER_COLORS; Minecraft bold/underline formatting has no OC GPU equivalent",["colors"]={16733525,43520,16755200,16777045,5592405,5592575,16733695,5636095,43520,11141120,11141290,170,16733525,11141120,16777215,16777215}}
 end)()
 local Batch=(function()
 -- Source: source/lib/batch.lua
@@ -254,15 +254,43 @@ field(
   'currentTier',
   'Current progression tier',
   'LuV',
-  'Changing this tier shifts the relative material curve automatically.',
+  'Select your current tier. Later materials are skipped unless enabled.',
   'select',
   tierChoices
+)
+field(
+  'abovePolicy',
+  'Materials above your tier',
+  'skip',
+  '',
+  'choice',
+  { { 'skip', 'Skip' }, { 'fixed', 'Include' } }
+)
+field(
+  'aboveMultiplier',
+  'Later material multiplier',
+  '1',
+  'Used only when later materials are included.'
+)
+field(
+  'unknownPolicy',
+  'Unclassified materials',
+  'voltage',
+  'Recipe voltage is an estimate of material tier, not proof of accessibility.',
+  'choice',
+  { { 'voltage', 'Use recipe voltage' }, { 'fixed', 'Fixed fallback' }, { 'skip', 'Skip' } }
+)
+field(
+  'unknownMultiplier',
+  'Unclassified fallback multiplier',
+  '1',
+  'Also used when recipe voltage is missing.'
 )
 field(
   'voltagePolicy',
   'Recipe voltage constraint',
   'cap',
-  'Cap limits the material budget by recipe voltage. It never increases an expensive material batch.',
+  'Cap also skips recipes above the reference tier. Ignore removes this constraint.',
   'choice',
   { { 'off', 'Ignore voltage' }, { 'cap', 'Cap by voltage' } }
 )
@@ -270,62 +298,93 @@ field(
   'voltageTier',
   'Voltage reference tier',
   'current',
-  'Machine voltage used for the voltage constraint; Current follows your progression tier.',
+  'Follow progression or select the voltage available to your machines.',
   'select',
   voltageChoices
-)
-field(
-  'maxMultiplier',
-  'Maximum tiered multiplier',
-  '512',
-  'Final ceiling after the tier curve and program multiplier are applied.'
 )
 field(
   'itemLimit',
   'Maximum items per pattern ingredient',
   '4096',
-  'Tiered batches shrink to keep every requested item input and output at or below this amount.'
+  'Shrink the whole batch together to preserve proportions.'
 )
 field(
   'fluidLimit',
   'Maximum fluid per pattern ingredient (mB)',
   '589824',
-  'Tiered fluid limit. 589824 mB equals 4096 standard ingots; all quantities shrink together.'
+  'Fluid inputs and outputs share this per-ingredient limit.'
+)
+
+group = 'Curve'
+field(
+  'curveMode',
+  'Multiplier curve',
+  'generated',
+  '',
+  'choice',
+  { { 'generated', 'Generated curve' }, { 'table', 'Custom table' } }
 )
 field(
-  'unknownMultiplier',
-  'Unclassified material multiplier',
-  '1',
-  'Fallback when the questbook provides no material progression tier. Never guesses from low EU/t.'
+  'curveShape',
+  'Generated curve shape',
+  'geometric',
+  '',
+  'choice',
+  { { 'geometric', 'Geometric' }, { 'logarithmic', 'Logarithmic' } }
+)
+field('atTier', 'Current-tier multiplier', '4', 'Starting point of the generated curve.')
+field(
+  'maxMultiplier',
+  'Maximum tiered multiplier',
+  '512',
+  'End of the generated curve and final ceiling, including tier overrides.'
 )
 field(
-  'aboveMultiplier',
-  'Materials above your tier',
-  '1',
-  'Budget for materials in later chapters. This does not exclude their recipes.'
+  'curveSpan',
+  'Tiers below until maximum',
+  '7',
+  'Growth follows the selected shape; older tiers stay at maximum.'
 )
-local preset = { 4, 32, 64, 256, 320, 400, 448, 512 }
-group = 'Relative curve'
+-- Retain custom points and overrides in the same saved configuration. Their UI
+-- is a compact editable table with shared headings, not repeated field help.
+local preset = { 4, 8, 16, 32, 64, 128, 256, 512 }
+group = 'Curve table'
 for gap = 0, 7 do
-  local label = gap == 0 and 'Material at your tier'
-    or gap == 7 and 'Material seven or more tiers below'
-    or 'Material ' .. gap .. ' tier(s) below'
   field(
     'below' .. gap,
-    label,
+    gap == 0 and 'Current tier' or gap == 7 and '7+ tiers below' or gap .. ' tiers below',
     tostring(preset[gap + 1]),
-    'Relative multiplier. Also used by the optional recipe-voltage constraint.'
+    ''
   )
 end
 group = 'Tier overrides'
 for _, name in ipairs(M.tiers) do
-  field(
-    'override' .. name,
-    name .. ' material multiplier override',
-    '',
-    'Blank follows the relative curve. A number fixes this material-tier budget as you advance.',
-    'optionalPositiveInteger'
-  )
+  field('override' .. name, name, '', '', 'optionalPositiveInteger')
+end
+for _, f in ipairs(M.fields) do
+  if f.key ~= 'mode' then
+    f.when = { mode = 'tiered' }
+  end
+  if f.key == 'aboveMultiplier' then
+    f.when.abovePolicy = 'fixed'
+  end
+  if f.key == 'unknownMultiplier' then
+    f.when.unknownPolicy = { 'fixed', 'voltage' }
+  end
+  if f.key == 'voltageTier' then
+    f.when.voltagePolicy = 'cap'
+  end
+  if f.key == 'atTier' or f.key == 'curveSpan' or f.key == 'curveShape' then
+    f.when.curveMode = 'generated'
+  end
+  if f.group == 'Curve table' then
+    f.when.curveMode = 'table'
+    f.compact = true
+  end
+  if f.group == 'Tier overrides' then
+    f.compact = true
+    f.placeholder = ''
+  end
 end
 
 function M.validate(values)
@@ -334,6 +393,7 @@ function M.validate(values)
     values.voltageTier == 'current' or index[values.voltageTier],
     'Unknown voltage reference tier'
   )
+
   for _, f in ipairs(M.fields) do
     if
       f.kind == 'positiveInteger' or f.kind == 'optionalPositiveInteger' and values[f.key] ~= ''
@@ -342,41 +402,90 @@ function M.validate(values)
       U.check(U.integer(value) and value > 0, f.label .. ' must be a positive whole number')
     end
   end
+  U.check(
+    values.mode ~= 'tiered'
+      or values.curveMode ~= 'generated'
+      or tonumber(values.atTier) <= tonumber(values.maxMultiplier),
+    'Current-tier multiplier must not exceed the maximum'
+  )
 end
 
 local function relative(values, current, tier)
   local gap = index[current] - index[tier]
-  return tonumber(values[gap < 0 and 'aboveMultiplier' or 'below' .. math.min(gap, 7)])
+  if gap < 0 then
+    return values.abovePolicy == 'skip' and 0 or tonumber(values.aboveMultiplier)
+  end
+  if values.curveMode == 'table' then
+    return tonumber(values['below' .. math.min(gap, 7)])
+  end
+  local first, maximum = tonumber(values.atTier), tonumber(values.maxMultiplier)
+  local span = tonumber(values.curveSpan)
+  local fraction = math.min(1, gap / span)
+  if values.curveShape == 'logarithmic' then
+    return math.floor(
+      first + (maximum - first) * math.log(1 + math.min(gap, span)) / math.log(1 + span) + 0.5
+    )
+  end
+  return math.floor(first * (maximum / first) ^ fraction + 0.5)
 end
 
 function M.budget(values, tier)
   if not index[tier] then
     return tonumber(values.unknownMultiplier)
   end
+  if index[tier] > index[values.currentTier] and values.abovePolicy == 'skip' then
+    return 0
+  end
   return tonumber(values['override' .. tier]) or relative(values, values.currentTier, tier)
 end
 
 -- Called once per requested recipe, before its items/fluids are resolved.
 -- Stocked circuits, molds and omitted insulation solids do not constrain a batch.
-function M.resolve(values, materialTier, eut, factor, quantities)
+function M.resolve(values, materialTier, eut, factor, quantities, materialSource)
   factor = factor or 1
   U.check(U.integer(factor) and factor > 0, 'Pattern multiplier must be a positive whole number')
   local recipeTier = M.voltageTier(eut)
-  local detail = { materialTier = materialTier, recipeTier = recipeTier, eut = eut }
+  local detail = {
+    materialTier = materialTier,
+    recipeTier = recipeTier,
+    eut = eut,
+    materialSource = materialSource,
+  }
   if not values or values.mode == 'fixed' then
     detail.multiplier = factor
     return factor, detail
   end
   M.validate(values)
-  detail.materialBudget = M.budget(values, materialTier)
+  -- Fixed program multipliers are intentionally irrelevant in tiered mode.
+  local effectiveTier = materialTier
+  if not index[effectiveTier] then
+    if values.unknownPolicy == 'skip' then
+      detail.excluded = 'Unclassified material: skipped by settings'
+    elseif values.unknownPolicy == 'voltage' and recipeTier then
+      effectiveTier = recipeTier
+      detail.tierSource = 'recipe voltage estimate'
+    end
+  end
+  detail.effectiveTier = effectiveTier
+  detail.materialBudget = M.budget(values, effectiveTier)
+  if detail.materialBudget == 0 then
+    detail.excluded = 'Material tier above current progression'
+  end
   local target = detail.materialBudget
   if values.voltagePolicy == 'cap' then
     local reference = values.voltageTier == 'current' and values.currentTier or values.voltageTier
+    if recipeTier and index[recipeTier] > index[reference] then
+      detail.excluded = 'Recipe voltage above ' .. reference
+    end
     detail.voltageBudget = recipeTier and relative(values, reference, recipeTier)
       or tonumber(values.unknownMultiplier)
     target = math.min(target, detail.voltageBudget)
   end
-  target = math.min(target * factor, tonumber(values.maxMultiplier))
+  if detail.excluded then
+    detail.multiplier = 0
+    return 0, detail
+  end
+  target = math.min(target, tonumber(values.maxMultiplier))
   for _, q in ipairs(quantities or {}) do
     local limit = tonumber(values[q.type == 'fluid' and 'fluidLimit' or 'itemLimit'])
     target = math.min(target, math.floor(limit / q.size))
@@ -386,11 +495,42 @@ function M.resolve(values, materialTier, eut, factor, quantities)
   return target, detail
 end
 
+function M.voltageText(detail)
+  if not detail.recipeTier then
+    return 'Unknown EU/t'
+  end
+  local digits = string.format('%.0f', detail.eut)
+  local grouped = digits:reverse():gsub('(%d%d%d)', '%1,'):reverse():gsub('^,', '')
+  return grouped .. ' EU/t (' .. detail.recipeTier .. ')'
+end
+
 function M.describe(detail)
-  local material = detail.materialTier or 'unclassified'
-  local voltage = detail.recipeTier and (detail.recipeTier .. ' / ' .. detail.eut .. ' EU/t')
-    or 'unknown voltage'
-  return 'Batch ' .. detail.multiplier .. 'x  |  Material ' .. material .. '  |  Recipe ' .. voltage
+  local material = detail.materialTier
+    or (detail.effectiveTier and (detail.effectiveTier .. ' estimated') or 'unclassified')
+  if detail.materialTier and detail.materialSource and detail.materialSource ~= 'quest item' then
+    material = material .. ' (estimated)'
+  end
+  return 'Batch '
+    .. detail.multiplier
+    .. 'x  |  Material '
+    .. material
+    .. '  |  '
+    .. M.voltageText(detail)
+end
+
+-- OC accepts RGB, without alpha. Blend tier backgrounds locally instead.
+function M.color(tier, background, opacity)
+  local rgb = Tiers.colors[index[tier]] or background
+  if not opacity then
+    return rgb
+  end
+  local value = 0
+  for _, divisor in ipairs({ 65536, 256, 1 }) do
+    local foreground = math.floor(rgb / divisor) % 256
+    local back = math.floor(background / divisor) % 256
+    value = value + math.floor(foreground * opacity + back * (1 - opacity) + 0.5) * divisor
+  end
+  return value
 end
 return M
 
@@ -424,7 +564,7 @@ local function multiplier()
   return field(
     'multiplier',
     'Pattern multiplier',
-    'Fixed: recipe batch x this value. Tiered: global tier budget x this value, capped by global quantity limits.',
+    'Fixed policy only: multiply every requested recipe input and output by this amount.',
     '1',
     'positiveInteger'
   )
@@ -807,6 +947,25 @@ M.sections = {
 function M.section(id)
   return U.check(M.sections[id] or Programs.byId[id], 'Unknown settings section')
 end
+function M.visibleFields(c, section)
+  local result, values = {}, M.values(c, section)
+  for _, f in ipairs(M.section(section).fields) do
+    local visible = not f.hidden and (f.key ~= 'multiplier' or c.batch.mode == 'fixed')
+    for key, expected in pairs(f.when or {}) do
+      local match = values[key] == expected
+      if type(expected) == 'table' then
+        for _, option in ipairs(expected) do
+          match = match or values[key] == option
+        end
+      end
+      visible = visible and match
+    end
+    if visible then
+      result[#result + 1] = f
+    end
+  end
+  return result
+end
 for _, p in ipairs(Programs.list) do
   local values = {}
   M.defaults.programs[p.id] = values
@@ -836,8 +995,11 @@ function M.normalize(c)
     U.check(type(values) == 'table', 'Missing configuration section')
     for _, f in ipairs(definitions) do
       local value = values[f.key]
-      if (f.kind == 'number' or f.kind == 'positiveInteger' or f.kind == 'optionalPositiveInteger')
-        and type(value) == 'string' and not value:find('[%c]') then
+      if
+        (f.kind == 'number' or f.kind == 'positiveInteger' or f.kind == 'optionalPositiveInteger')
+        and type(value) == 'string'
+        and not value:find('[%c]')
+      then
         values[f.key] = normalizeNumber(value)
       end
     end
@@ -925,6 +1087,15 @@ function M.migrate(old)
     for _, f in ipairs(Batch.fields) do
       if old.batch and old.batch[f.key] ~= nil then
         c.batch[f.key] = old.batch[f.key]
+      end
+    end
+    if old.batch and not old.batch.curveMode then
+      local prior = { 4, 32, 64, 256, 320, 400, 448, 512 }
+      for gap = 0, 7 do
+        local value = old.batch['below' .. gap]
+        if value and tonumber(value) ~= prior[gap + 1] then
+          c.batch.curveMode = 'table'
+        end
       end
     end
     for _, f in ipairs(M.fields) do
@@ -2344,7 +2515,6 @@ function M.plan(request, snapshot, checkpoint)
     'Missing ordered recipe manifest'
   )
   sequence(request.recipes, 'Recipes')
-  need(#request.recipes > 0, 'Manifest contains no recipes')
   local interfaces = validateSnapshot(snapshot)
   local p = {
     version = 1,
@@ -2511,6 +2681,16 @@ function M.plan(request, snapshot, checkpoint)
           .. ', have '
           .. #g.slots
       )
+    end
+  end
+  -- Destinations containing only excluded outputs stay in place, but still
+  -- contribute to existing-pattern counts and capacity reports.
+  for _, g in pairs(groups) do
+    if #g.wanted == 0 then
+      for _, t in ipairs(g.tokens) do
+        p.preserved[#p.preserved + 1] =
+          { from = t.current, to = t.current, fingerprint = t.pattern.fingerprint }
+      end
     end
   end
   for kind, count in pairs(p.available) do
@@ -2794,6 +2974,7 @@ function M.compile(data, mode, options, checkpoint)
     recipes = {},
     unusedExcluded = 0,
     unclassifiedRecipes = 0,
+    tierExcluded = 0,
     skipped = {},
   }
   local seen, unresolved, skipped = {}, {}, {}
@@ -2846,96 +3027,120 @@ function M.compile(data, mode, options, checkpoint)
           elseif eut == false then
             eut = nil
           end
-          local recipeMultiplier, batch =
-            Batch.resolve(options.batch, material.tier, eut, multiplier, quantities)
-          local function resolve(e, stocked)
-            if e.fluid == 'material' then
-              local fluid =
-                U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
-              local size = e.n * (stocked and 1 or recipeMultiplier)
-              U.check(
-                U.integer(size) and size > 0,
-                'Pattern multiplier exceeds the supported fluid quantity'
-              )
-              return {
-                type = 'fluid',
-                name = fluid,
-                label = 'Molten ' .. material.name,
-                size = size,
+          local recipeMultiplier, batch = Batch.resolve(
+            options.batch,
+            material.tier,
+            eut,
+            multiplier,
+            quantities,
+            material.tierSource
+          )
+          if recipeMultiplier == 0 then
+            manifest.tierExcluded = manifest.tierExcluded + 1
+            local out = rule.outputs[1]
+            local item = M.resolve(data, material, out.f)
+            local key = item.name .. ':' .. item.damage
+            if not skipped[key] then
+              skipped[key] = true
+              manifest.skipped[#manifest.skipped + 1] = {
+                material = material.name,
+                form = out.f,
+                label = material.name .. ' ' .. formLabel(out.f),
+                name = item.name,
+                damage = item.damage,
+                reason = batch.excluded,
               }
             end
-            local item
-            if e.f then
-              item = M.resolve(data, material, e.f)
-              item.label = material.name .. ' ' .. formLabel(e.f)
-            else
-              item = U.clone(U.check(data.items[e.i], 'Unknown shared item'))
-            end
-            if item.option and options[item.option] == false and not stocked then
-              return nil
-            end
-            item.option = nil
-            item.type = 'item'
-            item.size = e.n * (stocked and 1 or recipeMultiplier)
-            U.check(
-              U.integer(item.size) and item.size > 0,
-              'Pattern multiplier exceeds the supported ingredient quantity'
-            )
-            -- Oracle IDs are normalized to lower case. GT/Minecraft families above
-            -- have known spelling; other families still need a registry resolver.
-            local registered
-            item, registered = registeredItem(data, item)
-            if not stocked and not registered and not unresolved[item.name] then
-              unresolved[item.name] = true
-              manifest.unresolved[#manifest.unresolved + 1] = item.name
-            end
-            return item
-          end
-          local out = rule.outputs[1]
-          local label = formLabel(out.f)
-          local source = rule.inputs[1].f
-          local route = (mode == 'wiremill' or mode == 'bender')
-              and (' / from ' .. (labels[source] or source))
-            or ''
-          local recipe = {
-            kind = 'processing',
-            material = material.name,
-            outputForm = out.f,
-            outputLabel = label,
-            inputs = {},
-            outputs = {},
-            label = material.name .. ' / ' .. label .. route,
-            stock = {},
-            batch = batch,
-          }
-          for _, which in ipairs({ 'inputs', 'outputs' }) do
-            for _, e in ipairs(rule[which]) do
-              local item = resolve(e)
-              if item then
-                recipe[which][#recipe[which] + 1] = item
+          else
+            local function resolve(e, stocked)
+              if e.fluid == 'material' then
+                local fluid =
+                  U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
+                local size = e.n * (stocked and 1 or recipeMultiplier)
+                U.check(
+                  U.integer(size) and size > 0,
+                  'Pattern multiplier exceeds the supported fluid quantity'
+                )
+                return {
+                  type = 'fluid',
+                  name = fluid,
+                  label = 'Molten ' .. material.name,
+                  size = size,
+                }
+              end
+              local item
+              if e.f then
+                item = M.resolve(data, material, e.f)
+                item.label = material.name .. ' ' .. formLabel(e.f)
               else
-                recipe.stock[#recipe.stock + 1] = resolve(e, true)
+                item = U.clone(U.check(data.items[e.i], 'Unknown shared item'))
+              end
+              if item.option and options[item.option] == false and not stocked then
+                return nil
+              end
+              item.option = nil
+              item.type = 'item'
+              item.size = e.n * (stocked and 1 or recipeMultiplier)
+              U.check(
+                U.integer(item.size) and item.size > 0,
+                'Pattern multiplier exceeds the supported ingredient quantity'
+              )
+              -- Oracle IDs are normalized to lower case. GT/Minecraft families above
+              -- have known spelling; other families still need a registry resolver.
+              local registered
+              item, registered = registeredItem(data, item)
+              if not stocked and not registered and not unresolved[item.name] then
+                unresolved[item.name] = true
+                manifest.unresolved[#manifest.unresolved + 1] = item.name
+              end
+              return item
+            end
+            local out = rule.outputs[1]
+            local label = formLabel(out.f)
+            local source = rule.inputs[1].f
+            local route = (mode == 'wiremill' or mode == 'bender')
+                and (' / from ' .. (labels[source] or source))
+              or ''
+            local recipe = {
+              kind = 'processing',
+              material = material.name,
+              outputForm = out.f,
+              outputLabel = label,
+              inputs = {},
+              outputs = {},
+              label = material.name .. ' / ' .. label .. route,
+              stock = {},
+              batch = batch,
+            }
+            for _, which in ipairs({ 'inputs', 'outputs' }) do
+              for _, e in ipairs(rule[which]) do
+                local item = resolve(e)
+                if item then
+                  recipe[which][#recipe[which] + 1] = item
+                else
+                  recipe.stock[#recipe.stock + 1] = resolve(e, true)
+                end
               end
             end
-          end
-          for _, e in ipairs(rule.stock or {}) do
-            recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
-          end
-          U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
-          local key = Planner.recipeKey(recipe)
-          if not seen[key] then
-            manifest.recipes[#manifest.recipes + 1] = recipe
-            seen[key] = recipe
-          elseif U.canonical(seen[key].stock) ~= U.canonical(recipe.stock) then
-            local existing = seen[key]
-            existing.stockAlternatives = existing.stockAlternatives or {}
-            existing.stockAlternatives[#existing.stockAlternatives + 1] = recipe.stock
+            for _, e in ipairs(rule.stock or {}) do
+              recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
+            end
+            U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
+            local key = Planner.recipeKey(recipe)
+            if not seen[key] then
+              manifest.recipes[#manifest.recipes + 1] = recipe
+              seen[key] = recipe
+            elseif U.canonical(seen[key].stock) ~= U.canonical(recipe.stock) then
+              local existing = seen[key]
+              existing.stockAlternatives = existing.stockAlternatives or {}
+              existing.stockAlternatives[#existing.stockAlternatives + 1] = recipe.stock
+            end
           end
         end
       end
     end
   end
-  U.check(#manifest.recipes > 0, 'No verified recipes for this mode')
+  U.check(#manifest.recipes > 0 or #manifest.skipped > 0, 'No verified recipes for this mode')
   return manifest
 end
 return M
@@ -2982,14 +3187,21 @@ function M.planRows(plan, manifest)
     add(
       'Tiered batches at '
         .. manifest.policy.batch.currentTier
-        .. '; material tiers follow quest progression.',
+        .. '; fixed program multipliers do not apply.',
       'muted'
     )
     add(
       (manifest.unclassifiedRecipes or 0)
-        .. ' recipes have unclassified materials; fallback '
-        .. manifest.policy.batch.unknownMultiplier
-        .. 'x before other limits.',
+        .. ' unclassified recipes; policy: '
+        .. manifest.policy.batch.unknownPolicy
+        .. '.  '
+        .. (manifest.tierExcluded or 0)
+        .. ' routes excluded by tier settings.',
+      'muted'
+    )
+  elseif manifest.policy then
+    add(
+      'Batch policy: Fixed  |  Program multiplier ' .. (manifest.policy.multiplier or 1) .. 'x',
       'muted'
     )
   end
@@ -3053,7 +3265,15 @@ function M.planRows(plan, manifest)
     treeRow(rows, add, '  |      ', U.ingredientSummary(recipe.inputs))
     treeRow(rows, add, '  |      ', '-> ' .. U.ingredientSummary(recipe.outputs), 'green')
     if recipe.batch then
-      treeRow(rows, add, '  |      ', Batch.describe(recipe.batch), 'muted')
+      local description, voltage = Batch.describe(recipe.batch), Batch.voltageText(recipe.batch)
+      treeRow(rows, add, '  |      ', description, 'muted')
+      if recipe.batch.recipeTier then
+        rows[#rows][5] = {
+          from = 10 + #description - #voltage,
+          length = #voltage,
+          tier = recipe.batch.recipeTier,
+        }
+      end
     end
   end
   return rows
@@ -3162,11 +3382,8 @@ end
 
 function M.excludedRows(manifest)
   local rows, add = U.rows()
-  add('EXCLUDED BY RECIPE USE', 'blue')
-  add(
-    #(manifest.skipped or {}) .. ' output forms have no path to a non-recycling product.',
-    'muted'
-  )
+  add('EXCLUDED OUTPUTS', 'blue')
+  add(#(manifest.skipped or {}) .. ' output forms excluded by use or tier settings.', 'muted')
   add('Existing patterns for these outputs are kept; see Existing.', 'muted')
   local material
   for _, item in ipairs(manifest.skipped or {}) do
@@ -3175,10 +3392,11 @@ function M.excludedRows(manifest)
       material = item.material
       add(material, 'blue')
     end
-    add('  ' .. item.label .. '  (' .. item.name .. ':' .. item.damage .. ')', 'yellow')
+    add('  ' .. item.label, 'yellow')
+    add('    ' .. (item.reason or 'No path to a non-recycling product.'), 'muted')
   end
   if #(manifest.skipped or {}) == 0 then
-    add('No selected output forms excluded by the use check.', 'green')
+    add('No selected output forms excluded.', 'green')
   end
   return rows
 end
@@ -3325,7 +3543,7 @@ local function explainExisting(plan, snapshot, request, manifest)
         reason = reusedEntry.resize and 'Recipe matches; batch will be resized.'
           or 'Recipe matches the selected route.'
       elseif skippedItem then
-        reason = 'Skipped: no path to a non-recycling product in the recipe export.'
+        reason = 'Skipped: ' .. (skippedItem.reason or 'no path to a non-recycling product in the recipe export.')
       elseif wantedKeys[interface.name .. ':' .. tostring(pattern.recipeKey)] then
         reason = 'Duplicate of a selected recipe; kept after the planned patterns.'
       elseif wantedOutput and wantedOutput.destination ~= interface.name then
@@ -3372,7 +3590,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     end
   end
   local function destination(recipe)
-    return routing.destinations and routing.destinations[recipe.outputForm] or routing.destination
+    return routing.destinations and routing.destinations[recipe.outputForm or recipe.form] or routing.destination
   end
   U.check(
     manifest.version == 1 and type(manifest.recipes) == 'table',
@@ -3387,6 +3605,9 @@ local function scanManifest(c, manifest, routing, progress, control, started)
   )
   for _, recipe in ipairs(manifest.recipes) do
     group(destination(recipe), 'destination')
+  end
+  for _, item in ipairs(manifest.skipped or {}) do
+    group(destination(item), 'destination')
   end
   group(routing.donors, 'donor')
   group(routing.workspace, 'workspace')
@@ -3552,7 +3773,7 @@ function C.maker.preview(c, id, progress, control)
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)
   local groups = {}
   for _, recipe in ipairs(manifest.recipes) do
-    local name = routing.destinations and routing.destinations[recipe.outputForm]
+    local name = routing.destinations and routing.destinations[recipe.outputForm or recipe.form]
       or routing.destination
     groups[name] = (groups[name] or 0) + 1
   end
@@ -3562,7 +3783,7 @@ function C.maker.preview(c, id, progress, control)
   end
   for _, entry in ipairs(plan.preserved) do
     local name = banks[where(entry.from)]
-    groups[name] = groups[name] + 1
+    groups[name] = (groups[name] or 0) + 1
   end
   plan.capacities = Config.capacityReport(groups)
   local report = Preview.report(plan, manifest)
@@ -3791,7 +4012,7 @@ local function runUI()
   local buttonWidths, scrollbar = {}, nil
   local contentKey, contentRows
   local draw, handle, action, commitEdit, navigate
-  local function text(x, y, s, width, tone, bg, guideWidth, guideTone)
+  local function text(x, y, s, width, tone, bg, guideWidth, guideTone, accent)
     width = math.min(width or w - x + 1, w - x + 1)
     if width < 1 then
       return
@@ -3809,6 +4030,7 @@ local function runUI()
       .. tostring(guideWidth)
       .. ':'
       .. tostring(guideTone)
+      .. U.canonical(accent)
     if paintCache[key] == value then
       return
     end
@@ -3819,6 +4041,14 @@ local function runUI()
     if guideWidth and guideWidth > 0 then
       gpu.setForeground(colors[guideTone or tone or 'text'])
       gpu.set(x, y, unicode.sub(s, 1, guideWidth))
+    end
+    if accent then
+      local first, last = math.max(1, accent.from), math.min(width, accent.from + accent.length - 1)
+      if last >= first then
+        gpu.setForeground(colors.text)
+        gpu.setBackground(Batch.color(accent.tier, colors[bg or 'bg'], 0.5))
+        gpu.set(x + first - 1, y, unicode.sub(s, first, last))
+      end
     end
   end
   local function button(x, y, label, callback, enabled, selected)
@@ -3871,14 +4101,7 @@ local function runUI()
     invalidate()
   end
   local function fields()
-    local definitions = Config.section(state.settings).fields
-    local visible = {}
-    for _, f in ipairs(definitions) do
-      if not f.hidden then
-        visible[#visible + 1] = f
-      end
-    end
-    return visible
+    return Config.visibleFields(cfg, state.settings)
   end
   local function values()
     return Config.values(cfg, state.settings)
@@ -4041,7 +4264,7 @@ local function runUI()
       )
     elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
       for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
-        add(row[1], row[2], row[3], row[4])
+        add(row[1], row[2], row[3], row[4], row[5])
       end
     elseif state.section == 'details' and preview.manifest then
       if preview.id == 'bender' or preview.id == 'fluidShaper' then
@@ -4109,11 +4332,11 @@ local function runUI()
       end
     elseif state.section == 'capacity' then
       for _, row in ipairs(Preview.capacityRows(p)) do
-        add(row[1], row[2], row[3], row[4])
+        add(row[1], row[2], row[3], row[4], row[5])
       end
     elseif preview.id ~= 'assline' then
       for _, row in ipairs(Preview.planRows(p, preview.manifest)) do
-        add(row[1], row[2], row[3], row[4])
+        add(row[1], row[2], row[3], row[4], row[5])
       end
     elseif state.section == 'recipes' then
       for _, r in ipairs(p.recipes) do
@@ -4156,8 +4379,20 @@ local function runUI()
       contentKey = key
       contentRows = {}
       for _, r in ipairs(lines()) do
-        local remaining = r[1]
+        local remaining, consumed = r[1], 0
         local guideWidth = r[3] or 0
+        local function appendChunk(chunk)
+          local accent
+          if r[5] then
+            local first = math.max(1, r[5].from - consumed)
+            local last = math.min(unicode.len(chunk), r[5].from + r[5].length - 1 - consumed)
+            if first <= last then
+              accent = { from = first, length = last - first + 1, tier = r[5].tier }
+            end
+          end
+          contentRows[#contentRows + 1] =
+            { chunk, r[2], math.min(guideWidth, unicode.len(chunk)), r[4], accent }
+        end
         while unicode.len(remaining) > width do
           local prefix = unicode.sub(remaining, 1, width)
           local at = prefix:match('^.*()%s')
@@ -4165,23 +4400,30 @@ local function runUI()
           if count == 0 then
             count = width
           end
-          contentRows[#contentRows + 1] = {
-            unicode.sub(remaining, 1, count),
-            r[2],
-            math.min(guideWidth, count),
-            r[4],
-          }
+          appendChunk(unicode.sub(remaining, 1, count))
           guideWidth = 0
-          remaining = unicode.sub(remaining, count + 1):gsub('^%s+', '')
+          local tail = unicode.sub(remaining, count + 1)
+          remaining = tail:gsub('^%s+', '')
+          consumed = consumed + count + unicode.len(tail) - unicode.len(remaining)
         end
-        contentRows[#contentRows + 1] = { remaining, r[2], guideWidth, r[4] }
+        appendChunk(remaining)
       end
     end
     local rows = contentRows
     state.offset = math.max(0, math.min(state.offset, math.max(0, #rows - room)))
     for n = 1, room do
       local r = rows[state.offset + n]
-      text(x, y + n - 1, r and r[1] or '', width, r and r[2] or 'text', nil, r and r[3], r and r[4])
+      text(
+        x,
+        y + n - 1,
+        r and r[1] or '',
+        width,
+        r and r[2] or 'text',
+        nil,
+        r and r[3],
+        r and r[4],
+        r and r[5]
+      )
     end
     local maximum = math.max(0, #rows - room)
     local thumb = maximum == 0 and room or math.max(1, math.floor(room * room / #rows))
@@ -4220,6 +4462,7 @@ local function runUI()
   end
   draw = function()
     local key = state.page
+      .. tostring(cfg)
       .. state.settings
       .. tostring(state.settingsPage)
       .. tostring(state.choice)
@@ -4286,7 +4529,10 @@ local function runUI()
       local pages = { {} }
       for _, f in ipairs(fields()) do
         local page = pages[#pages]
-        if #page > 0 and (#page >= (section.pageSize or 8) or page[1].group ~= f.group) then
+        if
+          #page > 0
+          and (#page >= (f.compact and 16 or section.pageSize or 8) or page[1].group ~= f.group)
+        then
           page = {}
           pages[#pages + 1] = page
         end
@@ -4303,66 +4549,100 @@ local function runUI()
         124,
         'blue'
       )
-      text(34, 8, 'Changes save when you accept a field or navigate away.', 124, 'muted')
+      text(
+        34,
+        8,
+        'Accept a field or navigate away to save. Numbers accept k / M shorthand.',
+        124,
+        'muted'
+      )
       local y = section.pageSize == 9 and 10 or 11
-      for _, f in ipairs(page) do
-        local helpY, height = y + 2, 4
-        text(34, y, f.label, 124, 'blue')
-        if f.kind == 'multiToggle' then
-          local x, row = 34, y + 1
-          local selected = Config.selected(values()[f.key], f.choices)
-          for _, option in ipairs(f.choices) do
-            local key, choice = f.key, option[1]
-            if x + unicode.wlen('[ ' .. option[2] .. ' ]') - 1 > 157 then
-              x, row = 34, row + 1
-            end
-            x = button(x, row, option[2], function()
-              toggleForm(key, f.choices, choice)
-            end, true, selected[choice])
-          end
-          helpY, height = row + 1, row - y + 4
-        elseif f.enableForm then
-          local program = Programs.byId[state.settings]
-          local choice = f.enableForm
-          local selected = Config.selected(values()[program.formSwitch], program.formChoices)
-          button(34, y + 1, selected[choice] and 'X' or ' ', function()
-            toggleForm(program.formSwitch, program.formChoices, choice)
-          end, true, selected[choice])
-          editorRow(42, y + 1, 116, f)
-        elseif f.kind == 'select' then
-          local label, selected = values()[f.key], 1
-          for n, option in ipairs(f.choices) do
-            if option[1] == values()[f.key] then
-              label, selected = option[2], n
-            end
-          end
-          button(34, y + 1, label .. ' v', function()
-            commitEdit()
-            state.choice =
-              { key = f.key, label = f.label, choices = f.choices, selected = selected }
-          end)
-        elseif f.choices then
-          local x = 34
-          for _, option in ipairs(f.choices) do
-            local key, value = f.key, option[1]
-            x = button(x, y + 1, option[2], function()
-              chooseValue(key, value)
-            end, true, values()[key] == value)
-          end
-        elseif f.kind == 'toggle' then
-          button(34, y + 1, values()[f.key] == 'on' and 'On' or 'Off', function()
-            commitEdit()
-            local trial = U.clone(cfg)
-            local v = Config.values(trial, state.settings)
-            v[f.key] = v[f.key] == 'on' and 'off' or 'on'
-            saveConfig(trial)
-            status('Settings saved.', 'green')
-          end, true, values()[f.key] == 'on')
-        else
-          editorRow(34, y + 1, 124, f)
+      local compact = page[1] and page[1].compact
+      if compact then
+        local overrides = page[1].group == 'Tier overrides'
+        text(34, 10, overrides and 'MATERIAL TIER' or 'RELATIVE TIER', 42, 'blue')
+        text(80, 10, overrides and 'OVERRIDE' or 'MULTIPLIER', 22, 'blue')
+        if overrides then
+          text(115, 10, 'EFFECTIVE', 40, 'blue')
         end
-        text(34, helpY, f.help, 124, 'muted')
-        y = y + height
+        text(
+          34,
+          44,
+          overrides and 'Blank follows the curve. Later tiers remain skipped unless enabled.'
+            or 'One multiplier per relative tier. Maximum and quantity limits still apply.',
+          124,
+          'muted'
+        )
+        y = 12
+      end
+      for _, f in ipairs(page) do
+        if compact then
+          text(34, y, f.label, 42, 'text')
+          editorRow(80, y, 22, f)
+          if page[1].group == 'Tier overrides' then
+            local budget = Batch.budget(cfg.batch, f.label)
+            text(115, y, budget == 0 and 'Skipped' or budget .. 'x', 40, 'muted')
+          end
+          y = y + 2
+        else
+          local helpY, height = y + 2, 4
+          text(34, y, f.label, 124, 'blue')
+          if f.kind == 'multiToggle' then
+            local x, row = 34, y + 1
+            local selected = Config.selected(values()[f.key], f.choices)
+            for _, option in ipairs(f.choices) do
+              local key, choice = f.key, option[1]
+              if x + unicode.wlen('[ ' .. option[2] .. ' ]') - 1 > 157 then
+                x, row = 34, row + 1
+              end
+              x = button(x, row, option[2], function()
+                toggleForm(key, f.choices, choice)
+              end, true, selected[choice])
+            end
+            helpY, height = row + 1, row - y + 4
+          elseif f.enableForm then
+            local program = Programs.byId[state.settings]
+            local choice = f.enableForm
+            local selected = Config.selected(values()[program.formSwitch], program.formChoices)
+            button(34, y + 1, selected[choice] and 'X' or ' ', function()
+              toggleForm(program.formSwitch, program.formChoices, choice)
+            end, true, selected[choice])
+            editorRow(42, y + 1, 116, f)
+          elseif f.kind == 'select' then
+            local label, selected = values()[f.key], 1
+            for n, option in ipairs(f.choices) do
+              if option[1] == values()[f.key] then
+                label, selected = option[2], n
+              end
+            end
+            button(34, y + 1, label, function()
+              commitEdit()
+              state.choice =
+                { key = f.key, label = f.label, choices = f.choices, selected = selected }
+            end)
+          elseif f.choices then
+            local x = 34
+            for _, option in ipairs(f.choices) do
+              local key, value = f.key, option[1]
+              x = button(x, y + 1, option[2], function()
+                chooseValue(key, value)
+              end, true, values()[key] == value)
+            end
+          elseif f.kind == 'toggle' then
+            button(34, y + 1, values()[f.key] == 'on' and 'On' or 'Off', function()
+              commitEdit()
+              local trial = U.clone(cfg)
+              local v = Config.values(trial, state.settings)
+              v[f.key] = v[f.key] == 'on' and 'off' or 'on'
+              saveConfig(trial)
+              status('Settings saved.', 'green')
+            end, true, values()[f.key] == 'on')
+          else
+            editorRow(34, y + 1, 124, f)
+          end
+          text(34, helpY, f.help, 124, 'muted')
+          y = y + height
+        end
       end
       if #pages > 1 then
         local pageRow = section.pageSize == 9 and 45 or 44
@@ -4379,7 +4659,7 @@ local function runUI()
       button(34, 47, 'Run program', function()
         navigate('programs')
       end)
-      if state.settings == 'batch' then
+      if state.settings == 'batch' and cfg.batch.mode == 'tiered' then
         button(54, 47, 'Effective tiers', function()
           commitEdit()
           state.choice = { label = 'Material budgets at ' .. cfg.batch.currentTier, budgets = true }
@@ -4402,13 +4682,7 @@ local function runUI()
           state.selected = id
         end)
         text(38, y + 1, p.description, 120, 'text')
-        text(
-          38,
-          y + 2,
-          p.unavailable or 'Preview and execute',
-          120,
-          p.unavailable and 'muted' or 'green'
-        )
+        text(38, y + 2, p.unavailable or '', 120, p.unavailable and 'muted' or 'green')
       end
       local selected = state.selected and Programs.byId[state.selected]
       local x = button(34, 47, 'Preview selected', function()
@@ -4581,8 +4855,7 @@ local function runUI()
       text(
         51,
         12,
-        state.choice.budgets
-            and 'Material budgets before voltage, program factor and quantity limits.'
+        state.choice.budgets and 'Material budgets before recipe voltage and quantity limits.'
           or 'Choose a tier. Escape cancels.',
         98,
         'muted',
@@ -4593,7 +4866,18 @@ local function runUI()
         local x = n <= 9 and 51 or 101
         local y = 14 + ((n - 1) % 9) * 2
         if state.choice.budgets then
-          text(x, y, entry .. '  ' .. Batch.budget(cfg.batch, entry) .. 'x', 45, 'text', 'panel')
+          local budget = Batch.budget(cfg.batch, entry)
+          text(
+            x,
+            y,
+            entry .. '  ' .. (budget == 0 and 'Skipped' or budget .. 'x'),
+            45,
+            'text',
+            'panel',
+            nil,
+            nil,
+            { from = 1, length = #entry, tier = entry }
+          )
         else
           local value, label = entry[1], entry[2]
           button(x, y, label, function()

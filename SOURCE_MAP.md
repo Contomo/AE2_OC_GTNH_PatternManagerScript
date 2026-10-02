@@ -104,11 +104,12 @@ Resizing uses the pattern already in the destination, not a disposable donor.
 `source/lib/batch.lua` computes the per-recipe multiplier once, before ingredient
 resolution. Fixed batching preserves earlier settings. Tiered batching combines
 relative material budgets, optional absolute tier overrides, recipe voltage,
-program factors and quantity limits. `source/data/tiers.json` is read by both
+generated/custom curves and quantity limits; retained Fixed factors are inactive. `source/data/tiers.json` is read by both
 the desktop tools and bundle builder; the voltage names/thresholds are not
 copied into a second hand-edited table. The compiler keeps a common EU/t on
 each semantic rule and interns sparse voltage exceptions into shared sets.
-`source/tools/build_tiers.py` scrapes quest requirements. The generated
+`source/tools/build_tiers.py` scrapes quest items, prerequisite tiers, recipe
+ingredients and ore/dimension access estimates. The generated
 `data/material-tiers.json` is desktop provenance, and only its tier values and
 source summary are included in the OC matrix.
 The maker adapter reads both encoded item layouts: older entries store a

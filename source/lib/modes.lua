@@ -172,6 +172,7 @@ function M.compile(data, mode, options, checkpoint)
     recipes = {},
     unusedExcluded = 0,
     unclassifiedRecipes = 0,
+    tierExcluded = 0,
     skipped = {},
   }
   local seen, unresolved, skipped = {}, {}, {}
@@ -224,96 +225,120 @@ function M.compile(data, mode, options, checkpoint)
           elseif eut == false then
             eut = nil
           end
-          local recipeMultiplier, batch =
-            Batch.resolve(options.batch, material.tier, eut, multiplier, quantities)
-          local function resolve(e, stocked)
-            if e.fluid == 'material' then
-              local fluid =
-                U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
-              local size = e.n * (stocked and 1 or recipeMultiplier)
-              U.check(
-                U.integer(size) and size > 0,
-                'Pattern multiplier exceeds the supported fluid quantity'
-              )
-              return {
-                type = 'fluid',
-                name = fluid,
-                label = 'Molten ' .. material.name,
-                size = size,
+          local recipeMultiplier, batch = Batch.resolve(
+            options.batch,
+            material.tier,
+            eut,
+            multiplier,
+            quantities,
+            material.tierSource
+          )
+          if recipeMultiplier == 0 then
+            manifest.tierExcluded = manifest.tierExcluded + 1
+            local out = rule.outputs[1]
+            local item = M.resolve(data, material, out.f)
+            local key = item.name .. ':' .. item.damage
+            if not skipped[key] then
+              skipped[key] = true
+              manifest.skipped[#manifest.skipped + 1] = {
+                material = material.name,
+                form = out.f,
+                label = material.name .. ' ' .. formLabel(out.f),
+                name = item.name,
+                damage = item.damage,
+                reason = batch.excluded,
               }
             end
-            local item
-            if e.f then
-              item = M.resolve(data, material, e.f)
-              item.label = material.name .. ' ' .. formLabel(e.f)
-            else
-              item = U.clone(U.check(data.items[e.i], 'Unknown shared item'))
-            end
-            if item.option and options[item.option] == false and not stocked then
-              return nil
-            end
-            item.option = nil
-            item.type = 'item'
-            item.size = e.n * (stocked and 1 or recipeMultiplier)
-            U.check(
-              U.integer(item.size) and item.size > 0,
-              'Pattern multiplier exceeds the supported ingredient quantity'
-            )
-            -- Oracle IDs are normalized to lower case. GT/Minecraft families above
-            -- have known spelling; other families still need a registry resolver.
-            local registered
-            item, registered = registeredItem(data, item)
-            if not stocked and not registered and not unresolved[item.name] then
-              unresolved[item.name] = true
-              manifest.unresolved[#manifest.unresolved + 1] = item.name
-            end
-            return item
-          end
-          local out = rule.outputs[1]
-          local label = formLabel(out.f)
-          local source = rule.inputs[1].f
-          local route = (mode == 'wiremill' or mode == 'bender')
-              and (' / from ' .. (labels[source] or source))
-            or ''
-          local recipe = {
-            kind = 'processing',
-            material = material.name,
-            outputForm = out.f,
-            outputLabel = label,
-            inputs = {},
-            outputs = {},
-            label = material.name .. ' / ' .. label .. route,
-            stock = {},
-            batch = batch,
-          }
-          for _, which in ipairs({ 'inputs', 'outputs' }) do
-            for _, e in ipairs(rule[which]) do
-              local item = resolve(e)
-              if item then
-                recipe[which][#recipe[which] + 1] = item
+          else
+            local function resolve(e, stocked)
+              if e.fluid == 'material' then
+                local fluid =
+                  U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
+                local size = e.n * (stocked and 1 or recipeMultiplier)
+                U.check(
+                  U.integer(size) and size > 0,
+                  'Pattern multiplier exceeds the supported fluid quantity'
+                )
+                return {
+                  type = 'fluid',
+                  name = fluid,
+                  label = 'Molten ' .. material.name,
+                  size = size,
+                }
+              end
+              local item
+              if e.f then
+                item = M.resolve(data, material, e.f)
+                item.label = material.name .. ' ' .. formLabel(e.f)
               else
-                recipe.stock[#recipe.stock + 1] = resolve(e, true)
+                item = U.clone(U.check(data.items[e.i], 'Unknown shared item'))
+              end
+              if item.option and options[item.option] == false and not stocked then
+                return nil
+              end
+              item.option = nil
+              item.type = 'item'
+              item.size = e.n * (stocked and 1 or recipeMultiplier)
+              U.check(
+                U.integer(item.size) and item.size > 0,
+                'Pattern multiplier exceeds the supported ingredient quantity'
+              )
+              -- Oracle IDs are normalized to lower case. GT/Minecraft families above
+              -- have known spelling; other families still need a registry resolver.
+              local registered
+              item, registered = registeredItem(data, item)
+              if not stocked and not registered and not unresolved[item.name] then
+                unresolved[item.name] = true
+                manifest.unresolved[#manifest.unresolved + 1] = item.name
+              end
+              return item
+            end
+            local out = rule.outputs[1]
+            local label = formLabel(out.f)
+            local source = rule.inputs[1].f
+            local route = (mode == 'wiremill' or mode == 'bender')
+                and (' / from ' .. (labels[source] or source))
+              or ''
+            local recipe = {
+              kind = 'processing',
+              material = material.name,
+              outputForm = out.f,
+              outputLabel = label,
+              inputs = {},
+              outputs = {},
+              label = material.name .. ' / ' .. label .. route,
+              stock = {},
+              batch = batch,
+            }
+            for _, which in ipairs({ 'inputs', 'outputs' }) do
+              for _, e in ipairs(rule[which]) do
+                local item = resolve(e)
+                if item then
+                  recipe[which][#recipe[which] + 1] = item
+                else
+                  recipe.stock[#recipe.stock + 1] = resolve(e, true)
+                end
               end
             end
-          end
-          for _, e in ipairs(rule.stock or {}) do
-            recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
-          end
-          U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
-          local key = Planner.recipeKey(recipe)
-          if not seen[key] then
-            manifest.recipes[#manifest.recipes + 1] = recipe
-            seen[key] = recipe
-          elseif U.canonical(seen[key].stock) ~= U.canonical(recipe.stock) then
-            local existing = seen[key]
-            existing.stockAlternatives = existing.stockAlternatives or {}
-            existing.stockAlternatives[#existing.stockAlternatives + 1] = recipe.stock
+            for _, e in ipairs(rule.stock or {}) do
+              recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
+            end
+            U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
+            local key = Planner.recipeKey(recipe)
+            if not seen[key] then
+              manifest.recipes[#manifest.recipes + 1] = recipe
+              seen[key] = recipe
+            elseif U.canonical(seen[key].stock) ~= U.canonical(recipe.stock) then
+              local existing = seen[key]
+              existing.stockAlternatives = existing.stockAlternatives or {}
+              existing.stockAlternatives[#existing.stockAlternatives + 1] = recipe.stock
+            end
           end
         end
       end
     end
   end
-  U.check(#manifest.recipes > 0, 'No verified recipes for this mode')
+  U.check(#manifest.recipes > 0 or #manifest.skipped > 0, 'No verified recipes for this mode')
   return manifest
 end
 return M

@@ -19,11 +19,11 @@ test('voltage boundaries follow the pinned GT tiers, including OpV and MAX', fun
 end)
 test('relative curve shifts automatically while absolute overrides stay fixed', function()
   local p = policy()
-  assert(B.budget(p, 'LuV') == 4 and B.budget(p, 'IV') == 32)
-  assert(B.budget(p, 'EV') == 64 and B.budget(p, 'UV') == 1)
+  assert(B.budget(p, 'LuV') == 4 and B.budget(p, 'IV') == 8)
+  assert(B.budget(p, 'EV') == 16 and B.budget(p, 'UV') == 0)
   p.overrideULV = '4096'
   p.currentTier = 'ZPM'
-  assert(B.budget(p, 'LuV') == 32 and B.budget(p, 'IV') == 64)
+  assert(B.budget(p, 'LuV') == 8 and B.budget(p, 'IV') == 16)
   assert(B.budget(p, 'ULV') == 4096)
   p.currentTier = 'MAX'
   assert(B.budget(p, 'ULV') == 4096 and B.budget(p, 'LV') == 512)
@@ -39,15 +39,15 @@ test('voltage constraint can lower a cheap material batch and is adjustable', fu
   local p = policy()
   assert(B.resolve(p, 'ULV', 32768, 1) == 4)
   p.voltagePolicy = 'off'
-  assert(B.resolve(p, 'ULV', 32768, 1) == 448)
+  assert(B.resolve(p, 'ULV', 32768, 1) == 256)
   p.voltagePolicy = 'cap'; p.voltageTier = 'IV'
-  assert(B.resolve(p, 'ULV', 32768, 1) == 1)
+  assert(B.resolve(p, 'ULV', 32768, 1) == 0)
 end)
-test('unknown material and missing voltage use explicit conservative fallbacks', function()
+test('unknown materials can use recipe voltage while missing voltage uses the fixed fallback', function()
   local p = policy()
-  assert(B.resolve(p, nil, 8, 1) == 1)
+  assert(B.resolve(p, nil, 8, 1) == 256)
   assert(B.resolve(p, 'ULV', nil, 1) == 1)
-  p.unknownMultiplier = '3'
+  p.unknownMultiplier = '3'; p.unknownPolicy = 'fixed'
   assert(B.resolve(p, nil, 8, 1) == 3)
 end)
 test('item and fluid limits shrink the common whole-recipe multiplier', function()
@@ -60,10 +60,10 @@ test('item and fluid limits shrink the common whole-recipe multiplier', function
   assert(n == 11 and n*864 == 9504)
   assert(not pcall(B.resolve, p, 'ULV', 8, 1, {{type='fluid',size=10001}}))
 end)
-test('program factors obey the final ceiling and fixed mode preserves old batches', function()
+test('tiered budgets ignore retained fixed multipliers and fixed mode preserves old batches', function()
   local p = policy()
-  assert(B.resolve(p, 'LuV', 8, 4) == 16)
-  assert(B.resolve(p, 'ULV', 8, 256) == 512)
+  assert(B.resolve(p, 'LuV', 8, 512) == 4)
+  assert(B.resolve(p, 'ULV', 8, 256) == 256)
   p.mode = 'fixed'
   assert(B.resolve(p, nil, nil, 1024, {{type='fluid',size=864}}) == 1024)
 end)
@@ -92,7 +92,7 @@ test('numeric shorthand normalizes centrally without altering names or blank ove
   assert(c.batch.overrideULV == '1500' and c.batch.overrideLV == '2000000')
   assert(c.batch.overrideMV == '' and c.programs.wiremill.multiplier == '1500')
   assert(U.eq(Config.normalize(U.clone(c)), c))
-  assert(B.resolve(c.batch, 'ULV', 8, 1, {{type='item',size=2}}) == 448)
+  assert(B.resolve(c.batch, 'ULV', 8, 1, {{type='item',size=2}}) == 256)
 end)
 
 test('shorthand retains numeric validation for malformed, fractional and excessive values', function()
@@ -104,6 +104,34 @@ test('shorthand retains numeric validation for malformed, fractional and excessi
   local c = U.clone(Config.defaults)
   c.shared.energyPause = '4k'
   assert(not pcall(Config.migrate, c))
+end)
+
+test('future materials and recipes are excluded independently and can be enabled', function()
+  local p = policy(); p.currentTier = 'UV'
+  local n, detail = B.resolve(p, 'UHV', 491520, 512)
+  assert(n == 0 and detail.excluded:find('Material tier'))
+  p.currentTier = 'UHV'
+  n, detail = B.resolve(p, 'UHV', 491520, 512)
+  assert(n == 4 and detail.materialBudget == 4)
+  assert(B.voltageText(detail) == '491,520 EU/t (UV)')
+  p.currentTier = 'LV'; p.voltagePolicy = 'off'; p.abovePolicy = 'fixed'
+  assert(B.resolve(p, 'UHV', 491520, 512) == 1)
+  p.unknownPolicy = 'skip'
+  assert(B.resolve(p, nil, 8, 512) == 0)
+  p.unknownPolicy = 'voltage'
+  assert(B.resolve(p, nil, 8, 512) == 8)
+end)
+
+test('generated curve uses its maximum as the endpoint and custom tables remain available', function()
+  local p = policy(); p.currentTier = 'ZPM'; p.atTier = '2'; p.maxMultiplier = '128'; p.curveSpan = '3'
+  assert(B.budget(p, 'ZPM') == 2 and B.budget(p, 'LuV') == 8)
+  assert(B.budget(p, 'IV') == 32 and B.budget(p, 'EV') == 128 and B.budget(p, 'ULV') == 128)
+  p.curveShape = 'logarithmic'
+  assert(B.budget(p, 'LuV') == 65 and B.budget(p, 'ULV') == 128)
+  p.curveMode = 'table'; p.below1 = '17'
+  assert(B.budget(p, 'LuV') == 17)
+  local c = U.clone(Config.defaults); c.batch.curveMode = nil; c.batch.below1 = '17'
+  assert(Config.migrate(c).batch.curveMode == 'table')
 end)
 
 print('SUCCESS: ' .. tests .. ' tests')

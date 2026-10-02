@@ -91,6 +91,25 @@ M.sections = {
 function M.section(id)
   return U.check(M.sections[id] or Programs.byId[id], 'Unknown settings section')
 end
+function M.visibleFields(c, section)
+  local result, values = {}, M.values(c, section)
+  for _, f in ipairs(M.section(section).fields) do
+    local visible = not f.hidden and (f.key ~= 'multiplier' or c.batch.mode == 'fixed')
+    for key, expected in pairs(f.when or {}) do
+      local match = values[key] == expected
+      if type(expected) == 'table' then
+        for _, option in ipairs(expected) do
+          match = match or values[key] == option
+        end
+      end
+      visible = visible and match
+    end
+    if visible then
+      result[#result + 1] = f
+    end
+  end
+  return result
+end
 for _, p in ipairs(Programs.list) do
   local values = {}
   M.defaults.programs[p.id] = values
@@ -120,8 +139,11 @@ function M.normalize(c)
     U.check(type(values) == 'table', 'Missing configuration section')
     for _, f in ipairs(definitions) do
       local value = values[f.key]
-      if (f.kind == 'number' or f.kind == 'positiveInteger' or f.kind == 'optionalPositiveInteger')
-        and type(value) == 'string' and not value:find('[%c]') then
+      if
+        (f.kind == 'number' or f.kind == 'positiveInteger' or f.kind == 'optionalPositiveInteger')
+        and type(value) == 'string'
+        and not value:find('[%c]')
+      then
         values[f.key] = normalizeNumber(value)
       end
     end
@@ -209,6 +231,15 @@ function M.migrate(old)
     for _, f in ipairs(Batch.fields) do
       if old.batch and old.batch[f.key] ~= nil then
         c.batch[f.key] = old.batch[f.key]
+      end
+    end
+    if old.batch and not old.batch.curveMode then
+      local prior = { 4, 32, 64, 256, 320, 400, 448, 512 }
+      for gap = 0, 7 do
+        local value = old.batch['below' .. gap]
+        if value and tonumber(value) ~= prior[gap + 1] then
+          c.batch.curveMode = 'table'
+        end
       end
     end
     for _, f in ipairs(M.fields) do

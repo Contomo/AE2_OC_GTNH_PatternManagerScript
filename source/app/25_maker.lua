@@ -104,7 +104,7 @@ local function explainExisting(plan, snapshot, request, manifest)
         reason = reusedEntry.resize and 'Recipe matches; batch will be resized.'
           or 'Recipe matches the selected route.'
       elseif skippedItem then
-        reason = 'Skipped: no path to a non-recycling product in the recipe export.'
+        reason = 'Skipped: ' .. (skippedItem.reason or 'no path to a non-recycling product in the recipe export.')
       elseif wantedKeys[interface.name .. ':' .. tostring(pattern.recipeKey)] then
         reason = 'Duplicate of a selected recipe; kept after the planned patterns.'
       elseif wantedOutput and wantedOutput.destination ~= interface.name then
@@ -151,7 +151,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     end
   end
   local function destination(recipe)
-    return routing.destinations and routing.destinations[recipe.outputForm] or routing.destination
+    return routing.destinations and routing.destinations[recipe.outputForm or recipe.form] or routing.destination
   end
   U.check(
     manifest.version == 1 and type(manifest.recipes) == 'table',
@@ -166,6 +166,9 @@ local function scanManifest(c, manifest, routing, progress, control, started)
   )
   for _, recipe in ipairs(manifest.recipes) do
     group(destination(recipe), 'destination')
+  end
+  for _, item in ipairs(manifest.skipped or {}) do
+    group(destination(item), 'destination')
   end
   group(routing.donors, 'donor')
   group(routing.workspace, 'workspace')
@@ -331,7 +334,7 @@ function C.maker.preview(c, id, progress, control)
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)
   local groups = {}
   for _, recipe in ipairs(manifest.recipes) do
-    local name = routing.destinations and routing.destinations[recipe.outputForm]
+    local name = routing.destinations and routing.destinations[recipe.outputForm or recipe.form]
       or routing.destination
     groups[name] = (groups[name] or 0) + 1
   end
@@ -341,7 +344,7 @@ function C.maker.preview(c, id, progress, control)
   end
   for _, entry in ipairs(plan.preserved) do
     local name = banks[where(entry.from)]
-    groups[name] = groups[name] + 1
+    groups[name] = (groups[name] or 0) + 1
   end
   plan.capacities = Config.capacityReport(groups)
   local report = Preview.report(plan, manifest)

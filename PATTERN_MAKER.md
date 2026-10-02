@@ -201,26 +201,32 @@ python source/tools/build_tiers.py .research\pack-beta3.zip `
   --resources ..\OreDictScript\research\resource-index.json.gz `
   --ore-resources ..\OreDictScript\data\ores.json.gz `
   --recipes ..\OreDictScript\research\recipes.json.gz `
+  --gt-source .research\gt-5.09.54.133.zip `
   --pack-version 2.9.0-beta-3 --commit 27e61fbea6e245df80839885460994aa0ef9da9f `
   --output data\material-tiers.json
 ```
 
-Run this before the matrix command above when rebuilding the evidence. The
-policy uses the earliest tier-chapter task requiring a solid material form.
-Dust, tool heads, icons, rewards, optional ingredients, "any one" tasks and side
-chapters do not classify a material. Untagged storage blocks can be linked by
-actual compression recipes with matching material labels. It covers
-98 materials; all others remain unclassified and use the global fallback.
-Quest progression is not asserted to be exact earliest obtainable availability.
+Run this before the matrix command when rebuilding evidence. Quest items include
+ores/dusts, alternate forms and optional ingredient lists. Side chapters inherit
+prerequisite tiers; icons, rewards and tool heads do not classify materials.
+One recipe hop can resolve required products into material ingredients, requiring
+the material in every eligible alternative route and separate material-creation
+evidence. Byproducts, recycling and generic ore-to-ingot conversions do not prove
+material accessibility. Pinned OreMixes/SmallOres rules add dimension evidence;
+planet access uses explicit arrival paragraphs from tiered rocket quests, not
+substring matches in arbitrary descriptions. Estimates retain their source and
+production constraints in `data/material-tiers.json` and are marked at runtime.
+Unclassified materials use the user's recipe-voltage/fixed/skip policy.
 The spreadsheet's GT Tiers sheet provides only representative metals and is
 not used to invent mappings for the rest of the matrix.
 
 The shared batching implementation is `source/lib/batch.lua`. Its voltage
 thresholds come from `source/data/tiers.json`, sourced from pinned GTValues.
-Relative budget steps saturate after seven tiers, while optional absolute tier
-overrides remain fixed when current progression changes. The optional voltage
-budget is a constraint, not an amplification. Program multipliers apply before
-the final multiplier and per-ingredient item/fluid limits. Stocked ingredients
+Generated geometric/logarithmic curves reach the configured maximum after the
+selected number of tier steps. Custom points and absolute overrides are optional.
+Fixed program multipliers apply only in Fixed policy; Tiered uses its own budget
+and per-ingredient item/fluid limits. Voltage caps never amplify known material
+budgets, and recipes above the available voltage are skipped. Stocked ingredients
 are never multiplied or included in those limits. Existing settings migrate to
 Fixed so updating does not silently change existing batches.
 
