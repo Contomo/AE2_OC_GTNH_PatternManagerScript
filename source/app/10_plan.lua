@@ -9,6 +9,8 @@ local function item(s)
 end
 local function metadata(data, p)
   local t = nbt(data, p.tag)
+  -- AE2FC reads in/out. Its old duplicated Inputs/Outputs lists are preserved
+  -- verbatim as metadata; the interface setters do not rewrite those copies.
   t.__value['in'] = nil
   t.__value.out = nil
   return t

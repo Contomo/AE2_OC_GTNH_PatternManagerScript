@@ -35,14 +35,19 @@ local function refresh(p)
       if p.newEncoding and stack then
         arr[i]=compound({Cnt=typed('int',p.rawCounts[which][i]),Count=typed('byte',0),
           Craft=typed('byte',0),Damage=typed('int',stack.damage),id=typed('short',7495),
-          fieq=typed('byte',0),['Stack Type']='item'})
+          fieq=typed('byte',0),['Stack Type']='item',tag=stack.tag and unser(stack.tag)})
       elseif stack then
         local fields=cp(stack)
         fields.Count=typed('int',stack.size)
+        fields.tag=stack.tag and unser(stack.tag)
         arr[i]=compound(fields)
       else arr[i]=compound({}) end
     end
     root.__value[which=='inputs' and 'in' or 'out']=typed('list',arr)
+  end
+  if p.legacyMirrors then
+    root.__value.Inputs=root.__value.Inputs or cp(root.__value['in'])
+    root.__value.Outputs=root.__value.Outputs or cp(root.__value.out)
   end
   p.tag=ser(root);return p
 end
@@ -121,6 +126,8 @@ for _,which in ipairs({'Input','Output'}) do
     local p=assert(b.patterns[s]);mutate('set-before')
     if detail then
       assert(tp=='item' or tp=='fluid','must use item or fluid type')
+      assert(tp~='fluid' or p.name~='appliedenergistics2:item.ItemEncodedPattern',
+        'Ordinary PatternHelper only reads item stacks; use fluid drops')
       local value=cp(detail);value.label=tp=='fluid' and 'Molten fluid' or 'Item'
       value.hasTag=value.tag~=nil
       if tp=='fluid' then value.damage=nil;value.amount=value.size end
@@ -772,8 +779,8 @@ test('Fluid Shaper requests molten fluid, keeps molds stocked, and reuses its pa
       assert(#recipe.stock==1 and recipe.stock[1].label:find('Mold',1,true))
     end
     api.runner.execute(cfg,preview)
-    assert(target.patterns[0].inputs[1].name=='molten.a')
-    assert(target.patterns[0].inputs[1].damage==nil)
+    assert(target.patterns[0].inputs[1].name=='ae2fc:fluid_drop')
+    assert(unser(target.patterns[0].inputs[1].tag).__value.Fluid.__value=='molten.a')
     assert(target.patterns[0].inputs[1].size==288)
     assert(blades.patterns[0].inputs[1].size==1728)
     local again=api.runner.preview(cfg,'fluidShaper')
@@ -817,6 +824,108 @@ test('Fluid Shaper routes fluid and item pipes through their shared mold interfa
       assert(entry.destination.location.x==pipes.location.x)
     end
   end)
+end)
+
+-- The drop entry shape is from the user's Grisium NBT; drop semantics and the
+-- duplicated legacy lists follow ItemFluidDrop / FluidPatternDetails upstream.
+local function withLegacyFluid(f)
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    data.materials={data.materials[1]};data.materials[1].molten='molten.grisium'
+    data.capabilities[1].plate=true;data.production[1].molten_plate=true
+    data.families.gt.plate={name='gregtech:gt.metaitem.01',prefix=17000}
+    data.rules[#data.rules+1]={id='molten_plate',mode='solidifier',process='molten_plate',
+      requires={'plate'},inputs={{fluid='material',n=144}},outputs={{f='plate',n=1}},stock={}}
+    cfg.programs.fluidShaper.forms='plate'
+    cfg.programs.fluidShaper.plate=cfg.programs.assline.target
+    target.patterns={}
+    local desired=api.runner.preview(cfg,'fluidShaper').manifest.recipes[1]
+    f(desired)
+  end)
+end
+local function dropPattern(recipe, multiplier, modern)
+  local drop={name='ae2fc:fluid_drop',damage=0,size=144*multiplier,
+    label='Drop of Molten Grisium',hasTag=true,tag=ser(compound({Fluid=typed('string','molten.grisium')}))}
+  local output=cp(recipe.outputs[1]);output.size=multiplier
+  local p=modern and newPattern({drop},{output}) or pattern({drop},{output})
+  p.name=modern and 'ae2fc:fluid_encoded_pattern' or p.name
+  p.legacyMirrors=true
+  p=refresh(p)
+  local root=unser(p.tag)
+  local entry=root.__value['in'].__value[1].__value
+  entry.id=typed('short',4642)
+  p.tag=ser(root)
+  return p
+end
+test('legacy fluid drops match native mB recipes and resize without replacement donors',function()
+  for _,modern in ipairs({false,true}) do
+    reset()
+    withLegacyFluid(function(recipe)
+      local p=dropPattern(recipe,2,modern)
+      local root=unser(p.tag).__value
+      local mirrors=ser({root.Inputs,root.Outputs})
+      local oldName=p.name
+      target.patterns[0]=p;buffer.patterns={}
+      local preview=api.runner.preview(cfg,'fluidShaper')
+      assert(preview.plan.reused==1 and preview.plan.resizeCount==1 and #preview.plan.creates==0)
+      assert(preview.plan.existing[1].inputs=='288 mB Molten Grisium')
+      api.runner.execute(cfg,preview)
+      p=target.patterns[0];root=unser(p.tag).__value
+      assert(p.name==oldName and p.inputs[1].name=='ae2fc:fluid_drop')
+      local entry=root['in'].__value[1].__value
+      assert((modern and entry.Cnt or entry.Count).__value==144)
+      assert(entry.tag.__value.Fluid.__value=='molten.grisium')
+      assert(ser({root.Inputs,root.Outputs})==mirrors)
+      preview=api.runner.preview(cfg,'fluidShaper')
+      assert(preview.plan.reused==1 and preview.plan.resizeCount==0 and #preview.plan.creates==0)
+      assert(next(buffer.patterns)==nil and next(editor.patterns)==nil)
+    end)
+  end
+end)
+test('legacy fluid-drop resize recovers interrupted setters and preserves the original pattern',function()
+  for _,stage in ipairs({'send-after','set-after'}) do
+    reset()
+    withLegacyFluid(function(recipe)
+      target.patterns[0]=dropPattern(recipe,2,true);buffer.patterns={}
+      local name=target.patterns[0].name
+      local preview=api.runner.preview(cfg,'fluidShaper');fail={label=stage}
+      mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+      assert(files[api.paths.pending]);api.recover(cfg)
+      assert(target.patterns[0].name==name and not files[api.paths.pending])
+      assert(api.runner.preview(cfg,'fluidShaper').plan.resizeCount==0)
+    end)
+  end
+end)
+test('legacy drop matching retains fluid NBT identity and never converts unrelated items',function()
+  withLegacyFluid(function(recipe)
+    target.patterns[0]=dropPattern(recipe,1,true)
+    local p=target.patterns[0]
+    p.inputs[1].tag=ser(compound({Fluid=typed('string','molten.grisium'),
+      FluidTag=compound({grade=typed('int',2)})}))
+    refresh(p)
+    local preview=api.runner.preview(cfg,'fluidShaper')
+    assert(preview.plan.reused==0 and #preview.plan.preserved==1)
+    p.inputs[1].name='example:fluid_container';refresh(p)
+    preview=api.runner.preview(cfg,'fluidShaper')
+    assert(preview.plan.reused==0 and #preview.plan.preserved==1)
+  end)
+end)
+test('ultimate and fluid-pattern donors still use native fluid inputs and resize them',function()
+  for _,name in ipairs({'appliedenergistics2:item.ItemEncodedUltimatePattern','ae2fc:fluid_encoded_pattern'}) do
+    reset()
+    withLegacyFluid(function()
+      local donor=cp(buffer.patterns[0]);donor.name=name
+      buffer.patterns={[0]=donor}
+      api.runner.execute(cfg,api.runner.preview(cfg,'fluidShaper'))
+      assert(target.patterns[0].name==name and target.patterns[0].inputs[1].name=='molten.grisium')
+      assert(target.patterns[0].inputs[1].damage==nil)
+      cfg.programs.fluidShaper.multiplier='2'
+      local preview=api.runner.preview(cfg,'fluidShaper')
+      assert(preview.plan.reused==1 and preview.plan.resizeCount==1 and #preview.plan.creates==0)
+      api.runner.execute(cfg,preview)
+      assert(target.patterns[0].inputs[1].size==288)
+    end)
+  end
 end)
 
 test('generator starts short, waits between patterns and discovers a newly filled remote bank',function()
@@ -1155,8 +1264,8 @@ test('bender output switches toggle independently and migrate into the unified s
   assert(migrated.programs.bender.plateSource=='ingot' and migrated.programs.bender.springSmallSource=='stick')
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Bending machine'),function()
-    assert(frame[24]:find('[ 1x ]',1,true) and frame[24]:find('[ 2x ]',1,true))
-    return click('[ 1x ]',24)()
+    assert(frame[24]:find('[ X 1x ]',1,true) and frame[24]:find('[ X 2x ]',1,true))
+    return click('[ X 1x ]',24)()
   end,function()
     local c=unser(files[api.paths.config])
     local choices=api.programs.byId.bender.formChoices
@@ -1461,7 +1570,69 @@ test('all tier-excluded outputs remain visible as kept patterns with a no-op pla
   end)
 end)
 
-test('preview voltage badges group EU values and color only the voltage span',function()
+test('word wrapping preserves tree guides, words, quantities and voltage accents',function()
+  local U=require('assline_util');local unicode=require('unicode')
+  local rows=U.wrapRow({'Insufficient capacity in Fluid Solidifier (Plates): need 293, have 72'},45,unicode)
+  assert(rows[1][1]=='Insufficient capacity in Fluid Solidifier')
+  assert(rows[2][1]=='(Plates): need 293, have 72')
+  rows=U.wrapRow({'Need 242 disposable processing donors; have 79. Execution will wait for refills.'},45,unicode)
+  assert(rows[2][1]:find('79.',1,true) and not rows[1][1]:find('7$',1))
+  local s='  |    Encoded inputs: 2048 x Long Material Name; 30,720 EU/t (LuV)'
+  local x=s:find('30,720',1,true)
+  rows=U.wrapRow({s,'text',7,'muted',{from=x,length=17,tier='LuV'}},35,unicode)
+  local colored=''
+  for _,r in ipairs(rows) do
+    assert(r[1]:sub(1,7)=='  |    ' and r[3]==7 and r[4]=='muted' and #r[1]<=35)
+    if r[5] then colored=colored..r[1]:sub(r[5].from,r[5].from+r[5].length-1) end
+  end
+  assert(colored:gsub('%s','')=='30,720EU/t(LuV)')
+  rows=U.wrapRow({string.rep('a',80)},35,unicode)
+  assert(#rows==3 and #rows[1][1]==35 and #rows[3][1]==10)
+end)
+test('settings sidebar separates Current preview and auto addresses remain blank in saved config',function()
+  withMatrix(function()
+    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    files[api.paths.config]=ser(cfg)
+    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),nav('Settings'),
+      nav('Shared interfaces'),function()
+        assert(frame[19]:find('SETTINGS SECTIONS',1,true))
+        assert(frame[44]:sub(1,29):find('Current preview',1,true))
+        assert(frame[42]:sub(1,29):find('Fluid Shaper',1,true))
+        for _,y in ipairs({20,24,28}) do
+          assert(frame[y]:sub(34,37)=='auto' and foreground[y][34]==0x8297AB)
+        end
+        local c=unser(files[api.paths.config])
+        assert(c.shared.terminalAddress=='' and c.shared.editorAddress=='' and c.shared.dataAddress=='')
+        snapshot('shared_auto');return nav('Current preview')()
+      end,function()
+        assert(frame[7]:find('Preview - Wire insulator',1,true));return quit()
+      end)
+    api.runUI()
+  end)
+end)
+test('voltage and future-material policies use single checkboxes and preserve choice values',function()
+  files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),nav('Tier multipliers'),click('[ Tiered ]'),function()
+    local page=table.concat(frame,'\n')
+    assert(not page:find('Ignore voltage',1,true) and not page:find('Cap by voltage',1,true))
+    return field('Recipe voltage constraint')()
+  end,function()
+    assert(unser(files[api.paths.config]).batch.voltagePolicy=='off')
+    assert(not table.concat(frame,'\n'):find('Voltage reference tier',1,true))
+    return field('Recipe voltage constraint')()
+  end,function()
+    assert(unser(files[api.paths.config]).batch.voltagePolicy=='cap')
+    assert(table.concat(frame,'\n'):find('Voltage reference tier',1,true))
+    return field('Include materials above your tier')()
+  end,function()
+    assert(unser(files[api.paths.config]).batch.abovePolicy=='fixed')
+    assert(table.concat(frame,'\n'):find('Later material multiplier',1,true))
+    snapshot('policy_toggles');return quit()
+  end)
+  api.runUI()
+end)
+
+test('preview voltage text groups EU values and colors only the voltage foreground',function()
   withMatrix(function()
     cfg.programs.wiremill.wire1=cfg.programs.assline.target
     cfg.programs.wiremill.wireFine='Fine wires';iface('Fine wires',50)
@@ -1472,7 +1643,8 @@ test('preview voltage badges group EU values and color only the voltage span',fu
       for y=10,42 do
         local x=frame[y]:find('30,720 EU/t (LuV)',1,true)
         if x then
-          assert(background[y][x]~=background[y][x-1] and background[y][x+15]==background[y][x])
+          assert(background[y][x]==background[y][x-1] and background[y][x+15]==background[y][x])
+          assert(foreground[y][x]~=foreground[y][x-1] and foreground[y][x+15]==foreground[y][x])
           found=true;break
         end
       end
@@ -1566,7 +1738,7 @@ test('PPS button derives its paint, hitbox and color from each current state',fu
       function()
         local after=unser(files[api.paths.config]).programs.insulator.pps
         assert(after~=before)
-        local label=after=='on' and '[ On ]' or '[ Off ]'
+        local label=after=='on' and '[ X ]' or '[   ]'
         assert(frame[20]:sub(34,33+#label)==label)
         for x=34,33+#label do assert(background[20][x]==(after=='on' and 0x246B47 or 0x27465E)) end
         assert(background[20][34+#label]==0x101A26 and frame[20]:sub(34+#label,34+#label)==' ')
@@ -1707,7 +1879,7 @@ test('preview identifies kept encoded outputs, excluded forms and labeled sortin
     assert(preview.plan.existing[1].reason:find('no path',1,true))
     assert(preview.plan.existing[2].status=='REUSE')
     assert(preview.plan.existing[3].status=='KEEP')
-    assert(preview.plan.existing[3].reason:find('encoded inputs',1,true))
+    assert(preview.plan.existing[3].reason=='Recipe differs: inputs, ratio, NBT or flags.')
     assert(preview.plan.existing[3].requestedInputs:find('A 1x Wire',1,true))
     files[api.paths.config]=ser(cfg)
     local function screenText()

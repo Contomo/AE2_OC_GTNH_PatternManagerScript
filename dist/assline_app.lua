@@ -149,16 +149,21 @@ end
 function M.patternCount(stack, entry)
   local fields = entry and entry.__nbt_type == 'compound' and entry.__value
   local function positive(value)
-    if type(value) == 'table' then value = value.__value end
+    if type(value) == 'table' then
+      value = value.__value
+    end
     return M.integer(value) and value > 0 and value or nil
   end
-  return positive(fields and fields.Cnt) or positive(fields and fields.Count)
-    or positive(stack.size) or positive(stack.amount)
+  return positive(fields and fields.Cnt)
+    or positive(fields and fields.Count)
+    or positive(stack.size)
+    or positive(stack.amount)
 end
 
 function M.ingredientSummary(list)
   local out = {}
-  for _, item in ipairs(list or {}) do
+  for _, index in ipairs(M.keys(list or {})) do
+    local item = list[index]
     out[#out + 1] = tostring(item.size or item.amount or 1)
       .. (item.type == 'fluid' and ' mB ' or ' x ')
       .. tostring(item.label or item.name)
@@ -189,6 +194,54 @@ function M.rows()
     result[#result + 1] = { text, tone or 'text', guideWidth, guideTone, accent }
   end
   return result, add
+end
+
+-- One word wrapper for scrollable rows and narrow summary panels. Tree guides
+-- repeat on continuation lines; accent positions follow the original text.
+function M.wrapRow(row, width, unicode)
+  local result = {}
+  local prefixLength = math.min(row[3] or 0, width - 1)
+  local prefix = unicode.sub(row[1], 1, prefixLength)
+  local remaining = unicode.sub(row[1], prefixLength + 1)
+  local consumed = prefixLength
+  local available = width - unicode.wlen(prefix)
+  repeat
+    local count = unicode.len(remaining)
+    if unicode.wlen(remaining) > available then
+      local low, high = 1, count
+      while low < high do
+        local mid = math.ceil((low + high) / 2)
+        if unicode.wlen(unicode.sub(remaining, 1, mid)) <= available then
+          low = mid
+        else
+          high = mid - 1
+        end
+      end
+      count = low
+      local part = unicode.sub(remaining, 1, count)
+      local boundary = part:match('^.*()%s')
+      if boundary then
+        local words = unicode.len(part:sub(1, boundary - 1))
+        if words > 0 then
+          count = words
+        end
+      end
+    end
+    local chunk = unicode.sub(remaining, 1, count)
+    local accent
+    if row[5] then
+      local first = math.max(1, row[5].from - consumed)
+      local last = math.min(count, row[5].from + row[5].length - 1 - consumed)
+      if first <= last then
+        accent = { from = prefixLength + first, length = last - first + 1, tier = row[5].tier }
+      end
+    end
+    result[#result + 1] = { prefix .. chunk, row[2], prefixLength, row[4], accent }
+    local tail = unicode.sub(remaining, count + 1)
+    remaining = tail:gsub('^%s+', '')
+    consumed = consumed + count + unicode.len(tail) - unicode.len(remaining)
+  until remaining == ''
+  return result
 end
 
 return M
@@ -260,7 +313,7 @@ field(
 )
 field(
   'abovePolicy',
-  'Materials above your tier',
+  'Include materials above your tier',
   'skip',
   '',
   'choice',
@@ -290,7 +343,7 @@ field(
   'voltagePolicy',
   'Recipe voltage constraint',
   'cap',
-  'Cap also skips recipes above the reference tier. Ignore removes this constraint.',
+  'When enabled, cap batches by voltage and skip recipes above the reference tier.',
   'choice',
   { { 'off', 'Ignore voltage' }, { 'cap', 'Cap by voltage' } }
 )
@@ -362,6 +415,9 @@ for _, name in ipairs(M.tiers) do
   field('override' .. name, name, '', '', 'optionalPositiveInteger')
 end
 for _, f in ipairs(M.fields) do
+  if f.key == 'voltagePolicy' or f.key == 'abovePolicy' then
+    f.toggleValues = { f.choices[1][1], f.choices[2][1] }
+  end
   if f.key ~= 'mode' then
     f.when = { mode = 'tiered' }
   end
@@ -518,7 +574,7 @@ function M.describe(detail)
     .. M.voltageText(detail)
 end
 
--- OC accepts RGB, without alpha. Blend tier backgrounds locally instead.
+-- OC accepts RGB, without alpha. Blend tier colors locally when requested.
 function M.color(tier, background, opacity)
   local rgb = Tiers.colors[index[tier]] or background
   if not opacity then
@@ -902,18 +958,21 @@ M.fields = {
   },
   {
     key = 'terminalAddress',
+    placeholder = 'auto',
     label = 'Terminal component address',
     help = 'Blank selects the only terminal; otherwise enter its address or unique prefix.',
     default = '',
   },
   {
     key = 'editorAddress',
+    placeholder = 'auto',
     label = 'Editor component address',
     help = 'Blank selects the only directly connected ME interface.',
     default = '',
   },
   {
     key = 'dataAddress',
+    placeholder = 'auto',
     label = 'Data Card address',
     help = 'Blank selects the only Data Card.',
     default = '',
@@ -1659,28 +1718,86 @@ local function encodedPattern(data, p)
     return root
   end
 end
+-- Canonical ingredient identity shared by planning and editor read-back.
+-- AE2FC drops encode one mB per item; FluidTag is the fluid's own NBT.
+local function patternIngredient(data, s, entry)
+  U.check(not U.truth(s.hasTag) or type(s.tag) == 'string', 'Ingredient NBT hidden')
+  local count = U.patternCount(s, entry)
+  if not count then
+    return nil
+  end
+  local normalized = stack(s)
+  normalized.size, normalized.amount = count, nil
+  normalized.type = s.damage == nil and 'fluid' or 'item'
+  if s.name == 'ae2fc:fluid_drop' then
+    local fields = entry and entry.__value
+    local tag = fields and fields.tag
+    if type(tag) ~= 'table' or tag.__nbt_type ~= 'compound' then
+      tag = s.tag and nbt(data, s.tag)
+    end
+    local fluid = tag and tag.__value and tag.__value.Fluid
+    U.check(
+      fluid and fluid.__nbt_type == 'string' and fluid.__value ~= '',
+      'Fluid drop has no readable Fluid name'
+    )
+    normalized.type, normalized.name, normalized.damage = 'fluid', fluid.__value:lower(), nil
+    normalized.tag, normalized.hasTag = nil, false
+    normalized.label = s.label and s.label:gsub('^[Dd]rop of ', '')
+    local fluidTag = tag.__value.FluidTag
+    if fluidTag and next(fluidTag.__value) then
+      normalized.tag = invoke(data, 'encodeNBT', encodableNBT(fluidTag))
+      U.check(U.eq(nbt(data, normalized.tag), fluidTag), 'Fluid NBT round trip failed')
+      normalized.hasTag = true
+    end
+  end
+  return normalized
+end
+local function fluidDrop(data, s)
+  local root = {
+    __nbt_type = 'compound',
+    __value = {
+      Fluid = { __nbt_type = 'string', __value = s.name },
+    },
+  }
+  if s.tag then
+    root.__value.FluidTag = nbt(data, s.tag)
+  end
+  local tag = invoke(data, 'encodeNBT', encodableNBT(root))
+  U.check(U.eq(nbt(data, tag), root), 'Fluid drop NBT round trip failed')
+  return { type = 'item', name = 'ae2fc:fluid_drop', damage = 0, size = s.size, tag = tag }
+end
 local function effectivePattern(data, p)
-  if not U.exists(p) then return p end
+  if not U.exists(p) then
+    return p
+  end
   local needsNormalization = p.name == 'ae2fc:encodedPattern'
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     for _, s in pairs(p[which] or {}) do
-      if U.exists(s) and (not U.integer(s.size) or s.size <= 0 or s.amount ~= nil) then
+      if
+        U.exists(s)
+        and (
+          not U.integer(s.size)
+          or s.size <= 0
+          or s.amount ~= nil
+          or s.name == 'ae2fc:fluid_drop'
+        )
+      then
         needsNormalization = true
         break
       end
     end
   end
-  if not needsNormalization then return p end
+  if not needsNormalization then
+    return p
+  end
   local root = encodedPattern(data, p)
-  if not root then return p end
+  if not root then
+    return p
+  end
   local normalized = compact(p)
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     for index, s in pairs(normalized[which]) do
-      local count = U.patternCount(s, U.patternEntry(root, which, index))
-      if count then
-        s.size = count
-        s.amount = nil
-      end
+      normalized[which][index] = patternIngredient(data, s, U.patternEntry(root, which, index)) or s
     end
   end
   return normalized
@@ -1775,6 +1892,8 @@ local function item(s)
 end
 local function metadata(data, p)
   local t = nbt(data, p.tag)
+  -- AE2FC reads in/out. Its old duplicated Inputs/Outputs lists are preserved
+  -- verbatim as metadata; the interface setters do not rewrite those copies.
   t.__value['in'] = nil
   t.__value.out = nil
   return t
@@ -2094,21 +2213,29 @@ local function transfer(hw, from, to)
   U.check(ok == true, 'Pattern transfer failed: ' .. tostring(slot))
   U.check(slot == to.slot, 'Pattern moved to unexpected slot ' .. tostring(slot))
 end
-local function setEntry(hw, slot, which, index, s)
+local function setEntry(hw, slot, which, index, s, previous, normalizedPrevious, patternName)
   local method = which == 'inputs' and 'setInterfacePatternInput' or 'setInterfacePatternOutput'
   if s then
+    -- Resize old fluid drops without changing their representation or item NBT.
+    -- Imprinting a different ingredient still uses the normal typed setter.
+    if s.type == 'fluid' and previous and previous.name == 'ae2fc:fluid_drop' then
+      local old = normalizedPrevious
+      if old and old.name == s.name and tagKey(hw.data, old) == tagKey(hw.data, s) then
+        local amount = s.size
+        s = U.clone(previous)
+        s.type, s.size, s.amount = 'item', amount, nil
+      end
+    end
+    -- Ordinary AE2 patterns use PatternHelper's item-only parser. Their fluid
+    -- ingredients must be drops; ultimate and fluid patterns accept native fluids.
+    if s.type == 'fluid' and patternName == 'appliedenergistics2:item.ItemEncodedPattern' then
+      s = fluidDrop(hw.data, s)
+    end
     local detail = s.type == 'fluid'
-      and { name = s.name, amount = s.size, size = s.size }
+        and { name = s.name, amount = s.size, size = s.size, tag = s.tag }
       or { name = s.name, damage = s.damage, size = s.size, tag = s.tag }
     U.check(
-      direct(
-        hw,
-        method,
-        slot,
-        index,
-        detail,
-        s.type or 'item'
-      ) == true,
+      direct(hw, method, slot, index, detail, s.type or 'item') == true,
       'Pattern setter returned failure'
     )
   else
@@ -2160,7 +2287,7 @@ local function finish(hw, op, progress)
       local entries = rawList(hw.data, p, which)
       for index, s in ipairs(desired) do
         if not stackEq(hw.data, observed[which][index], s) then
-          setEntry(hw, op.slot, which, index, s)
+          setEntry(hw, op.slot, which, index, s, p[which][index], observed[which][index], p.name)
         end
       end
       for index = U.largest(entries), #desired + 1, -1 do
@@ -3454,7 +3581,7 @@ local function recipeKey(data, recipe)
   end
   return Planner.recipeKey(normalized)
 end
-local function patternRecipe(p, root)
+local function patternRecipe(data, p, root)
   U.check(type(p.tag) == 'string', 'Pattern NBT hidden; enable allowItemStackNBTTags')
   local crafting = U.truth(p.isCraftable)
   U.check(p.isCraftable ~= nil and p.inputs and p.outputs, 'Unsupported encoded pattern')
@@ -3468,18 +3595,11 @@ local function patternRecipe(p, root)
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     for index, s in pairs(p[which]) do
       if U.exists(s) then
-        U.check(not U.truth(s.hasTag) or type(s.tag) == 'string', 'Ingredient NBT hidden')
-        local count = U.patternCount(s, U.patternEntry(root, which, index))
-        if not count then
+        local ingredient = patternIngredient(data, s, U.patternEntry(root, which, index))
+        if not ingredient then
           return nil, 'Encoded ' .. which .. ' slot ' .. index .. ' has no readable count'
         end
-        r[which][index] = {
-          type = s.damage == nil and 'fluid' or 'item',
-          name = s.name,
-          damage = s.damage,
-          size = count,
-          tag = s.tag,
-        }
+        r[which][index] = ingredient
       end
     end
   end
@@ -3543,14 +3663,15 @@ local function explainExisting(plan, snapshot, request, manifest)
         reason = reusedEntry.resize and 'Recipe matches; batch will be resized.'
           or 'Recipe matches the selected route.'
       elseif skippedItem then
-        reason = 'Skipped: ' .. (skippedItem.reason or 'no path to a non-recycling product in the recipe export.')
+        reason = 'Skipped: '
+          .. (skippedItem.reason or 'no path to a non-recycling product in the recipe export.')
       elseif wantedKeys[interface.name .. ':' .. tostring(pattern.recipeKey)] then
         reason = 'Duplicate of a selected recipe; kept after the planned patterns.'
       elseif wantedOutput and wantedOutput.destination ~= interface.name then
         reason = 'Selected output belongs in interface ' .. wantedOutput.destination .. '.'
       elseif wantedOutput then
         reason = pattern.reason and ('Output selected; ' .. pattern.reason .. '.')
-          or 'Output selected, but encoded inputs, proportions, NBT or flags differ.'
+          or 'Recipe differs: inputs, ratio, NBT or flags.'
       elseif pattern.matchIssue then
         reason = pattern.matchIssue
       else
@@ -3590,7 +3711,8 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     end
   end
   local function destination(recipe)
-    return routing.destinations and routing.destinations[recipe.outputForm or recipe.form] or routing.destination
+    return routing.destinations and routing.destinations[recipe.outputForm or recipe.form]
+      or routing.destination
   end
   U.check(
     manifest.version == 1 and type(manifest.recipes) == 'table',
@@ -3661,9 +3783,13 @@ local function scanManifest(c, manifest, routing, progress, control, started)
           end
           value.inputSummary = table.concat(inputLabels, ', ')
           if root then
-            local r, issue = patternRecipe(p, root)
+            local r, issue = patternRecipe(hw.data, p, root)
             if r then
               value.kind = r.kind
+              value.inputSummary = U.ingredientSummary(r.inputs)
+              if r.outputs[1] then
+                value.output = U.clone(r.outputs[1])
+              end
               local valid, key, scale = pcall(recipeKey, hw.data, r)
               if valid then
                 value.recipeKey = key
@@ -4045,8 +4171,8 @@ local function runUI()
     if accent then
       local first, last = math.max(1, accent.from), math.min(width, accent.from + accent.length - 1)
       if last >= first then
-        gpu.setForeground(colors.text)
-        gpu.setBackground(Batch.color(accent.tier, colors[bg or 'bg'], 0.5))
+        gpu.setForeground(Batch.color(accent.tier, colors.text, 0.5))
+        gpu.setBackground(colors[bg or 'bg'])
         gpu.set(x + first - 1, y, unicode.sub(s, first, last))
       end
     end
@@ -4072,6 +4198,10 @@ local function runUI()
       buttons[#buttons + 1] = { x = x, y = y, w = length, action = callback }
     end
     return x + length + 2
+  end
+  local function toggleButton(x, y, selected, callback, enabled, label)
+    local marker = selected and 'X' or ' '
+    return button(x, y, marker .. (label and (' ' .. label) or ''), callback, enabled, selected)
   end
   local function nav(y, label, selected, callback, enabled)
     text(
@@ -4161,7 +4291,7 @@ local function runUI()
         y,
         value == '' and (f.placeholder or '(not configured)') or value,
         width,
-        'text',
+        value == '' and 'muted' or 'text',
         'panel'
       )
     end
@@ -4379,34 +4509,9 @@ local function runUI()
       contentKey = key
       contentRows = {}
       for _, r in ipairs(lines()) do
-        local remaining, consumed = r[1], 0
-        local guideWidth = r[3] or 0
-        local function appendChunk(chunk)
-          local accent
-          if r[5] then
-            local first = math.max(1, r[5].from - consumed)
-            local last = math.min(unicode.len(chunk), r[5].from + r[5].length - 1 - consumed)
-            if first <= last then
-              accent = { from = first, length = last - first + 1, tier = r[5].tier }
-            end
-          end
-          contentRows[#contentRows + 1] =
-            { chunk, r[2], math.min(guideWidth, unicode.len(chunk)), r[4], accent }
+        for _, row in ipairs(U.wrapRow(r, width, unicode)) do
+          contentRows[#contentRows + 1] = row
         end
-        while unicode.len(remaining) > width do
-          local prefix = unicode.sub(remaining, 1, width)
-          local at = prefix:match('^.*()%s')
-          local count = at and unicode.len(prefix:sub(1, at - 1)) or width
-          if count == 0 then
-            count = width
-          end
-          appendChunk(unicode.sub(remaining, 1, count))
-          guideWidth = 0
-          local tail = unicode.sub(remaining, count + 1)
-          remaining = tail:gsub('^%s+', '')
-          consumed = consumed + count + unicode.len(tail) - unicode.len(remaining)
-        end
-        appendChunk(remaining)
       end
     end
     local rows = contentRows
@@ -4507,21 +4612,26 @@ local function runUI()
       navigate('help')
     end)
     if state.preview then
-      nav(19, 'Current preview', state.page == 'preview', function()
-        navigate('preview')
-      end)
+      nav(
+        state.page == 'settings' and 44 or 19,
+        'Current preview',
+        state.page == 'preview',
+        function()
+          navigate('preview')
+        end
+      )
     end
     if state.page == 'settings' then
-      text(3, 20, 'SETTINGS SECTIONS', 26, 'muted')
-      nav(22, 'Tier multipliers', state.settings == 'batch', function()
+      text(3, 19, 'SETTINGS SECTIONS', 26, 'muted')
+      nav(21, 'Tier multipliers', state.settings == 'batch', function()
         navigate('settings', 'batch')
       end)
-      nav(25, 'Shared interfaces', state.settings == 'shared', function()
+      nav(24, 'Shared interfaces', state.settings == 'shared', function()
         navigate('settings', 'shared')
       end)
       for n, p in ipairs(Programs.list) do
         local id = p.id
-        nav(25 + n * 3, p.name, state.settings == id, function()
+        nav(24 + n * 3, p.name, state.settings == id, function()
           navigate('settings', id)
         end)
       end
@@ -4592,21 +4702,21 @@ local function runUI()
             local selected = Config.selected(values()[f.key], f.choices)
             for _, option in ipairs(f.choices) do
               local key, choice = f.key, option[1]
-              if x + unicode.wlen('[ ' .. option[2] .. ' ]') - 1 > 157 then
+              if x + unicode.wlen('[ X ' .. option[2] .. ' ]') - 1 > 157 then
                 x, row = 34, row + 1
               end
-              x = button(x, row, option[2], function()
+              x = toggleButton(x, row, selected[choice], function()
                 toggleForm(key, f.choices, choice)
-              end, true, selected[choice])
+              end, true, option[2])
             end
             helpY, height = row + 1, row - y + 4
           elseif f.enableForm then
             local program = Programs.byId[state.settings]
             local choice = f.enableForm
             local selected = Config.selected(values()[program.formSwitch], program.formChoices)
-            button(34, y + 1, selected[choice] and 'X' or ' ', function()
+            toggleButton(34, y + 1, selected[choice], function()
               toggleForm(program.formSwitch, program.formChoices, choice)
-            end, true, selected[choice])
+            end, true)
             editorRow(42, y + 1, 116, f)
           elseif f.kind == 'select' then
             local label, selected = values()[f.key], 1
@@ -4620,6 +4730,12 @@ local function runUI()
               state.choice =
                 { key = f.key, label = f.label, choices = f.choices, selected = selected }
             end)
+          elseif f.toggleValues or f.kind == 'toggle' then
+            local key = f.key
+            local choices = f.toggleValues or { 'off', 'on' }
+            toggleButton(34, y + 1, values()[key] == choices[2], function()
+              chooseValue(key, values()[key] == choices[2] and choices[1] or choices[2])
+            end)
           elseif f.choices then
             local x = 34
             for _, option in ipairs(f.choices) do
@@ -4628,15 +4744,6 @@ local function runUI()
                 chooseValue(key, value)
               end, true, values()[key] == value)
             end
-          elseif f.kind == 'toggle' then
-            button(34, y + 1, values()[f.key] == 'on' and 'On' or 'Off', function()
-              commitEdit()
-              local trial = U.clone(cfg)
-              local v = Config.values(trial, state.settings)
-              v[f.key] = v[f.key] == 'on' and 'off' or 'on'
-              saveConfig(trial)
-              status('Settings saved.', 'green')
-            end, true, values()[f.key] == 'on')
           else
             editorRow(34, y + 1, 124, f)
           end
@@ -4762,21 +4869,19 @@ local function runUI()
           45,
           #p.errors == 0 and 'green' or 'red'
         )
-        for _, err in ipairs(p.errors) do
-          for pos = 1, unicode.len(err), 45 do
+        local function summaryRow(message, tone)
+          for _, row in ipairs(U.wrapRow({ message, tone }, 45, unicode)) do
             if y < 32 then
               y = y + 1
-              text(113, y, unicode.sub(err, pos, pos + 44), 45, 'red')
+              text(113, y, row[1], 45, tone)
             end
           end
         end
+        for _, err in ipairs(p.errors) do
+          summaryRow(err, 'red')
+        end
         for _, warning in ipairs(p.warnings or {}) do
-          for pos = 1, unicode.len(warning), 45 do
-            if y < 32 then
-              y = y + 1
-              text(113, y, unicode.sub(warning, pos, pos + 44), 45, 'yellow')
-            end
-          end
+          summaryRow(warning, 'yellow')
         end
         if preview.manifest and #preview.manifest.unresolved > 0 then
           text(113, 34, 'Registry names need verification.', 45, 'red')

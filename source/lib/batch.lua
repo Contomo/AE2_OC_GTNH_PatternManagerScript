@@ -58,7 +58,7 @@ field(
 )
 field(
   'abovePolicy',
-  'Materials above your tier',
+  'Include materials above your tier',
   'skip',
   '',
   'choice',
@@ -88,7 +88,7 @@ field(
   'voltagePolicy',
   'Recipe voltage constraint',
   'cap',
-  'Cap also skips recipes above the reference tier. Ignore removes this constraint.',
+  'When enabled, cap batches by voltage and skip recipes above the reference tier.',
   'choice',
   { { 'off', 'Ignore voltage' }, { 'cap', 'Cap by voltage' } }
 )
@@ -160,6 +160,9 @@ for _, name in ipairs(M.tiers) do
   field('override' .. name, name, '', '', 'optionalPositiveInteger')
 end
 for _, f in ipairs(M.fields) do
+  if f.key == 'voltagePolicy' or f.key == 'abovePolicy' then
+    f.toggleValues = { f.choices[1][1], f.choices[2][1] }
+  end
   if f.key ~= 'mode' then
     f.when = { mode = 'tiered' }
   end
@@ -316,7 +319,7 @@ function M.describe(detail)
     .. M.voltageText(detail)
 end
 
--- OC accepts RGB, without alpha. Blend tier backgrounds locally instead.
+-- OC accepts RGB, without alpha. Blend tier colors locally when requested.
 function M.color(tier, background, opacity)
   local rgb = Tiers.colors[index[tier]] or background
   if not opacity then

@@ -81,21 +81,29 @@ local function transfer(hw, from, to)
   U.check(ok == true, 'Pattern transfer failed: ' .. tostring(slot))
   U.check(slot == to.slot, 'Pattern moved to unexpected slot ' .. tostring(slot))
 end
-local function setEntry(hw, slot, which, index, s)
+local function setEntry(hw, slot, which, index, s, previous, normalizedPrevious, patternName)
   local method = which == 'inputs' and 'setInterfacePatternInput' or 'setInterfacePatternOutput'
   if s then
+    -- Resize old fluid drops without changing their representation or item NBT.
+    -- Imprinting a different ingredient still uses the normal typed setter.
+    if s.type == 'fluid' and previous and previous.name == 'ae2fc:fluid_drop' then
+      local old = normalizedPrevious
+      if old and old.name == s.name and tagKey(hw.data, old) == tagKey(hw.data, s) then
+        local amount = s.size
+        s = U.clone(previous)
+        s.type, s.size, s.amount = 'item', amount, nil
+      end
+    end
+    -- Ordinary AE2 patterns use PatternHelper's item-only parser. Their fluid
+    -- ingredients must be drops; ultimate and fluid patterns accept native fluids.
+    if s.type == 'fluid' and patternName == 'appliedenergistics2:item.ItemEncodedPattern' then
+      s = fluidDrop(hw.data, s)
+    end
     local detail = s.type == 'fluid'
-      and { name = s.name, amount = s.size, size = s.size }
+        and { name = s.name, amount = s.size, size = s.size, tag = s.tag }
       or { name = s.name, damage = s.damage, size = s.size, tag = s.tag }
     U.check(
-      direct(
-        hw,
-        method,
-        slot,
-        index,
-        detail,
-        s.type or 'item'
-      ) == true,
+      direct(hw, method, slot, index, detail, s.type or 'item') == true,
       'Pattern setter returned failure'
     )
   else
@@ -147,7 +155,7 @@ local function finish(hw, op, progress)
       local entries = rawList(hw.data, p, which)
       for index, s in ipairs(desired) do
         if not stackEq(hw.data, observed[which][index], s) then
-          setEntry(hw, op.slot, which, index, s)
+          setEntry(hw, op.slot, which, index, s, p[which][index], observed[which][index], p.name)
         end
       end
       for index = U.largest(entries), #desired + 1, -1 do

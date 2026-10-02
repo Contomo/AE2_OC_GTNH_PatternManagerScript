@@ -450,28 +450,86 @@ local function encodedPattern(data, p)
     return root
   end
 end
+-- Canonical ingredient identity shared by planning and editor read-back.
+-- AE2FC drops encode one mB per item; FluidTag is the fluid's own NBT.
+local function patternIngredient(data, s, entry)
+  U.check(not U.truth(s.hasTag) or type(s.tag) == 'string', 'Ingredient NBT hidden')
+  local count = U.patternCount(s, entry)
+  if not count then
+    return nil
+  end
+  local normalized = stack(s)
+  normalized.size, normalized.amount = count, nil
+  normalized.type = s.damage == nil and 'fluid' or 'item'
+  if s.name == 'ae2fc:fluid_drop' then
+    local fields = entry and entry.__value
+    local tag = fields and fields.tag
+    if type(tag) ~= 'table' or tag.__nbt_type ~= 'compound' then
+      tag = s.tag and nbt(data, s.tag)
+    end
+    local fluid = tag and tag.__value and tag.__value.Fluid
+    U.check(
+      fluid and fluid.__nbt_type == 'string' and fluid.__value ~= '',
+      'Fluid drop has no readable Fluid name'
+    )
+    normalized.type, normalized.name, normalized.damage = 'fluid', fluid.__value:lower(), nil
+    normalized.tag, normalized.hasTag = nil, false
+    normalized.label = s.label and s.label:gsub('^[Dd]rop of ', '')
+    local fluidTag = tag.__value.FluidTag
+    if fluidTag and next(fluidTag.__value) then
+      normalized.tag = invoke(data, 'encodeNBT', encodableNBT(fluidTag))
+      U.check(U.eq(nbt(data, normalized.tag), fluidTag), 'Fluid NBT round trip failed')
+      normalized.hasTag = true
+    end
+  end
+  return normalized
+end
+local function fluidDrop(data, s)
+  local root = {
+    __nbt_type = 'compound',
+    __value = {
+      Fluid = { __nbt_type = 'string', __value = s.name },
+    },
+  }
+  if s.tag then
+    root.__value.FluidTag = nbt(data, s.tag)
+  end
+  local tag = invoke(data, 'encodeNBT', encodableNBT(root))
+  U.check(U.eq(nbt(data, tag), root), 'Fluid drop NBT round trip failed')
+  return { type = 'item', name = 'ae2fc:fluid_drop', damage = 0, size = s.size, tag = tag }
+end
 local function effectivePattern(data, p)
-  if not U.exists(p) then return p end
+  if not U.exists(p) then
+    return p
+  end
   local needsNormalization = p.name == 'ae2fc:encodedPattern'
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     for _, s in pairs(p[which] or {}) do
-      if U.exists(s) and (not U.integer(s.size) or s.size <= 0 or s.amount ~= nil) then
+      if
+        U.exists(s)
+        and (
+          not U.integer(s.size)
+          or s.size <= 0
+          or s.amount ~= nil
+          or s.name == 'ae2fc:fluid_drop'
+        )
+      then
         needsNormalization = true
         break
       end
     end
   end
-  if not needsNormalization then return p end
+  if not needsNormalization then
+    return p
+  end
   local root = encodedPattern(data, p)
-  if not root then return p end
+  if not root then
+    return p
+  end
   local normalized = compact(p)
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     for index, s in pairs(normalized[which]) do
-      local count = U.patternCount(s, U.patternEntry(root, which, index))
-      if count then
-        s.size = count
-        s.amount = nil
-      end
+      normalized[which][index] = patternIngredient(data, s, U.patternEntry(root, which, index)) or s
     end
   end
   return normalized

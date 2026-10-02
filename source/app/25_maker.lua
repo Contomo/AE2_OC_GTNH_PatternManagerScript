@@ -15,7 +15,7 @@ local function recipeKey(data, recipe)
   end
   return Planner.recipeKey(normalized)
 end
-local function patternRecipe(p, root)
+local function patternRecipe(data, p, root)
   U.check(type(p.tag) == 'string', 'Pattern NBT hidden; enable allowItemStackNBTTags')
   local crafting = U.truth(p.isCraftable)
   U.check(p.isCraftable ~= nil and p.inputs and p.outputs, 'Unsupported encoded pattern')
@@ -29,18 +29,11 @@ local function patternRecipe(p, root)
   for _, which in ipairs({ 'inputs', 'outputs' }) do
     for index, s in pairs(p[which]) do
       if U.exists(s) then
-        U.check(not U.truth(s.hasTag) or type(s.tag) == 'string', 'Ingredient NBT hidden')
-        local count = U.patternCount(s, U.patternEntry(root, which, index))
-        if not count then
+        local ingredient = patternIngredient(data, s, U.patternEntry(root, which, index))
+        if not ingredient then
           return nil, 'Encoded ' .. which .. ' slot ' .. index .. ' has no readable count'
         end
-        r[which][index] = {
-          type = s.damage == nil and 'fluid' or 'item',
-          name = s.name,
-          damage = s.damage,
-          size = count,
-          tag = s.tag,
-        }
+        r[which][index] = ingredient
       end
     end
   end
@@ -104,14 +97,15 @@ local function explainExisting(plan, snapshot, request, manifest)
         reason = reusedEntry.resize and 'Recipe matches; batch will be resized.'
           or 'Recipe matches the selected route.'
       elseif skippedItem then
-        reason = 'Skipped: ' .. (skippedItem.reason or 'no path to a non-recycling product in the recipe export.')
+        reason = 'Skipped: '
+          .. (skippedItem.reason or 'no path to a non-recycling product in the recipe export.')
       elseif wantedKeys[interface.name .. ':' .. tostring(pattern.recipeKey)] then
         reason = 'Duplicate of a selected recipe; kept after the planned patterns.'
       elseif wantedOutput and wantedOutput.destination ~= interface.name then
         reason = 'Selected output belongs in interface ' .. wantedOutput.destination .. '.'
       elseif wantedOutput then
         reason = pattern.reason and ('Output selected; ' .. pattern.reason .. '.')
-          or 'Output selected, but encoded inputs, proportions, NBT or flags differ.'
+          or 'Recipe differs: inputs, ratio, NBT or flags.'
       elseif pattern.matchIssue then
         reason = pattern.matchIssue
       else
@@ -151,7 +145,8 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     end
   end
   local function destination(recipe)
-    return routing.destinations and routing.destinations[recipe.outputForm or recipe.form] or routing.destination
+    return routing.destinations and routing.destinations[recipe.outputForm or recipe.form]
+      or routing.destination
   end
   U.check(
     manifest.version == 1 and type(manifest.recipes) == 'table',
@@ -222,9 +217,13 @@ local function scanManifest(c, manifest, routing, progress, control, started)
           end
           value.inputSummary = table.concat(inputLabels, ', ')
           if root then
-            local r, issue = patternRecipe(p, root)
+            local r, issue = patternRecipe(hw.data, p, root)
             if r then
               value.kind = r.kind
+              value.inputSummary = U.ingredientSummary(r.inputs)
+              if r.outputs[1] then
+                value.output = U.clone(r.outputs[1])
+              end
               local valid, key, scale = pcall(recipeKey, hw.data, r)
               if valid then
                 value.recipeKey = key

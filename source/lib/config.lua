@@ -46,18 +46,21 @@ M.fields = {
   },
   {
     key = 'terminalAddress',
+    placeholder = 'auto',
     label = 'Terminal component address',
     help = 'Blank selects the only terminal; otherwise enter its address or unique prefix.',
     default = '',
   },
   {
     key = 'editorAddress',
+    placeholder = 'auto',
     label = 'Editor component address',
     help = 'Blank selects the only directly connected ME interface.',
     default = '',
   },
   {
     key = 'dataAddress',
+    placeholder = 'auto',
     label = 'Data Card address',
     help = 'Blank selects the only Data Card.',
     default = '',

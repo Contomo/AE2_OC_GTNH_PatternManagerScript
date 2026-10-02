@@ -130,16 +130,21 @@ end
 function M.patternCount(stack, entry)
   local fields = entry and entry.__nbt_type == 'compound' and entry.__value
   local function positive(value)
-    if type(value) == 'table' then value = value.__value end
+    if type(value) == 'table' then
+      value = value.__value
+    end
     return M.integer(value) and value > 0 and value or nil
   end
-  return positive(fields and fields.Cnt) or positive(fields and fields.Count)
-    or positive(stack.size) or positive(stack.amount)
+  return positive(fields and fields.Cnt)
+    or positive(fields and fields.Count)
+    or positive(stack.size)
+    or positive(stack.amount)
 end
 
 function M.ingredientSummary(list)
   local out = {}
-  for _, item in ipairs(list or {}) do
+  for _, index in ipairs(M.keys(list or {})) do
+    local item = list[index]
     out[#out + 1] = tostring(item.size or item.amount or 1)
       .. (item.type == 'fluid' and ' mB ' or ' x ')
       .. tostring(item.label or item.name)
@@ -170,6 +175,54 @@ function M.rows()
     result[#result + 1] = { text, tone or 'text', guideWidth, guideTone, accent }
   end
   return result, add
+end
+
+-- One word wrapper for scrollable rows and narrow summary panels. Tree guides
+-- repeat on continuation lines; accent positions follow the original text.
+function M.wrapRow(row, width, unicode)
+  local result = {}
+  local prefixLength = math.min(row[3] or 0, width - 1)
+  local prefix = unicode.sub(row[1], 1, prefixLength)
+  local remaining = unicode.sub(row[1], prefixLength + 1)
+  local consumed = prefixLength
+  local available = width - unicode.wlen(prefix)
+  repeat
+    local count = unicode.len(remaining)
+    if unicode.wlen(remaining) > available then
+      local low, high = 1, count
+      while low < high do
+        local mid = math.ceil((low + high) / 2)
+        if unicode.wlen(unicode.sub(remaining, 1, mid)) <= available then
+          low = mid
+        else
+          high = mid - 1
+        end
+      end
+      count = low
+      local part = unicode.sub(remaining, 1, count)
+      local boundary = part:match('^.*()%s')
+      if boundary then
+        local words = unicode.len(part:sub(1, boundary - 1))
+        if words > 0 then
+          count = words
+        end
+      end
+    end
+    local chunk = unicode.sub(remaining, 1, count)
+    local accent
+    if row[5] then
+      local first = math.max(1, row[5].from - consumed)
+      local last = math.min(count, row[5].from + row[5].length - 1 - consumed)
+      if first <= last then
+        accent = { from = prefixLength + first, length = last - first + 1, tier = row[5].tier }
+      end
+    end
+    result[#result + 1] = { prefix .. chunk, row[2], prefixLength, row[4], accent }
+    local tail = unicode.sub(remaining, count + 1)
+    remaining = tail:gsub('^%s+', '')
+    consumed = consumed + count + unicode.len(tail) - unicode.len(remaining)
+  until remaining == ''
+  return result
 end
 
 return M

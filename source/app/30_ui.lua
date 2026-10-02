@@ -84,8 +84,8 @@ local function runUI()
     if accent then
       local first, last = math.max(1, accent.from), math.min(width, accent.from + accent.length - 1)
       if last >= first then
-        gpu.setForeground(colors.text)
-        gpu.setBackground(Batch.color(accent.tier, colors[bg or 'bg'], 0.5))
+        gpu.setForeground(Batch.color(accent.tier, colors.text, 0.5))
+        gpu.setBackground(colors[bg or 'bg'])
         gpu.set(x + first - 1, y, unicode.sub(s, first, last))
       end
     end
@@ -111,6 +111,10 @@ local function runUI()
       buttons[#buttons + 1] = { x = x, y = y, w = length, action = callback }
     end
     return x + length + 2
+  end
+  local function toggleButton(x, y, selected, callback, enabled, label)
+    local marker = selected and 'X' or ' '
+    return button(x, y, marker .. (label and (' ' .. label) or ''), callback, enabled, selected)
   end
   local function nav(y, label, selected, callback, enabled)
     text(
@@ -200,7 +204,7 @@ local function runUI()
         y,
         value == '' and (f.placeholder or '(not configured)') or value,
         width,
-        'text',
+        value == '' and 'muted' or 'text',
         'panel'
       )
     end
@@ -418,34 +422,9 @@ local function runUI()
       contentKey = key
       contentRows = {}
       for _, r in ipairs(lines()) do
-        local remaining, consumed = r[1], 0
-        local guideWidth = r[3] or 0
-        local function appendChunk(chunk)
-          local accent
-          if r[5] then
-            local first = math.max(1, r[5].from - consumed)
-            local last = math.min(unicode.len(chunk), r[5].from + r[5].length - 1 - consumed)
-            if first <= last then
-              accent = { from = first, length = last - first + 1, tier = r[5].tier }
-            end
-          end
-          contentRows[#contentRows + 1] =
-            { chunk, r[2], math.min(guideWidth, unicode.len(chunk)), r[4], accent }
+        for _, row in ipairs(U.wrapRow(r, width, unicode)) do
+          contentRows[#contentRows + 1] = row
         end
-        while unicode.len(remaining) > width do
-          local prefix = unicode.sub(remaining, 1, width)
-          local at = prefix:match('^.*()%s')
-          local count = at and unicode.len(prefix:sub(1, at - 1)) or width
-          if count == 0 then
-            count = width
-          end
-          appendChunk(unicode.sub(remaining, 1, count))
-          guideWidth = 0
-          local tail = unicode.sub(remaining, count + 1)
-          remaining = tail:gsub('^%s+', '')
-          consumed = consumed + count + unicode.len(tail) - unicode.len(remaining)
-        end
-        appendChunk(remaining)
       end
     end
     local rows = contentRows
@@ -546,21 +525,26 @@ local function runUI()
       navigate('help')
     end)
     if state.preview then
-      nav(19, 'Current preview', state.page == 'preview', function()
-        navigate('preview')
-      end)
+      nav(
+        state.page == 'settings' and 44 or 19,
+        'Current preview',
+        state.page == 'preview',
+        function()
+          navigate('preview')
+        end
+      )
     end
     if state.page == 'settings' then
-      text(3, 20, 'SETTINGS SECTIONS', 26, 'muted')
-      nav(22, 'Tier multipliers', state.settings == 'batch', function()
+      text(3, 19, 'SETTINGS SECTIONS', 26, 'muted')
+      nav(21, 'Tier multipliers', state.settings == 'batch', function()
         navigate('settings', 'batch')
       end)
-      nav(25, 'Shared interfaces', state.settings == 'shared', function()
+      nav(24, 'Shared interfaces', state.settings == 'shared', function()
         navigate('settings', 'shared')
       end)
       for n, p in ipairs(Programs.list) do
         local id = p.id
-        nav(25 + n * 3, p.name, state.settings == id, function()
+        nav(24 + n * 3, p.name, state.settings == id, function()
           navigate('settings', id)
         end)
       end
@@ -631,21 +615,21 @@ local function runUI()
             local selected = Config.selected(values()[f.key], f.choices)
             for _, option in ipairs(f.choices) do
               local key, choice = f.key, option[1]
-              if x + unicode.wlen('[ ' .. option[2] .. ' ]') - 1 > 157 then
+              if x + unicode.wlen('[ X ' .. option[2] .. ' ]') - 1 > 157 then
                 x, row = 34, row + 1
               end
-              x = button(x, row, option[2], function()
+              x = toggleButton(x, row, selected[choice], function()
                 toggleForm(key, f.choices, choice)
-              end, true, selected[choice])
+              end, true, option[2])
             end
             helpY, height = row + 1, row - y + 4
           elseif f.enableForm then
             local program = Programs.byId[state.settings]
             local choice = f.enableForm
             local selected = Config.selected(values()[program.formSwitch], program.formChoices)
-            button(34, y + 1, selected[choice] and 'X' or ' ', function()
+            toggleButton(34, y + 1, selected[choice], function()
               toggleForm(program.formSwitch, program.formChoices, choice)
-            end, true, selected[choice])
+            end, true)
             editorRow(42, y + 1, 116, f)
           elseif f.kind == 'select' then
             local label, selected = values()[f.key], 1
@@ -659,6 +643,12 @@ local function runUI()
               state.choice =
                 { key = f.key, label = f.label, choices = f.choices, selected = selected }
             end)
+          elseif f.toggleValues or f.kind == 'toggle' then
+            local key = f.key
+            local choices = f.toggleValues or { 'off', 'on' }
+            toggleButton(34, y + 1, values()[key] == choices[2], function()
+              chooseValue(key, values()[key] == choices[2] and choices[1] or choices[2])
+            end)
           elseif f.choices then
             local x = 34
             for _, option in ipairs(f.choices) do
@@ -667,15 +657,6 @@ local function runUI()
                 chooseValue(key, value)
               end, true, values()[key] == value)
             end
-          elseif f.kind == 'toggle' then
-            button(34, y + 1, values()[f.key] == 'on' and 'On' or 'Off', function()
-              commitEdit()
-              local trial = U.clone(cfg)
-              local v = Config.values(trial, state.settings)
-              v[f.key] = v[f.key] == 'on' and 'off' or 'on'
-              saveConfig(trial)
-              status('Settings saved.', 'green')
-            end, true, values()[f.key] == 'on')
           else
             editorRow(34, y + 1, 124, f)
           end
@@ -801,21 +782,19 @@ local function runUI()
           45,
           #p.errors == 0 and 'green' or 'red'
         )
-        for _, err in ipairs(p.errors) do
-          for pos = 1, unicode.len(err), 45 do
+        local function summaryRow(message, tone)
+          for _, row in ipairs(U.wrapRow({ message, tone }, 45, unicode)) do
             if y < 32 then
               y = y + 1
-              text(113, y, unicode.sub(err, pos, pos + 44), 45, 'red')
+              text(113, y, row[1], 45, tone)
             end
           end
         end
+        for _, err in ipairs(p.errors) do
+          summaryRow(err, 'red')
+        end
         for _, warning in ipairs(p.warnings or {}) do
-          for pos = 1, unicode.len(warning), 45 do
-            if y < 32 then
-              y = y + 1
-              text(113, y, unicode.sub(warning, pos, pos + 44), 45, 'yellow')
-            end
-          end
+          summaryRow(warning, 'yellow')
         end
         if preview.manifest and #preview.manifest.unresolved > 0 then
           text(113, 34, 'Registry names need verification.', 45, 'red')

@@ -69,11 +69,13 @@ an estimate, not a claim of earliest material accessibility. Missing voltage use
 the fallback multiplier. The separate voltage constraint can be disabled; when
 enabled it caps batches and skips recipes above the selected voltage reference.
 Cheap processing never increases a known high-tier material's budget.
+Voltage constraint and future-material inclusion use single checkboxes. Blank
+shared component addresses display muted `auto`; they remain blank in saved settings.
 
 Tiered batches default to limits of 4096 items or 589824 mB per ingredient. The
 whole batch shrinks together; stocked molds/circuits and omitted supplies do not
 consume those limits. Effective tiers shows material budgets before these caps.
-The preview uses labels such as `30,720 EU/t (LuV)` with tier-colored backgrounds
+The preview uses labels such as `30,720 EU/t (LuV)` with tier-colored text
 blended at 50%, and explains exclusions in Excluded and Existing. Existing patterns
 excluded by settings are kept. Selecting no recipes gives a non-executable preview.
 
@@ -445,6 +447,16 @@ are not a persistent cache that hides later changes. Donor editing clears only
 nonempty trailing NBT cells, in reverse order, with semantic readback. Empty
 padding can remain: [AE's processing pattern parser](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/src/main/java/appeng/helpers/PatternHelper.java)
 ignores empty compounds when condensing inputs and outputs.
+
+Legacy `ae2fc:fluid_drop` ingredients are compared as fluids: one drop equals one mB,
+with the fluid name read from the ingredient's `Fluid` tag. Both `Count` and `Cnt`
+layouts remain supported. Resizing preserves existing drops and their NBT; ordinary
+AE2 donors also receive drops for new fluid inputs because their pattern reader is
+item-only. Ultimate and fluid-pattern donors accept native fluids. The older
+duplicated `Inputs`/`Outputs` lists remain untouched; AE2FC reads `in`/`out`.
+These rules are checked against [AE2FC drop encoding](https://github.com/GTNewHorizons/AE2FluidCraft-Rework/blob/master/src/main/java/com/glodblock/github/common/item/ItemFluidDrop.java),
+[AE2FC pattern reading](https://github.com/GTNewHorizons/AE2FluidCraft-Rework/blob/master/src/main/java/com/glodblock/github/util/FluidPatternDetails.java),
+and [ordinary AE2 pattern reading](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/src/main/java/appeng/helpers/PatternHelper.java).
 
 API sources checked:
 
