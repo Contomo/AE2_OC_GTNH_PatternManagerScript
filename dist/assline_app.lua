@@ -4562,8 +4562,7 @@ local function runUI()
       end
     end
   end
-  local function button(x, y, label, callback, enabled, selected)
-    local content = '[ ' .. label .. ' ]'
+  local function control(x, y, content, callback, enabled, selected)
     local length = unicode.wlen(content)
     local key = x .. ':' .. y
     local previous = buttonWidths[key]
@@ -4584,9 +4583,22 @@ local function runUI()
     end
     return x + length + 2
   end
+  local function button(x, y, label, callback, enabled, selected)
+    return control(x, y, '[ ' .. label .. ' ]', callback, enabled, selected)
+  end
   local function toggleButton(x, y, selected, callback, enabled, label)
     local marker = selected and 'X' or ' '
     return button(x, y, marker .. (label and (' ' .. label) or ''), callback, enabled, selected)
+  end
+  local function checkbox(x, y, label, selected, callback)
+    return control(
+      x,
+      y,
+      '[ ' .. (selected and 'X' or ' ') .. ' ] ' .. label,
+      callback,
+      true,
+      selected
+    )
   end
   local function nav(y, label, selected, callback, enabled)
     text(
@@ -5097,8 +5109,18 @@ local function runUI()
           y = y + 2
         else
           local helpY, height = y + 2, 4
-          text(34, y, f.label, 124, 'blue')
-          if f.kind == 'multiToggle' then
+          local isCheckbox = f.toggleValues or f.kind == 'toggle'
+          if not isCheckbox then
+            text(34, y, f.label, 124, 'blue')
+          end
+          if isCheckbox then
+            local key = f.key
+            local choices = f.toggleValues or { 'off', 'on' }
+            checkbox(34, y, f.label, values()[key] == choices[2], function()
+              chooseValue(key, values()[key] == choices[2] and choices[1] or choices[2])
+            end)
+            helpY, height = y + 1, f.help and f.help ~= '' and 3 or 2
+          elseif f.kind == 'multiToggle' then
             local x, row = 34, y + 1
             local selected = Config.selected(values()[f.key], f.choices)
             for _, option in ipairs(f.choices) do
@@ -5131,12 +5153,6 @@ local function runUI()
               state.choice =
                 { key = f.key, label = f.label, choices = f.choices, selected = selected }
             end)
-          elseif f.toggleValues or f.kind == 'toggle' then
-            local key = f.key
-            local choices = f.toggleValues or { 'off', 'on' }
-            toggleButton(34, y + 1, values()[key] == choices[2], function()
-              chooseValue(key, values()[key] == choices[2] and choices[1] or choices[2])
-            end)
           elseif f.choices then
             local x = 34
             for _, option in ipairs(f.choices) do
@@ -5148,7 +5164,9 @@ local function runUI()
           else
             editorRow(34, y + 1, 124, f)
           end
-          text(34, helpY, f.help, 124, 'muted')
+          if f.help and f.help ~= '' then
+            text(34, helpY, f.help, 124, 'muted')
+          end
           y = y + height
         end
       end

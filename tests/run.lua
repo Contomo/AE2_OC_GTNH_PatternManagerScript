@@ -628,7 +628,8 @@ local function field(label)
     for y=10,43 do
       if frame[y] and frame[y]:sub(34):find(label,1,true) then
         local compact=frame[10] and (frame[10]:find('MATERIAL TIER',1,true) or frame[10]:find('RELATIVE TIER',1,true))
-        return 'touch','screen',compact and 80 or 34,compact and y or y+1,0
+        local inline=frame[y]:sub(34):match('^%[ [X ] %] ')
+        return 'touch','screen',compact and 80 or 34,(compact or inline) and y or y+1,0
       end
     end
     error('Settings field missing: '..label)
@@ -1707,16 +1708,31 @@ test('settings sidebar separates Current preview and auto addresses remain blank
     api.runUI()
   end)
 end)
-test('voltage and future-material policies use single checkboxes and preserve choice values',function()
+test('policy checkboxes share a label row, leave one blank row and preserve choice values',function()
   files[api.paths.config]=ser(cfg)
+  local function checkRow(label,checked,hasHelp)
+    local content='[ '..(checked and 'X' or ' ')..' ] '..label
+    for y=10,43 do
+      if frame[y]:sub(34,33+#content)==content then
+        local gap=y+(hasHelp and 2 or 1)
+        assert(frame[gap]:sub(34):match('^%s*$'),'expected one empty row after '..label)
+        assert(not frame[gap+1]:sub(34):match('^%s*$'),'unexpected second empty row after '..label)
+        return
+      end
+    end
+    error('Inline checkbox missing: '..content)
+  end
   queue(nav('Settings'),nav('Tier multipliers'),click('[ Tiered ]'),function()
     local page=table.concat(frame,'\n')
     assert(not page:find('Ignore voltage',1,true) and not page:find('Cap by voltage',1,true))
+    checkRow('Include materials above your tier',false,false)
+    checkRow('Recipe voltage constraint',true,true)
     return field('Recipe voltage constraint')()
   end,function()
     assert(unser(files[api.paths.config]).batch.voltagePolicy=='off')
     assert(not table.concat(frame,'\n'):find('Voltage reference tier',1,true))
-    return field('Recipe voltage constraint')()
+    checkRow('Recipe voltage constraint',false,true)
+    return click('Recipe voltage constraint')()
   end,function()
     assert(unser(files[api.paths.config]).batch.voltagePolicy=='cap')
     assert(table.concat(frame,'\n'):find('Voltage reference tier',1,true))
@@ -1724,6 +1740,8 @@ test('voltage and future-material policies use single checkboxes and preserve ch
   end,function()
     assert(unser(files[api.paths.config]).batch.abovePolicy=='fixed')
     assert(table.concat(frame,'\n'):find('Later material multiplier',1,true))
+    checkRow('Include materials above your tier',true,false)
+    checkRow('Recipe voltage constraint',true,true)
     snapshot('policy_toggles');return quit()
   end)
   api.runUI()
@@ -1775,7 +1793,8 @@ test('numeric settings expand shorthand on save and leave interface names untouc
       local c=unser(files[api.paths.config])
       assert(c.shared.donors=='4k' and c.programs.wiremill.multiplier=='1500')
       assert(c.batch.itemLimit=='4000' and c.batch.fluidLimit=='4000000')
-      assert(frame[39]:find('4000',1,true))
+      local _,_,_,y=field('Maximum items per pattern ingredient')()
+      assert(frame[y]:find('4000',1,true))
       return quit()
     end)
   api.runUI()
@@ -1831,15 +1850,16 @@ test('PPS button derives its paint, hitbox and color from each current state',fu
   files[api.paths.config]=ser(cfg)
   local function toggle()
     local before
-    return {function() before=unser(files[api.paths.config]).programs.insulator.pps;return 'touch','screen',35,20,0 end,
+    return {function() before=unser(files[api.paths.config]).programs.insulator.pps;return click('Request PPS')() end,
       function()
         local after=unser(files[api.paths.config]).programs.insulator.pps
         assert(after~=before)
-        local label=after=='on' and '[ X ]' or '[   ]'
-        assert(frame[20]:sub(34,33+#label)==label)
-        for x=34,33+#label do assert(background[20][x]==(after=='on' and 0x246B47 or 0x27465E)) end
-        assert(background[20][34+#label]==0x101A26 and frame[20]:sub(34+#label,34+#label)==' ')
-        return 'touch','screen',34+#label,20,0
+        local label=(after=='on' and '[ X ]' or '[   ]')..' Request PPS'
+        local _,_,_,y=field('Request PPS')()
+        assert(frame[y]:sub(34,33+#label)==label)
+        for x=34,33+#label do assert(background[y][x]==(after=='on' and 0x246B47 or 0x27465E)) end
+        assert(background[y][34+#label]==0x101A26 and frame[y]:sub(34+#label,34+#label)==' ')
+        return 'touch','screen',34+#label,y,0
       end,function() assert(unser(files[api.paths.config]).programs.insulator.pps~=before);return 'key_up','kbd',0,0 end}
   end
   queue(nav('Settings'),nav('Wire insulator'),toggle(),toggle(),toggle(),toggle(),quit)
