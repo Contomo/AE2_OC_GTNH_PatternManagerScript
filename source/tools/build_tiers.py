@@ -290,6 +290,87 @@ def ore_evidence(archive, quests, rows, result):
                                    'dimension': dimension, 'accessSource': origin}
 
 
+def refine_processed_quest_tiers(export, reverse, result):
+    """A late part quest is an upper bound, not a material's first production tier.
+
+    Resolve raw-material production routes using their base voltage and known
+    ingredient tiers. Follow same-material intermediates (dust -> hot ingot),
+    requiring a real creation route instead of recycling the requested part.
+    Unknown inputs, fluids without material evidence and cyclic routes cannot
+    establish an earlier tier. This remains an estimate, with route provenance.
+    """
+    raw = {'dust', 'dustSmall', 'dustTiny', 'ingot', 'ingotHot', 'gem', 'nugget'}
+    routes = {}
+    for section, _, recipe in records(export):
+        if section != 'recipes' or recipe.get('machineType') in RECOVERY_MACHINES | {'Arc Furnace'}:
+            continue
+        voltage = recipe.get('eut')
+        if voltage is None:
+            if recipe.get('kind') not in ('crafting', 'crafting_shaped', 'crafting_shapeless', 'furnace', 'smelting'):
+                continue
+            voltage = 0
+        ins = [reverse.get(e['id']) for e in recipe['inputs'] if e.get('consumed', True)]
+        if not ins or any(not found or found[1] not in raw for found in ins):
+            continue
+        tier = next((n for n, limit in zip(NAMES, DEFINITIONS['voltages']) if voltage <= limit), 'MAX')
+        if recipe.get('minimumTier') in NAMES:
+            tier = max(tier, recipe['minimumTier'], key=NAMES.index)
+        for output in recipe['outputs']:
+            found = reverse.get(output['id'])
+            if not found or found[1] not in raw or output.get('chance', 1) != 1:
+                continue
+            routes.setdefault(found, []).append((recipe['id'], tier, voltage, ins, output['id']))
+
+    original = dict(result)
+    for key, prior in original.items():
+        if prior.get('kind') != 'quest item' or prior.get('form') in raw:
+            continue
+        def resolve(form, visiting):
+            node = (key, form)
+            if node in visiting:
+                return None
+            best = None
+            for recipe, tier, voltage, inputs, output in routes.get(node, []):
+                input_tiers, path, unavailable = {}, [], False
+                for material, input_form in inputs:
+                    if material == key:
+                        step = resolve(input_form, visiting | {node})
+                        if not step:
+                            unavailable = True
+                            break
+                        input_tiers.update(step['inputTiers'])
+                        path.extend(step['route'])
+                        tier = max(tier, step['tier'], key=NAMES.index)
+                    elif material in original:
+                        input_tiers[material] = original[material]['tier']
+                        tier = max(tier, original[material]['tier'], key=NAMES.index)
+                    else:
+                        unavailable = True
+                        break
+                if unavailable:
+                    continue
+                candidate = {'tier': tier, 'recipe': recipe, 'eut': voltage,
+                             'inputTiers': input_tiers, 'route': list(dict.fromkeys(path + [recipe])),
+                             'output': output, 'form': form}
+                if best is None or NAMES.index(tier) < NAMES.index(best['tier']):
+                    best = candidate
+            return best
+
+        # Metals must reach ingots, not just cheap alloy dust. Dust-only materials
+        # can use dust production evidence; a part conversion never creates metal.
+        forms = {form for material, form in routes if material == key}
+        bases = ('ingot', 'ingotHot') if forms & {'ingot', 'ingotHot'} else ('gem',) if 'gem' in forms else ('dust',)
+        candidates = [route for form in bases if (route := resolve(form, set()))]
+        if not candidates:
+            continue
+        best = min(candidates, key=lambda route: NAMES.index(route['tier']))
+        if NAMES.index(best['tier']) >= NAMES.index(prior['tier']):
+            continue
+        name, _, damage = best.pop('output').partition('@')
+        result[key] = {**best, 'kind': 'production route estimate', 'quest': prior['quest'],
+                       'questTier': prior['tier'], 'item': name, 'damage': int(damage or 0)}
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('archive')
@@ -324,9 +405,10 @@ def main():
             evidence['accessTier'] = evidence['tier']
             evidence['tier'] = floor['tier']
             evidence['productionFloor'] = floor
+    refine_processed_quest_tiers(args.recipes, reverse, materials)
     with open(args.archive, 'rb') as stream:
         digest = hashlib.file_digest(stream, 'sha256').hexdigest()
-    output = {'policy': 'quest-and-ore-access-v2', 'packVersion': args.pack_version,
+    output = {'policy': 'quest-and-ore-access-v3', 'packVersion': args.pack_version,
               'source': 'https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/tree/' + args.commit + '/config/betterquesting/DefaultQuests',
               'commit': args.commit, 'archiveSha256': digest, 'gtSourceSha256': hashlib.sha256(Path(args.gt_source).read_bytes()).hexdigest(), 'materials': materials}
     Path(args.output).write_text(json.dumps(output, indent=2) + '\n', encoding='utf-8')

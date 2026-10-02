@@ -377,6 +377,20 @@ Completed rename recipes and edits stay applied if a later operation stops.
 Active recovery files are bounded to 400 KB each. The combined discard archive is
 bounded to 900 KB and replaces the previous archive; the timing log is rotated.
 
+OC terminal `send` returns success and the destination slot; the executor checks
+both, then reads the pattern back. Success alone does not prove that the slot is
+enabled: AE2 keeps a 36-slot pattern inventory behind its capacity-card row limit.
+A transfer into a disabled row can succeed while remaining invisible to the terminal.
+Opening the interface GUI removes patterns from disabled rows and drops them.
+All destinations must therefore have three capacity cards, as required by the preview.
+If read-back fails, the error identifies the interface coordinates and zero-based
+slot, distinguishes an absent pattern from a mismatched pattern, and retains the
+operation. Add the missing cards before continuing; if the pattern dropped, return
+that same encoded pattern to its saved editor slot rather than supplying a new donor.
+Sources: [OC transfer and visible-row snapshot](https://github.com/GTNewHorizons/OpenComputers/blob/master/src/main/scala/li/cil/oc/integration/appeng/DriverPartInterfaceTerminal.scala),
+[AE2 physical pattern inventory](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/src/main/java/appeng/helpers/DualityInterface.java),
+[AE2 disabled-row removal](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/src/main/java/appeng/container/implementations/ContainerInterface.java).
+
 ## Cable pattern feasibility
 
 The adjacent inventory exposed by a GTNH ME Interface is its **nine storage

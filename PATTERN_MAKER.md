@@ -216,6 +216,16 @@ material accessibility. Pinned OreMixes/SmallOres rules add dimension evidence;
 planet access uses explicit arrival paragraphs from tiered rocket quests, not
 substring matches in arbitrary descriptions. Estimates retain their source and
 production constraints in `data/material-tiers.json` and are marked at runtime.
+Late quests requesting parts are upper bounds on availability. The tier importer
+refines them when the recipe export proves an earlier raw-material production
+route: it follows same-material intermediates, takes the highest recipe/ingredient
+tier along the route, and selects the earliest complete route. Metals must reach
+ingots or hot ingots; cheap alloy dust alone does not establish their tier.
+Unknown inputs, unresolved fluids, recycling and unseeded cycles cannot lower a
+quest tier. These classifications are marked as production-route estimates and
+retain the recipe IDs, ingredient tiers and original quest tier on the desktop.
+This resolves Tungsten Carbide to EV through its mixer, blast furnace and cooling
+route instead of using the later ZPM foil quest. No per-material override is used.
 Unclassified materials use the user's recipe-voltage/fixed/skip policy.
 The spreadsheet's GT Tiers sheet provides only representative metals and is
 not used to invent mappings for the rest of the matrix.

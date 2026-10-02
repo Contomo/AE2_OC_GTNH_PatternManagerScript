@@ -2231,8 +2231,38 @@ local function allowedPartial(hw, p, op)
 end
 local function transfer(hw, from, to)
   local ok, slot = invoke(hw.terminal, 'send', from, to)
-  U.check(ok == true, 'Pattern transfer failed: ' .. tostring(slot))
-  U.check(slot == to.slot, 'Pattern moved to unexpected slot ' .. tostring(slot))
+  local destination = U.locationText(to) .. ' slot ' .. to.slot .. ' (zero based)'
+  U.check(ok == true, 'Pattern transfer failed to ' .. destination .. ': ' .. tostring(slot))
+  U.check(
+    slot == to.slot,
+    'Pattern moved to unexpected slot ' .. tostring(slot) .. '; requested ' .. destination
+  )
+end
+local function verifyDelivery(hw, from, to, matches, failure)
+  local after = current(hw, to).patterns[to.slot]
+  if matches(after) then
+    return
+  end
+  local message = failure
+    .. ' at '
+    .. U.locationText(to)
+    .. ' slot '
+    .. to.slot
+    .. ' (zero based). '
+  if not U.exists(after) then
+    message = message
+      .. 'Terminal send reported success, but the destination pattern is absent. '
+      .. 'Check capacity cards: hidden slots can accept a transfer and then eject the pattern. '
+    local source = current(hw, from).patterns[from.slot]
+    message = message
+      .. (
+        U.exists(source) and 'Source still contains a pattern.'
+        or 'Source is empty; check the interface and dropped items.'
+      )
+  else
+    message = message .. 'Destination contains a different pattern.'
+  end
+  error(message .. ' Saved operation retained.', 0)
 end
 local function setEntry(hw, slot, which, index, s, previous, normalizedPrevious, patternName)
   local method = which == 'inputs' and 'setInterfacePatternInput' or 'setInterfacePatternOutput'
@@ -2340,8 +2370,9 @@ local function finish(hw, op, progress)
   local liveDest = current(hw, op.destination)
   U.check(not U.exists(liveDest.patterns[op.destination.slot]), 'Destination filled during edit')
   transfer(hw, endpoint(op.buffer, op.slot), op.destination)
-  local after = current(hw, op.destination).patterns[op.destination.slot]
-  U.check(semantic(hw, after, goal), 'Destination read-back failed')
+  verifyDelivery(hw, endpoint(op.buffer, op.slot), op.destination, function(after)
+    return semantic(hw, after, goal)
+  end, 'Destination read-back failed')
   U.check(not U.exists(direct(hw, 'getInterfacePattern', op.slot)), 'Buffer slot did not empty')
   if progress then
     progress('Verified pattern in destination slot ' .. (op.destination.slot + 1))
@@ -3957,10 +3988,7 @@ function C.maker.finishMove(hw, op)
   U.check(matches(source), 'Sorting source changed; recovery stopped')
   U.check(not U.exists(destination), 'Sorting destination is occupied')
   transfer(hw, op.source, op.destination)
-  U.check(
-    matches(current(hw, op.destination).patterns[op.destination.slot]),
-    'Sorted pattern read-back failed'
-  )
+  verifyDelivery(hw, op.source, op.destination, matches, 'Sorted pattern read-back failed')
 end
 
 function C.maker.finishSort(hw, op, progress)
@@ -4688,8 +4716,10 @@ local function runUI()
       .. tostring(state.paused)
       .. tostring(state.stopRequested)
       .. tostring(state.verified)
-      .. tostring(fs.exists(paths.pending))
-      .. tostring(fs.exists(paths.run))
+      -- Transactions create/clear these files for every pattern. While busy,
+      -- they do not change the layout and must not invalidate the paint cache.
+      .. tostring(not state.busy and fs.exists(paths.pending))
+      .. tostring(not state.busy and fs.exists(paths.run))
     if key ~= paintKey then
       gpu.setBackground(colors.bg)
       gpu.fill(1, 1, w, h, ' ')
@@ -4980,10 +5010,12 @@ local function runUI()
           y,
           state.busy and (state.paused and 'Paused' or 'Executing preview')
             or fs.exists(paths.pending) and 'Saved transaction still open'
-            or #p.errors == 0 and 'Ready to execute' or 'BLOCKED: ' .. #p.errors .. ' issue(s)',
+            or #p.errors == 0 and 'Ready to execute'
+            or 'BLOCKED: ' .. #p.errors .. ' issue(s)',
           45,
           (state.busy or fs.exists(paths.pending)) and 'yellow'
-            or #p.errors == 0 and 'green' or 'red'
+            or #p.errors == 0 and 'green'
+            or 'red'
         )
         local function summaryRow(message, tone)
           for _, row in ipairs(U.wrapRow({ message, tone }, 45, unicode)) do

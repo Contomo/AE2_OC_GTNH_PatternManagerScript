@@ -493,8 +493,10 @@ local function runUI()
       .. tostring(state.paused)
       .. tostring(state.stopRequested)
       .. tostring(state.verified)
-      .. tostring(fs.exists(paths.pending))
-      .. tostring(fs.exists(paths.run))
+      -- Transactions create/clear these files for every pattern. While busy,
+      -- they do not change the layout and must not invalidate the paint cache.
+      .. tostring(not state.busy and fs.exists(paths.pending))
+      .. tostring(not state.busy and fs.exists(paths.run))
     if key ~= paintKey then
       gpu.setBackground(colors.bg)
       gpu.fill(1, 1, w, h, ' ')
@@ -785,10 +787,12 @@ local function runUI()
           y,
           state.busy and (state.paused and 'Paused' or 'Executing preview')
             or fs.exists(paths.pending) and 'Saved transaction still open'
-            or #p.errors == 0 and 'Ready to execute' or 'BLOCKED: ' .. #p.errors .. ' issue(s)',
+            or #p.errors == 0 and 'Ready to execute'
+            or 'BLOCKED: ' .. #p.errors .. ' issue(s)',
           45,
           (state.busy or fs.exists(paths.pending)) and 'yellow'
-            or #p.errors == 0 and 'green' or 'red'
+            or #p.errors == 0 and 'green'
+            or 'red'
         )
         local function summaryRow(message, tone)
           for _, row in ipairs(U.wrapRow({ message, tone }, 45, unicode)) do

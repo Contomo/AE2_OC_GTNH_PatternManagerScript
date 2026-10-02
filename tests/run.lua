@@ -19,6 +19,7 @@ local controlDown=false
 local now,energy,capacity,recharge,sleeps=123,10000,10000,0,0
 local waitEvent,dataCalls,dataCost=nil,0,0
 local powerDropAt,gpuFills=nil,0
+local gpuWrites={}
 local callCost,callCounts,pollEvents=0,{},{}
 local function typed(kind,value) return {__nbt_type=kind,__value=value} end
 local function compound(value) return typed('compound',value or {}) end
@@ -87,7 +88,14 @@ local function iterator(list)
   return setmetatable({getAll=function(include)
     assert(include==false,'Only metadata bulk reads are permitted')
     local r={};for _,i in ipairs(list) do r[#r+1]={name=i.name,location=cp(i.location),side=i.side} end;return r
-  end}, {__call=function() index=index+1;return cp(list[index]) end})
+  end}, {__call=function()
+    index=index+1;local result=cp(list[index])
+    -- OC snapshots rows()*rowSize(), while send uses the 36-slot inventory.
+    if result and result.visibleSlots then
+      for slot in pairs(result.patterns) do if slot>=result.visibleSlots then result.patterns[slot]=nil end end
+    end
+    return result
+  end})
 end
 local function mutate(label)
   mutations=mutations+1;history[#history+1]=label
@@ -200,6 +208,7 @@ gpu.fill=function(x,y,w,h,s)
   end
 end
 gpu.set=function(x,y,s)
+  gpuWrites[y]=(gpuWrites[y] or 0)+1
   assert(x>=1 and y>=1 and y<=50 and x+#s-1<=160,'GPU bounds '..x..','..y)
   frame[y]=(frame[y] or string.rep(' ',160)):sub(1,x-1)..s..(frame[y] or string.rep(' ',160)):sub(x+#s)
   for i=x,x+#s-1 do foreground[y][i]=fg;background[y][i]=bg end
@@ -266,6 +275,7 @@ local function reset()
   files={};interfaces={};mutations=0;history={};fail=nil;failDisk=false;wrongDirect=nil;methodsAsTables=false
   now,energy,capacity,recharge,sleeps=123,10000,10000,0,0;waitEvent,dataCalls,dataCost=nil,0,0
   powerDropAt,gpuFills=nil,0
+  gpuWrites={}
   callCost,callCounts,pollEvents=0,{},{}
   cfg=cp(api.defaults)
   cfg.batch.mode='fixed'
@@ -845,6 +855,91 @@ local function withLegacyFluid(f)
     f(desired)
   end)
 end
+
+test('journal changes during execution do not repaint unchanged preview panels',function()
+  withMatrix(function()
+    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    files[api.paths.config]=ser(cfg)
+    local fills,writes,polls,pendingSeen,clearedSeen
+    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',39),function()
+      callCost=0.1;polls=0
+      local function observe()
+        if not fills then
+          fills=gpuFills;writes=cp(gpuWrites)
+        else
+          assert(gpuFills==fills,'Journal change cleared the screen')
+          for row=12,44 do assert(gpuWrites[row]==writes[row],'Unchanged preview row repainted: '..row) end
+        end
+        polls=polls+1
+        if files[api.paths.pending] then pendingSeen=true
+        elseif pendingSeen then clearedSeen=true end
+        pollEvents[1]=observe;return 'key_up','kbd',0,0
+      end
+      pollEvents={observe};return click('[ Execute preview ]',47)()
+    end,function()
+      assert(polls>10 and pendingSeen and clearedSeen)
+      assert(target.patterns[0] and target.patterns[1] and not api.runner.hasSaved())
+      return quit()
+    end)
+    api.runUI();callCost=0
+  end)
+end)
+
+test('reported transfer failure leaves the edited pattern in the editor and keeps its journal',function()
+  withMatrix(function()
+    local preview=insulator();local send=proxies.terminal.send
+    proxies.terminal.send=function(from,to)
+      if byref(to)==target then return false,'Target slot out of bounds' end
+      return send(from,to)
+    end
+    local ok,why=pcall(function()
+      mustFail(function() api.runner.execute(cfg,preview) end,'Target slot out of bounds')
+    end)
+    proxies.terminal.send=send;assert(ok,why)
+    assert(editor.patterns[0] and not target.patterns[0] and files[api.paths.pending])
+    api.recover(cfg);assert(target.patterns[0] and not editor.patterns[0])
+  end)
+end)
+
+test('a hidden destination row accepts send but fails read-back until its capacity cards are added',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    for n=3,10 do
+      local material=cp(data.materials[2]);material.name=string.char(64+n)
+      material.dsf=n;material.conductor.base=n*100;data.materials[n]=material
+      buffer.patterns[n-1]=cp(buffer.patterns[0])
+    end
+    local preview=insulator();target.visibleSlots=9
+    mustFail(function() api.runner.execute(cfg,preview) end,'slot 9 (zero based)')
+    assert(target.patterns[9] and not editor.patterns[0] and files[api.paths.pending])
+    local before=mutations
+    target.visibleSlots=36
+    local remaining=api.runner.continue(cfg)
+    assert(remaining.plan.reused==10 and not api.runner.hasChanges(remaining))
+    assert(mutations==before and not api.runner.hasSaved())
+  end)
+end)
+
+test('a successful send followed by an ejected pattern reports its exact destination without retrying donors',function()
+  withMatrix(function()
+    local preview=insulator();local send=proxies.terminal.send;local dropped
+    proxies.terminal.send=function(from,to)
+      local result=table.pack(send(from,to))
+      if result[1] and byref(to)==target then dropped=target.patterns[to.slot];target.patterns[to.slot]=nil end
+      return table.unpack(result,1,result.n)
+    end
+    local ok,why=pcall(function()
+      local good,reason=pcall(function() api.runner.execute(cfg,preview) end)
+      assert(not good and reason:find('Destination read-back failed at '..require('assline_util').locationText(target)..' slot 0',1,true))
+      assert(reason:find('send reported success',1,true) and reason:find('Source is empty',1,true))
+    end)
+    proxies.terminal.send=send;assert(ok,why)
+    assert(dropped and files[api.paths.pending] and buffer.patterns[1] and not buffer.patterns[0])
+    -- Return the actual dropped pattern, rather than consuming a replacement donor.
+    editor.patterns[0]=dropped
+    api.recover(cfg);assert(target.patterns[0] and not editor.patterns[0])
+  end)
+end)
 local function dropPattern(recipe, multiplier, modern)
   local drop={name='ae2fc:fluid_drop',damage=0,size=144*multiplier,
     label='Drop of Molten Grisium',hasTag=true,tag=ser(compound({Fluid=typed('string','molten.grisium')}))}

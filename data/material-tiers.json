@@ -1,5 +1,5 @@
 {
-  "policy": "quest-and-ore-access-v2",
+  "policy": "quest-and-ore-access-v3",
   "packVersion": "2.9.0-beta-3",
   "source": "https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/tree/27e61fbea6e245df80839885460994aa0ef9da9f/config/betterquesting/DefaultQuests",
   "commit": "27e61fbea6e245df80839885460994aa0ef9da9f",
@@ -512,12 +512,24 @@
       "kind": "quest item"
     },
     "indiumgalliumphosphide": {
-      "tier": "IV",
+      "tier": "EV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:5c7974da341cfa4b",
+      "eut": 0,
+      "inputTiers": {
+        "indium": "EV",
+        "gallium": "LV",
+        "phosphorus": "HV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:a14f176bc45d314a",
+        "oracle:local-2.9.0-beta-2:smelting:5c7974da341cfa4b"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/HowtoGeneratePow-AAAAAAAAAAAAAAAAAAAACQ==/PoweroftheSunatH-AAAAAAAAAAAAAAAAAAAD7g==.json",
+      "questTier": "IV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 17981,
-      "form": "plate",
-      "kind": "quest item"
+      "damage": 11981
     },
     "superconductorev": {
       "tier": "EV",
@@ -648,12 +660,22 @@
       "kind": "quest item"
     },
     "blacksteel": {
-      "tier": "EV",
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:ed1fcf99d08c526c",
+      "eut": 120,
+      "inputTiers": {
+        "energeticalloy": "HV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:f18c091c72c8017a",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:ed1fcf99d08c526c"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/MassProcessing-AAAAAAAAAAAAAAAAAAAAEQ==/ExtractionPoint-Itn1KOiISHSbXzoDd2BB8w==.json",
-      "item": "gregtech:gt.blockframes",
-      "damage": 334,
-      "form": "frameGt",
-      "kind": "quest item"
+      "questTier": "EV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11334
     },
     "neutronium": {
       "tier": "LuV",
@@ -696,12 +718,28 @@
       "kind": "quest item"
     },
     "eglinsteel": {
-      "tier": "EV",
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-alloysmelter:1f5cd09532735ce5",
+      "eut": 3,
+      "inputTiers": {
+        "sulfur": "ULV",
+        "iron": "ULV",
+        "nickel": "ULV",
+        "chrome": "MV",
+        "silicon": "LV",
+        "carbon": "LV",
+        "aluminium": "LV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:a3081d8183efc6a2",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-alloysmelter:1f5cd09532735ce5"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/MassProcessing-AAAAAAAAAAAAAAAAAAAAEQ==/IThinkImGoingtob-AAAAAAAAAAAAAAAAAAAH7A==.json",
-      "item": "miscutils:blockframegteglinsteel",
-      "damage": 0,
-      "form": "frameGt",
-      "kind": "quest item"
+      "questTier": "EV",
+      "item": "miscutils:itemingoteglinsteel",
+      "damage": 0
     },
     "polyvinylchloride": {
       "tier": "MV",
@@ -759,12 +797,21 @@
       "accessSource": "Overworld"
     },
     "neodymiummagnetic": {
-      "tier": "IV",
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-polarizer:7dd8dd35904c2383",
+      "eut": 240,
+      "inputTiers": {
+        "neodymium": "HV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-polarizer:7dd8dd35904c2383"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/MassProcessing-AAAAAAAAAAAAAAAAAAAAEQ==/YouveGottaKeepEm-bkEol9zuRiiCMwMUopFHhg==.json",
-      "item": "gregtech:gt.blockframes",
-      "damage": 356,
-      "form": "frameGt",
-      "kind": "quest item"
+      "questTier": "IV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11356
     },
     "potin": {
       "tier": "LV",
@@ -856,12 +903,26 @@
       "kind": "quest item"
     },
     "superconductoruhvbase": {
-      "tier": "UIV",
+      "tier": "UHV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:53007b4383af42ac",
+      "eut": 1966080,
+      "inputTiers": {
+        "draconium": "EV",
+        "cosmicneutronium": "UV",
+        "tritanium": "ZPM",
+        "americium": "IV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:910a83e4218b38c1",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:a6041a2383ae825f",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:53007b4383af42ac"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/MultipleQuestLine/DysonSwarmGround-AAAAAAAAAAAAAAAAAAAL3w==.json",
-      "item": "gregtech:gt.blockframes",
-      "damage": 985,
-      "form": "frameGt",
-      "kind": "quest item"
+      "questTier": "UIV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11985
     },
     "netherite": {
       "tier": "LuV",
@@ -1001,12 +1062,26 @@
       "kind": "quest item"
     },
     "superconductorzpmbase": {
-      "tier": "UV",
+      "tier": "ZPM",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:f4c7baffec58a979",
+      "eut": 122880,
+      "inputTiers": {
+        "naquadah": "IV",
+        "indium": "EV",
+        "palladium": "IV",
+        "osmium": "IV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:82aab70967fafdb4",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:3d98a560a03bec62",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:f4c7baffec58a979"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/MultipleQuestLine/PurifyingWaterWi-pMGI_sXdQSKWWFFxTunqvA==.json",
-      "item": "gregtech:gt.blockframes",
-      "damage": 992,
-      "form": "frameGt",
-      "kind": "quest item"
+      "questTier": "UV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11992
     },
     "trinium": {
       "tier": "IV",
@@ -1225,12 +1300,23 @@
       "kind": "quest item"
     },
     "electrum": {
-      "tier": "MV",
+      "tier": "ULV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:202ffbe974198116",
+      "eut": 0,
+      "inputTiers": {
+        "gold": "ULV",
+        "silver": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:2d125a91d1737a3c",
+        "oracle:local-2.9.0-beta-2:smelting:202ffbe974198116"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/AdvancedCircuits-AAAAAAAAAAAAAAAAAAADRg==.json",
-      "item": "gregtech:gt.metaitem.02",
-      "damage": 19303,
-      "form": "wireFine",
-      "kind": "quest item"
+      "questTier": "MV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11303
     },
     "netherstar": {
       "tier": "LV",
@@ -1520,12 +1606,22 @@
       "kind": "quest item"
     },
     "chromaticglass": {
-      "tier": "UEV",
+      "tier": "UHV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-alloysmelter:c2457b64e25467ff",
+      "eut": 3,
+      "inputTiers": {
+        "glass": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-laserengraver:167847215d749405",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-alloysmelter:c2457b64e25467ff"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier10UEV-D_aFb1hFQH2PDkN0_KvAEQ==/CheaperZPMCircui-dYvLkQ-xRnWL8Egy_MnoIg==.json",
-      "item": "miscutils:itemboltchromaticglass",
-      "damage": 0,
-      "form": "bolt",
-      "kind": "quest item"
+      "questTier": "UEV",
+      "item": "miscutils:itemingotchromaticglass",
+      "damage": 0
     },
     "iodine": {
       "tier": "UEV",
@@ -2340,12 +2436,22 @@
       "kind": "quest item"
     },
     "bluealloy": {
-      "tier": "HV",
+      "tier": "LV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-alloysmelter:2700380c562d6013",
+      "eut": 15,
+      "inputTiers": {
+        "silver": "ULV",
+        "electrotine": "LV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-alloysmelter:2700380c562d6013"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/WorkstationsYour-AAAAAAAAAAAAAAAAAAAD9g==.json",
+      "questTier": "HV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 26309,
-      "form": "bolt",
-      "kind": "quest item"
+      "damage": 11309
     },
     "ilmeniteslag": {
       "tier": "EV",
@@ -2972,12 +3078,24 @@
       "kind": "quest item"
     },
     "tungstencarbide": {
-      "tier": "ZPM",
+      "tier": "EV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:7843a67214d41ed8",
+      "eut": 1920,
+      "inputTiers": {
+        "tungsten": "HV",
+        "carbon": "LV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:739a2281cb401a04",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:9e6e5a183de17663",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:7843a67214d41ed8"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier7ZPM-AAAAAAAAAAAAAAAAAAAAHg==/PrismaticNaquada-sHI1n7unRWecpNcyBAgUfw==.json",
+      "questTier": "ZPM",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 29370,
-      "form": "foil",
-      "kind": "quest item"
+      "damage": 11370
     },
     "indiumphosphate": {
       "tier": "ZPM",
@@ -3109,20 +3227,20 @@
       "kind": "quest recipe ingredient",
       "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-assembler:6ee2a780cde0c3a0"
     },
-    "metastableoganesson": {
-      "tier": "UMV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier12UMV-l37V2WvbSHGZQ5oMgAfBuw==/AnEyeattheEndofT-kazCPEWoSmiZhR4bkHlEBQ==.json",
-      "item": "bartworks:gt.bwmetageneratedscrew",
-      "damage": 10111,
-      "form": "screw",
-      "kind": "quest recipe ingredient",
-      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-assemble-condensate:9dd6ecc03322621b"
-    },
     "bluetopaz": {
       "tier": "UMV",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier12UMV-l37V2WvbSHGZQ5oMgAfBuw==/AnEyeattheEndofT-kazCPEWoSmiZhR4bkHlEBQ==.json",
       "item": "gregtech:gt.metaitem.01",
       "damage": 27513,
+      "form": "screw",
+      "kind": "quest recipe ingredient",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-assemble-condensate:9dd6ecc03322621b"
+    },
+    "metastableoganesson": {
+      "tier": "UMV",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier12UMV-l37V2WvbSHGZQ5oMgAfBuw==/AnEyeattheEndofT-kazCPEWoSmiZhR4bkHlEBQ==.json",
+      "item": "bartworks:gt.bwmetageneratedscrew",
+      "damage": 10111,
       "form": "screw",
       "kind": "quest recipe ingredient",
       "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-assemble-condensate:9dd6ecc03322621b"

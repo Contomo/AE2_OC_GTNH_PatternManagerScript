@@ -16,7 +16,7 @@ TIER_NAMES = json.loads((Path(__file__).parents[1] / 'data' / 'tiers.json').read
 
 def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis='', resources=None, registry_names=None, usage=None, material_tiers=None):
     if material_tiers:
-        if material_tiers.get('policy') not in ('first-solid-task-v1', 'quest-and-ore-access-v2'):
+        if material_tiers.get('policy') not in ('first-solid-task-v1', 'quest-and-ore-access-v2', 'quest-and-ore-access-v3'):
             raise ValueError('Unsupported material tier policy')
         if material_tiers.get('packVersion') != catalog['source'].get('targetVersion'):
             raise ValueError('Material tiers and target pack version differ')

@@ -4,7 +4,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'source' / 'tools'))
-from build_tiers import scrape, block_aliases, ore_aliases, inherit_tiers, ingredient_evidence
+from build_tiers import scrape, block_aliases, ore_aliases, inherit_tiers, ingredient_evidence, refine_processed_quest_tiers
 from unittest.mock import patch
 
 
@@ -65,6 +65,9 @@ class TierTests(unittest.TestCase):
         self.assertEqual(data['materials']['ironmagnetic']['tier'], 'ULV')
         self.assertIn('lead', data['materials'])
         self.assertNotEqual(data['materials'].get('neutronium', {}).get('tier'), 'EV')
+        self.assertEqual(data['materials']['tungstencarbide']['tier'], 'EV')
+        self.assertEqual(data['materials']['tungstencarbide']['kind'], 'production route estimate')
+        self.assertTrue(data['materials']['tungstencarbide']['route'])
 
     def test_storage_blocks_need_matching_material_labels_and_simple_compression(self):
         reverse = {'test:ingot': ('quorlium', 'ingot')}
@@ -135,5 +138,52 @@ class TierTests(unittest.TestCase):
         task['requiredItems:9']['1:10'] = {'id:8':'test:later','Damage:2':1,'Count:3':1}
         reverse = {'test:parts@1':('early','ingot'), 'test:later@1':('later','ingot')}
         self.assertFalse(scrape([('choose-one','LV',quest)],reverse,{}))
+
+    def route(self, name, inputs, output, voltage, machine='Mixer'):
+        return ('recipes', name, {'id': name, 'kind': 'gregtech_machine', 'machineType': machine,
+                'eut': voltage, 'inputs': [{'id': item, 'kind': 'item', 'amount': 1} for item in inputs],
+                'outputs': [{'id': output, 'kind': 'item', 'amount': 1}]})
+
+    def test_late_part_quest_is_refined_by_creation_and_ingot_production_route(self):
+        reverse = {'test:a': ('a', 'dust'), 'test:b': ('b', 'dust'),
+                   'test:dust': ('alloy', 'dust'), 'test:hot': ('alloy', 'ingotHot'),
+                   'test:ingot': ('alloy', 'ingot')}
+        result = {'a': {'tier': 'HV'}, 'b': {'tier': 'LV'},
+                  'alloy': {'tier': 'ZPM', 'form': 'foil', 'kind': 'quest item', 'quest': 'late'}}
+        rows = [self.route('mix', ['test:a', 'test:b'], 'test:dust', 480),
+                self.route('blast', ['test:dust'], 'test:hot', 1920, 'Blast Furnace'),
+                self.route('cool', ['test:hot'], 'test:ingot', 120, 'Vacuum Freezer')]
+        with patch('build_tiers.records', return_value=iter(rows)):
+            refine_processed_quest_tiers('unused', reverse, result)
+        evidence = result['alloy']
+        self.assertEqual(evidence['tier'], 'EV')
+        self.assertEqual(evidence['questTier'], 'ZPM')
+        self.assertEqual(evidence['inputTiers'], {'a': 'HV', 'b': 'LV'})
+        self.assertEqual(evidence['route'], ['mix', 'blast', 'cool'])
+
+    def test_unknown_inputs_recycling_and_unseeded_cycles_cannot_lower_a_part_quest(self):
+        reverse = {'test:dust': ('alloy', 'dust'), 'test:ingot': ('alloy', 'ingot'),
+                   'test:plate': ('alloy', 'plate')}
+        result = {'alloy': {'tier': 'UV', 'form': 'foil', 'kind': 'quest item', 'quest': 'late'}}
+        rows = [self.route('unknown', ['test:unknown'], 'test:ingot', 8),
+                self.route('recycle', ['test:plate'], 'test:ingot', 8, 'Arc Furnace'),
+                self.route('cycle1', ['test:ingot'], 'test:dust', 8),
+                self.route('cycle2', ['test:dust'], 'test:ingot', 8)]
+        with patch('build_tiers.records', return_value=iter(rows)):
+            refine_processed_quest_tiers('unused', reverse, result)
+        self.assertEqual(result['alloy']['tier'], 'UV')
+
+    def test_production_refinement_keeps_later_ingredient_tier_and_existing_earlier_quest(self):
+        reverse = {'test:a': ('a', 'dust'), 'test:ingot': ('alloy', 'ingot')}
+        result = {'a': {'tier': 'LuV'},
+                  'alloy': {'tier': 'UV', 'form': 'plate', 'kind': 'quest item', 'quest': 'late'}}
+        rows = [self.route('alloy', ['test:a'], 'test:ingot', 8)]
+        with patch('build_tiers.records', return_value=iter(rows)):
+            refine_processed_quest_tiers('unused', reverse, result)
+        self.assertEqual(result['alloy']['tier'], 'LuV')
+        result['alloy'] = {'tier': 'EV', 'form': 'plate', 'kind': 'quest item', 'quest': 'earlier'}
+        with patch('build_tiers.records', return_value=iter(rows)):
+            refine_processed_quest_tiers('unused', reverse, result)
+        self.assertEqual(result['alloy']['tier'], 'EV')
 
 if __name__ == '__main__': unittest.main()

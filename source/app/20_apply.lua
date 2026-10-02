@@ -78,8 +78,38 @@ local function allowedPartial(hw, p, op)
 end
 local function transfer(hw, from, to)
   local ok, slot = invoke(hw.terminal, 'send', from, to)
-  U.check(ok == true, 'Pattern transfer failed: ' .. tostring(slot))
-  U.check(slot == to.slot, 'Pattern moved to unexpected slot ' .. tostring(slot))
+  local destination = U.locationText(to) .. ' slot ' .. to.slot .. ' (zero based)'
+  U.check(ok == true, 'Pattern transfer failed to ' .. destination .. ': ' .. tostring(slot))
+  U.check(
+    slot == to.slot,
+    'Pattern moved to unexpected slot ' .. tostring(slot) .. '; requested ' .. destination
+  )
+end
+local function verifyDelivery(hw, from, to, matches, failure)
+  local after = current(hw, to).patterns[to.slot]
+  if matches(after) then
+    return
+  end
+  local message = failure
+    .. ' at '
+    .. U.locationText(to)
+    .. ' slot '
+    .. to.slot
+    .. ' (zero based). '
+  if not U.exists(after) then
+    message = message
+      .. 'Terminal send reported success, but the destination pattern is absent. '
+      .. 'Check capacity cards: hidden slots can accept a transfer and then eject the pattern. '
+    local source = current(hw, from).patterns[from.slot]
+    message = message
+      .. (
+        U.exists(source) and 'Source still contains a pattern.'
+        or 'Source is empty; check the interface and dropped items.'
+      )
+  else
+    message = message .. 'Destination contains a different pattern.'
+  end
+  error(message .. ' Saved operation retained.', 0)
 end
 local function setEntry(hw, slot, which, index, s, previous, normalizedPrevious, patternName)
   local method = which == 'inputs' and 'setInterfacePatternInput' or 'setInterfacePatternOutput'
@@ -187,8 +217,9 @@ local function finish(hw, op, progress)
   local liveDest = current(hw, op.destination)
   U.check(not U.exists(liveDest.patterns[op.destination.slot]), 'Destination filled during edit')
   transfer(hw, endpoint(op.buffer, op.slot), op.destination)
-  local after = current(hw, op.destination).patterns[op.destination.slot]
-  U.check(semantic(hw, after, goal), 'Destination read-back failed')
+  verifyDelivery(hw, endpoint(op.buffer, op.slot), op.destination, function(after)
+    return semantic(hw, after, goal)
+  end, 'Destination read-back failed')
   U.check(not U.exists(direct(hw, 'getInterfacePattern', op.slot)), 'Buffer slot did not empty')
   if progress then
     progress('Verified pattern in destination slot ' .. (op.destination.slot + 1))

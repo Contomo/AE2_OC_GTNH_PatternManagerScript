@@ -363,10 +363,7 @@ function C.maker.finishMove(hw, op)
   U.check(matches(source), 'Sorting source changed; recovery stopped')
   U.check(not U.exists(destination), 'Sorting destination is occupied')
   transfer(hw, op.source, op.destination)
-  U.check(
-    matches(current(hw, op.destination).patterns[op.destination.slot]),
-    'Sorted pattern read-back failed'
-  )
+  verifyDelivery(hw, op.source, op.destination, matches, 'Sorted pattern read-back failed')
 end
 
 function C.maker.finishSort(hw, op, progress)

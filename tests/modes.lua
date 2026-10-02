@@ -20,6 +20,20 @@ test('real matrix resolves suffixes, wire bases and independent eligibility',fun
   assert(nbti and not chrome) -- Chrome wiremill outputs have no non-recycling consumers.
   assert(wires.source.recipeVersion=='2.9.0-beta-2' and wires.source.targetVersion=='2.9.0-beta-3')
 end)
+test('scraped Tungsten Carbide progression feeds the tiered batch policy as EV',function()
+  local batch=U.clone(require('assline_config').defaults.batch)
+  local manifest=M.compile(data,'bender',{forms={plate=true},sources={plate='ingot'},batch=batch})
+  local found=false
+  for _,r in ipairs(manifest.recipes) do
+    if r.material=='TungstenCarbide' then
+      assert(r.batch.materialTier=='EV' and r.batch.materialBudget==16)
+      assert(r.batch.multiplier==16)
+      found=true
+    end
+  end
+  assert(found,'Tungsten Carbide plate missing from tiered bender recipes')
+end)
+
 test('PVC and PPS switches omit only their consumed solids and retain external requirements',function()
   local fixture={version=2,source=data.source,families={},production={},capabilities={{wire1=true,cable1=true}},items={
     {name='gregtech:pvc',damage=1,option='pvc'},{name='gregtech:pps',damage=2,option='pps'}},

@@ -30,6 +30,12 @@ embedded once by the build. This distinction is
 important when moving functions: a section-local function can be used by later
 sections. Shared general helpers are explicitly called through `U`.
 
+The UI's paint cache is invalidated by layout changes. Journal files are created
+and cleared for every pattern; their presence changes idle recovery controls but
+does not invalidate the screen during execution. Progress only updates its status
+row. Transfer return values and destination read-back diagnostics are shared by
+pattern edits and sorting in `20_apply.lua`.
+
 ## Generated files and what runs on OC
 
 `npm run build` produces these root staging artifacts:
