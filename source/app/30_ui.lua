@@ -295,13 +295,16 @@ local function runUI()
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
       add('Fields save when accepted or when you navigate away. Esc cancels only the active edit.')
-      add('After interruption, leave patterns in place and Recover; then build a new preview.')
+      add(
+        'Continue last operation finishes an interrupted transaction and previews the remaining work.'
+      )
       add(
         'History retains timing and memory reports. Updates preserve configuration and recovery files.'
       )
     elseif not p then
       add(
         state.busy and 'Program running. See progress below.'
+          or C.runner.hasSaved() and 'Continue last operation, or choose a program to build a new preview.'
           or 'Choose a program to build a preview.',
         'muted'
       )
@@ -475,8 +478,7 @@ local function runUI()
     if #p.errors > 0 or (preview.manifest and #preview.manifest.unresolved > 0) then
       return false
     end
-    return preview.id == 'assline' and #p.changes > 0
-      or preview.id ~= 'assline' and (#p.moves + #p.creates + #p.resizes) > 0
+    return C.runner.hasChanges(preview)
   end
   draw = function()
     local key = state.page
@@ -488,8 +490,11 @@ local function runUI()
       .. state.section
       .. tostring(state.preview)
       .. tostring(state.busy)
+      .. tostring(state.paused)
+      .. tostring(state.stopRequested)
       .. tostring(state.verified)
       .. tostring(fs.exists(paths.pending))
+      .. tostring(fs.exists(paths.run))
     if key ~= paintKey then
       gpu.setBackground(colors.bg)
       gpu.fill(1, 1, w, h, ' ')
@@ -707,7 +712,7 @@ local function runUI()
       local selected = state.selected and Programs.byId[state.selected]
       local x = button(34, 47, 'Preview selected', function()
         action('preview')
-      end, selected ~= nil and not selected.unavailable and not fs.exists(paths.pending))
+      end, selected ~= nil and not selected.unavailable)
       button(x, 47, 'Program settings', function()
         navigate('settings', state.selected)
       end, selected ~= nil)
@@ -778,9 +783,12 @@ local function runUI()
         text(
           113,
           y,
-          #p.errors == 0 and 'Ready to execute' or 'BLOCKED: ' .. #p.errors .. ' issue(s)',
+          state.busy and (state.paused and 'Paused' or 'Executing preview')
+            or fs.exists(paths.pending) and 'Saved transaction still open'
+            or #p.errors == 0 and 'Ready to execute' or 'BLOCKED: ' .. #p.errors .. ' issue(s)',
           45,
-          #p.errors == 0 and 'green' or 'red'
+          (state.busy or fs.exists(paths.pending)) and 'yellow'
+            or #p.errors == 0 and 'green' or 'red'
         )
         local function summaryRow(message, tone)
           for _, row in ipairs(U.wrapRow({ message, tone }, 45, unicode)) do
@@ -789,6 +797,9 @@ local function runUI()
               text(113, y, row[1], 45, tone)
             end
           end
+        end
+        if not state.busy and fs.exists(paths.pending) then
+          summaryRow('Continue or stop the saved operation before Execute.', 'yellow')
         end
         for _, err in ipairs(p.errors) do
           summaryRow(err, 'red')
@@ -807,7 +818,7 @@ local function runUI()
       end
       local x = button(34, 47, 'Scan', function()
         action('preview')
-      end, not state.busy and not fs.exists(paths.pending))
+      end, not state.busy)
       x = button(x, 47, 'Execute preview', function()
         action('execute')
       end, executable())
@@ -817,7 +828,7 @@ local function runUI()
       button(x, 47, 'Run program', function()
         navigate('programs')
       end, not state.busy)
-      if preview and preview.report then
+      if preview and preview.report and not state.busy then
         button(34, 45, 'Export report', function()
           local path = '/home/assline-preview.txt'
           local ok, why = pcall(function()
@@ -841,23 +852,42 @@ local function runUI()
       end, not state.busy)
     end
     if state.busy then
-      button(113, 47, 'Cancel', function()
-        state.cancelled = true
+      button(113, 47, state.paused and 'Resume' or 'Pause', function()
+        state.paused = not state.paused
+        status(
+          state.paused and 'Paused. Resume continues this run; Stop ends it.' or 'Resuming work.',
+          'yellow'
+        )
+      end, not state.stopRequested)
+      button(127, 47, 'Stop', function()
+        state.stopRequested, state.paused = true, false
+        status('Stopping after the current pattern transaction / sorting cycle.', 'yellow')
       end)
-    else
-      button(135, 47, 'Recover', function()
-        action('recover')
-      end, fs.exists(paths.pending))
+    elseif C.runner.hasSaved() then
+      if state.page ~= 'settings' then
+        button(113, 45, 'Continue last operation', function()
+          action('continue')
+        end)
+      end
+      button(135, 47, 'Stop saved', function()
+        state.choice = { label = 'Stop saved operation', discard = true }
+      end)
     end
     button(151, 47, 'Quit', function()
       commitEdit()
-      state.cancelled = true
+      state.stopRequested, state.paused = true, false
       state.running = false
     end)
     text(3, 46, string.rep('-', 155), 155, 'muted')
     text(3, 49, state.status, 155, state.tone)
-    if fs.exists(paths.pending) then
-      text(3, 43, 'Pending operation: Recover', 26, 'red')
+    if C.runner.hasSaved() and not state.busy then
+      text(
+        3,
+        5,
+        'Saved operation available. Continue it, or Stop saved to start fresh.',
+        155,
+        'muted'
+      )
     end
     if state.choice then
       -- Modal controls replace the underlying hit areas, so clicks cannot leak
@@ -873,13 +903,44 @@ local function runUI()
       text(
         51,
         12,
-        state.choice.budgets and 'Material budgets before recipe voltage and quantity limits.'
+        state.choice.discard and 'Discard the saved run and unfinished transaction record.'
+          or state.choice.budgets and 'Material budgets before recipe voltage and quantity limits.'
           or 'Choose a tier. Escape cancels.',
         98,
         'muted',
         'panel'
       )
-      local entries = state.choice.choices or Batch.tiers
+      if state.choice.discard then
+        text(
+          51,
+          15,
+          'Completed edits and moves stay in place. Nothing is undone.',
+          98,
+          'yellow',
+          'panel'
+        )
+        text(
+          51,
+          17,
+          'Any pattern left in the editor stays there; occupied slots are kept.',
+          98,
+          'muted',
+          'panel'
+        )
+        text(
+          51,
+          19,
+          'The discarded record is saved in /home/assline.abandoned.',
+          98,
+          'muted',
+          'panel'
+        )
+        button(51, 23, 'Discard saved operation', function()
+          action('discard')
+          state.choice = nil
+        end)
+      end
+      local entries = state.choice.discard and {} or state.choice.choices or Batch.tiers
       for n, entry in ipairs(entries) do
         local x = n <= 9 and 51 or 101
         local y = 14 + ((n - 1) % 9) * 2
@@ -910,6 +971,9 @@ local function runUI()
   end
   local lastProgress, lastPoll = 0, -math.huge
   local function progress(message, immediate)
+    if state.paused or state.stopRequested then
+      return
+    end
     if immediate or computer.uptime() - lastProgress >= 1 then
       status(message, 'yellow')
       text(3, 49, message, 155, 'yellow')
@@ -924,15 +988,11 @@ local function runUI()
       handle(pulled)
       lastPoll = computer.uptime()
     end
-    U.check(
-      not state.cancelled,
-      'Work cancelled. Use Recover if an operation is pending; otherwise preview again.'
-    )
-    return pulled
+    return { paused = state.paused, stop = state.stopRequested }
   end
   action = function(name)
     commitEdit()
-    local isWork = name == 'preview' or name == 'execute' or name == 'recover'
+    local isWork = name == 'preview' or name == 'execute' or name == 'continue'
     U.check(not isWork or not state.busy, 'Work already running')
     if name == 'execute' then
       U.check(executable(), 'Review and verify the preview first')
@@ -940,15 +1000,14 @@ local function runUI()
     if isWork then
       state.error = nil
       state.busy = true
-      state.cancelled = false
+      state.stopRequested, state.paused = false, false
       lastPoll = computer.uptime()
-      status('Working: ' .. name .. ' (Esc cancels)', 'yellow')
+      status('Working: ' .. name .. ' (Pause / Resume / Stop; Esc stops)', 'yellow')
     end
     local ok, why = pcall(function()
       if name == 'history' then
         history()
       elseif name == 'preview' then
-        U.check(not fs.exists(paths.pending), 'Recover the pending operation before previewing')
         local id = state.page == 'preview' and state.preview and state.preview.id or state.selected
         U.check(id, 'Choose a program first')
         invalidate()
@@ -962,21 +1021,48 @@ local function runUI()
         )
       elseif name == 'execute' then
         local preview = state.preview
-        state.preview = nil
         C.runner.execute(cfg, preview, progress, control)
         status('Program completed. Build a new preview to check the result.', 'green')
-      elseif name == 'recover' then
+      elseif name == 'continue' then
         invalidate()
-        recover(cfg, progress, control)
-        status('Saved operation completed. Build a new preview to continue.', 'green')
+        state.preview = C.runner.continue(cfg, progress, control)
+        if state.preview then
+          state.page, state.section, state.offset = 'preview', 'changes', 0
+          state.selected = state.preview.id
+        end
+        status(
+          state.preview
+              and not C.runner.hasChanges(state.preview)
+              and #state.preview.plan.errors == 0
+              and 'No remaining changes for the current settings.'
+            or state.preview and state.preview.continuedWithChangedSettings and 'Settings changed since the saved run. Review the updated preview before executing.'
+            or state.preview and 'Remaining work previewed with current settings. Review and Execute to continue.'
+            or 'Saved transaction completed. Choose a program to preview the remaining work.',
+          'green'
+        )
+      elseif name == 'discard' then
+        C.runner.discard()
+        invalidate()
+        status(
+          'Saved operation discarded. Existing patterns stay as they are. Build a new preview.',
+          'muted'
+        )
       end
     end)
+    if name == 'execute' then
+      invalidate()
+    end
     if isWork then
       state.busy = false
     end
-    U.check(ok, why)
+    if not ok and why == C.stopped then
+      state.paused = false
+      status(C.stopped, 'muted')
+    else
+      U.check(ok, why)
+    end
     if isWork then
-      perfReport(name .. ' complete')
+      perfReport(ok and (name .. ' complete') or 'stopped by user')
       releaseWork()
       if state.page == 'history' then
         history()
@@ -1038,7 +1124,7 @@ local function runUI()
       end
     end
     if e[1] == 'interrupted' then
-      state.cancelled = true
+      state.stopRequested, state.paused = true, false
       state.running = false
     elseif e[1] == 'touch' then
       state.scrollDrag = nil
@@ -1090,7 +1176,7 @@ local function runUI()
     elseif e[1] == 'key_down' then
       local char, key = e[3], e[4]
       if state.busy and (key == 1 or char == 113) then
-        state.cancelled = true
+        state.stopRequested, state.paused = true, false
         if char == 113 then
           state.running = false
         end
@@ -1137,7 +1223,7 @@ local function runUI()
         state.offset = state.offset + 31
       elseif char == 113 then
         state.running = false
-      elseif char == 115 and state.page == 'preview' and not fs.exists(paths.pending) then
+      elseif char == 115 and state.page == 'preview' then
         action('preview')
       end
     end

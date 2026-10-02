@@ -195,19 +195,22 @@ local function finish(hw, op, progress)
   end
 end
 local function saveOp(hw, op)
-  U.check(not fs.exists(paths.pending), 'An unfinished operation needs Recover first')
+  U.check(not fs.exists(paths.pending), 'Continue or stop the saved operation first')
   op.version = 1
   op.direct = hw.direct.address
   op.terminal = hw.terminal.address
   op.data = hw.data.address
   op.buffer = U.clone(hw.buffer)
   writeFile(paths.pending, op)
+  work.atomic = true
 end
 local function clearOp()
   U.check(fs.remove(paths.pending), 'Cannot clear completed recovery record')
   if fs.exists(paths.cursor) then
     U.check(fs.remove(paths.cursor), 'Cannot clear completed recovery progress')
   end
+  work.atomic = false
+  gate()
 end
 
 -- Donor supply is live, unlike the destination plan. Keep only slot references
@@ -261,7 +264,7 @@ local function donorPool(hw, name, protected, progress)
             progress(
               'Waiting for processing donors in "'
                 .. name
-                .. '". Refill buffers to continue; Cancel / Esc to stop.',
+                .. '". Refill buffers to continue; Stop / Esc to stop.',
               true
             )
           end
@@ -274,7 +277,10 @@ local function donorPool(hw, name, protected, progress)
 end
 
 local function apply(c, plan, progress, control)
-  U.check(not fs.exists(paths.pending), 'Use Recover before applying another scan')
+  U.check(
+    not fs.exists(paths.pending),
+    'Continue or stop the saved operation before applying another scan'
+  )
   U.check(#plan.errors == 0, 'Resolve scan blockers first')
   local fresh, hw = scan(c, progress, control)
   local function fixed(p)
@@ -353,6 +359,7 @@ end
 local function recover(c, progress, control)
   local op = U.check(readFile(paths.pending), 'No pending operation')
   local hw = connect(c, progress, control)
+  work.atomic = true
   if op.kind == 'move' or op.kind == 'sort' then
     U.check(
       op.direct == hw.direct.address

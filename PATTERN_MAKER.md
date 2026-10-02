@@ -42,7 +42,7 @@ touching AE interfaces.
 The processing-pattern executor sorts existing patterns first, then stages each
 remote donor through the shared editor, imprints and verifies its ingredients,
 and installs it in the planned destination slot. A sorting stage and its small
-progress cursor are durable, so Recover completes an interrupted permutation
+progress cursor are durable, so Continue last operation completes an interrupted permutation
 cycle. Imprints reuse the same durable pattern-edit/recovery service as the
 assembly-line renamer. Fresh snapshots reject stale plans before any writes.
 Registry spelling is recovered from registration code, source recipe references
@@ -275,12 +275,18 @@ move list once and persists a small `/home/assline.pending.step` cursor after ea
 verified move. Recovery verifies the hardware binding and pattern fingerprints.
 A missing/corrupt cursor or a foreign edit stops recovery rather than guessing.
 Per-pattern imprints retain the original donor and accept only expected partial
-ingredient changes. New programs should extend these services, not copy them.
+ingredient changes. Pause/Stop are handled once by `pollWork` in `00_core.lua`.
+A journaled transaction defers Stop until it completes; sorting tracks its parked
+workspace pattern and offers stop boundaries after completed cycles. The runner
+stores only the program choice/config signature in `assline.run`; Continue resolves
+an outstanding transaction and rebuilds the remaining preview with current settings.
+Discard archives the records without touching inventories. New programs should
+extend these services, not copy them.
 
 ## Validation
 
-`node test.js` checks the readable application and wget installer/updater, UI cancellation at full
-power, durable recovery, padded donors, interface-call scaling, metadata discovery,
+`npm test` checks the readable application and wget installer/updater, UI pause/resume/stop at full
+power, optional continuation, durable recovery, padded donors, interface-call scaling, metadata discovery,
 mixed donors, 20 named banks, capacities, stale plans and all 720 permutations of
 six occupied slots. It also checks the material/rule compiler and Python import
 contracts. With the local scrape present, a round-trip check verifies every

@@ -9,7 +9,7 @@ One application runs several programs through **Run program**: assembly-line
 renaming, wire insulation, wiremill patterns for 1x wire and fine wire,
 bending-machine patterns for plates, foil, sheet metal and springs, and Fluid
 Shaper patterns for verified molten-fluid solid parts.
-Navigation is on the left; Scan, Execute, Recover and Quit are in the bottom row.
+Navigation is on the left; Scan, Execute, Pause/Resume, Stop and Quit are at the bottom.
 Settings has shared interfaces/hardware and a separate section for each program.
 [Program architecture and recipe matrix](PATTERN_MAKER.md).
 [Source files, generated outputs and shared services](SOURCE_MAP.md).
@@ -30,7 +30,7 @@ Settings has shared interfaces/hardware and a separate section for each program.
    required for these banks. Crafting donors are counted separately.
    A donor shortage is a warning: execution starts with the available processing
    patterns, then waits for refills. Refill any matching terminal-visible buffer;
-   newly added matching banks are discovered too. Cancel/Escape stops the wait.
+   newly added matching banks are discovered too. Stop/Escape stops the wait; Pause/Resume suspends and continues it.
    Completed work is retained and reused by the next preview.
 5. Configure destination names in **Settings**, under the appropriate program.
    All destination interfaces with a matching exact name participate. The editor
@@ -307,7 +307,7 @@ network, including capacitors on that network; they do not measure AE power.
 Existing saved settings retain their values. With many capacitors, recharging
 from the default 25% to 75% can take a long time; the thresholds are editable.
 
-After each Scan, Apply or Recover (including a caught error), the program appends
+After each preview, execution or continuation (including a caught error), the program appends
 a timing summary to `/home/assline-perf.log`. It records starting and ending
 charge and free memory, total time, energy-sample count and time, recharge pauses,
 `event.pull` yields and wait time, plus call counts and timings by AE/Data Card
@@ -319,7 +319,7 @@ An abrupt computer blackout can interrupt a report before it is saved.
 
 If energy keeps falling below half the pause threshold, or does not increase for
 30 seconds, work stops with an error. A pending pattern operation stays saved
-for Recover. This protects the workload; it cannot keep a computer powered if
+for Continue last operation. This protects the workload; it cannot keep a computer powered if
 its supply cannot sustain idle consumption or an individual call exceeds the
 remaining buffer. Percentage checks use the OC energy buffer, not AE power.
 
@@ -336,32 +336,46 @@ references are released and OC performs collection during normal yields.
 
 ## Recovery and files
 
-Before each operation the program writes its intent and the original pattern to
-`/home/assline.pending`, flushes it, and verifies the saved bytes. If interrupted,
-**Recover** finishes that recorded operation. A sorting journal retains the whole
-sorting stage, so recovery completes any cycle that parked a pattern in the editor. It checks whether a transfer
-already completed, accepts only expected partial edits, and stops on unexpected
-pattern changes or an occupied destination. After recovery, **Scan** again to
-continue the remaining work. Hardware and editor selection must still match the
-saved record.
+**Pause** suspends execution at a component-call boundary; **Resume** continues the
+same in-memory run. **Stop**, Escape and Quit finish the current journaled pattern
+transaction before stopping. During sorting, they finish the current cycle so its
+temporarily parked pattern returns from the editor. Completed changes remain applied.
+Stopping while waiting for donors ends the wait without creating a transaction.
 
-Do not move editor, donor or destination patterns while recovery is pending. If recovery
-reports an unexpected edit, inspect the indicated pattern and the saved record;
-it does not guess which foreign changes to overwrite. The screen shows the full
-error in the scrollable preview.
+A stopped or interrupted execution keeps its program choice in `/home/assline.run`.
+**Continue last operation**, available at the bottom of Programs/Preview, finishes
+any interrupted transaction, then builds a fresh preview for the saved program
+using current settings and interface contents. Review it and Execute to carry on.
+Completed patterns are reused; an old full preview is never replayed blindly.
+If the fresh preview has no remaining work, the saved run is cleared automatically.
+
+Before each transaction the program writes its intent and original pattern to
+`/home/assline.pending`, flushes it, and verifies the saved bytes. Sorting also
+keeps a progress cursor. Continuation checks the hardware, fingerprints and expected
+partial edits; it stops on foreign changes rather than overwriting them.
+
+Continuation is optional. Read-only previews remain available with a saved operation.
+**Stop saved** opens a discard dialog: it archives the saved records to
+`/home/assline.abandoned` and clears the active continuation records. It does not
+undo edits or move any patterns. If a failure left a pattern in the editor, it stays
+there and the next scan treats that slot as occupied. Discard the old transaction
+before executing a different plan; a clean stopped run can be replaced directly.
 
 | File | Purpose |
 | --- | --- |
 | `/home/assline.cfg` | Shared configuration and per-program settings |
 | `/home/assline.pending` | Active operation, retained on failure; removed on completion |
 | `/home/assline.pending.step` | Verified progress through an active sorting stage |
+| `/home/assline.run` | Saved program choice for optional continuation after Stop/restart |
+| `/home/assline.abandoned` | Latest discarded transaction/run records; no automatic Undo |
 | `/home/assline.last` | Latest submitted assembly-line plan or generator operation summary |
 | `/home/assline-perf.log` | Timing/charge summaries; rotates above 64 KB |
 | `*.tmp` | Temporary files used while saving |
 
 The latest-plan file is an inspection/backup record, **not an automatic Undo**.
 Completed rename recipes and edits stay applied if a later operation stops.
-Recovery files are bounded to 400 KB each; the timing log is rotated.
+Active recovery files are bounded to 400 KB each. The combined discard archive is
+bounded to 900 KB and replaces the previous archive; the timing log is rotated.
 
 ## Cable pattern feasibility
 
@@ -394,7 +408,7 @@ Sources: [GTNH interface inventories](https://github.com/GTNewHorizons/Applied-E
 [AE crafting pattern validation](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/src/main/java/appeng/helpers/PatternHelper.java).
 
 Touch navigation, program cards, fields and bottom-row actions. **S** rebuilds the
-current preview; **Q** quits; **Escape / Cancel** cancels active work. Mouse wheel
+current preview; **Q** quits; **Escape / Stop** stops active work at a safe boundary. Mouse wheel
 and Page Up / Page Down scroll the preview and history. The scrollbar can also
 be dragged using native OC `touch`, `drag`, and `drop` screen signals, or clicked
 to jump to a position. Text fields support

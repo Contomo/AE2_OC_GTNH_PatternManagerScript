@@ -306,7 +306,7 @@ test('interface reads scale with target dependencies and distinct locations',fun
   print('BENCHMARK 8 targets / 8 recipes / shared destination: location reads (remote donors / shared editor): '..callCounts.getInterfacesByLocation..'; direct reads: '..callCounts.getInterfacePattern)
 end)
 
-test('full-power UI accepts History and Escape while an intent is active',function()
+test('full-power UI accepts History and Escape, finishes its current transaction and continues the rest',function()
   files[api.paths.config]=ser(cfg)
   events={{'touch','screen',38,11,0},{'touch','screen',38,47,0},{'touch','screen',118,39,0},function()
     callCost=0.05
@@ -320,12 +320,14 @@ test('full-power UI accepts History and Escape while an intent is active',functi
     end
     pollEvents={pending};return 'touch','screen',48,47,0
   end,function()
-    assert(energy==capacity and files[api.paths.pending])
-    assert(frame[49]:find('Work cancelled',1,true))
+    assert(energy==capacity and not files[api.paths.pending] and files[api.paths.run])
+    assert(next(editor.patterns)==nil and dest1.patterns[0])
+    assert(frame[49]:find('Work stopped',1,true))
     return 'key_down','kbd',113,16
   end}
-  api.runUI();callCost=0;api.recover(cfg)
-  assert(dest1.patterns[0] and not files[api.paths.pending])
+  api.runUI();callCost=0
+  api.runner.execute(cfg,api.runner.continue(cfg))
+  assert(dest1.patterns[0] and not api.runner.hasSaved() and #api.scan(cfg).changes==0)
 end)
 
 test('full apply preserves first input, counts, outputs, flags and slots',function()
@@ -638,7 +640,7 @@ local function quit() return 'key_down','kbd',113,16 end
 test('program selection is explicit and all operation controls are on the bottom row',function()
   files[api.paths.config]=ser(cfg)
   queue(function()
-    assert(frame[47]:find('[ Quit ]',1,true) and frame[47]:find('[ Recover ]',1,true))
+    assert(frame[47]:find('[ Quit ]',1,true) and not frame[47]:find('[ Recover ]',1,true))
     assert(not frame[7]:find('[ Scan ]',1,true));snapshot('programs')
     return 'touch','screen',38,17,0
   end,function()
@@ -1684,7 +1686,7 @@ test('numeric settings expand shorthand on save and leave interface names untouc
   api.runUI()
 end)
 
-test('shortage preview allows Execute and the UI Cancel button stops refill waiting',function()
+test('shortage preview allows Execute and the UI Stop button stops refill waiting',function()
   withMatrix(function()
     cfg.programs.insulator.destination=cfg.programs.assline.target
     target.patterns={};buffer.patterns={};files[api.paths.config]=ser(cfg)
@@ -1703,12 +1705,12 @@ test('shortage preview allows Execute and the UI Cancel button stops refill wait
         end
         assert(not files[api.paths.pending] and mutations==0)
         snapshot('maker_refill_wait')
-        return click('[ Cancel ]',47)()
+        return click('[ Stop ]',47)()
       end
       pollEvents={cancelWhenWaiting}
       return click('[ Execute preview ]',47)()
     end,function()
-      assert((frame[49] or ''):find('Work cancelled',1,true))
+      assert((frame[49] or ''):find('Work stopped',1,true))
       assert(not files[api.paths.pending] and mutations==0)
       return quit()
     end)
@@ -1981,6 +1983,216 @@ test('rejected donors explain the preserved flags that prevent imprinting',funct
     local root=unser(buffer.patterns[0].tag);root.__value.substitute=typed('byte',1);buffer.patterns[0].tag=ser(root)
     local p=insulator().plan
     assert(p.donorRejected==1 and p.donorReasons['Input substitution enabled']==1)
+  end)
+end)
+
+test('Pause holds component calls at an active edit and Resume continues without growing the Lua stack',function()
+  withMatrix(function()
+    local preview=insulator();local pausedAt, polls
+    api.runner.execute(cfg,preview,nil,function(delay)
+      if not pausedAt and (callCounts.setInterfacePatternInput or 0)>0 then
+        pausedAt=mutations;polls=0
+      end
+      if pausedAt and polls<2000 then
+        assert(mutations==pausedAt)
+        polls=polls+1;now=now+delay
+        return {paused=true}
+      end
+      return {}
+    end)
+    assert(polls==2000 and target.patterns[0] and target.patterns[1])
+    assert(not api.runner.hasSaved() and next(editor.patterns)==nil)
+  end)
+end)
+test('Stop during imprint finishes one transaction and Continue rebuilds only the remaining work',function()
+  withMatrix(function()
+    local preview=insulator()
+    mustFail(function()
+      api.runner.execute(cfg,preview,nil,function()
+        return {stop=(callCounts.setInterfacePatternInput or 0)>0}
+      end)
+    end,'Work stopped')
+    assert(target.patterns[0] and not target.patterns[1] and next(editor.patterns)==nil)
+    assert(not files[api.paths.pending] and files[api.paths.run])
+    local continued=api.runner.continue(cfg)
+    assert(continued.id=='insulator' and continued.plan.reused==1 and #continued.plan.creates==1)
+    api.runner.execute(cfg,continued)
+    assert(target.patterns[1] and not api.runner.hasSaved())
+  end)
+end)
+test('Continue after Stop uses current settings and diagnoses concurrent destination changes',function()
+  withMatrix(function()
+    local preview=insulator()
+    mustFail(function()
+      api.runner.execute(cfg,preview,nil,function() return {stop=target.patterns[0]~=nil} end)
+    end,'Work stopped')
+    cfg.programs.insulator.multiplier='3'
+    local continued=api.runner.continue(cfg)
+    assert(continued.continuedWithChangedSettings and continued.plan.resizeCount==1)
+    target.patterns[10]=pattern({item('Concurrent',1,777)})
+    mustFail(function() api.runner.execute(cfg,continued) end,'changed')
+    assert(target.patterns[0].outputs[1].size==1)
+    continued=api.runner.continue(cfg)
+    api.runner.execute(cfg,continued)
+    assert(target.patterns[0].outputs[1].size==3 and target.patterns[1].outputs[1].size==3)
+    assert(api.runner.preview(cfg,'insulator').plan.reused==2)
+  end)
+end)
+test('Stop in a sorting cycle releases its parked editor pattern before returning',function()
+  withMatrix(function()
+    api.runner.execute(cfg,insulator())
+    target.patterns[0],target.patterns[1]=target.patterns[1],target.patterns[0]
+    local preview=api.runner.preview(cfg,'insulator');local requested=false
+    mustFail(function()
+      api.runner.execute(cfg,preview,nil,function()
+        requested=requested or next(editor.patterns)~=nil
+        return {stop=requested}
+      end)
+    end,'Work stopped')
+    assert(requested and next(editor.patterns)==nil and files[api.paths.pending])
+    local continued=api.runner.continue(cfg)
+    assert(not api.runner.hasChanges(continued) and not api.runner.hasSaved())
+    assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
+  end)
+end)
+test('legacy interrupted operations can be continued without a saved whole-run record',function()
+  withMatrix(function()
+    local preview=insulator();fail={label='set-before'}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    files[api.paths.run]=nil
+    local continued=api.runner.continue(cfg)
+    assert(continued.id=='insulator' and continued.plan.reused==1 and #continued.plan.creates==1)
+    assert(not files[api.paths.pending] and next(editor.patterns)==nil)
+    api.runner.execute(cfg,continued)
+    assert(not api.runner.hasSaved())
+  end)
+end)
+test('discarding a saved transaction archives it without moving or changing any patterns',function()
+  withMatrix(function()
+    local preview=insulator();fail={label='set-after'}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    local hardware=ser(interfaces);local count=mutations
+    local other=api.runner.preview(cfg,'insulator') -- read-only preview is optional
+    assert(other and files[api.paths.pending])
+    api.runner.discard()
+    assert(ser(interfaces)==hardware and mutations==count and not api.runner.hasSaved())
+    local archived=unser(files[api.paths.abandoned])
+    assert(archived.operation and archived.run and archived.run.program=='insulator')
+    other=api.runner.preview(cfg,'insulator')
+    for _,entry in ipairs(other.plan.creates) do assert(entry.workspace.slot~=0) end
+  end)
+end)
+test('a failed discard archive preserves the saved operation and run',function()
+  withMatrix(function()
+    local preview=insulator();fail={label='set-after'}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    local pending,run=files[api.paths.pending],files[api.paths.run]
+    failDisk=true;mustFail(function() api.runner.discard() end,'Flush failed');failDisk=false
+    assert(files[api.paths.pending]==pending and files[api.paths.run]==run)
+  end)
+end)
+test('discard archives two valid records whose combined size exceeds the active-record budget',function()
+  withMatrix(function()
+    local preview=insulator();fail={label='set-after'}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    local pending=unser(files[api.paths.pending]);pending.diagnostic=string.rep('x',365000)
+    local run=unser(files[api.paths.run]);run.diagnostic=string.rep('y',40000)
+    files[api.paths.pending]=ser(pending);files[api.paths.run]=ser(run)
+    assert(#files[api.paths.pending]<400000 and #files[api.paths.run]<400000)
+    api.runner.discard()
+    assert(#files[api.paths.abandoned]>400000 and #files[api.paths.abandoned]<900000)
+    assert(not api.runner.hasSaved())
+  end)
+end)
+test('UI Pause Resume Stop and optional continuation remain usable during an active pattern transaction',function()
+  withMatrix(function()
+    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    files[api.paths.config]=ser(cfg)
+    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',39),function()
+      callCost=0.05
+      local before,polls
+      local function pauseAfterSetter()
+        if (callCounts.setInterfacePatternInput or 0)==0 then
+          pollEvents[1]=pauseAfterSetter;return 'key_up','kbd',0,0
+        end
+        pollEvents[1]=function()
+          before=mutations;polls=0
+          local function paused()
+            assert(mutations==before and frame[47]:find('[ Resume ]',1,true))
+            assert(table.concat(frame,'\n'):find('Paused',1,true))
+            assert(not table.concat(frame,'\n'):find('Program running. See progress below.',1,true))
+            polls=polls+1
+            if polls<20 then pollEvents[1]=paused;return 'key_up','kbd',0,0 end
+            snapshot('paused_run')
+            pollEvents[1]=function()
+              assert(frame[47]:find('[ Pause ]',1,true));return click('[ Stop ]',47)()
+            end
+            return click('[ Resume ]',47)()
+          end
+          pollEvents[1]=paused;return 'key_up','kbd',0,0
+        end
+        return click('[ Pause ]',47)()
+      end
+      pollEvents={pauseAfterSetter};return click('[ Execute preview ]',47)()
+    end,function()
+      assert(not files[api.paths.pending] and next(editor.patterns)==nil and files[api.paths.run])
+      assert(not target.patterns[1] and not table.concat(frame,'\n'):find('Pending operation: Recover',1,true))
+      assert(not table.concat(frame,'\n'):find('Executing preview',1,true))
+      assert(table.concat(frame,'\n'):find('Continue last operation, or choose a program',1,true))
+      snapshot('stopped_run');return click('[ Continue last operation ]',45)()
+    end,function()
+      assert(frame[7]:find('Preview - Wire insulator',1,true))
+      assert(table.concat(frame,'\n'):find('1 reuse',1,true))
+      return quit()
+    end)
+    api.runUI();callCost=0
+  end)
+end)
+test('Stop saved is optional and its discard dialog lets a new preview replace an interrupted run',function()
+  withMatrix(function()
+    local preview=insulator();fail={label='set-after'}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    files[api.paths.config]=ser(cfg);local before=mutations
+    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
+      assert(files[api.paths.pending] and table.concat(frame,'\n'):find('Saved transaction still open',1,true))
+      return click('[ Stop saved ]',47)()
+    end,function()
+      assert(frame[10]:find('Stop saved operation',1,true));snapshot('discard_saved')
+      return click('[ Discard saved operation ]',23)()
+    end,function()
+      assert(not api.runner.hasSaved() and mutations==before and editor.patterns[0])
+      return click('[ Scan ]',47)()
+    end,function()
+      assert(frame[7]:find('Preview - Wire insulator',1,true));return quit()
+    end)
+    api.runUI()
+  end)
+end)
+test('Quit during Pause finishes the current transaction and leaves optional continuation for next launch',function()
+  withMatrix(function()
+    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    files[api.paths.config]=ser(cfg)
+    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',39),function()
+      callCost=0.05
+      local function pause()
+        if (callCounts.setInterfacePatternInput or 0)==0 then
+          pollEvents[1]=pause;return 'key_up','kbd',0,0
+        end
+        pollEvents[1]=function()
+          assert(frame[47]:find('[ Resume ]',1,true));return quit()
+        end
+        return click('[ Pause ]',47)()
+      end
+      pollEvents={pause};return click('[ Execute preview ]',47)()
+    end)
+    api.runUI();callCost=0
+    assert(target.patterns[0] and not target.patterns[1] and next(editor.patterns)==nil)
+    assert(not files[api.paths.pending] and files[api.paths.run])
+    queue(function()
+      assert(frame[45]:find('[ Continue last operation ]',1,true))
+      assert(frame[47]:find('[ Stop saved ]',1,true));return quit()
+    end)
+    api.runUI()
   end)
 end)
 

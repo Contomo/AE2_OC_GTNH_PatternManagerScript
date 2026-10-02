@@ -6,6 +6,7 @@ local fs = require('filesystem')
 local serialization = require('serialization')
 local unicode = require('unicode')
 local C = {}
+C.stopped = 'Work stopped. Continue last operation or start a new preview.'
 local U = require('assline_util')
 local Programs = require('assline_programs')
 local Config = require('assline_config')
@@ -18,6 +19,7 @@ local function releaseWork()
   perf = nil
   work.progress = nil
   work.control = nil
+  work.atomic = false
   tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
 end
 local function sampleEnergy()
@@ -91,28 +93,42 @@ local function energyFraction()
   local e, m = sampleEnergy()
   return e / m
 end
+-- All component gates and waits share one cooperative control path. Stop is
+-- deferred inside a journaled transaction; Pause can wait at any call boundary.
+local function pollWork(delay)
+  local e
+  repeat
+    local t = computer.uptime()
+    e = work.control and (work.control(delay) or {}) or (delay > 0 and { event.pull(delay) } or {})
+    if perf then
+      if delay > 0 or work.control then
+        perf.yields = perf.yields + 1
+      end
+      if delay > 0 then
+        perf.wait = perf.wait + computer.uptime() - t
+      end
+    end
+    if e.stop or e[1] == 'interrupted' or (e[1] == 'key_down' and e[4] == 1) then
+      work.stopping = true
+      work.stopReason = e.stop and C.stopped
+        or 'Work cancelled. Continue last operation or scan again.'
+    end
+    delay = 0.25
+  until not e.paused or work.stopping
+  if work.stopping and not work.atomic then
+    error(work.stopReason, 0)
+  end
+  return e
+end
 local function rest(seconds)
   local deadline = computer.uptime() + seconds
   repeat
-    if perf then
-      perf.yields = perf.yields + 1
-    end
-    local t = computer.uptime()
-    local delay = math.max(0, math.min(0.25, deadline - computer.uptime()))
-    local e = work.control and (work.control(delay) or {}) or { event.pull(delay) }
-    if perf then
-      perf.wait = perf.wait + computer.uptime() - t
-    end
-    U.check(
-      e[1] ~= 'interrupted' and not (e[1] == 'key_down' and e[4] == 1),
-      'Work cancelled. Use Recover if an operation is pending; otherwise scan again.'
-    )
+    pollWork(math.max(0, math.min(0.25, deadline - computer.uptime())))
   until computer.uptime() >= deadline
 end
+
 local function gate()
-  if work.control and work.control(0) and perf then
-    perf.yields = perf.yields + 1
-  end
+  pollWork(0)
   if energyFraction() < work.pause then
     if perf then
       perf.pauses = perf.pauses + 1
@@ -127,16 +143,16 @@ local function gate()
       lastValue = value
       U.check(
         energyFraction() >= work.pause / 2,
-        'Energy keeps falling; work stopped. Recharge, then Recover / Scan.'
+        'Energy keeps falling; work stopped. Recharge, then Continue last operation / Scan.'
       )
       U.check(
         now - lastGain < 30,
-        'No recharge for 30 seconds; work stopped. Check power input, then Recover / Scan.'
+        'No recharge for 30 seconds; work stopped. Check power input, then Continue last operation / Scan.'
       )
       if work.progress and now - lastReport >= 2 then
         work.progress(
           string.format(
-            'Waiting for energy: %.0f%% -> %.0f%%. Esc cancels.',
+            'Waiting for energy: %.0f%% -> %.0f%%. Pause / Resume / Stop.',
             energyFraction() * 100,
             work.resume * 100
           )
@@ -172,13 +188,15 @@ local paths = {
   config = '/home/assline.cfg',
   pending = '/home/assline.pending',
   cursor = '/home/assline.pending.step',
+  run = '/home/assline.run',
+  abandoned = '/home/assline.abandoned',
   backup = '/home/assline.last',
 }
-local function readRaw(path)
+local function readRaw(path, maximum)
   if not fs.exists(path) then
     return nil
   end
-  U.check(fs.size(path) <= 400000, 'File too large: ' .. path)
+  U.check(fs.size(path) <= (maximum or 400000), 'File too large: ' .. path)
   local f = U.check(io.open(path, 'r'), 'Cannot open ' .. path)
   local s = f:read('*a')
   f:close()
@@ -194,9 +212,12 @@ local function readFile(path)
   U.check(type(t) == 'table', 'Invalid file: ' .. path)
   return t
 end
-local function writeFile(path, t)
+local function writeFile(path, t, maximum)
   local s = serialization.serialize(t)
-  U.check(#s <= 400000, 'Recovery data exceeds disk/memory budget; use a smaller target interface')
+  U.check(
+    #s <= (maximum or 400000),
+    'Recovery data exceeds disk/memory budget; use a smaller target interface'
+  )
   U.check(
     computer.freeMemory() > #s + 131072,
     'Not enough memory to verify saved data; use a smaller target interface'
@@ -209,7 +230,7 @@ local function writeFile(path, t)
   end)
   f:close()
   U.check(ok, err)
-  U.check(readRaw(temp) == s, 'Saved file verification failed')
+  U.check(readRaw(temp, maximum) == s, 'Saved file verification failed')
   if fs.exists(path) then
     U.check(fs.remove(path), 'Cannot replace ' .. path)
   end

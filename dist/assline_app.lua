@@ -1274,6 +1274,7 @@ local fs = require('filesystem')
 local serialization = require('serialization')
 local unicode = require('unicode')
 local C = {}
+C.stopped = 'Work stopped. Continue last operation or start a new preview.'
 local U = U
 local Programs = Programs
 local Config = Config
@@ -1286,6 +1287,7 @@ local function releaseWork()
   perf = nil
   work.progress = nil
   work.control = nil
+  work.atomic = false
   tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
 end
 local function sampleEnergy()
@@ -1359,28 +1361,42 @@ local function energyFraction()
   local e, m = sampleEnergy()
   return e / m
 end
+-- All component gates and waits share one cooperative control path. Stop is
+-- deferred inside a journaled transaction; Pause can wait at any call boundary.
+local function pollWork(delay)
+  local e
+  repeat
+    local t = computer.uptime()
+    e = work.control and (work.control(delay) or {}) or (delay > 0 and { event.pull(delay) } or {})
+    if perf then
+      if delay > 0 or work.control then
+        perf.yields = perf.yields + 1
+      end
+      if delay > 0 then
+        perf.wait = perf.wait + computer.uptime() - t
+      end
+    end
+    if e.stop or e[1] == 'interrupted' or (e[1] == 'key_down' and e[4] == 1) then
+      work.stopping = true
+      work.stopReason = e.stop and C.stopped
+        or 'Work cancelled. Continue last operation or scan again.'
+    end
+    delay = 0.25
+  until not e.paused or work.stopping
+  if work.stopping and not work.atomic then
+    error(work.stopReason, 0)
+  end
+  return e
+end
 local function rest(seconds)
   local deadline = computer.uptime() + seconds
   repeat
-    if perf then
-      perf.yields = perf.yields + 1
-    end
-    local t = computer.uptime()
-    local delay = math.max(0, math.min(0.25, deadline - computer.uptime()))
-    local e = work.control and (work.control(delay) or {}) or { event.pull(delay) }
-    if perf then
-      perf.wait = perf.wait + computer.uptime() - t
-    end
-    U.check(
-      e[1] ~= 'interrupted' and not (e[1] == 'key_down' and e[4] == 1),
-      'Work cancelled. Use Recover if an operation is pending; otherwise scan again.'
-    )
+    pollWork(math.max(0, math.min(0.25, deadline - computer.uptime())))
   until computer.uptime() >= deadline
 end
+
 local function gate()
-  if work.control and work.control(0) and perf then
-    perf.yields = perf.yields + 1
-  end
+  pollWork(0)
   if energyFraction() < work.pause then
     if perf then
       perf.pauses = perf.pauses + 1
@@ -1395,16 +1411,16 @@ local function gate()
       lastValue = value
       U.check(
         energyFraction() >= work.pause / 2,
-        'Energy keeps falling; work stopped. Recharge, then Recover / Scan.'
+        'Energy keeps falling; work stopped. Recharge, then Continue last operation / Scan.'
       )
       U.check(
         now - lastGain < 30,
-        'No recharge for 30 seconds; work stopped. Check power input, then Recover / Scan.'
+        'No recharge for 30 seconds; work stopped. Check power input, then Continue last operation / Scan.'
       )
       if work.progress and now - lastReport >= 2 then
         work.progress(
           string.format(
-            'Waiting for energy: %.0f%% -> %.0f%%. Esc cancels.',
+            'Waiting for energy: %.0f%% -> %.0f%%. Pause / Resume / Stop.',
             energyFraction() * 100,
             work.resume * 100
           )
@@ -1440,13 +1456,15 @@ local paths = {
   config = '/home/assline.cfg',
   pending = '/home/assline.pending',
   cursor = '/home/assline.pending.step',
+  run = '/home/assline.run',
+  abandoned = '/home/assline.abandoned',
   backup = '/home/assline.last',
 }
-local function readRaw(path)
+local function readRaw(path, maximum)
   if not fs.exists(path) then
     return nil
   end
-  U.check(fs.size(path) <= 400000, 'File too large: ' .. path)
+  U.check(fs.size(path) <= (maximum or 400000), 'File too large: ' .. path)
   local f = U.check(io.open(path, 'r'), 'Cannot open ' .. path)
   local s = f:read('*a')
   f:close()
@@ -1462,9 +1480,12 @@ local function readFile(path)
   U.check(type(t) == 'table', 'Invalid file: ' .. path)
   return t
 end
-local function writeFile(path, t)
+local function writeFile(path, t, maximum)
   local s = serialization.serialize(t)
-  U.check(#s <= 400000, 'Recovery data exceeds disk/memory budget; use a smaller target interface')
+  U.check(
+    #s <= (maximum or 400000),
+    'Recovery data exceeds disk/memory budget; use a smaller target interface'
+  )
   U.check(
     computer.freeMemory() > #s + 131072,
     'Not enough memory to verify saved data; use a smaller target interface'
@@ -1477,7 +1498,7 @@ local function writeFile(path, t)
   end)
   f:close()
   U.check(ok, err)
-  U.check(readRaw(temp) == s, 'Saved file verification failed')
+  U.check(readRaw(temp, maximum) == s, 'Saved file verification failed')
   if fs.exists(path) then
     U.check(fs.remove(path), 'Cannot replace ' .. path)
   end
@@ -2327,19 +2348,22 @@ local function finish(hw, op, progress)
   end
 end
 local function saveOp(hw, op)
-  U.check(not fs.exists(paths.pending), 'An unfinished operation needs Recover first')
+  U.check(not fs.exists(paths.pending), 'Continue or stop the saved operation first')
   op.version = 1
   op.direct = hw.direct.address
   op.terminal = hw.terminal.address
   op.data = hw.data.address
   op.buffer = U.clone(hw.buffer)
   writeFile(paths.pending, op)
+  work.atomic = true
 end
 local function clearOp()
   U.check(fs.remove(paths.pending), 'Cannot clear completed recovery record')
   if fs.exists(paths.cursor) then
     U.check(fs.remove(paths.cursor), 'Cannot clear completed recovery progress')
   end
+  work.atomic = false
+  gate()
 end
 
 -- Donor supply is live, unlike the destination plan. Keep only slot references
@@ -2393,7 +2417,7 @@ local function donorPool(hw, name, protected, progress)
             progress(
               'Waiting for processing donors in "'
                 .. name
-                .. '". Refill buffers to continue; Cancel / Esc to stop.',
+                .. '". Refill buffers to continue; Stop / Esc to stop.',
               true
             )
           end
@@ -2406,7 +2430,10 @@ local function donorPool(hw, name, protected, progress)
 end
 
 local function apply(c, plan, progress, control)
-  U.check(not fs.exists(paths.pending), 'Use Recover before applying another scan')
+  U.check(
+    not fs.exists(paths.pending),
+    'Continue or stop the saved operation before applying another scan'
+  )
   U.check(#plan.errors == 0, 'Resolve scan blockers first')
   local fresh, hw = scan(c, progress, control)
   local function fixed(p)
@@ -2485,6 +2512,7 @@ end
 local function recover(c, progress, control)
   local op = U.check(readFile(paths.pending), 'No pending operation')
   local hw = connect(c, progress, control)
+  work.atomic = true
   if op.kind == 'move' or op.kind == 'sort' then
     U.check(
       op.direct == hw.direct.address
@@ -3944,6 +3972,19 @@ function C.maker.finishSort(hw, op, progress)
       and cursor.index <= #op.moves + 1,
     'Invalid sorting recovery progress'
   )
+  local parked = false
+  local function track(move)
+    if where(move.to) == where(hw.buffer) then
+      parked = true
+    end
+    if where(move.from) == where(hw.buffer) then
+      parked = false
+    end
+  end
+  -- An interrupted cycle may already have a pattern in its workspace.
+  for n = 1, cursor.index - 1 do
+    track(op.moves[n])
+  end
   for n = cursor.index, #op.moves do
     local move = op.moves[n]
     C.maker.finishMove(
@@ -3951,6 +3992,14 @@ function C.maker.finishSort(hw, op, progress)
       { source = move.from, destination = move.to, fingerprint = move.fingerprint }
     )
     writeFile(paths.cursor, { id = op.id, index = n + 1 })
+    track(move)
+    -- Stop only when the cycle has returned its parked pattern. The cursor
+    -- retains the remaining moves without holding an editor slot hostage.
+    if not parked then
+      work.atomic = false
+      gate()
+      work.atomic = true
+    end
     if progress then
       progress('Sorted pattern ' .. n .. ' / ' .. #op.moves)
     end
@@ -3958,7 +4007,10 @@ function C.maker.finishSort(hw, op, progress)
 end
 
 function C.maker.apply(c, id, plan, manifest, progress, control)
-  U.check(not fs.exists(paths.pending), 'Use Recover before executing another preview')
+  U.check(
+    not fs.exists(paths.pending),
+    'Continue or stop the saved operation before executing another preview'
+  )
   U.check(#plan.errors == 0, 'Resolve preview blockers first')
   U.check(
     not manifest.unresolved or #manifest.unresolved == 0,
@@ -3994,7 +4046,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
   })
   if #plan.moves > 0 then
     -- Keep the whole sorting stage durable. A cycle can temporarily park a
-    -- pattern in the editor; Recover must finish the cycle before a new scan.
+    -- pattern in the editor; continuation finishes that cycle before replanning.
     local op =
       { kind = 'sort', moves = plan.moves, id = invoke(hw.data, 'sha256', U.canonical(plan.moves)) }
     writeFile(paths.cursor, { id = op.id, index = 1 })
@@ -4064,6 +4116,11 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
 end
 
 C.runner = {}
+function C.runner.hasChanges(preview)
+  local plan = preview.plan
+  return preview.id == 'assline' and #plan.changes > 0
+    or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
+end
 function C.runner.preview(c, id, progress, control)
   Config.requireProgram(c, id)
   local preview = { id = id, configKey = U.canonical(c) }
@@ -4077,10 +4134,61 @@ end
 function C.runner.execute(c, preview, progress, control)
   U.check(preview and preview.configKey == U.canonical(c), 'Settings changed; build a new preview')
   Config.requireProgram(c, preview.id)
+  U.check(not fs.exists(paths.pending), 'Continue or stop the saved operation before executing')
+  writeFile(paths.run, { version = 1, program = preview.id, configKey = U.canonical(c) })
   if preview.id == 'assline' then
     apply(c, preview.plan, progress, control)
   else
     C.maker.apply(c, preview.id, preview.plan, preview.manifest, progress, control)
+  end
+  U.check(fs.remove(paths.run), 'Cannot clear completed program run')
+end
+
+function C.runner.hasSaved()
+  return fs.exists(paths.run) or fs.exists(paths.pending)
+end
+
+function C.runner.continue(c, progress, control)
+  local saved, op = readFile(paths.run), readFile(paths.pending)
+  U.check(saved or op, 'No saved operation')
+  local backup = readFile(paths.backup)
+  local id = saved and saved.program
+    or op and (op.kind == 'edit' or op.kind == 'recipe') and 'assline'
+    or backup and backup.program
+  if id and not saved then
+    writeFile(paths.run, { version = 1, program = id, configKey = U.canonical(c) })
+  end
+  if op then
+    recover(c, progress, control)
+  end
+  -- A fresh plan recognizes the finished patterns and checks today's interface
+  -- contents/settings. Never replay an old full plan after a stop or restart.
+  if id then
+    local preview = C.runner.preview(c, id, progress, control)
+    preview.continuedWithChangedSettings = saved and saved.configKey ~= U.canonical(c) or false
+    if
+      not C.runner.hasChanges(preview)
+      and #preview.plan.errors == 0
+      and (not preview.manifest or #preview.manifest.unresolved == 0)
+    then
+      U.check(fs.remove(paths.run), 'Cannot clear completed program run')
+    end
+    return preview
+  end
+end
+
+function C.runner.discard()
+  U.check(C.runner.hasSaved(), 'No saved operation')
+  -- One bounded archive may contain both 400 KB records plus the small cursor.
+  writeFile(paths.abandoned, {
+    operation = readFile(paths.pending),
+    step = readFile(paths.cursor),
+    run = readFile(paths.run),
+  }, 900000)
+  for _, path in ipairs({ paths.pending, paths.cursor, paths.run }) do
+    if fs.exists(path) then
+      U.check(fs.remove(path), 'Cannot discard ' .. path)
+    end
   end
 end
 
@@ -4382,13 +4490,16 @@ local function runUI()
       add('')
       add('SETTINGS AND RECOVERY', 'blue')
       add('Fields save when accepted or when you navigate away. Esc cancels only the active edit.')
-      add('After interruption, leave patterns in place and Recover; then build a new preview.')
+      add(
+        'Continue last operation finishes an interrupted transaction and previews the remaining work.'
+      )
       add(
         'History retains timing and memory reports. Updates preserve configuration and recovery files.'
       )
     elseif not p then
       add(
         state.busy and 'Program running. See progress below.'
+          or C.runner.hasSaved() and 'Continue last operation, or choose a program to build a new preview.'
           or 'Choose a program to build a preview.',
         'muted'
       )
@@ -4562,8 +4673,7 @@ local function runUI()
     if #p.errors > 0 or (preview.manifest and #preview.manifest.unresolved > 0) then
       return false
     end
-    return preview.id == 'assline' and #p.changes > 0
-      or preview.id ~= 'assline' and (#p.moves + #p.creates + #p.resizes) > 0
+    return C.runner.hasChanges(preview)
   end
   draw = function()
     local key = state.page
@@ -4575,8 +4685,11 @@ local function runUI()
       .. state.section
       .. tostring(state.preview)
       .. tostring(state.busy)
+      .. tostring(state.paused)
+      .. tostring(state.stopRequested)
       .. tostring(state.verified)
       .. tostring(fs.exists(paths.pending))
+      .. tostring(fs.exists(paths.run))
     if key ~= paintKey then
       gpu.setBackground(colors.bg)
       gpu.fill(1, 1, w, h, ' ')
@@ -4794,7 +4907,7 @@ local function runUI()
       local selected = state.selected and Programs.byId[state.selected]
       local x = button(34, 47, 'Preview selected', function()
         action('preview')
-      end, selected ~= nil and not selected.unavailable and not fs.exists(paths.pending))
+      end, selected ~= nil and not selected.unavailable)
       button(x, 47, 'Program settings', function()
         navigate('settings', state.selected)
       end, selected ~= nil)
@@ -4865,9 +4978,12 @@ local function runUI()
         text(
           113,
           y,
-          #p.errors == 0 and 'Ready to execute' or 'BLOCKED: ' .. #p.errors .. ' issue(s)',
+          state.busy and (state.paused and 'Paused' or 'Executing preview')
+            or fs.exists(paths.pending) and 'Saved transaction still open'
+            or #p.errors == 0 and 'Ready to execute' or 'BLOCKED: ' .. #p.errors .. ' issue(s)',
           45,
-          #p.errors == 0 and 'green' or 'red'
+          (state.busy or fs.exists(paths.pending)) and 'yellow'
+            or #p.errors == 0 and 'green' or 'red'
         )
         local function summaryRow(message, tone)
           for _, row in ipairs(U.wrapRow({ message, tone }, 45, unicode)) do
@@ -4876,6 +4992,9 @@ local function runUI()
               text(113, y, row[1], 45, tone)
             end
           end
+        end
+        if not state.busy and fs.exists(paths.pending) then
+          summaryRow('Continue or stop the saved operation before Execute.', 'yellow')
         end
         for _, err in ipairs(p.errors) do
           summaryRow(err, 'red')
@@ -4894,7 +5013,7 @@ local function runUI()
       end
       local x = button(34, 47, 'Scan', function()
         action('preview')
-      end, not state.busy and not fs.exists(paths.pending))
+      end, not state.busy)
       x = button(x, 47, 'Execute preview', function()
         action('execute')
       end, executable())
@@ -4904,7 +5023,7 @@ local function runUI()
       button(x, 47, 'Run program', function()
         navigate('programs')
       end, not state.busy)
-      if preview and preview.report then
+      if preview and preview.report and not state.busy then
         button(34, 45, 'Export report', function()
           local path = '/home/assline-preview.txt'
           local ok, why = pcall(function()
@@ -4928,23 +5047,42 @@ local function runUI()
       end, not state.busy)
     end
     if state.busy then
-      button(113, 47, 'Cancel', function()
-        state.cancelled = true
+      button(113, 47, state.paused and 'Resume' or 'Pause', function()
+        state.paused = not state.paused
+        status(
+          state.paused and 'Paused. Resume continues this run; Stop ends it.' or 'Resuming work.',
+          'yellow'
+        )
+      end, not state.stopRequested)
+      button(127, 47, 'Stop', function()
+        state.stopRequested, state.paused = true, false
+        status('Stopping after the current pattern transaction / sorting cycle.', 'yellow')
       end)
-    else
-      button(135, 47, 'Recover', function()
-        action('recover')
-      end, fs.exists(paths.pending))
+    elseif C.runner.hasSaved() then
+      if state.page ~= 'settings' then
+        button(113, 45, 'Continue last operation', function()
+          action('continue')
+        end)
+      end
+      button(135, 47, 'Stop saved', function()
+        state.choice = { label = 'Stop saved operation', discard = true }
+      end)
     end
     button(151, 47, 'Quit', function()
       commitEdit()
-      state.cancelled = true
+      state.stopRequested, state.paused = true, false
       state.running = false
     end)
     text(3, 46, string.rep('-', 155), 155, 'muted')
     text(3, 49, state.status, 155, state.tone)
-    if fs.exists(paths.pending) then
-      text(3, 43, 'Pending operation: Recover', 26, 'red')
+    if C.runner.hasSaved() and not state.busy then
+      text(
+        3,
+        5,
+        'Saved operation available. Continue it, or Stop saved to start fresh.',
+        155,
+        'muted'
+      )
     end
     if state.choice then
       -- Modal controls replace the underlying hit areas, so clicks cannot leak
@@ -4960,13 +5098,44 @@ local function runUI()
       text(
         51,
         12,
-        state.choice.budgets and 'Material budgets before recipe voltage and quantity limits.'
+        state.choice.discard and 'Discard the saved run and unfinished transaction record.'
+          or state.choice.budgets and 'Material budgets before recipe voltage and quantity limits.'
           or 'Choose a tier. Escape cancels.',
         98,
         'muted',
         'panel'
       )
-      local entries = state.choice.choices or Batch.tiers
+      if state.choice.discard then
+        text(
+          51,
+          15,
+          'Completed edits and moves stay in place. Nothing is undone.',
+          98,
+          'yellow',
+          'panel'
+        )
+        text(
+          51,
+          17,
+          'Any pattern left in the editor stays there; occupied slots are kept.',
+          98,
+          'muted',
+          'panel'
+        )
+        text(
+          51,
+          19,
+          'The discarded record is saved in /home/assline.abandoned.',
+          98,
+          'muted',
+          'panel'
+        )
+        button(51, 23, 'Discard saved operation', function()
+          action('discard')
+          state.choice = nil
+        end)
+      end
+      local entries = state.choice.discard and {} or state.choice.choices or Batch.tiers
       for n, entry in ipairs(entries) do
         local x = n <= 9 and 51 or 101
         local y = 14 + ((n - 1) % 9) * 2
@@ -4997,6 +5166,9 @@ local function runUI()
   end
   local lastProgress, lastPoll = 0, -math.huge
   local function progress(message, immediate)
+    if state.paused or state.stopRequested then
+      return
+    end
     if immediate or computer.uptime() - lastProgress >= 1 then
       status(message, 'yellow')
       text(3, 49, message, 155, 'yellow')
@@ -5011,15 +5183,11 @@ local function runUI()
       handle(pulled)
       lastPoll = computer.uptime()
     end
-    U.check(
-      not state.cancelled,
-      'Work cancelled. Use Recover if an operation is pending; otherwise preview again.'
-    )
-    return pulled
+    return { paused = state.paused, stop = state.stopRequested }
   end
   action = function(name)
     commitEdit()
-    local isWork = name == 'preview' or name == 'execute' or name == 'recover'
+    local isWork = name == 'preview' or name == 'execute' or name == 'continue'
     U.check(not isWork or not state.busy, 'Work already running')
     if name == 'execute' then
       U.check(executable(), 'Review and verify the preview first')
@@ -5027,15 +5195,14 @@ local function runUI()
     if isWork then
       state.error = nil
       state.busy = true
-      state.cancelled = false
+      state.stopRequested, state.paused = false, false
       lastPoll = computer.uptime()
-      status('Working: ' .. name .. ' (Esc cancels)', 'yellow')
+      status('Working: ' .. name .. ' (Pause / Resume / Stop; Esc stops)', 'yellow')
     end
     local ok, why = pcall(function()
       if name == 'history' then
         history()
       elseif name == 'preview' then
-        U.check(not fs.exists(paths.pending), 'Recover the pending operation before previewing')
         local id = state.page == 'preview' and state.preview and state.preview.id or state.selected
         U.check(id, 'Choose a program first')
         invalidate()
@@ -5049,21 +5216,48 @@ local function runUI()
         )
       elseif name == 'execute' then
         local preview = state.preview
-        state.preview = nil
         C.runner.execute(cfg, preview, progress, control)
         status('Program completed. Build a new preview to check the result.', 'green')
-      elseif name == 'recover' then
+      elseif name == 'continue' then
         invalidate()
-        recover(cfg, progress, control)
-        status('Saved operation completed. Build a new preview to continue.', 'green')
+        state.preview = C.runner.continue(cfg, progress, control)
+        if state.preview then
+          state.page, state.section, state.offset = 'preview', 'changes', 0
+          state.selected = state.preview.id
+        end
+        status(
+          state.preview
+              and not C.runner.hasChanges(state.preview)
+              and #state.preview.plan.errors == 0
+              and 'No remaining changes for the current settings.'
+            or state.preview and state.preview.continuedWithChangedSettings and 'Settings changed since the saved run. Review the updated preview before executing.'
+            or state.preview and 'Remaining work previewed with current settings. Review and Execute to continue.'
+            or 'Saved transaction completed. Choose a program to preview the remaining work.',
+          'green'
+        )
+      elseif name == 'discard' then
+        C.runner.discard()
+        invalidate()
+        status(
+          'Saved operation discarded. Existing patterns stay as they are. Build a new preview.',
+          'muted'
+        )
       end
     end)
+    if name == 'execute' then
+      invalidate()
+    end
     if isWork then
       state.busy = false
     end
-    U.check(ok, why)
+    if not ok and why == C.stopped then
+      state.paused = false
+      status(C.stopped, 'muted')
+    else
+      U.check(ok, why)
+    end
     if isWork then
-      perfReport(name .. ' complete')
+      perfReport(ok and (name .. ' complete') or 'stopped by user')
       releaseWork()
       if state.page == 'history' then
         history()
@@ -5125,7 +5319,7 @@ local function runUI()
       end
     end
     if e[1] == 'interrupted' then
-      state.cancelled = true
+      state.stopRequested, state.paused = true, false
       state.running = false
     elseif e[1] == 'touch' then
       state.scrollDrag = nil
@@ -5177,7 +5371,7 @@ local function runUI()
     elseif e[1] == 'key_down' then
       local char, key = e[3], e[4]
       if state.busy and (key == 1 or char == 113) then
-        state.cancelled = true
+        state.stopRequested, state.paused = true, false
         if char == 113 then
           state.running = false
         end
@@ -5224,7 +5418,7 @@ local function runUI()
         state.offset = state.offset + 31
       elseif char == 113 then
         state.running = false
-      elseif char == 115 and state.page == 'preview' and not fs.exists(paths.pending) then
+      elseif char == 115 and state.page == 'preview' then
         action('preview')
       end
     end

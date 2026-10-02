@@ -378,6 +378,19 @@ function C.maker.finishSort(hw, op, progress)
       and cursor.index <= #op.moves + 1,
     'Invalid sorting recovery progress'
   )
+  local parked = false
+  local function track(move)
+    if where(move.to) == where(hw.buffer) then
+      parked = true
+    end
+    if where(move.from) == where(hw.buffer) then
+      parked = false
+    end
+  end
+  -- An interrupted cycle may already have a pattern in its workspace.
+  for n = 1, cursor.index - 1 do
+    track(op.moves[n])
+  end
   for n = cursor.index, #op.moves do
     local move = op.moves[n]
     C.maker.finishMove(
@@ -385,6 +398,14 @@ function C.maker.finishSort(hw, op, progress)
       { source = move.from, destination = move.to, fingerprint = move.fingerprint }
     )
     writeFile(paths.cursor, { id = op.id, index = n + 1 })
+    track(move)
+    -- Stop only when the cycle has returned its parked pattern. The cursor
+    -- retains the remaining moves without holding an editor slot hostage.
+    if not parked then
+      work.atomic = false
+      gate()
+      work.atomic = true
+    end
     if progress then
       progress('Sorted pattern ' .. n .. ' / ' .. #op.moves)
     end
@@ -392,7 +413,10 @@ function C.maker.finishSort(hw, op, progress)
 end
 
 function C.maker.apply(c, id, plan, manifest, progress, control)
-  U.check(not fs.exists(paths.pending), 'Use Recover before executing another preview')
+  U.check(
+    not fs.exists(paths.pending),
+    'Continue or stop the saved operation before executing another preview'
+  )
   U.check(#plan.errors == 0, 'Resolve preview blockers first')
   U.check(
     not manifest.unresolved or #manifest.unresolved == 0,
@@ -428,7 +452,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
   })
   if #plan.moves > 0 then
     -- Keep the whole sorting stage durable. A cycle can temporarily park a
-    -- pattern in the editor; Recover must finish the cycle before a new scan.
+    -- pattern in the editor; continuation finishes that cycle before replanning.
     local op =
       { kind = 'sort', moves = plan.moves, id = invoke(hw.data, 'sha256', U.canonical(plan.moves)) }
     writeFile(paths.cursor, { id = op.id, index = 1 })
@@ -498,6 +522,11 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
 end
 
 C.runner = {}
+function C.runner.hasChanges(preview)
+  local plan = preview.plan
+  return preview.id == 'assline' and #plan.changes > 0
+    or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
+end
 function C.runner.preview(c, id, progress, control)
   Config.requireProgram(c, id)
   local preview = { id = id, configKey = U.canonical(c) }
@@ -511,9 +540,60 @@ end
 function C.runner.execute(c, preview, progress, control)
   U.check(preview and preview.configKey == U.canonical(c), 'Settings changed; build a new preview')
   Config.requireProgram(c, preview.id)
+  U.check(not fs.exists(paths.pending), 'Continue or stop the saved operation before executing')
+  writeFile(paths.run, { version = 1, program = preview.id, configKey = U.canonical(c) })
   if preview.id == 'assline' then
     apply(c, preview.plan, progress, control)
   else
     C.maker.apply(c, preview.id, preview.plan, preview.manifest, progress, control)
+  end
+  U.check(fs.remove(paths.run), 'Cannot clear completed program run')
+end
+
+function C.runner.hasSaved()
+  return fs.exists(paths.run) or fs.exists(paths.pending)
+end
+
+function C.runner.continue(c, progress, control)
+  local saved, op = readFile(paths.run), readFile(paths.pending)
+  U.check(saved or op, 'No saved operation')
+  local backup = readFile(paths.backup)
+  local id = saved and saved.program
+    or op and (op.kind == 'edit' or op.kind == 'recipe') and 'assline'
+    or backup and backup.program
+  if id and not saved then
+    writeFile(paths.run, { version = 1, program = id, configKey = U.canonical(c) })
+  end
+  if op then
+    recover(c, progress, control)
+  end
+  -- A fresh plan recognizes the finished patterns and checks today's interface
+  -- contents/settings. Never replay an old full plan after a stop or restart.
+  if id then
+    local preview = C.runner.preview(c, id, progress, control)
+    preview.continuedWithChangedSettings = saved and saved.configKey ~= U.canonical(c) or false
+    if
+      not C.runner.hasChanges(preview)
+      and #preview.plan.errors == 0
+      and (not preview.manifest or #preview.manifest.unresolved == 0)
+    then
+      U.check(fs.remove(paths.run), 'Cannot clear completed program run')
+    end
+    return preview
+  end
+end
+
+function C.runner.discard()
+  U.check(C.runner.hasSaved(), 'No saved operation')
+  -- One bounded archive may contain both 400 KB records plus the small cursor.
+  writeFile(paths.abandoned, {
+    operation = readFile(paths.pending),
+    step = readFile(paths.cursor),
+    run = readFile(paths.run),
+  }, 900000)
+  for _, path in ipairs({ paths.pending, paths.cursor, paths.run }) do
+    if fs.exists(path) then
+      U.check(fs.remove(path), 'Cannot discard ' .. path)
+    end
   end
 end
