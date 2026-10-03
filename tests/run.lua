@@ -279,6 +279,8 @@ local function reset()
   callCost,callCounts,pollEvents=0,{},{}
   cfg=cp(api.defaults)
   cfg.batch.mode='fixed'
+  -- Existing fixtures exercise unscaled fixed batches; cost-aware cases opt in below.
+  cfg.batch.costScaling='off'
   editor=iface(cfg.shared.editor,20)
   target=iface(cfg.programs.assline.target,1,{[0]=pattern({item('Samarium Rod',1,5),item(),item(),item()})})
   buffer=iface(cfg.shared.donors,2,{[0]=pattern({item('Junk',3,9),item('Other',2,8),item('Third',1,7)},
@@ -627,7 +629,7 @@ local function field(label)
   return function()
     for y=10,43 do
       if frame[y] and frame[y]:sub(34):find(label,1,true) then
-        local compact=frame[10] and (frame[10]:find('MATERIAL TIER',1,true) or frame[10]:find('RELATIVE TIER',1,true))
+        local compact=frame[10] and (frame[10]:find('MATERIAL TIER',1,true) or frame[10]:find('RELATIVE TIER',1,true) or frame[10]:find('OUTPUT FORM',1,true))
         local inline=frame[y]:sub(34):match('^%[ [X ] %] ')
         return 'touch','screen',compact and 80 or 34,(compact or inline) and y or y+1,0
       end
@@ -1302,6 +1304,62 @@ test('Run program chooser and insulator preview share the same settings and exec
     end)
     api.runUI()
   end)
+end)
+
+test('material cost rescales existing dense plates without donors and applies form overrides',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    data.materials={data.materials[1]};data.materials[1].tier='UHV'
+    data.capabilities[1].plate=true;data.capabilities[1].plateDense=true
+    data.production[1].ingot_plate=true;data.production[1].ingot_plateDense=true
+    data.families.gt.plate={name='gregtech:gt.metaitem.01',prefix=17000}
+    data.families.gt.plateDense={name='gregtech:gt.metaitem.01',prefix=38000}
+    data.rules={
+      {id='plate',mode='bender',process='ingot_plate',eut=1966080,requires={'ingot','plate'},
+        inputs={{f='ingot',n=1}},outputs={{f='plate',n=1}},stock={}},
+      {id='dense',mode='bender',process='ingot_plateDense',eut=1966080,requires={'ingot','plateDense'},
+        inputs={{f='ingot',n=9}},outputs={{f='plateDense',n=1}},stock={}}}
+    cfg.programs.bender.plate=cfg.programs.assline.target;cfg.programs.bender.forms='plate,plateDense'
+    cfg.batch.mode='tiered';cfg.batch.costScaling='on';cfg.batch.currentTier='UHV'
+    cfg.batch.overrideUHV='29';cfg.batch.voltagePolicy='off'
+    target.patterns={[0]=pattern({item('A Ingot',29,11001)},{item('A Plate',29,17001)}),
+      [1]=pattern({item('A Ingot',261,11001)},{item('A Dense Plate',29,38001)})}
+    buffer.patterns={}
+    local preview=api.runner.preview(cfg,'bender')
+    assert(preview.plan.reused==2 and preview.plan.resizeCount==1 and #preview.plan.creates==0)
+    assert(preview.report:find('Batch 3x (29x / 9)',1,true))
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[0].inputs[1].size==29 and target.patterns[0].outputs[1].size==29)
+    assert(target.patterns[1].inputs[1].size==27 and target.patterns[1].outputs[1].size==3)
+    assert(next(buffer.patterns)==nil and next(editor.patterns)==nil)
+    cfg.programs.bender.divisorplateDense='1'
+    preview=api.runner.preview(cfg,'bender')
+    assert(preview.plan.resizeCount==1 and #preview.plan.creates==0)
+    api.runner.execute(cfg,preview)
+    assert(target.patterns[1].inputs[1].size==261 and target.patterns[1].outputs[1].size==29)
+    assert(unser(target.patterns[1].tag).__value.preserved.__value==42)
+  end)
+end)
+
+test('form divisor settings use the shared compact table and save inline edits',function()
+  cfg.batch.costScaling='on';files[api.paths.config]=ser(cfg)
+  queue(nav('Settings'),nav('Bending machine'),click('[ Next ]',44),function()
+    assert(frame[10]:find('OUTPUT FORM',1,true) and frame[10]:find('BATCH DIVISOR',1,true))
+    assert(frame[22]:find('Auto',1,true))
+    return field('Dense (9x)')()
+  end,{'clipboard','kbd','3'},{'key_down','kbd',13,28},function()
+    assert(unser(files[api.paths.config]).programs.bender.divisorplateDense=='3')
+    assert(frame[43]:sub(34):find('Blank uses material input cost.',1,true))
+    assert(frame[44]:sub(34):find('Settings page 2/2',1,true))
+    assert(not frame[44]:find('quarters',1,true))
+    snapshot('form_divisors');return nav('Tier multipliers')()
+  end,click('[ Next ]',45),click('Scale batches by material input'),nav('Bending machine'),function()
+    assert(unser(files[api.paths.config]).batch.costScaling=='off')
+    assert(not table.concat(frame,'\n'):find('BATCH DIVISOR',1,true))
+    assert(not frame[44]:find('[ Next ]',1,true))
+    return quit()
+  end)
+  api.runUI()
 end)
 
 test('bender imprints ingot routes, stores circuits externally and switches 1x plates off',function()

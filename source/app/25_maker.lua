@@ -314,6 +314,12 @@ local function programRouting(c, id)
       sources[form] = values[key]
     end
   end
+  local formDivisors = {}
+  for _, field in ipairs(program.fields) do
+    if field.costDivisor then
+      formDivisors[field.costDivisor] = tonumber(values[field.key])
+    end
+  end
   return routing,
     {
       polymer = values.polymer,
@@ -322,6 +328,7 @@ local function programRouting(c, id)
       pps = values.pps ~= 'off',
       forms = forms,
       sources = sources,
+      formDivisors = formDivisors,
     },
     program
 end

@@ -1,4 +1,5 @@
 -- Program definitions shared by configuration, navigation and execution.
+local Batch = require('assline_batch')
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -25,7 +26,7 @@ local function multiplier()
   return field(
     'multiplier',
     'Pattern multiplier',
-    'Fixed policy only: multiply every requested recipe input and output by this amount.',
+    'Fixed batch before material-cost scaling; all requested inputs and outputs scale together.',
     '1',
     'positiveInteger'
   )
@@ -42,6 +43,10 @@ local benderForms = {
   { 'springSmall', 'Small spring' },
   { 'spring', 'Spring' },
 }
+local cableForms = {}
+for _, size in ipairs({ 1, 2, 4, 8, 12, 16 }) do
+  cableForms[#cableForms + 1] = { 'cable' .. size, size .. 'x Cable' }
+end
 local shaperForms = {
   { 'ingot', 'Ingot' },
   { 'nugget', 'Nugget' },
@@ -134,6 +139,7 @@ M.list = {
     id = 'insulator',
     name = 'Wire insulator',
     mode = 'coating',
+    formChoices = cableForms,
     description = 'Plan insulation patterns in material and cable-size order.',
     fields = {
       field(
@@ -168,6 +174,7 @@ M.list = {
     id = 'wiremill',
     name = 'Wiremill',
     mode = 'wiremill',
+    formChoices = { { 'wire1', '1x wire' }, { 'wireFine', 'Fine wire' } },
     description = 'Create 1x wire and fine-wire patterns in separate destination banks.',
     outputs = { wire1 = 'wire1', wireFine = 'wireFine' },
     sources = { fields = { wire1 = 'wireSource', wireFine = 'fineSource' } },
@@ -313,6 +320,16 @@ M.list[#M.list + 1] = {
 }
 M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
+  if program.mode and program.formChoices then
+    for _, entry in ipairs(program.formChoices) do
+      local f = field(Batch.divisorKey(entry[1]), entry[2], '', '', 'optionalPositiveInteger', true)
+      f.costDivisor, f.group, f.compact, f.placeholder = entry[1], 'Batch divisors', true, 'Auto'
+      f.tableLabel, f.valueLabel = 'OUTPUT FORM', 'BATCH DIVISOR'
+      f.tableHelp =
+        'Blank uses material input cost. A divisor of 1 keeps the full batch; 4 quarters it.'
+      program.fields[#program.fields + 1] = f
+    end
+  end
   M.byId[program.id] = program
   if #program.fields > 0 then
     M.settings[#M.settings + 1] = program

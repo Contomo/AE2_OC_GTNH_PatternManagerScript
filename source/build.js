@@ -21,13 +21,16 @@ const lua = value => typeof value === 'string' ? JSON.stringify(value)
   : value && typeof value === 'object' ? '{'+Object.entries(value).map(([k,v])=>'['+lua(k)+']='+lua(v)).join(',')+'}'
   : String(value);
 const tierDefinitions = '-- Source: source/data/tiers.json\nreturn '+lua(JSON.parse(read('source/data/tiers.json')))+'\n';
+const materialUnits = '-- Source: source/data/material_units.json\nreturn '+lua(JSON.parse(read('source/data/material_units.json')))+'\n';
 const inline = source => source.replaceAll("require('assline_util')",'U')
   .replaceAll("require('assline_tier_definitions')",'TierDefinitions')
+  .replaceAll("require('assline_material_units')",'MaterialUnits')
   .replaceAll("require('assline_batch')",'Batch')
   .replaceAll("require('assline_programs')",'Programs').replaceAll("require('assline_config')",'Config')
   .replaceAll("require('assline_planner')",'Planner').replaceAll("require('assline_modes')",'Modes');
 const pure = (name,file) => 'local '+name+'=(function()\n'+inline(section(file))+'\nend)()\n';
 const body = pure('U','source/lib/util.lua')+'local TierDefinitions=(function()\n'+tierDefinitions+'end)()\n'+
+  'local MaterialUnits=(function()\n'+materialUnits+'end)()\n'+
   pure('Batch','source/lib/batch.lua')+pure('Programs','source/lib/programs.lua')+pure('Config','source/lib/config.lua')+
   inline(['source/app/00_core.lua','source/app/10_plan.lua','source/app/20_apply.lua'].map(section).join('\n'))+'\n'+
   pure('Planner','source/lib/planner.lua')+pure('Modes','source/lib/modes.lua')+
@@ -58,6 +61,7 @@ if not ok then error(result,0) end
 return result
 `;
 emit('tests/lib/assline_tier_definitions.lua',tierDefinitions,true);
+emit('tests/lib/assline_material_units.lua',materialUnits,true);
 for (const [name,file] of [['util','source/lib/util.lua'],['batch','source/lib/batch.lua'],['programs','source/lib/programs.lua'],['config','source/lib/config.lua'],['planner','source/lib/planner.lua'],['modes','source/lib/modes.lua'],['preview','source/lib/preview.lua']]) {
   emit('tests/lib/assline_'+name+'.lua',read(file),true);
 }

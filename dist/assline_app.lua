@@ -251,11 +251,16 @@ local TierDefinitions=(function()
 -- Source: source/data/tiers.json
 return {["source"]="https://github.com/GTNewHorizons/GT5-Unofficial/blob/5.09.54.133/src/main/java/gregtech/api/enums/GTValues.java",["names"]={"ULV","LV","MV","HV","EV","IV","LuV","ZPM","UV","UHV","UEV","UIV","UMV","UXV","OpV","MAX"},["voltages"]={8,32,128,512,2048,8192,32768,131072,524288,2097152,8388608,33554432,134217728,536870912,2147483640,8589934592},["colorSource"]="RGB colors of pinned GTValues.TIER_COLORS; Minecraft bold/underline formatting has no OC GPU equivalent",["colors"]={16733525,43520,16755200,16777045,5592405,5592575,16733695,5636095,43520,11141120,11141290,170,16733525,11141120,16777215,16777215}}
 end)()
+local MaterialUnits=(function()
+-- Source: source/data/material_units.json
+return {["policy"]="ore-prefix-material-units-v1",["source"]={["archive"]="gt-5.09.54.133.zip",["sha256"]="a5993a25fbf464348182baac16539bcf08bdfa18d22ef0217dc84fc4c14ca03e",["definitions"]={"gregtech/api/enums/OrePrefixes.java","gregtech/api/enums/GTValues.java"}},["fluidPerIngot"]=144,["forms"]={["armorBoots"]=4,["armorChestplate"]=8,["armorHelmet"]=5,["armorLeggings"]=7,["block"]=9,["blockCasing"]=9,["blockCasingAdvanced"]=9,["bolt"]=0.125,["bucket"]=1,["bucketClay"]=1,["bulletGtLarge"]=0.3333333333333333,["bulletGtMedium"]=0.16666666666666666,["bulletGtSmall"]=0.1111111111111111,["cable1"]=0.5,["cable12"]=6,["cable16"]=8,["cable2"]=1,["cable4"]=2,["cable8"]=4,["capsule"]=1,["capsuleMolten"]=1,["cell"]=1,["cellHydroCracked1"]=1,["cellHydroCracked2"]=1,["cellHydroCracked3"]=1,["cellMolten"]=1,["cellPlasma"]=1,["cellSteamCracked1"]=1,["cellSteamCracked2"]=1,["cellSteamCracked3"]=1,["comb"]=1,["compressed"]=3,["crystal"]=1,["dust"]=1,["dustImpure"]=1,["dustPure"]=1,["dustRefined"]=1,["dustSmall"]=0.25,["dustTiny"]=0.1111111111111111,["foil"]=0.25,["frameGt"]=2,["gearGt"]=4,["gearGtSmall"]=1,["gem"]=1,["gemChipped"]=0.25,["gemExquisite"]=4,["gemFlawed"]=0.5,["gemFlawless"]=2,["handleMallet"]=0.5,["ingot"]=1,["ingotHot"]=1,["itemCasing"]=0.5,["lens"]=0.75,["nugget"]=0.1111111111111111,["pipeHuge"]=12,["pipeLarge"]=6,["pipeMedium"]=3,["pipeNonuple"]=9,["pipeQuadruple"]=12,["pipeRestrictiveHuge"]=12,["pipeRestrictiveLarge"]=6,["pipeRestrictiveMedium"]=3,["pipeRestrictiveSmall"]=1,["pipeRestrictiveTiny"]=0.5,["pipeSmall"]=1,["pipeTiny"]=0.5,["plate"]=1,["plateDense"]=9,["plateDouble"]=2,["plateQuadruple"]=4,["plateQuintuple"]=5,["plateSuperdense"]=64,["plateTriple"]=3,["ring"]=0.25,["rotor"]=4.25,["round"]=0.1111111111111111,["screw"]=0.125,["sheetmetal"]=2,["spring"]=1,["springSmall"]=0.25,["stick"]=0.5,["stickLong"]=1,["toolAxe"]=3,["toolHeadBuzzSaw"]=4,["toolHeadChainsaw"]=2,["toolHeadDrill"]=4,["toolHeadFile"]=2,["toolHeadHammer"]=6,["toolHeadMallet"]=6,["toolHeadSaw"]=2,["toolHeadScrewdriver"]=1,["toolHeadWrench"]=4,["toolHoe"]=2,["toolPickaxe"]=3,["toolShears"]=2,["toolShovel"]=1,["toolSword"]=2,["turbineBlade"]=6,["wire1"]=0.5,["wire12"]=6,["wire16"]=8,["wire2"]=1,["wire4"]=2,["wire8"]=4,["wireFine"]=0.125}}
+end)()
 local Batch=(function()
 -- Source: source/lib/batch.lua
 -- Shared batch policy. Tier definitions are built from source/data/tiers.json.
 local U = U
 local Tiers = TierDefinitions
+local MaterialUnits = MaterialUnits
 local M = { tiers = Tiers.names, fields = {} }
 local index = {}
 for n, name in ipairs(M.tiers) do
@@ -367,8 +372,15 @@ field(
   '589824',
   'Fluid inputs and outputs share this per-ingredient limit.'
 )
+group = 'Batch sizing'
+field(
+  'costScaling',
+  'Scale batches by material input',
+  'on',
+  'Divide fixed or tiered batches by consumed material in ingots; round down, minimum one batch.',
+  'toggle'
+)
 
-group = 'Curve'
 field(
   'curveMode',
   'Multiplier curve',
@@ -418,7 +430,7 @@ for _, f in ipairs(M.fields) do
   if f.key == 'voltagePolicy' or f.key == 'abovePolicy' then
     f.toggleValues = { f.choices[1][1], f.choices[2][1] }
   end
-  if f.key ~= 'mode' then
+  if f.key ~= 'mode' and f.key ~= 'costScaling' then
     f.when = { mode = 'tiered' }
   end
   if f.key == 'aboveMultiplier' then
@@ -441,6 +453,31 @@ for _, f in ipairs(M.fields) do
     f.compact = true
     f.placeholder = ''
   end
+end
+
+-- Recipe forms refer only to this recipe's main material. Shared ingredients
+-- (polymers/PPS) and stocked molds/circuits are deliberately not counted.
+function M.materialCost(rule)
+  local total = 0
+  for _, input in ipairs(rule.inputs or {}) do
+    local units = input.fluid == 'material' and 1 / MaterialUnits.fluidPerIngot
+      or MaterialUnits.forms[input.f]
+    if input.f or input.fluid == 'material' then
+      if not units then
+        return nil
+      end
+      total = total + input.n * units
+    end
+  end
+  return total > 0 and total or nil
+end
+
+function M.divisorForm(form)
+  -- Fluid/item pipes use the same mold setting and the same form override.
+  return (form:gsub('^pipeFluid', 'pipe'):gsub('^pipeItem', 'pipe'))
+end
+function M.divisorKey(form)
+  return 'divisor' .. M.divisorForm(form)
 end
 
 function M.validate(values)
@@ -497,7 +534,7 @@ end
 
 -- Called once per requested recipe, before its items/fluids are resolved.
 -- Stocked circuits, molds and omitted insulation solids do not constrain a batch.
-function M.resolve(values, materialTier, eut, factor, quantities, materialSource)
+function M.resolve(values, materialTier, eut, factor, quantities, materialSource, scaling)
   factor = factor or 1
   U.check(U.integer(factor) and factor > 0, 'Pattern multiplier must be a positive whole number')
   local recipeTier = M.voltageTier(eut)
@@ -507,9 +544,22 @@ function M.resolve(values, materialTier, eut, factor, quantities, materialSource
     eut = eut,
     materialSource = materialSource,
   }
+  local function scale(target)
+    detail.unscaledMultiplier = target
+    if values and values.costScaling == 'on' then
+      local divisor = scaling and scaling.divisor
+      detail.materialCost = scaling and scaling.cost
+      detail.divisorSource = divisor and 'override' or 'material input'
+      divisor = divisor or detail.materialCost or 1
+      U.check(type(divisor) == 'number' and divisor > 0, 'Invalid material cost divisor')
+      detail.divisor = math.max(1, divisor)
+      target = math.max(1, math.floor(target / detail.divisor))
+    end
+    return target
+  end
   if not values or values.mode == 'fixed' then
-    detail.multiplier = factor
-    return factor, detail
+    detail.multiplier = scale(factor)
+    return detail.multiplier, detail
   end
   M.validate(values)
   -- Fixed program multipliers are intentionally irrelevant in tiered mode.
@@ -542,6 +592,7 @@ function M.resolve(values, materialTier, eut, factor, quantities, materialSource
     return 0, detail
   end
   target = math.min(target, tonumber(values.maxMultiplier))
+  target = scale(target)
   for _, q in ipairs(quantities or {}) do
     local limit = tonumber(values[q.type == 'fluid' and 'fluidLimit' or 'itemLimit'])
     target = math.min(target, math.floor(limit / q.size))
@@ -568,7 +619,9 @@ function M.describe(detail)
   end
   return 'Batch '
     .. detail.multiplier
-    .. 'x  |  Material '
+    .. 'x'
+    .. (detail.divisor and detail.divisor > 1 and (' (' .. detail.unscaledMultiplier .. 'x / ' .. detail.divisor .. ')') or '')
+    .. '  |  Material '
     .. material
     .. '  |  '
     .. M.voltageText(detail)
@@ -594,6 +647,7 @@ end)()
 local Programs=(function()
 -- Source: source/lib/programs.lua
 -- Program definitions shared by configuration, navigation and execution.
+local Batch = Batch
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -620,7 +674,7 @@ local function multiplier()
   return field(
     'multiplier',
     'Pattern multiplier',
-    'Fixed policy only: multiply every requested recipe input and output by this amount.',
+    'Fixed batch before material-cost scaling; all requested inputs and outputs scale together.',
     '1',
     'positiveInteger'
   )
@@ -637,6 +691,10 @@ local benderForms = {
   { 'springSmall', 'Small spring' },
   { 'spring', 'Spring' },
 }
+local cableForms = {}
+for _, size in ipairs({ 1, 2, 4, 8, 12, 16 }) do
+  cableForms[#cableForms + 1] = { 'cable' .. size, size .. 'x Cable' }
+end
 local shaperForms = {
   { 'ingot', 'Ingot' },
   { 'nugget', 'Nugget' },
@@ -729,6 +787,7 @@ M.list = {
     id = 'insulator',
     name = 'Wire insulator',
     mode = 'coating',
+    formChoices = cableForms,
     description = 'Plan insulation patterns in material and cable-size order.',
     fields = {
       field(
@@ -763,6 +822,7 @@ M.list = {
     id = 'wiremill',
     name = 'Wiremill',
     mode = 'wiremill',
+    formChoices = { { 'wire1', '1x wire' }, { 'wireFine', 'Fine wire' } },
     description = 'Create 1x wire and fine-wire patterns in separate destination banks.',
     outputs = { wire1 = 'wire1', wireFine = 'wireFine' },
     sources = { fields = { wire1 = 'wireSource', wireFine = 'fineSource' } },
@@ -908,6 +968,16 @@ M.list[#M.list + 1] = {
 }
 M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
+  if program.mode and program.formChoices then
+    for _, entry in ipairs(program.formChoices) do
+      local f = field(Batch.divisorKey(entry[1]), entry[2], '', '', 'optionalPositiveInteger', true)
+      f.costDivisor, f.group, f.compact, f.placeholder = entry[1], 'Batch divisors', true, 'Auto'
+      f.tableLabel, f.valueLabel = 'OUTPUT FORM', 'BATCH DIVISOR'
+      f.tableHelp =
+        'Blank uses material input cost. A divisor of 1 keeps the full batch; 4 quarters it.'
+      program.fields[#program.fields + 1] = f
+    end
+  end
   M.byId[program.id] = program
   if #program.fields > 0 then
     M.settings[#M.settings + 1] = program
@@ -1021,6 +1091,9 @@ function M.visibleFields(c, section)
   local result, values = {}, M.values(c, section)
   for _, f in ipairs(M.section(section).fields) do
     local visible = not f.hidden and (f.key ~= 'multiplier' or c.batch.mode == 'fixed')
+    if f.costDivisor then
+      visible = visible and c.batch.costScaling == 'on'
+    end
     for key, expected in pairs(f.when or {}) do
       local match = values[key] == expected
       if type(expected) == 'table' then
@@ -1101,7 +1174,7 @@ function M.validate(c)
       if f.kind == 'toggle' then
         U.check(v == 'on' or v == 'off', f.label .. ' must be on or off')
       end
-      if f.kind == 'positiveInteger' then
+      if f.kind == 'positiveInteger' or f.kind == 'optionalPositiveInteger' and v ~= '' then
         U.check(
           U.integer(tonumber(v)) and tonumber(v) > 0,
           f.label .. ' must be a positive whole number'
@@ -3187,6 +3260,7 @@ function M.compile(data, mode, options, checkpoint)
       sources = U.clone(options.sources),
       multiplier = multiplier,
       batch = U.clone(options.batch),
+      formDivisors = U.clone(options.formDivisors),
     },
     recipes = {},
     unusedExcluded = 0,
@@ -3256,7 +3330,13 @@ function M.compile(data, mode, options, checkpoint)
             eut,
             multiplier,
             quantities,
-            material.tierSource
+            material.tierSource,
+            {
+              cost = Batch.materialCost(rule),
+              divisor = tonumber(
+                (options.formDivisors or {})[Batch.divisorForm(rule.outputs[1].f)]
+              ),
+            }
           )
           if recipeMultiplier == 0 then
             manifest.tierExcluded = manifest.tierExcluded + 1
@@ -4032,6 +4112,12 @@ local function programRouting(c, id)
       sources[form] = values[key]
     end
   end
+  local formDivisors = {}
+  for _, field in ipairs(program.fields) do
+    if field.costDivisor then
+      formDivisors[field.costDivisor] = tonumber(values[field.key])
+    end
+  end
   return routing,
     {
       polymer = values.polymer,
@@ -4040,6 +4126,7 @@ local function programRouting(c, id)
       pps = values.pps ~= 'off',
       forms = forms,
       sources = sources,
+      formDivisors = formDivisors,
     },
     program
 end
@@ -5049,6 +5136,7 @@ local function runUI()
         end)
       end
       local section = Config.section(state.settings)
+      local pageRow = section.pageSize == 9 and 45 or 44
       local pages = { {} }
       for _, f in ipairs(fields()) do
         local page = pages[#pages]
@@ -5083,16 +5171,25 @@ local function runUI()
       local compact = page[1] and page[1].compact
       if compact then
         local overrides = page[1].group == 'Tier overrides'
-        text(34, 10, overrides and 'MATERIAL TIER' or 'RELATIVE TIER', 42, 'blue')
-        text(80, 10, overrides and 'OVERRIDE' or 'MULTIPLIER', 22, 'blue')
+        text(
+          34,
+          10,
+          page[1].tableLabel or (overrides and 'MATERIAL TIER' or 'RELATIVE TIER'),
+          42,
+          'blue'
+        )
+        text(80, 10, page[1].valueLabel or (overrides and 'OVERRIDE' or 'MULTIPLIER'), 22, 'blue')
         if overrides then
           text(115, 10, 'EFFECTIVE', 40, 'blue')
         end
         text(
           34,
-          44,
-          overrides and 'Blank follows the curve. Later tiers remain skipped unless enabled.'
-            or 'One multiplier per relative tier. Maximum and quantity limits still apply.',
+          pageRow - 1,
+          page[1].tableHelp
+            or (
+              overrides and 'Blank follows the curve. Later tiers remain skipped unless enabled.'
+              or 'One multiplier per relative tier. Maximum and quantity limits still apply.'
+            ),
           124,
           'muted'
         )
@@ -5171,7 +5268,6 @@ local function runUI()
         end
       end
       if #pages > 1 then
-        local pageRow = section.pageSize == 9 and 45 or 44
         text(34, pageRow, 'Settings page ' .. state.settingsPage .. '/' .. #pages, 30, 'muted')
         button(111, pageRow, 'Previous', function()
           commitEdit()

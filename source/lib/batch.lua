@@ -1,6 +1,7 @@
 -- Shared batch policy. Tier definitions are built from source/data/tiers.json.
 local U = require('assline_util')
 local Tiers = require('assline_tier_definitions')
+local MaterialUnits = require('assline_material_units')
 local M = { tiers = Tiers.names, fields = {} }
 local index = {}
 for n, name in ipairs(M.tiers) do
@@ -112,8 +113,15 @@ field(
   '589824',
   'Fluid inputs and outputs share this per-ingredient limit.'
 )
+group = 'Batch sizing'
+field(
+  'costScaling',
+  'Scale batches by material input',
+  'on',
+  'Divide fixed or tiered batches by consumed material in ingots; round down, minimum one batch.',
+  'toggle'
+)
 
-group = 'Curve'
 field(
   'curveMode',
   'Multiplier curve',
@@ -163,7 +171,7 @@ for _, f in ipairs(M.fields) do
   if f.key == 'voltagePolicy' or f.key == 'abovePolicy' then
     f.toggleValues = { f.choices[1][1], f.choices[2][1] }
   end
-  if f.key ~= 'mode' then
+  if f.key ~= 'mode' and f.key ~= 'costScaling' then
     f.when = { mode = 'tiered' }
   end
   if f.key == 'aboveMultiplier' then
@@ -186,6 +194,31 @@ for _, f in ipairs(M.fields) do
     f.compact = true
     f.placeholder = ''
   end
+end
+
+-- Recipe forms refer only to this recipe's main material. Shared ingredients
+-- (polymers/PPS) and stocked molds/circuits are deliberately not counted.
+function M.materialCost(rule)
+  local total = 0
+  for _, input in ipairs(rule.inputs or {}) do
+    local units = input.fluid == 'material' and 1 / MaterialUnits.fluidPerIngot
+      or MaterialUnits.forms[input.f]
+    if input.f or input.fluid == 'material' then
+      if not units then
+        return nil
+      end
+      total = total + input.n * units
+    end
+  end
+  return total > 0 and total or nil
+end
+
+function M.divisorForm(form)
+  -- Fluid/item pipes use the same mold setting and the same form override.
+  return (form:gsub('^pipeFluid', 'pipe'):gsub('^pipeItem', 'pipe'))
+end
+function M.divisorKey(form)
+  return 'divisor' .. M.divisorForm(form)
 end
 
 function M.validate(values)
@@ -242,7 +275,7 @@ end
 
 -- Called once per requested recipe, before its items/fluids are resolved.
 -- Stocked circuits, molds and omitted insulation solids do not constrain a batch.
-function M.resolve(values, materialTier, eut, factor, quantities, materialSource)
+function M.resolve(values, materialTier, eut, factor, quantities, materialSource, scaling)
   factor = factor or 1
   U.check(U.integer(factor) and factor > 0, 'Pattern multiplier must be a positive whole number')
   local recipeTier = M.voltageTier(eut)
@@ -252,9 +285,22 @@ function M.resolve(values, materialTier, eut, factor, quantities, materialSource
     eut = eut,
     materialSource = materialSource,
   }
+  local function scale(target)
+    detail.unscaledMultiplier = target
+    if values and values.costScaling == 'on' then
+      local divisor = scaling and scaling.divisor
+      detail.materialCost = scaling and scaling.cost
+      detail.divisorSource = divisor and 'override' or 'material input'
+      divisor = divisor or detail.materialCost or 1
+      U.check(type(divisor) == 'number' and divisor > 0, 'Invalid material cost divisor')
+      detail.divisor = math.max(1, divisor)
+      target = math.max(1, math.floor(target / detail.divisor))
+    end
+    return target
+  end
   if not values or values.mode == 'fixed' then
-    detail.multiplier = factor
-    return factor, detail
+    detail.multiplier = scale(factor)
+    return detail.multiplier, detail
   end
   M.validate(values)
   -- Fixed program multipliers are intentionally irrelevant in tiered mode.
@@ -287,6 +333,7 @@ function M.resolve(values, materialTier, eut, factor, quantities, materialSource
     return 0, detail
   end
   target = math.min(target, tonumber(values.maxMultiplier))
+  target = scale(target)
   for _, q in ipairs(quantities or {}) do
     local limit = tonumber(values[q.type == 'fluid' and 'fluidLimit' or 'itemLimit'])
     target = math.min(target, math.floor(limit / q.size))
@@ -313,7 +360,9 @@ function M.describe(detail)
   end
   return 'Batch '
     .. detail.multiplier
-    .. 'x  |  Material '
+    .. 'x'
+    .. (detail.divisor and detail.divisor > 1 and (' (' .. detail.unscaledMultiplier .. 'x / ' .. detail.divisor .. ')') or '')
+    .. '  |  Material '
     .. material
     .. '  |  '
     .. M.voltageText(detail)

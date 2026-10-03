@@ -187,6 +187,7 @@ function M.compile(data, mode, options, checkpoint)
       sources = U.clone(options.sources),
       multiplier = multiplier,
       batch = U.clone(options.batch),
+      formDivisors = U.clone(options.formDivisors),
     },
     recipes = {},
     unusedExcluded = 0,
@@ -256,7 +257,13 @@ function M.compile(data, mode, options, checkpoint)
             eut,
             multiplier,
             quantities,
-            material.tierSource
+            material.tierSource,
+            {
+              cost = Batch.materialCost(rule),
+              divisor = tonumber(
+                (options.formDivisors or {})[Batch.divisorForm(rule.outputs[1].f)]
+              ),
+            }
           )
           if recipeMultiplier == 0 then
             manifest.tierExcluded = manifest.tierExcluded + 1

@@ -76,6 +76,24 @@ Tiered batches default to limits of 4096 items or 589824 mB per ingredient. The
 whole batch shrinks together; stocked molds/circuits and omitted supplies do not
 consume those limits. Effective tiers shows material budgets before these caps.
 
+**Scale batches by material input** (on by default) applies to both Fixed and
+Tiered. It divides the selected batch by the main material consumed per recipe,
+measured in ingot equivalents: nine ingots or plates divide by nine; 576 mB of
+molten material divide by four. Solid form amounts and the fluid unit come from
+the pinned GT source, not material-specific examples. Additives such as PVC/PPS
+and stocked circuits/molds do not count. Cheap forms never increase the batch.
+Batches round down to at least one recipe execution; tiered ingredient limits
+still apply afterward. A budget below the cost of one recipe therefore still
+encodes one execution, unless it exceeds an ingredient limit.
+
+Each recipe program's settings has a compact **Batch divisors** table. Blank
+(`Auto`) uses the actual input cost; a positive integer replaces that divisor.
+For example, `4` quarters the batch and `1` disables the reduction for that form.
+The global checkbox disables all cost scaling and hides the tables. Existing
+matching patterns are resized through the shared editor without using donors.
+The preview shows the pre-scaling budget and divisor, such as
+`Batch 3x (29x / 9)` for 27 ingots → 3 dense plates.
+
 Fluid Shaper ingots require a native liquid-producing route in the full scrape.
 Alloy synthesis counts; fluid extraction, remelting finished parts and unpacking
 containers do not. Plasma cooling counts only with an independent liquid source.

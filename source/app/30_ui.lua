@@ -577,6 +577,7 @@ local function runUI()
         end)
       end
       local section = Config.section(state.settings)
+      local pageRow = section.pageSize == 9 and 45 or 44
       local pages = { {} }
       for _, f in ipairs(fields()) do
         local page = pages[#pages]
@@ -611,16 +612,25 @@ local function runUI()
       local compact = page[1] and page[1].compact
       if compact then
         local overrides = page[1].group == 'Tier overrides'
-        text(34, 10, overrides and 'MATERIAL TIER' or 'RELATIVE TIER', 42, 'blue')
-        text(80, 10, overrides and 'OVERRIDE' or 'MULTIPLIER', 22, 'blue')
+        text(
+          34,
+          10,
+          page[1].tableLabel or (overrides and 'MATERIAL TIER' or 'RELATIVE TIER'),
+          42,
+          'blue'
+        )
+        text(80, 10, page[1].valueLabel or (overrides and 'OVERRIDE' or 'MULTIPLIER'), 22, 'blue')
         if overrides then
           text(115, 10, 'EFFECTIVE', 40, 'blue')
         end
         text(
           34,
-          44,
-          overrides and 'Blank follows the curve. Later tiers remain skipped unless enabled.'
-            or 'One multiplier per relative tier. Maximum and quantity limits still apply.',
+          pageRow - 1,
+          page[1].tableHelp
+            or (
+              overrides and 'Blank follows the curve. Later tiers remain skipped unless enabled.'
+              or 'One multiplier per relative tier. Maximum and quantity limits still apply.'
+            ),
           124,
           'muted'
         )
@@ -699,7 +709,6 @@ local function runUI()
         end
       end
       if #pages > 1 then
-        local pageRow = section.pageSize == 9 and 45 or 44
         text(34, pageRow, 'Settings page ' .. state.settingsPage .. '/' .. #pages, 30, 'muted')
         button(111, pageRow, 'Previous', function()
           commitEdit()

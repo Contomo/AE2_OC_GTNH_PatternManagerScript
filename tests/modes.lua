@@ -443,4 +443,28 @@ test('Infinity foil shrinks independently of the retained fixed multiplier and f
   assert(excluded and excluded.reason:find('Material tier above'))
 end)
 
+test('all scraped rules have material costs and Chromatic Glass dense plates scale at UHV',function()
+  local B=require('assline_batch')
+  for _,rule in ipairs(data.rules) do assert(B.materialCost(rule),'Missing material cost: '..rule.id) end
+  local batch=U.clone(require('assline_config').defaults.batch)
+  batch.currentTier='UHV';batch.overrideUHV='29';batch.voltagePolicy='off'
+  local result=M.compile(data,'bender',{forms={plateDense=true},sources={plateDense='ingot'},batch=batch})
+  local found
+  for _,r in ipairs(result.recipes) do
+    if r.material=='ChromaticGlass' then
+      assert(r.batch.materialTier=='UHV' and r.batch.recipeTier=='UHV')
+      assert(r.batch.materialCost==9 and r.inputs[1].size==27 and r.outputs[1].size==3)
+      found=true
+    end
+  end
+  assert(found)
+  result=M.compile(data,'bender',{forms={plateDense=true},sources={plateDense='plate'},batch=batch,
+    formDivisors={plateDense=1}})
+  for _,r in ipairs(result.recipes) do
+    if r.material=='ChromaticGlass' then
+      assert(r.batch.divisorSource=='override' and r.inputs[1].size==261 and r.outputs[1].size==29)
+    end
+  end
+end)
+
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

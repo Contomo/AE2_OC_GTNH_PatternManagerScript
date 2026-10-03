@@ -98,6 +98,9 @@ function M.visibleFields(c, section)
   local result, values = {}, M.values(c, section)
   for _, f in ipairs(M.section(section).fields) do
     local visible = not f.hidden and (f.key ~= 'multiplier' or c.batch.mode == 'fixed')
+    if f.costDivisor then
+      visible = visible and c.batch.costScaling == 'on'
+    end
     for key, expected in pairs(f.when or {}) do
       local match = values[key] == expected
       if type(expected) == 'table' then
@@ -178,7 +181,7 @@ function M.validate(c)
       if f.kind == 'toggle' then
         U.check(v == 'on' or v == 'off', f.label .. ' must be on or off')
       end
-      if f.kind == 'positiveInteger' then
+      if f.kind == 'positiveInteger' or f.kind == 'optionalPositiveInteger' and v ~= '' then
         U.check(
           U.integer(tonumber(v)) and tonumber(v) > 0,
           f.label .. ' must be a positive whole number'
