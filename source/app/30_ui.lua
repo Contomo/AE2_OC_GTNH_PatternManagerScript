@@ -7,6 +7,19 @@ local function runUI()
   local maxW, maxH = gpu.maxResolution()
   U.check(maxW >= 160 and maxH >= 50, 'Use a tier 3 GPU and screen with 160x50 resolution') -- the fuck
   local w, h = 160, 50
+  local layout = {
+    title = 2,
+    subtitle = 3,
+    tabs = 4,
+    body = 7,
+    bodyBottom = 42,
+    scrollFooter = 44,
+    separator = 46,
+    actions = 47,
+    notice = 48,
+    status = 49,
+    metrics = 50,
+  }
   -- OC can report char=0 for keypad keys (notably with Num Lock off).
   -- The physical key code still identifies the intended digit.
   local keypad = {
@@ -49,7 +62,7 @@ local function runUI()
   }
   local buttons, paintCache, paintKey, edit = {}, {}, nil, nil
   local buttonWidths, scrollbar = {}, nil
-  local contentKey, contentRows
+  local contentKey, contentRows, destinations
   local draw, handle, action, commitEdit, navigate
   local function text(x, y, s, width, tone, bg, guideWidth, guideTone, accent)
     width = math.min(width or w - x + 1, w - x + 1)
@@ -322,11 +335,11 @@ local function runUI()
       )
     elseif p.kind == 'donorCleanup' then
       for _, row in ipairs(Preview.rows(state.section, p)) do
-        add(row[1], row[2], row[3], row[4], row[5])
+        add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
     elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
       for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
-        add(row[1], row[2], row[3], row[4], row[5])
+        add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
     elseif state.section == 'details' and preview.manifest then
       if preview.id == 'bender' or preview.id == 'fluidShaper' then
@@ -394,11 +407,11 @@ local function runUI()
       end
     elseif state.section == 'capacity' then
       for _, row in ipairs(Preview.capacityRows(p)) do
-        add(row[1], row[2], row[3], row[4], row[5])
+        add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
     elseif preview.id ~= 'assline' then
       for _, row in ipairs(Preview.planRows(p, preview.manifest)) do
-        add(row[1], row[2], row[3], row[4], row[5])
+        add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
     elseif state.section == 'recipes' then
       for _, r in ipairs(p.recipes) do
@@ -439,15 +452,49 @@ local function runUI()
       .. width
     if key ~= contentKey then
       contentKey = key
-      contentRows = {}
+      contentRows, destinations = {}, {}
       for _, r in ipairs(lines()) do
         for _, row in ipairs(U.wrapRow(r, width, unicode)) do
           contentRows[#contentRows + 1] = row
+          if row[6] and row[6].destination then
+            destinations[#destinations + 1] = { name = row[6].destination, row = #contentRows }
+          end
         end
       end
     end
     local rows = contentRows
-    state.offset = math.max(0, math.min(state.offset, math.max(0, #rows - room)))
+    local linked = #destinations > 1
+    local linkTop, linkBottom = y, y + room - 1
+    if linked then
+      y, room = y + 1, room - 2
+    end
+    -- Let even a short final destination align with the first content row.
+    -- Otherwise clamping at the document end can leave Next pointing at the
+    -- same destination after a click because its heading never reaches the top.
+    local maximum = math.max(0, #rows - room, linked and destinations[#destinations].row - 1 or 0)
+    state.offset = math.max(0, math.min(state.offset, maximum))
+    if linked then
+      local current = 1
+      for index, destination in ipairs(destinations) do
+        if destination.row <= state.offset + 1 then
+          current = index
+        end
+      end
+      local function jumpLink(row, destination, direction)
+        if destination then
+          local label =
+            U.wrapRow({ direction .. ': Jump to ' .. destination.name }, width - 4, unicode)[1][1]
+          button(x, row, label, function()
+            state.scrollDrag = nil
+            state.offset = destination.row - 1
+          end)
+        else
+          text(x, row, '', width)
+        end
+      end
+      jumpLink(linkTop, destinations[current - 1], 'Previous')
+      jumpLink(linkBottom, destinations[current + 1], 'Next')
+    end
     for n = 1, room do
       local r = rows[state.offset + n]
       text(
@@ -462,8 +509,7 @@ local function runUI()
         r and r[5]
       )
     end
-    local maximum = math.max(0, #rows - room)
-    local thumb = maximum == 0 and room or math.max(1, math.floor(room * room / #rows))
+    local thumb = maximum == 0 and room or math.max(1, math.floor(room * room / (maximum + room)))
     local top = y
       + (maximum == 0 and 0 or math.floor(state.offset / maximum * (room - thumb) + 0.5))
     scrollbar =
@@ -473,7 +519,7 @@ local function runUI()
     end
     text(
       x,
-      44,
+      layout.scrollFooter,
       'Rows '
         .. math.min(#rows, state.offset + 1)
         .. '-'
@@ -527,34 +573,21 @@ local function runUI()
     end
     buttons = {}
     scrollbar = nil
-    text(3, 2, 'AE2 / GTNH PATTERN MANAGER', 95, 'blue')
-    text(
-      111,
-      2,
-      string.format(
-        '%.0f%% energy  |  %d KB free',
-        energyFraction() * 100,
-        math.floor(computer.freeMemory() / 1024)
-      ),
-      47,
-      'muted'
-    )
-    text(3, 4, string.rep('-', 155), 155, 'muted')
-    nav(7, 'Programs', state.page == 'programs', function()
+    nav(layout.title, 'Programs', state.page == 'programs', function()
       navigate('programs')
     end, not state.busy)
-    nav(10, 'Settings', state.page == 'settings', function()
+    nav(layout.body - 2, 'Settings', state.page == 'settings', function()
       navigate('settings')
     end, not state.busy)
-    nav(13, 'History', state.page == 'history', function()
+    nav(layout.body + 1, 'History', state.page == 'history', function()
       navigate('history')
     end)
-    nav(16, 'Help', state.page == 'help', function()
+    nav(layout.body + 4, 'Help', state.page == 'help', function()
       navigate('help')
     end)
     if state.preview then
       nav(
-        state.page == 'settings' and 44 or 19,
+        state.page == 'settings' and layout.scrollFooter or layout.body + 7,
         'Current preview',
         state.page == 'preview',
         function()
@@ -563,21 +596,21 @@ local function runUI()
       )
     end
     if state.page == 'settings' then
-      text(3, 19, 'SETTINGS SECTIONS', 26, 'muted')
-      nav(21, 'Tier multipliers', state.settings == 'batch', function()
+      text(3, layout.body + 7, 'SETTINGS SECTIONS', 26, 'muted')
+      nav(layout.body + 9, 'Tier multipliers', state.settings == 'batch', function()
         navigate('settings', 'batch')
       end)
-      nav(24, 'Shared interfaces', state.settings == 'shared', function()
+      nav(layout.body + 12, 'Shared interfaces', state.settings == 'shared', function()
         navigate('settings', 'shared')
       end)
       for n, p in ipairs(Programs.settings) do
         local id = p.id
-        nav(24 + n * 3, p.name, state.settings == id, function()
+        nav(layout.body + 12 + n * 3, p.name, state.settings == id, function()
           navigate('settings', id)
         end)
       end
       local section = Config.section(state.settings)
-      local pageRow = section.pageSize == 9 and 45 or 44
+      local pageRow = layout.scrollFooter + (section.pageSize == 9 and 1 or 0)
       local pages = { {} }
       for _, f in ipairs(fields()) do
         local page = pages[#pages]
@@ -594,7 +627,7 @@ local function runUI()
       local page = pages[state.settingsPage]
       text(
         34,
-        7,
+        layout.title,
         'SETTINGS / '
           .. section.name
           .. (page[1] and page[1].group and (' / ' .. page[1].group) or ''),
@@ -603,25 +636,31 @@ local function runUI()
       )
       text(
         34,
-        8,
+        layout.subtitle,
         'Accept a field or navigate away to save. Numbers accept k / M shorthand.',
         124,
         'muted'
       )
-      local y = section.pageSize == 9 and 10 or 11
+      local y = layout.body - (section.pageSize == 9 and 2 or 1)
       local compact = page[1] and page[1].compact
       if compact then
         local overrides = page[1].group == 'Tier overrides'
         text(
           34,
-          10,
+          layout.body - 2,
           page[1].tableLabel or (overrides and 'MATERIAL TIER' or 'RELATIVE TIER'),
           42,
           'blue'
         )
-        text(80, 10, page[1].valueLabel or (overrides and 'OVERRIDE' or 'MULTIPLIER'), 22, 'blue')
+        text(
+          80,
+          layout.body - 2,
+          page[1].valueLabel or (overrides and 'OVERRIDE' or 'MULTIPLIER'),
+          22,
+          'blue'
+        )
         if overrides then
-          text(115, 10, 'EFFECTIVE', 40, 'blue')
+          text(115, layout.body - 2, 'EFFECTIVE', 40, 'blue')
         end
         text(
           34,
@@ -634,7 +673,7 @@ local function runUI()
           124,
           'muted'
         )
-        y = 12
+        y = layout.body
       end
       for _, f in ipairs(page) do
         if compact then
@@ -719,25 +758,25 @@ local function runUI()
           state.settingsPage = state.settingsPage + 1
         end, state.settingsPage < #pages)
       end
-      button(34, 47, 'Run program', function()
+      button(34, layout.actions, 'Run program', function()
         navigate('programs')
       end)
       if state.settings == 'batch' and cfg.batch.mode == 'tiered' then
-        button(54, 47, 'Effective tiers', function()
+        button(54, layout.actions, 'Effective tiers', function()
           commitEdit()
           state.choice = { label = 'Material budgets at ' .. cfg.batch.currentTier, budgets = true }
         end)
       end
     elseif state.page == 'programs' then
-      text(34, 7, 'RUN A PROGRAM', 124, 'blue')
+      text(34, layout.title, 'RUN A PROGRAM', 124, 'blue')
       text(
         34,
-        8,
+        layout.subtitle,
         'Select what to do. Preview selected builds a plan without changing patterns.',
         124,
         'muted'
       )
-      local y = 11
+      local y = layout.body - 1
       for _, p in ipairs(Programs.list) do
         local id = p.id
         button(34, y, (state.selected == id and '* ' or '') .. p.name, function()
@@ -752,17 +791,23 @@ local function runUI()
         y = y + 3
       end
       local selected = state.selected and Programs.byId[state.selected]
-      local x = button(34, 47, 'Preview selected', function()
+      local x = button(34, layout.actions, 'Preview selected', function()
         action('preview')
       end, selected ~= nil and not selected.unavailable)
-      button(x, 47, 'Program settings', function()
+      button(x, layout.actions, 'Program settings', function()
         navigate('settings', state.selected)
       end, selected ~= nil and #selected.fields > 0)
     elseif state.page == 'preview' then
       local preview = state.preview
       local p = preview and preview.plan
       local current = preview and preview.id or state.selected
-      text(34, 7, 'Preview - ' .. (current and Programs.byId[current].name or ''), 124, 'blue')
+      text(
+        34,
+        layout.title,
+        'Preview - ' .. (current and Programs.byId[current].name or ''),
+        124,
+        'blue'
+      )
       local x = 34
       local tabs = current and Programs.byId[current].previewTabs
         or preview and preview.id == 'assline' and {
@@ -782,41 +827,53 @@ local function runUI()
         }
       for _, tab in ipairs(tabs) do
         local section = tab[1]
-        x = button(x, 9, (state.section == section and '* ' or '') .. tab[2], function()
+        x = button(x, layout.tabs, (state.section == section and '* ' or '') .. tab[2], function()
           state.section = section
           state.offset = 0
         end)
       end
-      scrollRows(34, 12, 74, 31)
-      text(113, 12, 'Summary', 45, 'blue')
+      scrollRows(34, layout.body, 74, layout.bodyBottom - layout.body + 1)
+      text(113, layout.body, 'Summary', 45, 'blue')
       if p then
         if p.kind == 'donorCleanup' then
-          text(113, 14, p.banks .. ' donor interfaces', 45, 'muted')
-          text(113, 15, p.scanned .. ' encoded patterns scanned', 45)
-          text(113, 16, #p.cleanups .. ' recipes to park', 45, 'yellow')
-          text(113, 17, p.parked .. ' already parked', 45, 'green')
-          text(113, 18, p.skipped .. ' skipped; see Patterns', 45, 'muted')
+          text(113, layout.body + 2, p.banks .. ' donor interfaces', 45, 'muted')
+          text(113, layout.body + 3, p.scanned .. ' encoded patterns scanned', 45)
+          text(113, layout.body + 4, #p.cleanups .. ' recipes to park', 45, 'yellow')
+          text(113, layout.body + 5, p.parked .. ' already parked', 45, 'green')
+          text(113, layout.body + 6, p.skipped .. ' skipped; see Patterns', 45, 'muted')
         elseif preview.id == 'assline' then
           --todo remove and unify this
-          text(113, 14, p.scanned .. 'existing patterns scanned', 45)
-          text(113, 15, #p.changes .. 'existing patterns to update', 45, 'green')
-          text(113, 16, p.newRecipes .. ' donor patterns needed', 45, 'yellow')
-          text(113, 17, (#p.recipes - p.newRecipes) .. ' rename recipes reused', 45, 'green')
-          text(113, 18, p.available .. ' processing donors available', 45, 'muted')
-        else
-          text(113, 13, #(p.existing or {}) .. ' existing patterns scanned', 45, 'muted')
-          text(113, 14, p.reused .. ' reused patterns recipes', 45, 'green')
+          text(113, layout.body + 2, p.scanned .. 'existing patterns scanned', 45)
+          text(113, layout.body + 3, #p.changes .. 'existing patterns to update', 45, 'green')
+          text(113, layout.body + 4, p.newRecipes .. ' donor patterns needed', 45, 'yellow')
           text(
             113,
-            15,
+            layout.body + 5,
+            (#p.recipes - p.newRecipes) .. ' rename recipes reused',
+            45,
+            'green'
+          )
+          text(113, layout.body + 6, p.available .. ' processing donors available', 45, 'muted')
+        else
+          text(
+            113,
+            layout.body + 1,
+            #(p.existing or {}) .. ' existing patterns scanned',
+            45,
+            'muted'
+          )
+          text(113, layout.body + 2, p.reused .. ' reused patterns recipes', 45, 'green')
+          text(
+            113,
+            layout.body + 3,
             p.resizeCount .. ' reused patterns to resize',
             45,
             p.resizeCount > 0 and 'yellow_lighter1' or 'muted'
           )
-          text(113, 16, #p.preserved .. ' unrelated kept', 45, 'muted')
+          text(113, layout.body + 4, #p.preserved .. ' unrelated kept', 45, 'muted')
           text(
             113,
-            18,
+            layout.body + 6,
             p.required.processing
               .. '/'
               .. p.available.processing
@@ -824,9 +881,9 @@ local function runUI()
             45,
             p.required.processing < p.available.processing and 'green' or 'red'
           )
-          text(113, 20, #p.moves .. ' sorting moves first', 45)
+          text(113, layout.body + 8, #p.moves .. ' sorting moves first', 45)
         end
-        local y = 22
+        local y = layout.body + 10
         text(
           113,
           y,
@@ -841,7 +898,7 @@ local function runUI()
         )
         local function summaryRow(message, tone)
           for _, row in ipairs(U.wrapRow({ message, tone }, 45, unicode)) do
-            if y < 32 then
+            if y < layout.body + 20 then
               y = y + 1
               text(113, y, row[1], 45, tone)
             end
@@ -857,33 +914,39 @@ local function runUI()
           summaryRow(warning, 'yellow')
         end
         if preview.manifest and #preview.manifest.unresolved > 0 then
-          text(113, 34, 'Registry names need verification.', 45, 'red')
+          text(113, layout.body + 22, 'Registry names need verification.', 45, 'red')
         end
         if C.runner.requiresVerification(preview) then
-          text(113, 36, 'Destination assumption: 36 slots each.', 45, 'yellow')
-          text(113, 37, 'Verify expanded interfaces in the game.', 45, 'muted')
-          button(113, 39, state.verified and '36 slots verified' or 'Verify 36 slots', function()
-            state.verified = not state.verified
-          end, not state.busy)
+          text(113, layout.body + 24, 'Destination assumption: 36 slots each.', 45, 'yellow')
+          text(113, layout.body + 25, 'Verify expanded interfaces in the game.', 45, 'muted')
+          button(
+            113,
+            layout.body + 27,
+            state.verified and '36 slots verified' or 'Verify 36 slots',
+            function()
+              state.verified = not state.verified
+            end,
+            not state.busy
+          )
         else
-          text(113, 36, 'Returns donors to their original slots.', 45, 'muted')
-          text(113, 37, 'Only the shared editor needs free space.', 45, 'muted')
+          text(113, layout.body + 24, 'Returns donors to their original slots.', 45, 'muted')
+          text(113, layout.body + 25, 'Only the shared editor needs free space.', 45, 'muted')
         end
       end
-      local x = button(34, 47, 'Scan', function()
+      local x = button(34, layout.actions, 'Scan', function()
         action('preview')
       end, not state.busy)
-      x = button(x, 47, 'Execute preview', function()
+      x = button(x, layout.actions, 'Execute preview', function()
         action('execute')
       end, executable())
-      x = button(x, 47, 'Program settings', function()
+      x = button(x, layout.actions, 'Program settings', function()
         navigate('settings', preview.id)
       end, not state.busy and preview ~= nil and #Programs.byId[preview.id].fields > 0)
-      button(x, 47, 'Run program', function()
+      button(x, layout.actions, 'Run program', function()
         navigate('programs')
       end, not state.busy)
       if preview and preview.report and not state.busy then
-        button(34, 45, 'Export report', function()
+        button(34, layout.scrollFooter + 1, 'Export report', function()
           local path = '/home/assline-preview.txt'
           local ok, why = pcall(function()
             local file, err = io.open(path, 'w')
@@ -899,45 +962,56 @@ local function runUI()
         end, not state.busy)
       end
     else
-      text(34, 7, state.page == 'history' and 'HISTORY' or 'HELP', 124, 'blue')
-      scrollRows(34, 12, 124, 31)
-      button(34, 47, 'Run program', function()
+      text(34, layout.title, state.page == 'history' and 'HISTORY' or 'HELP', 124, 'blue')
+      scrollRows(34, layout.body, 124, layout.bodyBottom - layout.body + 1)
+      button(34, layout.actions, 'Run program', function()
         navigate('programs')
       end, not state.busy)
     end
     if state.busy then
-      button(113, 47, state.paused and 'Resume' or 'Pause', function()
+      button(113, layout.actions, state.paused and 'Resume' or 'Pause', function()
         state.paused = not state.paused
         status(
           state.paused and 'Paused. Resume continues this run; Stop ends it.' or 'Resuming work.',
           'yellow'
         )
       end, not state.stopRequested)
-      button(127, 47, 'Stop', function()
+      button(127, layout.actions, 'Stop', function()
         state.stopRequested, state.paused = true, false
         status('Stopping after the current pattern transaction / sorting cycle.', 'yellow')
       end)
     elseif C.runner.hasSaved() then
       if state.page ~= 'settings' then
-        button(113, 45, 'Continue last operation', function()
+        button(113, layout.scrollFooter + 1, 'Continue last operation', function()
           action('continue')
         end)
       end
-      button(135, 47, 'Stop saved', function()
+      button(135, layout.actions, 'Stop saved', function()
         state.choice = { label = 'Stop saved operation', discard = true }
       end)
     end
-    button(151, 47, 'Quit', function()
+    button(151, layout.actions, 'Quit', function()
       commitEdit()
       state.stopRequested, state.paused = true, false
       state.running = false
     end)
-    text(3, 46, string.rep('-', 155), 155, 'muted')
-    text(3, 49, state.status, 155, state.tone)
+    text(3, layout.separator, string.rep('-', 155), 155, 'muted')
+    text(3, layout.status, state.status, 155, state.tone)
+    text(
+      111,
+      layout.metrics,
+      string.format(
+        '%.0f%% energy  |  %d KB free',
+        energyFraction() * 100,
+        math.floor(computer.freeMemory() / 1024)
+      ),
+      47,
+      'muted'
+    )
     if C.runner.hasSaved() and not state.busy then
       text(
         3,
-        5,
+        layout.notice,
         'Saved operation available. Continue it, or Stop saved to start fresh.',
         155,
         'muted'
@@ -1030,7 +1104,7 @@ local function runUI()
     end
     if immediate or computer.uptime() - lastProgress >= 1 then
       status(message, 'yellow')
-      text(3, 49, message, 155, 'yellow')
+      text(3, layout.status, message, 155, 'yellow')
       lastProgress = computer.uptime()
     end
   end
@@ -1274,9 +1348,11 @@ local function runUI()
           end
         end
       elseif key == 201 then
-        state.offset = state.offset - 31
+        state.offset = state.offset
+          - (scrollbar and scrollbar.room or layout.bodyBottom - layout.body + 1)
       elseif key == 209 then
-        state.offset = state.offset + 31
+        state.offset = state.offset
+          + (scrollbar and scrollbar.room or layout.bodyBottom - layout.body + 1)
       elseif char == 113 then
         state.running = false
       elseif char == 115 and state.page == 'preview' then

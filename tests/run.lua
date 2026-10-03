@@ -320,15 +320,15 @@ end)
 
 test('full-power UI accepts History and Escape, finishes its current transaction and continues the rest',function()
   files[api.paths.config]=ser(cfg)
-  events={{'touch','screen',38,11,0},{'touch','screen',38,47,0},{'touch','screen',118,39,0},function()
+  events={{'touch','screen',38,6,0},{'touch','screen',38,47,0},{'touch','screen',118,34,0},function()
     callCost=0.05
     local function pending()
       if (callCounts.setInterfacePatternInput or 0)==0 then pollEvents[1]=pending;return 'key_up','kbd',0,0 end
       pollEvents[1]=function()
-        assert(frame[12]:find('RECENT OPERATIONS',1,true),'History did not render during work')
+        assert(frame[7]:find('RECENT OPERATIONS',1,true),'History did not render during work')
         return 'key_down','kbd',27,1
       end
-      return 'touch','screen',5,13,0
+      return 'touch','screen',5,8,0
     end
     pollEvents={pending};return 'touch','screen',48,47,0
   end,function()
@@ -618,7 +618,7 @@ local function click(label,row)
 end
 local function nav(label)
   return function()
-    for y=7,46 do
+    for y=2,46 do
       local x=frame[y] and frame[y]:sub(1,29):find(label,1,true)
       if x then return 'touch','screen',x,y,0 end
     end
@@ -627,9 +627,9 @@ local function nav(label)
 end
 local function field(label)
   return function()
-    for y=10,43 do
+    for y=5,43 do
       if frame[y] and frame[y]:sub(34):find(label,1,true) then
-        local compact=frame[10] and (frame[10]:find('MATERIAL TIER',1,true) or frame[10]:find('RELATIVE TIER',1,true) or frame[10]:find('OUTPUT FORM',1,true))
+        local compact=frame[5] and (frame[5]:find('MATERIAL TIER',1,true) or frame[5]:find('RELATIVE TIER',1,true) or frame[5]:find('OUTPUT FORM',1,true))
         local inline=frame[y]:sub(34):match('^%[ [X ] %] ')
         return 'touch','screen',compact and 80 or 34,(compact or inline) and y or y+1,0
       end
@@ -654,11 +654,14 @@ test('program selection is explicit and all operation controls are on the bottom
   files[api.paths.config]=ser(cfg)
   queue(function()
     assert(frame[47]:find('[ Quit ]',1,true) and not frame[47]:find('[ Recover ]',1,true))
-    assert(not frame[7]:find('[ Scan ]',1,true));snapshot('programs')
+    assert(frame[2]:find('RUN A PROGRAM',1,true))
+    assert(not table.concat(frame,'\n'):find('AE2 / GTNH PATTERN MANAGER',1,true))
+    assert(frame[50]:find('100% energy',1,true) and frame[50]:find('KB free',1,true))
+    assert(not frame[2]:find('[ Scan ]',1,true));snapshot('programs')
     return click('[ Wire insulator ]')()
   end,function()
     assert(mutations==0 and not callCounts.getInterfacesByName)
-    assert(frame[14]:find('* Wire insulator',1,true));return quit()
+    assert(frame[9]:find('* Wire insulator',1,true));return quit()
   end)
   api.runUI()
 end)
@@ -668,11 +671,11 @@ test('shared names survive navigation, quit and a fresh UI invocation',function(
   queue(nav('Settings'),replace('Pattern editor interface','My editor'),replace('New pattern buffer name','My banks'),
     nav('Programs'),nav('Settings'),function()
       local c=unser(files[api.paths.config]);assert(c.shared.editor=='My editor' and c.shared.donors=='My banks')
-      assert(frame[12]:find('My editor',1,true) and frame[16]:find('My banks',1,true));snapshot('settings');return quit()
+      assert(frame[7]:find('My editor',1,true) and frame[11]:find('My banks',1,true));snapshot('settings');return quit()
     end)
   api.runUI()
   queue(nav('Settings'),function()
-    assert(frame[12]:find('My editor',1,true) and frame[16]:find('My banks',1,true));return quit()
+    assert(frame[7]:find('My editor',1,true) and frame[11]:find('My banks',1,true));return quit()
   end)
   api.runUI();assert(mutations==0)
 end)
@@ -681,7 +684,7 @@ test('leaving an active field saves it and program settings do not overwrite sha
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),field('New pattern buffer name'),function() controlDown=true;return 'key_down','kbd',97,30 end,
     {'clipboard','kbd','Uncommitted banks'},nav('Wire insulator'),replace('Insulator interface name','Latex destinations'),
-    click('[ Nothing ]',16),nav('Wiremill'),replace('1x wire interface name','1x wires'),replace('Fine wire interface name','Fine wires'),
+    click('[ Nothing ]',11),nav('Wiremill'),replace('1x wire interface name','1x wires'),replace('Fine wire interface name','Fine wires'),
     nav('Wire insulator'),function()
       local c=unser(files[api.paths.config])
       assert(c.shared.donors=='Uncommitted banks' and c.programs.insulator.destination=='Latex destinations')
@@ -695,11 +698,11 @@ end)
 test('assembly line preview requires explicit capacity verification before execution',function()
   files[api.paths.config]=ser(cfg)
   queue(click('[ Assembly line renamer ]'),click('[ Preview selected ]',47),function()
-    assert(frame[14]:find('patterns scanned',1,true));snapshot('preview')
+    assert(frame[9]:find('patterns scanned',1,true));snapshot('preview')
     assert(mutations==0);return 'touch','screen',48,47,0
-  end,function() assert(mutations==0);return 'touch','screen',118,39,0 end,
-    click('[ Rename recipes ]',9),function()
-      assert(frame[12]:find('CREATE Rename NAME_1',1,true));snapshot('recipes')
+  end,function() assert(mutations==0);return 'touch','screen',118,34,0 end,
+    click('[ Rename recipes ]',4),function()
+      assert(frame[7]:find('CREATE Rename NAME_1',1,true));snapshot('recipes')
       return 'touch','screen',48,47,0
     end,function()
       assert(target.patterns[0].inputs[3].label=='NAME_1' and not files[api.paths.pending])
@@ -712,7 +715,7 @@ test('Esc cancels only an active edit and cursor repositioning does not discard 
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),replace('New pattern buffer name','Saved banks'),field('Pattern editor interface'),
     {'key_down','kbd',88,45},function() controlDown=true;return 'key_down','kbd',97,30 end,
-    {'touch','screen',36,12,0},{'key_down','kbd',8,14},{'key_down','kbd',27,1},nav('Programs'),function()
+    {'touch','screen',36,7,0},{'key_down','kbd',8,14},{'key_down','kbd',27,1},nav('Programs'),function()
       local c=unser(files[api.paths.config]);assert(c.shared.donors=='Saved banks' and c.shared.editor==cfg.shared.editor)
       return quit()
     end)
@@ -722,7 +725,7 @@ end)
 test('idle events and edits do not repaint the whole settings page',function()
   files[api.paths.config]=ser(cfg);local fills
   queue(nav('Settings'),function() fills=gpuFills;return 'key_up','kbd',0,0 end,
-    function() assert(gpuFills==fills);return 'touch','screen',150,12,0 end,{'key_down','kbd',8,14},function()
+    function() assert(gpuFills==fills);return 'touch','screen',150,7,0 end,{'key_down','kbd',8,14},function()
       assert(gpuFills==fills);return 'key_down','kbd',27,1
     end,quit)
   api.runUI()
@@ -732,8 +735,8 @@ test('history remains a separate page and lists operations newest first',functio
   files[api.paths.config]=ser(cfg)
   files['/home/assline-perf.log']='\nuptime=1 scan complete\nold report\n\nuptime=2 apply complete\nnew report\n'
   queue(nav('History'),function()
-    assert(frame[12]:find('RECENT OPERATIONS',1,true) and frame[15]:find('uptime=2 apply complete',1,true))
-    assert(frame[18]:find('uptime=1 scan complete',1,true));snapshot('history');return quit()
+    assert(frame[7]:find('RECENT OPERATIONS',1,true) and frame[10]:find('uptime=2 apply complete',1,true))
+    assert(frame[13]:find('uptime=1 scan complete',1,true));snapshot('history');return quit()
   end)
   api.runUI();assert(mutations==0)
 end)
@@ -864,14 +867,14 @@ test('journal changes during execution do not repaint unchanged preview panels',
     cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
     files[api.paths.config]=ser(cfg)
     local fills,writes,polls,pendingSeen,clearedSeen
-    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',39),function()
+    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',34),function()
       callCost=0.1;polls=0
       local function observe()
         if not fills then
           fills=gpuFills;writes=cp(gpuWrites)
         else
           assert(gpuFills==fills,'Journal change cleared the screen')
-          for row=12,44 do assert(gpuWrites[row]==writes[row],'Unchanged preview row repainted: '..row) end
+          for row=7,44 do assert(gpuWrites[row]==writes[row],'Unchanged preview row repainted: '..row) end
         end
         polls=polls+1
         if files[api.paths.pending] then pendingSeen=true
@@ -1296,8 +1299,8 @@ test('Run program chooser and insulator preview share the same settings and exec
   withMatrix(function()
     cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={};files[api.paths.config]=ser(cfg)
     queue(nav('History'),click('[ Run program ]',47),click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
-      assert(frame[7]:find('Preview - Wire insulator',1,true) and mutations==0);snapshot('insulator_preview')
-      return 'touch','screen',118,39,0
+      assert(frame[2]:find('Preview - Wire insulator',1,true) and mutations==0);snapshot('insulator_preview')
+      return 'touch','screen',118,34,0
     end,click('[ Execute preview ]',47),function()
       assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
       return quit()
@@ -1344,8 +1347,8 @@ end)
 test('form divisor settings use the shared compact table and save inline edits',function()
   cfg.batch.costScaling='on';files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Bending machine'),click('[ Next ]',44),function()
-    assert(frame[10]:find('OUTPUT FORM',1,true) and frame[10]:find('BATCH DIVISOR',1,true))
-    assert(frame[22]:find('Auto',1,true))
+    assert(frame[5]:find('OUTPUT FORM',1,true) and frame[5]:find('BATCH DIVISOR',1,true))
+    assert(frame[17]:find('Auto',1,true))
     return field('Dense (9x)')()
   end,{'clipboard','kbd','3'},{'key_down','kbd',13,28},function()
     assert(unser(files[api.paths.config]).programs.bender.divisorplateDense=='3')
@@ -1385,11 +1388,11 @@ test('bender imprints ingot routes, stores circuits externally and switches 1x p
     assert(#preview.manifest.recipes[1].inputs==1 and preview.manifest.recipes[1].inputs[1].name=='gregtech:gt.metaitem.01')
     files[api.paths.config]=ser(cfg)
     queue(nav('Programs'),click('[ Bending machine ]'),click('[ Preview selected ]',47),function()
-      assert(frame[7]:find('Preview - Bending machine',1,true))
+      assert(frame[2]:find('Preview - Bending machine',1,true))
       snapshot('bender_preview')
-      return click('[ Details ]',9)()
+      return click('[ Details ]',4)()
     end,function()
-      assert(table.concat({frame[13] or '',frame[14] or '',frame[15] or ''},' '):find('circuit 1',1,true))
+      assert(table.concat({frame[8] or '',frame[9] or '',frame[10] or ''},' '):find('circuit 1',1,true))
       snapshot('bender_circuits')
       return quit()
     end)
@@ -1420,8 +1423,8 @@ test('bender output switches toggle independently and migrate into the unified s
   assert(migrated.programs.bender.plateSource=='ingot' and migrated.programs.bender.springSmallSource=='stick')
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Bending machine'),function()
-    assert(frame[24]:find('[ X 1x ]',1,true) and frame[24]:find('[ X 2x ]',1,true))
-    return click('[ X 1x ]',24)()
+    assert(frame[19]:find('[ X 1x ]',1,true) and frame[19]:find('[ X 2x ]',1,true))
+    return click('[ X 1x ]',19)()
   end,function()
     local c=unser(files[api.paths.config])
     local choices=api.programs.byId.bender.formChoices
@@ -1441,27 +1444,27 @@ test('Fluid Shaper enables each destination beside its interface field',function
     'Turbine blade interface name')
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Fluid Shaper'),function()
-    assert(frame[12]:find('[   ]',1,true) and frame[12]:find('(not configured)',1,true))
-    assert(frame[20]:find('[ X ]',1,true) and frame[20]:find('Plates',1,true))
+    assert(frame[7]:find('[   ]',1,true) and frame[7]:find('(not configured)',1,true))
+    assert(frame[15]:find('[ X ]',1,true) and frame[15]:find('Plates',1,true))
     assert(frame[44]:find('Settings page 1/3',1,true))
     snapshot('fluid_shaper_settings')
     return click('[ Next ]',44)()
   end,function()
-    assert(frame[36]:find('[ X ]',1,true) and frame[36]:find('(not configured)',1,true))
+    assert(frame[31]:find('[ X ]',1,true) and frame[31]:find('(not configured)',1,true))
     snapshot('fluid_shaper_settings_page_2')
     return click('[ Next ]',44)()
   end,function()
-    assert(frame[11]:find('Small pipe interface name',1,true))
-    assert(frame[23]:find('Huge pipe interface name',1,true))
-    assert(frame[27]:find('Pattern multiplier',1,true))
+    assert(frame[6]:find('Small pipe interface name',1,true))
+    assert(frame[18]:find('Huge pipe interface name',1,true))
+    assert(frame[22]:find('Pattern multiplier',1,true))
     return click('[ Previous ]',44)()
   end,function()
-    return click('[ X ]',36)()
+    return click('[ X ]',31)()
   end,function()
     local saved=unser(files[api.paths.config])
     assert(saved.programs.fluidShaper.forms=='plate')
     api.config.requireProgram(saved,'fluidShaper')
-    assert(frame[36]:find('[   ]',1,true))
+    assert(frame[31]:find('[   ]',1,true))
     return quit()
   end)
   api.runUI()
@@ -1669,7 +1672,7 @@ test('tier settings use a modal selector, save globally and show the shifted bud
     end,function()
       local c=unser(files[api.paths.config])
       assert(c.batch.mode=='tiered' and c.batch.currentTier=='UV')
-      assert(frame[15]:find('[ UV ]',1,true))
+      assert(frame[10]:find('[ UV ]',1,true))
       snapshot('tier_settings')
       return click('[ Effective tiers ]',47)()
     end,function()
@@ -1685,7 +1688,7 @@ test('tier settings use a modal selector, save globally and show the shifted bud
     end)
   api.runUI()
   queue(nav('Settings'),nav('Tier multipliers'),function()
-    assert(frame[15]:find('[ UV ]',1,true))
+    assert(frame[10]:find('[ UV ]',1,true))
     assert(unser(files[api.paths.config]).batch.below2=='96')
     return quit()
   end)
@@ -1706,7 +1709,7 @@ test('batch UI hides inactive controls and edits overrides in one compact table'
       return click('[ Next ]',45)()
     end,replace('UHV','2'),function()
       assert(unser(files[api.paths.config]).batch.overrideUHV=='2')
-      assert(frame[10]:find('MATERIAL TIER',1,true) and frame[10]:find('EFFECTIVE',1,true))
+      assert(frame[5]:find('MATERIAL TIER',1,true) and frame[5]:find('EFFECTIVE',1,true))
       snapshot('tier_overrides')
       return quit()
     end)
@@ -1751,17 +1754,17 @@ test('settings sidebar separates Current preview and auto addresses remain blank
     files[api.paths.config]=ser(cfg)
     queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),nav('Settings'),
       nav('Shared interfaces'),function()
-        assert(frame[19]:find('SETTINGS SECTIONS',1,true))
+        assert(frame[14]:find('SETTINGS SECTIONS',1,true))
         assert(frame[44]:sub(1,29):find('Current preview',1,true))
-        assert(frame[42]:sub(1,29):find('Fluid Shaper',1,true))
-        for _,y in ipairs({20,24,28}) do
+        assert(frame[37]:sub(1,29):find('Fluid Shaper',1,true))
+        for _,y in ipairs({15,19,23}) do
           assert(frame[y]:sub(34,37)=='auto' and foreground[y][34]==0x8297AB)
         end
         local c=unser(files[api.paths.config])
         assert(c.shared.terminalAddress=='' and c.shared.editorAddress=='' and c.shared.dataAddress=='')
         snapshot('shared_auto');return nav('Current preview')()
       end,function()
-        assert(frame[7]:find('Preview - Wire insulator',1,true));return quit()
+        assert(frame[2]:find('Preview - Wire insulator',1,true));return quit()
       end)
     api.runUI()
   end)
@@ -1770,7 +1773,7 @@ test('policy checkboxes share a label row, leave one blank row and preserve choi
   files[api.paths.config]=ser(cfg)
   local function checkRow(label,checked,hasHelp)
     local content='[ '..(checked and 'X' or ' ')..' ] '..label
-    for y=10,43 do
+    for y=5,43 do
       if frame[y]:sub(34,33+#content)==content then
         local gap=y+(hasHelp and 2 or 1)
         assert(frame[gap]:sub(34):match('^%s*$'),'expected one empty row after '..label)
@@ -1813,7 +1816,7 @@ test('preview voltage text groups EU values and colors only the voltage foregrou
     files[api.paths.config]=ser(cfg)
     queue(nav('Programs'),click('[ Wiremill ]'),click('[ Preview selected ]',47),function()
       local found
-      for y=10,42 do
+      for y=7,42 do
         local x=frame[y]:find('30,720 EU/t (LuV)',1,true)
         if x then
           assert(background[y][x]==background[y][x-1] and background[y][x+15]==background[y][x])
@@ -1863,9 +1866,9 @@ test('shortage preview allows Execute and the UI Stop button stops refill waitin
     cfg.programs.insulator.destination=cfg.programs.assline.target
     target.patterns={};buffer.patterns={};files[api.paths.config]=ser(cfg)
     queue(nav('Programs'),click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
-      assert(((frame[22] or '')..(frame[23] or '')..(frame[24] or '')):find('wait for refills.',1,true))
+      assert(((frame[17] or '')..(frame[18] or '')..(frame[19] or '')):find('wait for refills.',1,true))
       snapshot('maker_refill_preview')
-      return 'touch','screen',118,39,0
+      return 'touch','screen',118,34,0
     end,function()
       local polls=0
       local function cancelWhenWaiting()
@@ -1927,12 +1930,12 @@ end)
 test('wiremill route choices save independently and default to ingots',function()
   files[api.paths.config]=ser(cfg)
   assert(cfg.programs.wiremill.wireSource=='ingot' and cfg.programs.wiremill.fineSource=='ingot')
-  queue(nav('Settings'),nav('Wiremill'),click('[ Rod ]',20),click('[ 1x wire ]',24),
+  queue(nav('Settings'),nav('Wiremill'),click('[ Rod ]',15),click('[ 1x wire ]',19),
     nav('Programs'),nav('Settings'),function()
       local v=unser(files[api.paths.config]).programs.wiremill
       assert(v.wireSource=='stick' and v.fineSource=='wire1')
-      assert(background[20][frame[20]:find('[ Rod ]',1,true)]==0x246B47)
-      assert(background[24][frame[24]:find('[ 1x wire ]',1,true)]==0x246B47)
+      assert(background[15][frame[15]:find('[ Rod ]',1,true)]==0x246B47)
+      assert(background[19][frame[19]:find('[ 1x wire ]',1,true)]==0x246B47)
       snapshot('wiremill_settings');return quit()
     end)
   api.runUI()
@@ -1997,7 +2000,7 @@ test('insulator preview uses readable groups and contains no external-stock dump
     files[api.paths.config]=ser(cfg)
     queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
       local interfaceY,materialY
-      for y=12,42 do
+      for y=7,42 do
         if frame[y]:find('+-- Interface',34,true) then interfaceY=y end
         if frame[y]:find('  |  A',34,true) then materialY=y end
       end
@@ -2062,12 +2065,12 @@ test('preview identifies kept encoded outputs, excluded forms and labeled sortin
       return table.concat(rows,'\n')
     end
     queue(nav('Programs'),click('[ Wire insulator ]'),click('[ Preview selected ]',47),
-      click('[ Existing ]',9),function()
+      click('[ Existing ]',4),function()
         local screen=screenText()
         assert(screen:find('B 1x Cable',1,true) and screen:find('SORTING MOVES',1,true))
         assert(screen:find('Requested inputs:',1,true))
         snapshot('diagnosis_existing')
-        return click('[ Excluded ]',9)()
+        return click('[ Excluded ]',4)()
       end,function()
         local screen=screenText()
         assert(screen:find('EXCLUDED OUTPUTS',1,true))
@@ -2094,13 +2097,13 @@ test('five polymer choices save immediately with one highlighted choice and inde
   local steps={nav('Settings'),nav('Wire insulator')}
   for _,option in ipairs(choices) do
     local label,value=option[1],option[2]
-    steps[#steps+1]=click('[ '..label..' ]',16)
+    steps[#steps+1]=click('[ '..label..' ]',11)
     steps[#steps+1]=function()
       assert(unser(files[api.paths.config]).programs.insulator.polymer==value)
       assert(unser(files[api.paths.config]).programs.insulator.pps=='on')
       for _,other in ipairs(choices) do
-        local x=assert(frame[16]:find('[ '..other[1]..' ]',1,true))
-        assert(background[16][x]==(other[2]==value and 0x246B47 or 0x27465E))
+        local x=assert(frame[11]:find('[ '..other[1]..' ]',1,true))
+        assert(background[11][x]==(other[2]==value and 0x246B47 or 0x27465E))
       end
       return 'key_up','kbd',0,0
     end
@@ -2118,14 +2121,103 @@ test('native touch drag drop scrolls, clamps and releases the scrollbar without 
   local function position() return tonumber(frame[44]:match('Rows (%d+)')) end
   local bottom
   queue(nav('History'),function() assert(position()==1);return 'drag','screen',159,42,0,'Player' end,
-    function() assert(position()==1);return 'touch','screen',159,12,0,'Player' end,
+    function() assert(position()==1);return 'touch','screen',159,7,0,'Player' end,
     {'drag','other-screen',159,100,0,'Player'},function() assert(position()==1);return 'drag','screen',159,100,0,'Other' end,
     function() assert(position()==1);return 'drag','screen',159,100,0,'Player' end,
     function() bottom=position();assert(bottom>70);snapshot('history_scrollbar');return 'drop','screen',159,100,0,'Player' end,
-    {'drag','screen',159,12,0,'Player'},function() assert(position()==bottom);return 'touch','screen',159,42,0,'Player' end,
+    {'drag','screen',159,12,0,'Player'},function() assert(position()==bottom);return 'touch','screen',159,37,0,'Player' end,
     {'drag','screen',159,-50,0,'Player'},function() assert(position()==1);return 'drop','screen',159,12,0,'Player' end,
-    {'touch','screen',50,20,0,'Player'},{'drag','screen',159,42,0,'Player'},function() assert(position()==1);return quit() end)
+    {'touch','screen',50,15,0,'Player'},{'drag','screen',159,42,0,'Player'},function() assert(position()==1);return quit() end)
   api.runUI()
+end)
+
+test('destination links jump between grouped banks after wrapping and align short final groups',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    data.capabilities[1].plate=true;data.capabilities[1].foil=true;data.capabilities[1].springSmall=true
+    data.capabilities[1].stick=true
+    data.families.gt.plate={name='gregtech:gt.metaitem.01',prefix=17000}
+    data.families.gt.foil={name='gregtech:gt.metaitem.01',prefix=24000}
+    data.families.gt.springSmall={name='gregtech:gt.metaitem.01',prefix=25000}
+    data.families.gt.stick={name='gregtech:gt.metaitem.01',prefix=23000}
+    data.production={{ingot_plate=true,ingot_foil=true},
+      {ingot_plate=true,ingot_foil=true,stick_springSmall=true}}
+    data.materials={}
+    for n=1,40 do
+      data.materials[n]={name=string.format('Material%02d',n),family='gt',dsf=n,a=1,p=n==40 and 2 or 1}
+    end
+    data.rules={
+      {id='plate',mode='bender',process='ingot_plate',requires={'ingot','plate'},
+        inputs={{f='ingot',n=1}},outputs={{f='plate',n=1}},stock={}},
+      {id='foil',mode='bender',process='ingot_foil',requires={'ingot','foil'},
+        inputs={{f='ingot',n=1}},outputs={{f='foil',n=4}},stock={}},
+      {id='spring',mode='bender',process='stick_springSmall',requires={'stick','springSmall'},
+        inputs={{f='stick',n=1}},outputs={{f='springSmall',n=2}},stock={}}}
+    local foils='Foils with a long destination name that wraps across multiple lines in the preview'
+    cfg.programs.bender.plate='Plates';cfg.programs.bender.foil=foils;cfg.programs.bender.spring='Springs'
+    cfg.programs.bender.forms='plate,foil,springSmall'
+    target.name='Plates';target.patterns={[0]=pattern({item('Unrelated',1,900)})}
+    iface('Plates',30);iface(foils,40,{[0]=pattern({item('Unrelated',1,901)})});iface(foils,50)
+    iface('Springs',60,{[0]=pattern({item('Unrelated',1,902)})})
+    files[api.paths.config]=ser(cfg)
+    local reads,fills
+    local function heading(name)
+      assert(frame[8]:sub(34):find('DESTINATION: '..name,1,true),'Jump did not align '..name)
+      assert(callCounts.getInterfacesByLocation==reads and mutations==0,'Navigation performed a new scan')
+      assert(gpuFills==fills,'Destination navigation cleared the screen')
+    end
+    queue(click('[ Bending machine ]'),click('[ Preview selected ]',47),function()
+      reads,fills=callCounts.getInterfacesByLocation,gpuFills
+      assert(frame[7]:sub(34,107):match('^%s*$'))
+      assert(frame[42]:find('Next: Jump to Foils',1,true))
+      return 'scroll','screen',50,20,-40
+    end,function()
+      assert(frame[7]:sub(34,107):match('^%s*$'))
+      assert(frame[42]:find('Next: Jump to Foils',1,true))
+      return click('Next: Jump to Foils',42)()
+    end,function()
+      heading('Foils with a long destination')
+      assert(frame[9]:sub(34):find('preview',1,true),'Wrapped destination continuation missing')
+      assert(frame[7]:find('Previous: Jump to Plates',1,true))
+      assert(frame[42]:find('Next: Jump to Springs',1,true))
+      return 'scroll','screen',50,20,-1
+    end,function()
+      assert(frame[7]:find('Previous: Jump to Plates',1,true))
+      snapshot('destination_links_middle')
+      return click('Next: Jump to Springs',42)()
+    end,function()
+      heading('Springs')
+      assert(frame[42]:sub(34,107):match('^%s*$'))
+      assert(frame[7]:find('Previous: Jump to Foils',1,true))
+      snapshot('destination_links_last')
+      return click('Previous: Jump to Foils',7)()
+    end,function()
+      heading('Foils with a long destination')
+      return click('Previous: Jump to Plates',7)()
+    end,function()
+      heading('Plates')
+      assert(frame[7]:sub(34,107):match('^%s*$'))
+      return click('[ Existing ]',4)()
+    end,function()
+      fills=gpuFills
+      return click('Next: Jump to Foils',42)()
+    end,function()
+      heading('Foils with a long destination')
+      return click('Next: Jump to Springs',42)()
+    end,function()
+      heading('Springs')
+      return quit()
+    end)
+    api.runUI()
+  end)
+end)
+
+test('word wrapping retains one destination bookmark on its first physical row only',function()
+  local U=require('assline_util')
+  local rows=U.wrapRow({'DESTINATION: '..string.rep('long name ',12),'blue',nil,nil,nil,
+    {destination='long name'}},35,require('unicode'))
+  assert(#rows>1 and rows[1][6].destination=='long name')
+  for n=2,#rows do assert(rows[n][6]==nil) end
 end)
 
 test('ultimate processing donors without crafting tags are recognized across eight terminal banks and remain recoverable',function()
@@ -2281,7 +2373,7 @@ test('UI Pause Resume Stop and optional continuation remain usable during an act
   withMatrix(function()
     cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
     files[api.paths.config]=ser(cfg)
-    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',39),function()
+    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',34),function()
       callCost=0.05
       local before,polls
       local function pauseAfterSetter()
@@ -2314,7 +2406,7 @@ test('UI Pause Resume Stop and optional continuation remain usable during an act
       assert(table.concat(frame,'\n'):find('Continue last operation, or choose a program',1,true))
       snapshot('stopped_run');return click('[ Continue last operation ]',45)()
     end,function()
-      assert(frame[7]:find('Preview - Wire insulator',1,true))
+      assert(frame[2]:find('Preview - Wire insulator',1,true))
       assert(table.concat(frame,'\n'):find('1 reuse',1,true))
       return quit()
     end)
@@ -2336,7 +2428,7 @@ test('Stop saved is optional and its discard dialog lets a new preview replace a
       assert(not api.runner.hasSaved() and mutations==before and editor.patterns[0])
       return click('[ Scan ]',47)()
     end,function()
-      assert(frame[7]:find('Preview - Wire insulator',1,true));return quit()
+      assert(frame[2]:find('Preview - Wire insulator',1,true));return quit()
     end)
     api.runUI()
   end)
@@ -2345,7 +2437,7 @@ test('Quit during Pause finishes the current transaction and leaves optional con
   withMatrix(function()
     cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
     files[api.paths.config]=ser(cfg)
-    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',39),function()
+    queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',34),function()
       callCost=0.05
       local function pause()
         if (callCounts.setInterfacePatternInput or 0)==0 then
@@ -2513,9 +2605,9 @@ end)
 test('compact program chooser exposes cleanup without paging or a 36-slot verification requirement',function()
   files[api.paths.config]=ser(cfg)
   queue(click('[ Clean donor buffer ]'),click('[ Preview selected ]',47),function()
-    assert(frame[7]:find('Clean donor buffer',1,true))
-    assert(not frame[39]:find('Verify 36 slots',1,true))
-    assert(frame[9]:find('Details',1,true) and not frame[9]:find('Capacity',1,true))
+    assert(frame[2]:find('Clean donor buffer',1,true))
+    assert(not frame[34]:find('Verify 36 slots',1,true))
+    assert(frame[4]:find('Details',1,true) and not frame[4]:find('Capacity',1,true))
     snapshot('donor_cleanup_preview')
     return click('[ Execute preview ]',47)()
   end,function()
@@ -2531,7 +2623,7 @@ test('saved continuation does not cover program choices and its right edge invok
   files[api.paths.run]=ser({version=1,program='donorCleanup',configKey=require('assline_util').canonical(cfg)})
   queue(function()
     local found={}
-    for y=11,43 do
+    for y=6,43 do
       for _,program in ipairs(api.programs.list) do
         if frame[y]:find('[ '..program.name..' ]',1,true) then found[program.id]=y end
       end
@@ -2544,7 +2636,7 @@ test('saved continuation does not cover program choices and its right edge invok
     -- The former Next button occupied this part of Continue's hit area.
     return 'touch','screen',137,45,0
   end,function()
-    assert(frame[7]:find('Preview - Clean donor buffer',1,true),'Continue was intercepted by another control')
+    assert(frame[2]:find('Preview - Clean donor buffer',1,true),'Continue was intercepted by another control')
     assert(mutations==0)
     return 'interrupted'
   end)

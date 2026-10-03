@@ -40,6 +40,14 @@ Settings has shared interfaces/hardware and a separate section for each program.
    **36 usable slots each**; the preview states the minimum interface count.
    Verify the interfaces in game, select **Verify 36 slots**, then **Execute preview**.
 
+The Patterns and Existing lists have pinned **Previous / Next: Jump to** links
+when more than one destination is present. Each jump aligns that destination's
+heading at the top, including short final groups. Interfaces sharing a name
+stay within one destination. Wheel, Page Up/Down and the draggable scrollbar
+continue to work. The application banner has been removed; energy and free
+memory appear at the bottom, leaving five more rows for list content (three
+when both jump rows are reserved).
+
 Wiremill selects one input route per output: both default to **Ingot**. Fine wire
 can instead use Rod or 1x wire. Only recipes present in the scrape are generated.
 Wiremill, the insulator and the bending machine each have a **Pattern multiplier** setting, default

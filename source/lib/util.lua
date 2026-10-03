@@ -171,8 +171,8 @@ end
 -- Shared row construction for preview and UI text, with one default tone.
 function M.rows()
   local result = {}
-  local function add(text, tone, guideWidth, guideTone, accent)
-    result[#result + 1] = { text, tone or 'text', guideWidth, guideTone, accent }
+  local function add(text, tone, guideWidth, guideTone, accent, marker)
+    result[#result + 1] = { text, tone or 'text', guideWidth, guideTone, accent, marker }
   end
   return result, add
 end
@@ -217,7 +217,8 @@ function M.wrapRow(row, width, unicode)
         accent = { from = prefixLength + first, length = last - first + 1, tier = row[5].tier }
       end
     end
-    result[#result + 1] = { prefix .. chunk, row[2], prefixLength, row[4], accent }
+    result[#result + 1] =
+      { prefix .. chunk, row[2], prefixLength, row[4], accent, #result == 0 and row[6] or nil }
     local tail = unicode.sub(remaining, count + 1)
     remaining = tail:gsub('^%s+', '')
     consumed = consumed + count + unicode.len(tail) - unicode.len(remaining)

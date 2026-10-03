@@ -4,6 +4,9 @@ local Planner = require('assline_planner')
 local Batch = require('assline_batch')
 local M = {}
 local interfaceTone = 'muted'
+local function destinationRow(add, name)
+  add('DESTINATION: ' .. tostring(name), 'blue', nil, nil, nil, { destination = name })
+end
 
 local function spacer(rows, add)
   if #rows > 0 and rows[#rows][1] ~= '' then
@@ -73,7 +76,7 @@ function M.planRows(plan, manifest)
     if group ~= entry.group then
       spacer(rows, add)
       group, bank, material = entry.group, nil, nil
-      add('DESTINATION: ' .. tostring(group), 'blue')
+      destinationRow(add, group)
     end
     local location = entry.destination and U.where(entry.destination) or 'needs space'
     if bank ~= location then
@@ -165,7 +168,7 @@ function M.existingRows(plan)
     if group ~= entry.interface then
       spacer(rows, add)
       group, bank = entry.interface, nil
-      add('DESTINATION: ' .. group, 'blue')
+      destinationRow(add, group)
     end
     if bank ~= location then
       if bank then
