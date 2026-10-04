@@ -758,13 +758,6 @@ shaperFields[#shaperFields + 1] = formSwitches(
   'plate,turbineBlade'
 )
 shaperFields[#shaperFields + 1] = multiplier()
-shaperFields[#shaperFields + 1] = field(
-  'preferSolidIngots',
-  'Prefer solid ingot production',
-  'Skip ingot casts with a verified solid route. Off permits native ABS/liquid routes; the live ME check still applies.',
-  'on',
-  'toggle'
-)
 M.list = {
   {
     id = 'assline',
@@ -2810,7 +2803,6 @@ function M.plan(request, snapshot, checkpoint)
     moves = {},
     creates = {},
     resizes = {},
-    parks = {},
     resizeCount = 0,
     preserved = {},
     reused = 0,
@@ -2829,7 +2821,6 @@ function M.plan(request, snapshot, checkpoint)
     end
   end
   local groups, workspace, tokens, occupied = {}, nil, {}, {}
-  local parkCount = 0
   for _, i in ipairs(interfaces) do
     if checkpoint then
       checkpoint()
@@ -2847,12 +2838,6 @@ function M.plan(request, snapshot, checkpoint)
         g.slots[#g.slots + 1] = e
         local pattern = i.patterns[slot]
         if pattern then
-          if pattern.parkReason then
-            parkCount = parkCount + 1
-            if not pattern.donor then
-              block('Cannot disable ingot cast: ' .. (pattern.reason or 'unsupported metadata'))
-            end
-          end
           local t = { pattern = pattern, current = e }
           tokens[#tokens + 1] = t
           g.tokens[#g.tokens + 1] = t
@@ -2962,12 +2947,8 @@ function M.plan(request, snapshot, checkpoint)
       if not t.selected then
         n = n + 1
         t.goal = g.slots[n]
-        p.preserved[#p.preserved + 1] = {
-          from = t.current,
-          to = t.goal,
-          fingerprint = t.pattern.fingerprint,
-          parkReason = t.pattern.parkReason,
-        }
+        p.preserved[#p.preserved + 1] =
+          { from = t.current, to = t.goal, fingerprint = t.pattern.fingerprint }
       end
     end
     if n > #g.slots then
@@ -2986,12 +2967,8 @@ function M.plan(request, snapshot, checkpoint)
   for _, g in pairs(groups) do
     if #g.wanted == 0 then
       for _, t in ipairs(g.tokens) do
-        p.preserved[#p.preserved + 1] = {
-          from = t.current,
-          to = t.current,
-          fingerprint = t.pattern.fingerprint,
-          parkReason = t.pattern.parkReason,
-        }
+        p.preserved[#p.preserved + 1] =
+          { from = t.current, to = t.current, fingerprint = t.pattern.fingerprint }
       end
     end
   end
@@ -3013,12 +2990,8 @@ function M.plan(request, snapshot, checkpoint)
     end
   end
   if
-    (
-      needsMoves
-      or parkCount > 0
-      or p.resizeCount > 0
-      or p.required.crafting + p.required.processing > 0
-    ) and not workspace
+    (needsMoves or p.resizeCount > 0 or p.required.crafting + p.required.processing > 0)
+    and not workspace
   then
     block('Leave an empty slot in the dedicated editing/workspace interface')
   end
@@ -3057,16 +3030,6 @@ function M.plan(request, snapshot, checkpoint)
       move(stuck, workspace)
     end
   end
-  for _, entry in ipairs(p.preserved) do
-    if entry.parkReason then
-      p.parks[#p.parks + 1] = {
-        to = copy(entry.to),
-        workspace = copy(workspace),
-        fingerprint = entry.fingerprint,
-        reason = entry.parkReason,
-      }
-    end
-  end
   for _, entry in ipairs(p.layout) do
     if entry.resize then
       p.resizes[#p.resizes + 1] = {
@@ -3099,7 +3062,7 @@ end
 function M.revalidate(request, snapshot, preview, checkpoint)
   local fresh = M.plan(request, snapshot, checkpoint)
   local function operations(p)
-    return encoded({ p.layout, p.moves, p.creates, p.resizes, p.parks, p.preserved, p.required })
+    return encoded({ p.layout, p.moves, p.creates, p.resizes, p.preserved, p.required })
   end
   need(
     #fresh.errors == 0
@@ -3230,7 +3193,7 @@ function M.resolve(data, material, form)
   local item = registeredItem(data, resolveForm(data, material, form))
   return item
 end
-function M.eligible(data, material, rule, options)
+function M.eligible(data, material, rule)
   if (material.deny or {})[rule.id] then
     return false
   end
@@ -3257,12 +3220,6 @@ function M.eligible(data, material, rule, options)
     end
     if data.source.materialSourcePolicy and rule.outputs[1].f == 'ingot' then
       local sources = (data.origins or {})[material.o] or {}
-      if
-        sources.native_ingot
-        and (not sources.native_molten or not options or options.preferSolidIngots ~= false)
-      then
-        return false, 'Ingots have a direct solid production route.', true
-      end
       if not sources.native_molten then
         return false, 'No verified native liquid source for ingots.'
       end
@@ -3397,7 +3354,6 @@ function M.compile(data, mode, options, checkpoint)
       multiplier = multiplier,
       batch = U.clone(options.batch),
       formDivisors = U.clone(options.formDivisors),
-      preferSolidIngots = options.preferSolidIngots ~= false,
     },
     recipes = {},
     unusedExcluded = 0,
@@ -3407,7 +3363,7 @@ function M.compile(data, mode, options, checkpoint)
   }
   local seen, unresolved, skipped = {}, {}, {}
   manifest.unresolved = {}
-  local function exclude(material, rule, reason, retire)
+  local function exclude(material, rule, reason)
     local out = rule.outputs[1]
     local item = M.resolve(data, material, out.f)
     local key = item.name .. ':' .. item.damage
@@ -3420,7 +3376,6 @@ function M.compile(data, mode, options, checkpoint)
         name = item.name,
         damage = item.damage,
         reason = reason,
-        retireRecipe = retire and ruleRecipe(data, material, rule, options, 1, nil, {}) or nil,
       }
     end
   end
@@ -3435,12 +3390,12 @@ function M.compile(data, mode, options, checkpoint)
         and (not rule.polymer or rule.polymer == (polymer == 'none' and 'pvcSmall' or polymer))
         and (not options.sources or options.sources[rule.outputs[1].f] == rule.inputs[1].f)
       then
-        local eligible, reason, retire = M.eligible(data, material, rule, options)
+        local eligible, reason = M.eligible(data, material, rule)
         if reason == 'unused' then
           manifest.unusedExcluded = manifest.unusedExcluded + 1
           exclude(material, rule)
         elseif reason then
-          exclude(material, rule, reason, retire)
+          exclude(material, rule, reason)
         end
         if eligible then
           if not material.tier then
@@ -3584,10 +3539,6 @@ function M.planRows(plan, manifest)
       'yellow_lighter1'
     )
   end
-  if #(plan.parks or {}) > 0 then
-    add(#plan.parks .. ' solid-route ingot casts will be disabled (PARK).', 'yellow')
-    add('Their encoded patterns stay in their slots as inert donor placeholders.', 'muted')
-  end
   local group, bank, material
   for _, entry in ipairs(plan.layout) do
     local recipe = details[entry.key]
@@ -3702,8 +3653,7 @@ function M.existingRows(plan)
       add,
       '  |  ',
       entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
-      entry.status == 'PARK' and 'red'
-        or entry.status == 'RESIZE' and 'yellow_lighter1'
+      entry.status == 'RESIZE' and 'yellow_lighter1'
         or entry.status == 'KEEP' and 'yellow'
         or 'green'
     )
@@ -3759,10 +3709,7 @@ function M.excludedRows(manifest)
     #(manifest.skipped or {}) .. ' output forms excluded by material, use or tier policy.',
     'muted'
   )
-  add(
-    'Existing patterns are kept except matching solid-route ingot casts (PARK); see Existing.',
-    'muted'
-  )
+  add('Existing patterns for these outputs are kept; see Existing.', 'muted')
   local material
   for _, item in ipairs(manifest.skipped or {}) do
     if material ~= item.material then
@@ -4062,18 +4009,12 @@ local function explainExisting(plan, snapshot, request, manifest)
         or outputKey
         or 'Unknown output'
       local reason
-      if keptEntry and keptEntry.parkReason then
-        reason = keptEntry.parkReason .. ' Replace this cast with an inert donor placeholder.'
-      elseif reusedEntry then
+      if reusedEntry then
         reason = reusedEntry.resize and 'Recipe matches; batch will be resized.'
           or 'Recipe matches the selected route.'
       elseif skippedItem then
         reason = 'Skipped: '
           .. (skippedItem.reason or 'no path to a non-recycling product in the recipe export.')
-        if skippedItem.retireRecipe and pattern.hasFluidInput then
-          plan.warnings[#plan.warnings + 1] = label
-            .. ': existing fluid-input recipe differs; inspect or remove it manually.'
-        end
       elseif wantedKeys[interface.name .. ':' .. tostring(pattern.recipeKey)] then
         reason = 'Duplicate of a selected recipe; kept after the planned patterns.'
       elseif wantedOutput and wantedOutput.destination ~= interface.name then
@@ -4090,9 +4031,7 @@ local function explainExisting(plan, snapshot, request, manifest)
         interface = interface.name,
         from = from,
         to = reusedEntry and reusedEntry.destination or keptEntry and keptEntry.to or from,
-        status = keptEntry and keptEntry.parkReason and 'PARK'
-          or reusedEntry and (reusedEntry.resize and 'RESIZE' or 'REUSE')
-          or 'KEEP',
+        status = reusedEntry and (reusedEntry.resize and 'RESIZE' or 'REUSE') or 'KEEP',
         label = label,
         output = pattern.output,
         inputs = pattern.inputSummary,
@@ -4149,12 +4088,6 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     data = selectDevice('data', c.shared.dataAddress),
   }
   local snapshot = { terminal = hw.terminal.address, interfaces = {} }
-  local retireKeys = {}
-  for _, item in ipairs(manifest.skipped or {}) do
-    if item.retireRecipe then
-      retireKeys[recipeKey(hw.data, item.retireRecipe)] = item.reason
-    end
-  end
   for _, g in ipairs(groups) do
     local found = discover(hw, g.name)
     for _, entry in ipairs(found) do
@@ -4203,9 +4136,6 @@ local function scanManifest(c, manifest, routing, progress, control, started)
             local r, issue = patternRecipe(hw.data, p, root)
             if r then
               value.kind = r.kind
-              for _, input in pairs(r.inputs) do
-                value.hasFluidInput = value.hasFluidInput or input.type == 'fluid'
-              end
               value.inputSummary = U.ingredientSummary(r.inputs)
               if r.outputs[1] then
                 value.output = U.clone(r.outputs[1])
@@ -4214,9 +4144,6 @@ local function scanManifest(c, manifest, routing, progress, control, started)
               if valid then
                 value.recipeKey = key
                 value.scale = scale
-                if g.role == 'destination' then
-                  value.parkReason = retireKeys[key]
-                end
               else
                 value.matchIssue = 'Encoded ingredients could not be compared'
               end
@@ -4319,7 +4246,6 @@ local function programRouting(c, id)
       forms = forms,
       sources = sources,
       formDivisors = formDivisors,
-      preferSolidIngots = values.preferSolidIngots ~= 'off',
     },
     program
 end
@@ -4424,7 +4350,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
   Planner.revalidate(request, snapshot, baseline, gate)
   local hw = connect(c, progress, control)
   local editor = current(hw, hw.buffer)
-  local firstEdit = plan.parks[1] or plan.resizes[1] or plan.creates[1]
+  local firstEdit = plan.resizes[1] or plan.creates[1]
   local slot = firstEdit and firstEdit.workspace.slot
   if slot then
     U.check(
@@ -4443,7 +4369,6 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     program = id,
     created = #plan.creates,
     resized = #plan.resizes,
-    parked = #plan.parks,
     sorted = #plan.moves,
   })
   if #plan.moves > 0 then
@@ -4467,26 +4392,6 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     end
   end
   local takeDonor = donorPool(hw, c.shared.donors, protected, progress)
-  local marker = #plan.parks > 0 and C.donors.marker(hw) or nil
-  for _, entry in ipairs(plan.parks) do
-    gate()
-    local original = current(hw, entry.to).patterns[entry.to.slot]
-    U.check(patternFingerprint(hw, original) == entry.fingerprint, 'Cast changed before parking')
-    U.check(safeDonor(hw.data, original), 'Cast is no longer editable')
-    local op = {
-      kind = 'park',
-      destination = entry.to,
-      slot = entry.workspace.slot,
-      original = compact(original),
-      recipe = marker,
-    }
-    saveOp(hw, op)
-    finish(hw, op, progress)
-    clearOp()
-    if progress then
-      progress('Disabled ingot cast in slot ' .. entry.to.slot)
-    end
-  end
   local function imprint(entry, resize)
     local recipe = recipes[entry.key]
     U.check(recipe and recipe.kind == 'processing', 'Unsupported pattern kind')
@@ -4544,7 +4449,7 @@ function C.runner.hasChanges(preview)
     return #plan.cleanups > 0
   end
   return preview.id == 'assline' and #plan.changes > 0
-    or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes + #plan.parks) > 0
+    or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
 end
 function C.runner.requiresVerification(preview)
   return Programs.byId[preview.id].requiresCapacityVerification ~= false
@@ -4644,7 +4549,6 @@ local function donorMarker(hw)
   local marker = { type = 'item', name = 'minecraft:paper', damage = 0, size = 1, tag = tag }
   return { kind = 'processing', inputs = { marker }, outputs = { U.clone(marker) } }
 end
-C.donors.marker = donorMarker
 
 function C.donors.scan(c, progress, control)
   local hw = connect(c, progress, control)
@@ -5645,9 +5549,6 @@ local function runUI()
             p.resizeCount > 0 and 'yellow_lighter1' or 'muted'
           )
           text(113, layout.body + 4, #p.preserved .. ' unrelated kept', 45, 'muted')
-          if #p.parks > 0 then
-            text(113, layout.body + 5, #p.parks .. ' ingot casts to disable', 45, 'yellow')
-          end
           text(
             113,
             layout.body + 6,

@@ -1,9 +1,12 @@
-"""Find native ingot and liquid producers in the full desktop recipe export.
+"""Find ingot endpoint recipes and native liquid producers in the full export.
 
 Extraction, finished-part remelting and container transport are not creation.
-Same-material plasma cooling must trace to an independent liquid producer; a
-closed heat/cool cycle cannot establish a source. Raw alloy dust is permitted.
-Only deduplicated source flags are deployed to OC, not the evidence below.
+Same-material plasma cooling must trace to a liquid-producing recipe; a closed
+heat/cool cycle cannot establish a source. Raw alloy dust is permitted, but its
+upstream supply is not traced by this pass. Liquid flags are route estimates.
+The solid counts observe the last conversion only: they do not prove an
+independent dust supply and must not choose between solid and liquid routes.
+Only deduplicated liquid-source flags are deployed to OC, not this evidence.
 """
 import argparse
 from collections import defaultdict
@@ -176,4 +179,4 @@ if __name__ == '__main__':
     fluids = [f for row in result['materials'].values() for f in row['fluids'].values()]
     print(result['recipeCount'], 'recipes;', sum(f['native'] for f in fluids),
           'native liquid sources;', sum(row['solid']['count'] > 0 for row in result['materials'].values()),
-          'materials with direct ingot production')
+          'materials with untraced ingot endpoint recipes')

@@ -17,7 +17,6 @@ local function donorMarker(hw)
   local marker = { type = 'item', name = 'minecraft:paper', damage = 0, size = 1, tag = tag }
   return { kind = 'processing', inputs = { marker }, outputs = { U.clone(marker) } }
 end
-C.donors.marker = donorMarker
 
 function C.donors.scan(c, progress, control)
   local hw = connect(c, progress, control)

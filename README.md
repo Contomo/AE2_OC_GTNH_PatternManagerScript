@@ -128,32 +128,26 @@ It replaces disposable recipes and does not provide undo.
 
 The preview uses labels such as `30,720 EU/t (LuV)` with tier-colored text
 blended at 50%, and explains exclusions in Excluded and Existing. Existing patterns
-excluded by settings are kept. A Fluid Shaper preview can still execute when its
-only changes are disabling obsolete ingot casts.
+excluded by settings are kept. Selecting no recipes gives a non-executable preview.
 
-Fluid Shaper's **Prefer solid ingot production** defaults on: it skips casts with
-a verified solid production route, even when the export also contains a native
-molten route. Turning it off permits those native-liquid/ABS routes; materials
-whose molten form only comes from extraction remain excluded. New ingot casts are additionally
-skipped if the connected ME network already advertises the ingot as craftable.
-The block editor interface supplies this read-only query; a multipart editor uses
-the sole connected `me_controller` instead. The availability check is repeated
-before execution, and a changed result invalidates the preview.
-With multiple network components, select one using **ME network component
-address** under Shared interfaces.
+New Fluid Shaper ingot casts are skipped if the connected ME network already
+advertises the ingot as craftable. The block editor interface supplies this
+read-only query; a multipart editor uses the sole connected `me_controller`
+instead. The check is repeated before execution, and changed availability
+invalidates the preview. With multiple network components, select one using
+**ME network component address** under Shared interfaces.
 
-An existing cast matching an excluded solid-route ingot appears as **PARK** in
-Existing. Executing the preview replaces its recipe with the same inert donor
-placeholder used by Clean donor buffer, retaining its encoded item and original
-metadata. It stays in its destination slot and can be moved back to the donor
-buffer later. Nonmatching recipes remain untouched, with a warning for fluid-input
-recipes that need manual inspection. Parking uses the shared journal and editor;
-Pause, Stop and Continue work at the same operation boundaries.
+A dust-to-ingot recipe does not prove independent solid production: its dust may
+only be obtainable by grinding an ingot cast from fluid. The scrape's direct-solid
+flag is not used to exclude casts or disable existing patterns. Both solid and
+native-liquid routes may be valid for the same material, such as Potin; catalog
+availability alone cannot choose the production route installed in your base.
 
 OC's ME crafting query exposes outputs, not each competing recipe's inputs. A
 matching cast already in its configured destination therefore does not exclude
-itself merely because ME advertises that output. The independent solid-route
-check is what retires such casts for materials such as Naquadah.
+itself merely because ME advertises that output. The current ME guard prevents
+new duplicate ingot casts; it cannot determine whether an installed cast also
+has a competing solid-production recipe. Existing patterns remain intact.
 
 Material tiers come from the pinned beta-3 questbook's item/ingredient lists,
 side-chapter prerequisites and pinned GT ore placement rules. Dusts, ores,

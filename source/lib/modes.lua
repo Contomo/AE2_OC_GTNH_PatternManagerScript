@@ -112,7 +112,7 @@ function M.resolve(data, material, form)
   local item = registeredItem(data, resolveForm(data, material, form))
   return item
 end
-function M.eligible(data, material, rule, options)
+function M.eligible(data, material, rule)
   if (material.deny or {})[rule.id] then
     return false
   end
@@ -139,12 +139,6 @@ function M.eligible(data, material, rule, options)
     end
     if data.source.materialSourcePolicy and rule.outputs[1].f == 'ingot' then
       local sources = (data.origins or {})[material.o] or {}
-      if
-        sources.native_ingot
-        and (not sources.native_molten or not options or options.preferSolidIngots ~= false)
-      then
-        return false, 'Ingots have a direct solid production route.', true
-      end
       if not sources.native_molten then
         return false, 'No verified native liquid source for ingots.'
       end
@@ -279,7 +273,6 @@ function M.compile(data, mode, options, checkpoint)
       multiplier = multiplier,
       batch = U.clone(options.batch),
       formDivisors = U.clone(options.formDivisors),
-      preferSolidIngots = options.preferSolidIngots ~= false,
     },
     recipes = {},
     unusedExcluded = 0,
@@ -289,7 +282,7 @@ function M.compile(data, mode, options, checkpoint)
   }
   local seen, unresolved, skipped = {}, {}, {}
   manifest.unresolved = {}
-  local function exclude(material, rule, reason, retire)
+  local function exclude(material, rule, reason)
     local out = rule.outputs[1]
     local item = M.resolve(data, material, out.f)
     local key = item.name .. ':' .. item.damage
@@ -302,7 +295,6 @@ function M.compile(data, mode, options, checkpoint)
         name = item.name,
         damage = item.damage,
         reason = reason,
-        retireRecipe = retire and ruleRecipe(data, material, rule, options, 1, nil, {}) or nil,
       }
     end
   end
@@ -317,12 +309,12 @@ function M.compile(data, mode, options, checkpoint)
         and (not rule.polymer or rule.polymer == (polymer == 'none' and 'pvcSmall' or polymer))
         and (not options.sources or options.sources[rule.outputs[1].f] == rule.inputs[1].f)
       then
-        local eligible, reason, retire = M.eligible(data, material, rule, options)
+        local eligible, reason = M.eligible(data, material, rule)
         if reason == 'unused' then
           manifest.unusedExcluded = manifest.unusedExcluded + 1
           exclude(material, rule)
         elseif reason then
-          exclude(material, rule, reason, retire)
+          exclude(material, rule, reason)
         end
         if eligible then
           if not material.tier then

@@ -321,22 +321,20 @@ test('Fluid Shaper ingots require native liquid production; solid-only and unkno
     fixture.materials[n]={name=name,family='gt',dsf=n,a=1,p=1,o=n,molten='molten.test'..n}
   end
   local manifest=M.compile(fixture,'solidifier')
-  assert(#manifest.recipes==5 and #manifest.skipped==3)
+  assert(#manifest.recipes==6 and #manifest.skipped==2)
   local counts={}
   for _,recipe in ipairs(manifest.recipes) do
     counts[recipe.material]=(counts[recipe.material] or 0)+1
   end
-  assert(counts.LiquidOnly==2 and counts.BothSources==1 and counts.SolidOnly==1 and counts.Unknown==1)
+  assert(counts.LiquidOnly==2 and counts.BothSources==2 and counts.SolidOnly==1 and counts.Unknown==1)
   for _,item in ipairs(manifest.skipped) do
     assert(item.form=='ingot')
-    assert(item.reason==(item.material~='Unknown'
-      and 'Ingots have a direct solid production route.'
-      or 'No verified native liquid source for ingots.'))
-    assert((item.retireRecipe~=nil)==(item.material~='Unknown'))
+    assert(item.reason=='No verified native liquid source for ingots.')
+    assert(item.retireRecipe==nil)
   end
 end)
 
-test('scraped solid-route ingots are excluded while plates remain; liquid preference permits native ABS casts',function()
+test('casts without native liquid sources remain excluded while native ABS casts stay eligible',function()
   local manifest=M.compile(data,'solidifier',{forms={ingot=true,plate=true}})
   local vgPlate,absIngot,vgExcluded=false,false,false
   for _,recipe in ipairs(manifest.recipes) do
@@ -349,17 +347,11 @@ test('scraped solid-route ingots are excluded while plates remain; liquid prefer
   end
   for _,item in ipairs(manifest.skipped) do
     if item.material=='VanadiumGallium' and item.form=='ingot' then
-      assert(item.reason=='Ingots have a direct solid production route.')
+      assert(item.reason=='No verified native liquid source for ingots.')
       vgExcluded=true
     end
   end
-  assert(vgPlate and not absIngot and vgExcluded)
-  manifest=M.compile(data,'solidifier',{forms={ingot=true},preferSolidIngots=false})
-  for _,recipe in ipairs(manifest.recipes) do
-    if recipe.material=='AbyssalAlloy' then absIngot=true end
-    assert(recipe.material~='VanadiumGallium')
-  end
-  assert(absIngot)
+  assert(vgPlate and absIngot and vgExcluded)
 end)
 
 test('Fluid Shaper compiles only verified molten plate and turbine-blade routes',function()
@@ -474,25 +466,21 @@ test('all scraped rules have material costs and Chromatic Glass dense plates sca
   end
 end)
 
-test('scraped Tairitsu ring is selected at UHV and Naquadah casts retire despite a native liquid route',function()
+test('Tairitsu ring stays UHV and a scraped dust-to-ingot endpoint does not exclude Naquadah or Potin',function()
   local batch=U.clone(require('assline_config').defaults.batch)
   batch.mode='tiered';batch.currentTier='UHV'
   local manifest=M.compile(data,'solidifier',{forms={ingot=true,ring=true},batch=batch})
-  local ring,retire=false,false
+  local ring,naquadah,potin=false,false,false
   for _,r in ipairs(manifest.recipes) do
     if r.material=='Tairitsu' and r.outputForm=='ring' then
       assert(r.outputs[1].name=='bartworks:gt.bwMetaGeneratedring' and r.outputs[1].damage==10106)
       assert(r.batch.materialTier=='UHV');ring=true
     end
-    assert(not(r.material=='Naquadah' and r.outputForm=='ingot'))
+    if r.material=='Naquadah' and r.outputForm=='ingot' then naquadah=true end
+    if r.material=='Potin' and r.outputForm=='ingot' then potin=true end
   end
-  for _,entry in ipairs(manifest.skipped) do
-    if entry.material=='Naquadah' and entry.form=='ingot' then
-      assert(entry.retireRecipe.inputs[1].name=='molten.naquadah')
-      retire=true
-    end
-  end
-  assert(ring and retire)
+  assert(ring and naquadah and potin)
+
 end)
 
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

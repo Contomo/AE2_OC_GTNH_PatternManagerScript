@@ -136,7 +136,9 @@ class MaterialSourceTests(unittest.TestCase):
             both = compile_matrix(catalog, registry, resources={r['id']: r for r in resources},
                                   material_sources=evidence)
             both_flags = both['origins'][both['materials'][0]['o'] - 1]
-            self.assertTrue(both_flags['native_ingot'] and both_flags['native_molten'])
+            self.assertTrue(both_flags['native_molten'])
+            self.assertNotIn('native_ingot', both_flags)
+            self.assertEqual(matrix, both)
             self.assertEqual(matrix['rules'], both['rules'])
             self.assertEqual(matrix['capabilities'], both['capabilities'])
             self.assertEqual(matrix['production'], both['production'])

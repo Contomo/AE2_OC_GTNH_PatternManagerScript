@@ -70,10 +70,6 @@ function M.planRows(plan, manifest)
       'yellow_lighter1'
     )
   end
-  if #(plan.parks or {}) > 0 then
-    add(#plan.parks .. ' solid-route ingot casts will be disabled (PARK).', 'yellow')
-    add('Their encoded patterns stay in their slots as inert donor placeholders.', 'muted')
-  end
   local group, bank, material
   for _, entry in ipairs(plan.layout) do
     local recipe = details[entry.key]
@@ -188,8 +184,7 @@ function M.existingRows(plan)
       add,
       '  |  ',
       entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
-      entry.status == 'PARK' and 'red'
-        or entry.status == 'RESIZE' and 'yellow_lighter1'
+      entry.status == 'RESIZE' and 'yellow_lighter1'
         or entry.status == 'KEEP' and 'yellow'
         or 'green'
     )
@@ -245,10 +240,7 @@ function M.excludedRows(manifest)
     #(manifest.skipped or {}) .. ' output forms excluded by material, use or tier policy.',
     'muted'
   )
-  add(
-    'Existing patterns are kept except matching solid-route ingot casts (PARK); see Existing.',
-    'muted'
-  )
+  add('Existing patterns for these outputs are kept; see Existing.', 'muted')
   local material
   for _, item in ipairs(manifest.skipped or {}) do
     if material ~= item.material then

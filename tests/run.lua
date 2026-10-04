@@ -783,7 +783,7 @@ local function withIngotShaper(f)
     local data=package.loaded.assline_data
     data.source.materialSourcePolicy='native-material-sources-v1'
     data.production={{molten_ingot=true}}
-    data.origins={{native_molten=true},{native_molten=true,native_ingot=true}}
+    data.origins={{native_molten=true},{native_ingot=true}}
     for n,m in ipairs(data.materials) do m.o=n;m.molten='molten.test'..n end
     data.rules={{id='cast',mode='solidifier',process='molten_ingot',requires={'ingot'},
       inputs={{fluid='material',n=144}},outputs={{f='ingot',n=1}},stock={}}}
@@ -803,7 +803,7 @@ test('ingot preview skips ME craftable outputs without changing existing solid r
     networkCraftables['gregtech:gt.metaitem.01:11001']=true
     target.patterns[0]=pattern({item('Dust',1,2001)},{item('Ingot',1,11001)})
     local p=api.runner.preview(cfg,'fluidShaper')
-    assert(mutations==0 and #p.plan.creates==0 and #p.plan.parks==0)
+    assert(mutations==0 and #p.plan.creates==0)
     assert(#p.manifest.recipes==0 and #p.manifest.skipped==2)
     assert(p.plan.existing[1].status=='KEEP')
     assert(p.manifest.skipped[2].reason:find('already craftable',1,true))
@@ -873,55 +873,35 @@ test('ME recipe changes invalidate both added and skipped ingot previews before 
   end)
 end)
 
-test('solid-route casts are parked in place while unrelated recipes survive sorting',function()
-  withIngotShaper(function()
-    target.patterns[0]=ingotCast(2,1024)
-    target.patterns[1]=pattern({item('Unrelated',3,88)},{item('Other output',1,99)})
+test('dust-to-ingot evidence never disables an existing native-liquid cast',function()
+  withIngotShaper(function(data)
+    data.materials={data.materials[2]}
+    data.origins[2].native_molten=true
+    target.patterns[0]=ingotCast(2,1)
+    target.patterns[0].name='appliedenergistics2:item.ItemEncodedUltimatePattern'
+    networkCraftables['gregtech:gt.metaitem.01:11002']=true
+    local original=ser(target.patterns[0])
     local p=api.runner.preview(cfg,'fluidShaper')
-    assert(mutations==0 and #p.plan.parks==1 and #p.plan.creates==1)
-    assert(p.plan.existing[1].status=='PARK')
-    assert(p.report:find('will be disabled',1,true))
+    assert(mutations==0 and p.plan.reused==1 and #p.plan.creates==0)
+    assert(p.plan.existing[1].status=='REUSE' and not api.runner.hasChanges(p))
     api.runner.execute(cfg,p)
-    assert(target.patterns[0].outputs[1].damage==11001)
-    assert(target.patterns[1].outputs[1].name=='minecraft:paper')
-    assert(target.patterns[1].name=='appliedenergistics2:item.ItemEncodedPattern')
-    assert(unser(target.patterns[1].tag).__value.preserved.__value==42)
-    assert(target.patterns[2].outputs[1].damage==99)
-    p=api.runner.preview(cfg,'fluidShaper');assert(#p.plan.parks==0)
+    assert(mutations==0 and ser(target.patterns[0])==original)
+    assert(not p.report:find('PARK',1,true))
   end)
 end)
 
-test('parking a solid-route ultimate cast recovers an interrupted edit without donors',function()
-  for _,stage in ipairs({'send-after','set-after'}) do
-    reset()
-    withIngotShaper(function(data)
-      data.materials={data.materials[2]}
-      target.patterns[0]=ingotCast(2,1024)
-      target.patterns[0].name='appliedenergistics2:item.ItemEncodedUltimatePattern'
-      buffer.patterns={}
-      local p=api.runner.preview(cfg,'fluidShaper');assert(#p.plan.parks==1)
-      fail={label=stage}
-      mustFail(function() api.runner.execute(cfg,p) end,'injected')
-      assert(files[api.paths.pending]);api.recover(cfg)
-      assert(not files[api.paths.pending] and next(editor.patterns)==nil)
-      assert(target.patterns[0].outputs[1].name=='minecraft:paper')
-      assert(target.patterns[0].name=='appliedenergistics2:item.ItemEncodedUltimatePattern')
-      assert(#api.runner.preview(cfg,'fluidShaper').plan.parks==0)
-    end)
-  end
-end)
-
-test('nonmatching fluid casts remain untouched with a warning and parking requires free editor space',function()
+test('both native source routes remain available and obsolete preference settings are ignored',function()
   withIngotShaper(function(data)
     data.materials={data.materials[2]}
-    target.patterns[0]=ingotCast(2,1)
-    target.patterns[0].inputs[1].size=145;refresh(target.patterns[0])
+    data.origins[2].native_molten=true
+    local old=cp(cfg);old.programs.fluidShaper.preferSolidIngots='on'
+    cfg=api.config.migrate(old)
+    assert(cfg.programs.fluidShaper.preferSolidIngots==nil)
     local p=api.runner.preview(cfg,'fluidShaper')
-    assert(#p.plan.parks==0 and #p.plan.warnings==1 and p.plan.existing[1].status=='KEEP')
-    target.patterns[0]=ingotCast(2,1)
-    for slot=0,35 do editor.patterns[slot]=cp(buffer.patterns[0]) end
+    assert(#p.plan.creates==1 and #p.manifest.skipped==0 and mutations==0)
+    networkCraftables['gregtech:gt.metaitem.01:11002']=true
     p=api.runner.preview(cfg,'fluidShaper')
-    assert(#p.plan.errors>0 and #p.plan.parks==0 and mutations==0)
+    assert(#p.plan.creates==0 and #p.manifest.skipped==1 and mutations==0)
   end)
 end)
 

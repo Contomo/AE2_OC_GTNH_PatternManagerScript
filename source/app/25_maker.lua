@@ -179,18 +179,12 @@ local function explainExisting(plan, snapshot, request, manifest)
         or outputKey
         or 'Unknown output'
       local reason
-      if keptEntry and keptEntry.parkReason then
-        reason = keptEntry.parkReason .. ' Replace this cast with an inert donor placeholder.'
-      elseif reusedEntry then
+      if reusedEntry then
         reason = reusedEntry.resize and 'Recipe matches; batch will be resized.'
           or 'Recipe matches the selected route.'
       elseif skippedItem then
         reason = 'Skipped: '
           .. (skippedItem.reason or 'no path to a non-recycling product in the recipe export.')
-        if skippedItem.retireRecipe and pattern.hasFluidInput then
-          plan.warnings[#plan.warnings + 1] = label
-            .. ': existing fluid-input recipe differs; inspect or remove it manually.'
-        end
       elseif wantedKeys[interface.name .. ':' .. tostring(pattern.recipeKey)] then
         reason = 'Duplicate of a selected recipe; kept after the planned patterns.'
       elseif wantedOutput and wantedOutput.destination ~= interface.name then
@@ -207,9 +201,7 @@ local function explainExisting(plan, snapshot, request, manifest)
         interface = interface.name,
         from = from,
         to = reusedEntry and reusedEntry.destination or keptEntry and keptEntry.to or from,
-        status = keptEntry and keptEntry.parkReason and 'PARK'
-          or reusedEntry and (reusedEntry.resize and 'RESIZE' or 'REUSE')
-          or 'KEEP',
+        status = reusedEntry and (reusedEntry.resize and 'RESIZE' or 'REUSE') or 'KEEP',
         label = label,
         output = pattern.output,
         inputs = pattern.inputSummary,
@@ -266,12 +258,6 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     data = selectDevice('data', c.shared.dataAddress),
   }
   local snapshot = { terminal = hw.terminal.address, interfaces = {} }
-  local retireKeys = {}
-  for _, item in ipairs(manifest.skipped or {}) do
-    if item.retireRecipe then
-      retireKeys[recipeKey(hw.data, item.retireRecipe)] = item.reason
-    end
-  end
   for _, g in ipairs(groups) do
     local found = discover(hw, g.name)
     for _, entry in ipairs(found) do
@@ -320,9 +306,6 @@ local function scanManifest(c, manifest, routing, progress, control, started)
             local r, issue = patternRecipe(hw.data, p, root)
             if r then
               value.kind = r.kind
-              for _, input in pairs(r.inputs) do
-                value.hasFluidInput = value.hasFluidInput or input.type == 'fluid'
-              end
               value.inputSummary = U.ingredientSummary(r.inputs)
               if r.outputs[1] then
                 value.output = U.clone(r.outputs[1])
@@ -331,9 +314,6 @@ local function scanManifest(c, manifest, routing, progress, control, started)
               if valid then
                 value.recipeKey = key
                 value.scale = scale
-                if g.role == 'destination' then
-                  value.parkReason = retireKeys[key]
-                end
               else
                 value.matchIssue = 'Encoded ingredients could not be compared'
               end
@@ -436,7 +416,6 @@ local function programRouting(c, id)
       forms = forms,
       sources = sources,
       formDivisors = formDivisors,
-      preferSolidIngots = values.preferSolidIngots ~= 'off',
     },
     program
 end
@@ -541,7 +520,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
   Planner.revalidate(request, snapshot, baseline, gate)
   local hw = connect(c, progress, control)
   local editor = current(hw, hw.buffer)
-  local firstEdit = plan.parks[1] or plan.resizes[1] or plan.creates[1]
+  local firstEdit = plan.resizes[1] or plan.creates[1]
   local slot = firstEdit and firstEdit.workspace.slot
   if slot then
     U.check(
@@ -560,7 +539,6 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     program = id,
     created = #plan.creates,
     resized = #plan.resizes,
-    parked = #plan.parks,
     sorted = #plan.moves,
   })
   if #plan.moves > 0 then
@@ -584,26 +562,6 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     end
   end
   local takeDonor = donorPool(hw, c.shared.donors, protected, progress)
-  local marker = #plan.parks > 0 and C.donors.marker(hw) or nil
-  for _, entry in ipairs(plan.parks) do
-    gate()
-    local original = current(hw, entry.to).patterns[entry.to.slot]
-    U.check(patternFingerprint(hw, original) == entry.fingerprint, 'Cast changed before parking')
-    U.check(safeDonor(hw.data, original), 'Cast is no longer editable')
-    local op = {
-      kind = 'park',
-      destination = entry.to,
-      slot = entry.workspace.slot,
-      original = compact(original),
-      recipe = marker,
-    }
-    saveOp(hw, op)
-    finish(hw, op, progress)
-    clearOp()
-    if progress then
-      progress('Disabled ingot cast in slot ' .. entry.to.slot)
-    end
-  end
   local function imprint(entry, resize)
     local recipe = recipes[entry.key]
     U.check(recipe and recipe.kind == 'processing', 'Unsupported pattern kind')
@@ -661,7 +619,7 @@ function C.runner.hasChanges(preview)
     return #plan.cleanups > 0
   end
   return preview.id == 'assline' and #plan.changes > 0
-    or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes + #plan.parks) > 0
+    or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
 end
 function C.runner.requiresVerification(preview)
   return Programs.byId[preview.id].requiresCapacityVerification ~= false

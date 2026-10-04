@@ -323,8 +323,8 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             origin = {}
             if fluid.get('native'):
                 origin['native_molten'] = True
-            if evidence.get('solid', {}).get('count', 0):
-                origin['native_ingot'] = True
+            # Dust-to-ingot endpoint recipes do not prove where the dust comes
+            # from. Do not deploy an independent-solid-source flag from them.
             if origin:
                 identity = tuple(sorted(origin))
                 if identity not in origin_index:
