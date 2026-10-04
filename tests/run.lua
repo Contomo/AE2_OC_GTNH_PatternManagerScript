@@ -2779,6 +2779,153 @@ test('saved continuation does not cover program choices and its right edge invok
   api.runUI()
 end)
 
+local function transitionFixture()
+  cfg.programs.implosionTransition.source='Old implosion'
+  cfg.programs.implosionTransition.destination='Electric implosion'
+  target.name='Old implosion'
+  dest1.name='Electric implosion'
+  target.patterns={}
+  local tnt={name='minecraft:tnt',damage=0,size=32,label='TNT'}
+  target.patterns[0]=pattern({tnt,item('Flawed gem',256,28208)},
+    {item('Gem',64,123),item('Tiny Dark Ash',128,816)})
+  return target,dest1
+end
+
+test('implosion transition discovers all remote banks, previews removals and fills target holes without donors',function()
+  local old,new=transitionFixture()
+  local secondOld=iface('Old implosion',-10,{[5]=cp(old.patterns[0])})
+  local secondNew=iface('Electric implosion',5)
+  for slot=0,35 do new.patterns[slot]=pattern({item('Existing',1,777)}) end
+  new.patterns[4]=nil
+  local untouched=ser(new.patterns[3]);local donors=ser(buffer.patterns)
+  cfg.shared.donors='No actual donor banks'
+  local preview=api.runner.preview(cfg,'implosionTransition')
+  local p=preview.plan
+  assert(mutations==0 and #p.errors==0 and #p.transfers==2)
+  assert(p.sourceBanks==2 and p.targetBanks==2 and p.free==37)
+  assert(p.transfers[1].from.location.x==-10 and p.transfers[1].to.slot==4)
+  assert(p.transfers[2].to.location.x==5 and p.transfers[2].to.slot==0)
+  assert(preview.report:find('Remove inputs: 32 x TNT',1,true))
+  assert(preview.report:find('Remove outputs: 128 x Tiny Pile of Dark Ashes',1,true))
+  api.runner.execute(cfg,preview)
+  assert(next(old.patterns)==nil and next(secondOld.patterns)==nil)
+  assert(new.patterns[4].inputs[1].size==256 and not new.patterns[4].inputs[2])
+  assert(new.patterns[4].outputs[1].size==64 and not new.patterns[4].outputs[2])
+  assert(secondNew.patterns[0] and ser(new.patterns[3])==untouched and ser(buffer.patterns)==donors)
+  assert(next(editor.patterns)==nil and not api.runner.hasSaved())
+  assert(not api.runner.hasChanges(api.runner.preview(cfg,'implosionTransition')))
+end)
+
+test('transition preserves Count and Cnt batches, ultimate metadata, primary tiny outputs and unrelated secondary outputs',function()
+  local old,new=transitionFixture()
+  local industrial={name='IC2:blockITNT',damage=0,size=1024,label='Industrial TNT'}
+  local input={item('Input',2048,11),industrial}
+  local output={item('Primary tiny dust',4096,816),item('Other useful output',1024,765),item('Tiny Ash',2048,815)}
+  old.patterns[0]=pattern(input,output)
+  old.patterns[1]=newPattern(input,output)
+  old.patterns[2]=pattern(input,output)
+  old.patterns[2].name='appliedenergistics2:item.ItemEncodedUltimatePattern'
+  local root=unser(old.patterns[2].tag);root.__value.crafting=nil;old.patterns[2].tag=ser(root)
+  local names={};for slot,p in pairs(old.patterns) do names[slot]=p.name end
+  api.runner.execute(cfg,api.runner.preview(cfg,'implosionTransition'))
+  for slot,p in pairs(new.patterns) do
+    assert(p.name==names[slot] and unser(p.tag).__value.preserved.__value==42)
+    assert(not p.inputs[2] and not p.outputs[3])
+    assert(p.outputs[1].damage==816 and p.outputs[2].damage==765)
+    if p.newEncoding then
+      assert(p.rawCounts.inputs[1]==2048 and p.rawCounts.outputs[1]==4096 and p.rawCounts.outputs[2]==1024)
+    else assert(p.inputs[1].size==2048 and p.outputs[1].size==4096 and p.outputs[2].size==1024) end
+  end
+end)
+
+test('transition skips crafting, unsafe flags and empty results while moving already clean processing patterns',function()
+  local old,new=transitionFixture()
+  old.patterns[1]=pattern({item()},nil,true)
+  old.patterns[2]=cp(old.patterns[0])
+  local root=unser(old.patterns[2].tag);root.__value.substitute=typed('byte',1);old.patterns[2].tag=ser(root)
+  old.patterns[3]=pattern({{name='minecraft:tnt',size=1,damage=0}})
+  old.patterns[4]=pattern({item('Clean input',1,321)},{item('Clean output',1,654)})
+  local kept={};for slot=1,3 do kept[slot]=ser(old.patterns[slot]) end
+  local preview=api.runner.preview(cfg,'implosionTransition')
+  assert(#preview.plan.transfers==2 and preview.plan.skipped==3 and #preview.plan.errors==0)
+  assert(preview.report:find('empty recipe',1,true) and preview.report:find('Crafting pattern',1,true))
+  api.runner.execute(cfg,preview)
+  for slot=1,3 do assert(ser(old.patterns[slot])==kept[slot]) end
+  assert(new.patterns[1].inputs[1].damage==321 and new.patterns[1].outputs[1].damage==654)
+end)
+
+test('transition rejects stale source, destination and editor snapshots before any mutation',function()
+  for _,change in ipairs({'source','destination','editor'}) do
+    reset();local old,new=transitionFixture()
+    local preview=api.runner.preview(cfg,'implosionTransition')
+    if change=='source' then old.patterns[0]=pattern({item('Changed',1,919)})
+    elseif change=='destination' then new.patterns[3]=pattern({item()})
+    else editor.patterns[0]=pattern({item()}) end
+    mustFail(function() api.runner.execute(cfg,preview) end,'changed since preview')
+    assert(mutations==0 and not files[api.paths.pending])
+  end
+end)
+
+test('transition blocks overlapping names, missing banks, insufficient capacity and a full editor',function()
+  transitionFixture();cfg.programs.implosionTransition.destination='Old implosion'
+  mustFail(function() api.runner.preview(cfg,'implosionTransition') end,'must differ')
+  cfg.programs.implosionTransition.destination=cfg.shared.editor
+  mustFail(function() api.runner.preview(cfg,'implosionTransition') end,'must differ')
+  local old,new=transitionFixture();old.name='Missing old';new.name='Missing new'
+  assert(#api.runner.preview(cfg,'implosionTransition').plan.errors==2)
+  old.name='Old implosion';new.name='Electric implosion'
+  for slot=0,35 do new.patterns[slot]=pattern({item()}) end
+  local p=api.runner.preview(cfg,'implosionTransition').plan
+  assert(#p.errors==1 and p.errors[1]:find('Insufficient free target slots',1,true))
+  new.patterns={};for slot=0,8 do editor.patterns[slot]=pattern({item()}) end
+  assert(api.runner.preview(cfg,'implosionTransition').plan.errors[1]:find('one empty slot',1,true))
+  assert(mutations==0)
+end)
+
+test('transition recovers source-transfer and edit interruptions and replans only remaining old patterns',function()
+  for _,stage in ipairs({'send-before','send-after','set-after'}) do
+    reset();local old,new=transitionFixture();old.patterns[1]=cp(old.patterns[0])
+    local preview=api.runner.preview(cfg,'implosionTransition');fail={label=stage}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    assert(files[api.paths.pending])
+    local remaining=api.runner.continue(cfg)
+    assert(remaining.id=='implosionTransition' and #remaining.plan.transfers==1)
+    assert(not old.patterns[0] and old.patterns[1] and new.patterns[0] and not new.patterns[0].inputs[2])
+    assert(next(editor.patterns)==nil)
+    api.runner.execute(cfg,remaining)
+    assert(next(old.patterns)==nil and new.patterns[1] and not api.runner.hasSaved())
+  end
+end)
+
+test('transition Stop finishes the active transaction and Continue previews the remaining transfers',function()
+  local old,new=transitionFixture();old.patterns[1]=cp(old.patterns[0])
+  local preview=api.runner.preview(cfg,'implosionTransition')
+  mustFail(function()
+    api.runner.execute(cfg,preview,nil,function()
+      return {stop=(callCounts.setInterfacePatternInput or 0)>0}
+    end)
+  end,'Work stopped')
+  assert(new.patterns[0] and old.patterns[1] and next(editor.patterns)==nil and not files[api.paths.pending])
+  local remaining=api.runner.continue(cfg);assert(#remaining.plan.transfers==1)
+  api.runner.execute(cfg,remaining);assert(next(old.patterns)==nil and not api.runner.hasSaved())
+end)
+
+test('transition chooser, settings and unified preview show capacity verification and named removals',function()
+  transitionFixture();files[api.paths.config]=ser(cfg)
+  queue(click('[ Implosion transition ]'),click('[ Preview selected ]',47),function()
+    assert(frame[2]:find('Implosion transition',1,true))
+    assert(frame[34]:find('Verify 36 slots',1,true))
+    assert(frame[4]:find('Capacity',1,true) and frame[4]:find('Details',1,true))
+    snapshot('implosion_transition_preview')
+    return click('[ Program settings ]',47)()
+  end,function()
+    assert(frame[6]:find('Old interface name',1,true) and frame[10]:find('New interface name',1,true))
+    assert(frame[7]:find('Old implosion',1,true) and frame[11]:find('Electric implosion',1,true))
+    return 'interrupted'
+  end)
+  api.runUI()
+end)
+
 if artifact=='assline_app.lua' then
   package.loaded.assline_data={};files[api.paths.config]=ser(cfg);events={{'interrupted'}}
   local before=package.path;assert(loadfile(artifact))();assert(package.path==before)

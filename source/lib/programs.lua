@@ -318,6 +318,26 @@ M.list[#M.list + 1] = {
   requiresCapacityVerification = false,
   previewTabs = { { 'changes', 'Patterns' }, { 'details', 'Details' } },
 }
+M.list[#M.list + 1] = {
+  id = 'implosionTransition',
+  name = 'Implosion transition',
+  description = 'Move existing patterns to electric implosion, removing explosives and tiny byproducts.',
+  fields = {
+    field(
+      'source',
+      'Old interface name',
+      'All interfaces with this exact terminal name are included.',
+      ''
+    ),
+    field(
+      'destination',
+      'New interface name',
+      'Existing target patterns stay in place; migrated patterns use free slots.',
+      ''
+    ),
+  },
+  previewTabs = { { 'changes', 'Patterns' }, { 'capacity', 'Capacity' }, { 'details', 'Details' } },
+}
 M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
   if program.mode and program.formChoices then

@@ -315,7 +315,89 @@ function M.donorRows(plan, section)
   return rows
 end
 
+function M.transitionRows(plan, section)
+  if section == 'capacity' then
+    return M.capacityRows(plan)
+  end
+  local rows, add = U.rows()
+  add('IMPLOSION TRANSITION', 'blue')
+  add('FROM: ' .. plan.source, 'muted')
+  destinationRow(add, plan.destination)
+  if section == 'details' then
+    add('Moves the same encoded patterns; no disposable donors are needed.')
+    add('Preserves quantities, item type and supported pattern metadata.')
+    add('Removes TNT, industrial TNT, dynamite and powderbarrels.', 'yellow')
+    add('Omits known secondary tiny dust / ash outputs. The primary output stays.')
+    add('The machine may still produce these byproducts; AE will not request them.', 'muted')
+    add('Existing target patterns stay in place. Free slots fill in interface / slot order.')
+    add('Skipped patterns remain in the old interfaces; their reasons appear under Patterns.')
+    add('Pause / Resume / Stop and Continue use the shared operation journal.', 'muted')
+  else
+    local bank
+    for _, entry in ipairs(plan.entries) do
+      if bank ~= U.where(entry.from) then
+        spacer(rows, add)
+        bank = U.where(entry.from)
+        add('  +-- Old interface ' .. U.locationText(entry.from), interfaceTone)
+      else
+        add('  |', interfaceTone)
+      end
+      treeRow(
+        rows,
+        add,
+        '  |  ',
+        (entry.reason and 'SKIP' or 'MOVE') .. ' slot ' .. entry.from.slot .. '  ' .. entry.label,
+        entry.reason and 'muted' or 'green'
+      )
+      if entry.reason then
+        treeRow(rows, add, '  |    ', entry.reason, 'muted')
+      else
+        treeRow(
+          rows,
+          add,
+          '  |    ',
+          'Inputs: ' .. U.ingredientSummary(entry.recipe.inputs),
+          'text'
+        )
+        treeRow(
+          rows,
+          add,
+          '  |    ',
+          'Outputs: ' .. U.ingredientSummary(entry.recipe.outputs),
+          'text'
+        )
+        for _, which in ipairs({ 'inputs', 'outputs' }) do
+          if #entry.removed[which] > 0 then
+            treeRow(
+              rows,
+              add,
+              '  |    ',
+              'Remove ' .. which .. ': ' .. U.ingredientSummary(entry.removed[which]),
+              'yellow'
+            )
+          end
+        end
+        treeRow(
+          rows,
+          add,
+          '  |    ',
+          entry.to and ('To ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot)
+            or 'Needs a free target slot',
+          'muted'
+        )
+      end
+    end
+  end
+  for _, err in ipairs(plan.errors) do
+    add('BLOCKED: ' .. err, 'red')
+  end
+  return rows
+end
+
 function M.rows(section, plan, manifest)
+  if plan.kind == 'transition' then
+    return M.transitionRows(plan, section)
+  end
   if plan.kind == 'donorCleanup' then
     return M.donorRows(plan, section)
   end
@@ -338,6 +420,12 @@ function M.report(plan, manifest)
       lines[#lines + 1] = row[1]
     end
     lines[#lines + 1] = ''
+  end
+  if plan.kind == 'transition' then
+    for _, section in ipairs({ 'changes', 'capacity', 'details' }) do
+      append(M.rows(section, plan))
+    end
+    return table.concat(lines, '\n') .. '\n'
   end
   if plan.kind == 'donorCleanup' then
     append(M.donorRows(plan))

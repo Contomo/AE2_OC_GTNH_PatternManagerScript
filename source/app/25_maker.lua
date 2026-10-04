@@ -618,6 +618,9 @@ function C.runner.hasChanges(preview)
   if plan.kind == 'donorCleanup' then
     return #plan.cleanups > 0
   end
+  if plan.kind == 'transition' then
+    return #plan.transfers > 0
+  end
   return preview.id == 'assline' and #plan.changes > 0
     or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
 end
@@ -631,6 +634,8 @@ function C.runner.preview(c, id, progress, control)
     preview.plan = scan(c, progress, control)
   elseif id == 'donorCleanup' then
     preview.plan, preview.report = C.donors.preview(c, progress, control)
+  elseif id == 'implosionTransition' then
+    preview.plan, preview.report = C.transition.preview(c, progress, control)
   else
     preview.plan, preview.report, preview.manifest = C.maker.preview(c, id, progress, control)
   end
@@ -645,6 +650,8 @@ function C.runner.execute(c, preview, progress, control)
     apply(c, preview.plan, progress, control)
   elseif preview.id == 'donorCleanup' then
     C.donors.apply(c, preview.plan, progress, control)
+  elseif preview.id == 'implosionTransition' then
+    C.transition.apply(c, preview.plan, progress, control)
   else
     C.maker.apply(c, preview.id, preview.plan, preview.manifest, progress, control)
   end

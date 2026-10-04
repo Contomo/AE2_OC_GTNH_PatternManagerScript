@@ -22,6 +22,7 @@ const lua = value => typeof value === 'string' ? JSON.stringify(value)
   : String(value);
 const tierDefinitions = '-- Source: source/data/tiers.json\nreturn '+lua(JSON.parse(read('source/data/tiers.json')))+'\n';
 const materialUnits = '-- Source: source/data/material_units.json\nreturn '+lua(JSON.parse(read('source/data/material_units.json')))+'\n';
+const transitionRules = '-- Source: source/data/transition.json\nreturn '+lua(JSON.parse(read('source/data/transition.json')))+'\n';
 const inline = source => source.replaceAll("require('assline_util')",'U')
   .replaceAll("require('assline_tier_definitions')",'TierDefinitions')
   .replaceAll("require('assline_material_units')",'MaterialUnits')
@@ -31,11 +32,12 @@ const inline = source => source.replaceAll("require('assline_util')",'U')
 const pure = (name,file) => 'local '+name+'=(function()\n'+inline(section(file))+'\nend)()\n';
 const body = pure('U','source/lib/util.lua')+'local TierDefinitions=(function()\n'+tierDefinitions+'end)()\n'+
   'local MaterialUnits=(function()\n'+materialUnits+'end)()\n'+
+  'local TransitionRules=(function()\n'+transitionRules+'end)()\n'+
   pure('Batch','source/lib/batch.lua')+pure('Programs','source/lib/programs.lua')+pure('Config','source/lib/config.lua')+
   inline(['source/app/00_core.lua','source/app/10_plan.lua','source/app/20_apply.lua'].map(section).join('\n'))+'\n'+
   pure('Planner','source/lib/planner.lua')+pure('Modes','source/lib/modes.lua')+
   pure('Preview','source/lib/preview.lua')+
-  inline(section('source/app/25_maker.lua'))+'\n'+section('source/app/26_donors.lua')+'\n'+section('source/app/30_ui.lua')+'\n'+section('source/app/90_main.lua');
+  inline(section('source/app/25_maker.lua'))+'\n'+section('source/app/26_donors.lua')+'\n'+section('source/app/27_transition.lua')+'\n'+section('source/app/30_ui.lua')+'\n'+section('source/app/90_main.lua');
 const entry = `-- Readable application bundle, generated from the source files named below.
 local savedPath=package.path
 local function unload()

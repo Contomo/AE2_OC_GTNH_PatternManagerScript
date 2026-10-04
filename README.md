@@ -184,6 +184,22 @@ Details explains rejected donors, including substitution or invalid-pattern flag
 Unsupported tagged items are not donor patterns. Existing
 processing recipes compare actual item IDs, input/output proportions, substitution flags and semantic NBT;
 missing and empty ingredient NBT are equivalent.
+
+**Implosion transition** migrates existing processing patterns from all interfaces
+with the configured old name to free slots in the new interface bank. Configure
+both names in its program settings, preview the changes, verify the target
+interfaces have 36 slots each, then execute. Existing target patterns stay in place;
+no disposable donors are needed. Quantities, pattern type and supported metadata
+are preserved, including ordinary and ultimate patterns with large counts.
+
+The helper removes TNT, industrial TNT, dynamite and powderbarrels, plus known
+secondary tiny dust / ash outputs; it always keeps the primary output. The
+electric machine can still produce those byproducts, but AE will not wait for
+them. The compact cleanup identities are derived from all 1,096 exported implosion
+recipes and their electric counterparts by `source/tools/build_transition.py`,
+with tiny forms verified against the ore registry. The preview names removals,
+source slots, target slots and skipped-pattern reasons. Pause, Stop and Continue
+use the same transaction journal as the other programs.
 Thus an existing 256 → 512 pattern matches a requested 1 → 2 recipe. It appears
 as **RESIZE** when its batch differs from the configured multiplier, and its
 existing pattern item is edited through the shared editor without using a donor.

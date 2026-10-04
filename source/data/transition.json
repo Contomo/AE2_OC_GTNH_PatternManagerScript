@@ -1,0 +1,27 @@
+{
+  "explosives": {
+    "gregtech:gt.blockreinforced@5": "Powderbarrel",
+    "ic2:blockitnt": "Industrial TNT",
+    "ic2:itemdynamite": "Dynamite",
+    "minecraft:tnt": "TNT"
+  },
+  "secondary": {
+    "bartworks:gt.bwmetagenerateddusttiny@90": "Tiny Pile of Ruridit Dust",
+    "gregtech:gt.metaitem.01@129": "Tiny Pile of Neutronium Dust",
+    "gregtech:gt.metaitem.01@306": "Tiny Pile of Stainless Steel Dust",
+    "gregtech:gt.metaitem.01@316": "Tiny Pile of Tungstensteel Dust",
+    "gregtech:gt.metaitem.01@329": "Tiny Pile of Tritanium Dust",
+    "gregtech:gt.metaitem.01@370": "Tiny Pile of Tungstencarbide Dust",
+    "gregtech:gt.metaitem.01@374": "Tiny Pile of HSS-S Dust",
+    "gregtech:gt.metaitem.01@388": "Tiny Pile of Black Plutonium Dust",
+    "gregtech:gt.metaitem.01@70": "Tiny Pile of Europium Dust",
+    "gregtech:gt.metaitem.01@815": "Tiny Pile of Ashes",
+    "gregtech:gt.metaitem.01@816": "Tiny Pile of Dark Ashes",
+    "gregtech:gt.metaitem.01@85": "Tiny Pile of Platinum Dust"
+  },
+  "evidence": {
+    "implosionRecipes": 1096,
+    "matchedRecipes": 1096,
+    "sourceVersion": "2.9.0-beta-2"
+  }
+}

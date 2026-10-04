@@ -6,7 +6,8 @@ local function rawList(data, p, which)
   U.check(t and t.__nbt_type == 'list', 'Unsupported encoded pattern layout')
   return t.__value
 end
-local recipeOperations = { recipe = true, imprint = true, resize = true, park = true }
+local recipeOperations =
+  { recipe = true, imprint = true, resize = true, park = true, transition = true }
 local function expected(data, op)
   local p = compact(effectivePattern(data, op.original))
   if recipeOperations[op.kind] then

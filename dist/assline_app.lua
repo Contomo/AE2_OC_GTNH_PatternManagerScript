@@ -256,6 +256,10 @@ local MaterialUnits=(function()
 -- Source: source/data/material_units.json
 return {["policy"]="ore-prefix-material-units-v1",["source"]={["archive"]="gt-5.09.54.133.zip",["sha256"]="a5993a25fbf464348182baac16539bcf08bdfa18d22ef0217dc84fc4c14ca03e",["definitions"]={"gregtech/api/enums/OrePrefixes.java","gregtech/api/enums/GTValues.java"}},["fluidPerIngot"]=144,["forms"]={["armorBoots"]=4,["armorChestplate"]=8,["armorHelmet"]=5,["armorLeggings"]=7,["block"]=9,["blockCasing"]=9,["blockCasingAdvanced"]=9,["bolt"]=0.125,["bucket"]=1,["bucketClay"]=1,["bulletGtLarge"]=0.3333333333333333,["bulletGtMedium"]=0.16666666666666666,["bulletGtSmall"]=0.1111111111111111,["cable1"]=0.5,["cable12"]=6,["cable16"]=8,["cable2"]=1,["cable4"]=2,["cable8"]=4,["capsule"]=1,["capsuleMolten"]=1,["cell"]=1,["cellHydroCracked1"]=1,["cellHydroCracked2"]=1,["cellHydroCracked3"]=1,["cellMolten"]=1,["cellPlasma"]=1,["cellSteamCracked1"]=1,["cellSteamCracked2"]=1,["cellSteamCracked3"]=1,["comb"]=1,["compressed"]=3,["crystal"]=1,["dust"]=1,["dustImpure"]=1,["dustPure"]=1,["dustRefined"]=1,["dustSmall"]=0.25,["dustTiny"]=0.1111111111111111,["foil"]=0.25,["frameGt"]=2,["gearGt"]=4,["gearGtSmall"]=1,["gem"]=1,["gemChipped"]=0.25,["gemExquisite"]=4,["gemFlawed"]=0.5,["gemFlawless"]=2,["handleMallet"]=0.5,["ingot"]=1,["ingotHot"]=1,["itemCasing"]=0.5,["lens"]=0.75,["nugget"]=0.1111111111111111,["pipeHuge"]=12,["pipeLarge"]=6,["pipeMedium"]=3,["pipeNonuple"]=9,["pipeQuadruple"]=12,["pipeRestrictiveHuge"]=12,["pipeRestrictiveLarge"]=6,["pipeRestrictiveMedium"]=3,["pipeRestrictiveSmall"]=1,["pipeRestrictiveTiny"]=0.5,["pipeSmall"]=1,["pipeTiny"]=0.5,["plate"]=1,["plateDense"]=9,["plateDouble"]=2,["plateQuadruple"]=4,["plateQuintuple"]=5,["plateSuperdense"]=64,["plateTriple"]=3,["ring"]=0.25,["rotor"]=4.25,["round"]=0.1111111111111111,["screw"]=0.125,["sheetmetal"]=2,["spring"]=1,["springSmall"]=0.25,["stick"]=0.5,["stickLong"]=1,["toolAxe"]=3,["toolHeadBuzzSaw"]=4,["toolHeadChainsaw"]=2,["toolHeadDrill"]=4,["toolHeadFile"]=2,["toolHeadHammer"]=6,["toolHeadMallet"]=6,["toolHeadSaw"]=2,["toolHeadScrewdriver"]=1,["toolHeadWrench"]=4,["toolHoe"]=2,["toolPickaxe"]=3,["toolShears"]=2,["toolShovel"]=1,["toolSword"]=2,["turbineBlade"]=6,["wire1"]=0.5,["wire12"]=6,["wire16"]=8,["wire2"]=1,["wire4"]=2,["wire8"]=4,["wireFine"]=0.125}}
 end)()
+local TransitionRules=(function()
+-- Source: source/data/transition.json
+return {["explosives"]={["gregtech:gt.blockreinforced@5"]="Powderbarrel",["ic2:blockitnt"]="Industrial TNT",["ic2:itemdynamite"]="Dynamite",["minecraft:tnt"]="TNT"},["secondary"]={["bartworks:gt.bwmetagenerateddusttiny@90"]="Tiny Pile of Ruridit Dust",["gregtech:gt.metaitem.01@129"]="Tiny Pile of Neutronium Dust",["gregtech:gt.metaitem.01@306"]="Tiny Pile of Stainless Steel Dust",["gregtech:gt.metaitem.01@316"]="Tiny Pile of Tungstensteel Dust",["gregtech:gt.metaitem.01@329"]="Tiny Pile of Tritanium Dust",["gregtech:gt.metaitem.01@370"]="Tiny Pile of Tungstencarbide Dust",["gregtech:gt.metaitem.01@374"]="Tiny Pile of HSS-S Dust",["gregtech:gt.metaitem.01@388"]="Tiny Pile of Black Plutonium Dust",["gregtech:gt.metaitem.01@70"]="Tiny Pile of Europium Dust",["gregtech:gt.metaitem.01@815"]="Tiny Pile of Ashes",["gregtech:gt.metaitem.01@816"]="Tiny Pile of Dark Ashes",["gregtech:gt.metaitem.01@85"]="Tiny Pile of Platinum Dust"},["evidence"]={["implosionRecipes"]=1096,["matchedRecipes"]=1096,["sourceVersion"]="2.9.0-beta-2"}}
+end)()
 local Batch=(function()
 -- Source: source/lib/batch.lua
 -- Shared batch policy. Tier definitions are built from source/data/tiers.json.
@@ -966,6 +970,26 @@ M.list[#M.list + 1] = {
   fields = {},
   requiresCapacityVerification = false,
   previewTabs = { { 'changes', 'Patterns' }, { 'details', 'Details' } },
+}
+M.list[#M.list + 1] = {
+  id = 'implosionTransition',
+  name = 'Implosion transition',
+  description = 'Move existing patterns to electric implosion, removing explosives and tiny byproducts.',
+  fields = {
+    field(
+      'source',
+      'Old interface name',
+      'All interfaces with this exact terminal name are included.',
+      ''
+    ),
+    field(
+      'destination',
+      'New interface name',
+      'Existing target patterns stay in place; migrated patterns use free slots.',
+      ''
+    ),
+  },
+  previewTabs = { { 'changes', 'Patterns' }, { 'capacity', 'Capacity' }, { 'details', 'Details' } },
 }
 M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
@@ -2251,7 +2275,8 @@ local function rawList(data, p, which)
   U.check(t and t.__nbt_type == 'list', 'Unsupported encoded pattern layout')
   return t.__value
 end
-local recipeOperations = { recipe = true, imprint = true, resize = true, park = true }
+local recipeOperations =
+  { recipe = true, imprint = true, resize = true, park = true, transition = true }
 local function expected(data, op)
   local p = compact(effectivePattern(data, op.original))
   if recipeOperations[op.kind] then
@@ -3784,7 +3809,89 @@ function M.donorRows(plan, section)
   return rows
 end
 
+function M.transitionRows(plan, section)
+  if section == 'capacity' then
+    return M.capacityRows(plan)
+  end
+  local rows, add = U.rows()
+  add('IMPLOSION TRANSITION', 'blue')
+  add('FROM: ' .. plan.source, 'muted')
+  destinationRow(add, plan.destination)
+  if section == 'details' then
+    add('Moves the same encoded patterns; no disposable donors are needed.')
+    add('Preserves quantities, item type and supported pattern metadata.')
+    add('Removes TNT, industrial TNT, dynamite and powderbarrels.', 'yellow')
+    add('Omits known secondary tiny dust / ash outputs. The primary output stays.')
+    add('The machine may still produce these byproducts; AE will not request them.', 'muted')
+    add('Existing target patterns stay in place. Free slots fill in interface / slot order.')
+    add('Skipped patterns remain in the old interfaces; their reasons appear under Patterns.')
+    add('Pause / Resume / Stop and Continue use the shared operation journal.', 'muted')
+  else
+    local bank
+    for _, entry in ipairs(plan.entries) do
+      if bank ~= U.where(entry.from) then
+        spacer(rows, add)
+        bank = U.where(entry.from)
+        add('  +-- Old interface ' .. U.locationText(entry.from), interfaceTone)
+      else
+        add('  |', interfaceTone)
+      end
+      treeRow(
+        rows,
+        add,
+        '  |  ',
+        (entry.reason and 'SKIP' or 'MOVE') .. ' slot ' .. entry.from.slot .. '  ' .. entry.label,
+        entry.reason and 'muted' or 'green'
+      )
+      if entry.reason then
+        treeRow(rows, add, '  |    ', entry.reason, 'muted')
+      else
+        treeRow(
+          rows,
+          add,
+          '  |    ',
+          'Inputs: ' .. U.ingredientSummary(entry.recipe.inputs),
+          'text'
+        )
+        treeRow(
+          rows,
+          add,
+          '  |    ',
+          'Outputs: ' .. U.ingredientSummary(entry.recipe.outputs),
+          'text'
+        )
+        for _, which in ipairs({ 'inputs', 'outputs' }) do
+          if #entry.removed[which] > 0 then
+            treeRow(
+              rows,
+              add,
+              '  |    ',
+              'Remove ' .. which .. ': ' .. U.ingredientSummary(entry.removed[which]),
+              'yellow'
+            )
+          end
+        end
+        treeRow(
+          rows,
+          add,
+          '  |    ',
+          entry.to and ('To ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot)
+            or 'Needs a free target slot',
+          'muted'
+        )
+      end
+    end
+  end
+  for _, err in ipairs(plan.errors) do
+    add('BLOCKED: ' .. err, 'red')
+  end
+  return rows
+end
+
 function M.rows(section, plan, manifest)
+  if plan.kind == 'transition' then
+    return M.transitionRows(plan, section)
+  end
   if plan.kind == 'donorCleanup' then
     return M.donorRows(plan, section)
   end
@@ -3807,6 +3914,12 @@ function M.report(plan, manifest)
       lines[#lines + 1] = row[1]
     end
     lines[#lines + 1] = ''
+  end
+  if plan.kind == 'transition' then
+    for _, section in ipairs({ 'changes', 'capacity', 'details' }) do
+      append(M.rows(section, plan))
+    end
+    return table.concat(lines, '\n') .. '\n'
   end
   if plan.kind == 'donorCleanup' then
     append(M.donorRows(plan))
@@ -4448,6 +4561,9 @@ function C.runner.hasChanges(preview)
   if plan.kind == 'donorCleanup' then
     return #plan.cleanups > 0
   end
+  if plan.kind == 'transition' then
+    return #plan.transfers > 0
+  end
   return preview.id == 'assline' and #plan.changes > 0
     or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
 end
@@ -4461,6 +4577,8 @@ function C.runner.preview(c, id, progress, control)
     preview.plan = scan(c, progress, control)
   elseif id == 'donorCleanup' then
     preview.plan, preview.report = C.donors.preview(c, progress, control)
+  elseif id == 'implosionTransition' then
+    preview.plan, preview.report = C.transition.preview(c, progress, control)
   else
     preview.plan, preview.report, preview.manifest = C.maker.preview(c, id, progress, control)
   end
@@ -4475,6 +4593,8 @@ function C.runner.execute(c, preview, progress, control)
     apply(c, preview.plan, progress, control)
   elseif preview.id == 'donorCleanup' then
     C.donors.apply(c, preview.plan, progress, control)
+  elseif preview.id == 'implosionTransition' then
+    C.transition.apply(c, preview.plan, progress, control)
   else
     C.maker.apply(c, preview.id, preview.plan, preview.manifest, progress, control)
   end
@@ -4671,6 +4791,205 @@ function C.donors.apply(c, plan, progress, control)
     clearOp()
     if progress then
       progress('Parked donor ' .. n .. ' / ' .. #plan.cleanups)
+    end
+  end
+end
+
+-- Source: source/app/27_transition.lua
+-- Existing patterns supply both the recipe and the physical pattern. Only the
+-- scraped cleanup identities change; all editing uses the shared transaction.
+C.transition = {}
+
+local function transitionId(stack)
+  return stack.name:lower() .. ((stack.damage or 0) ~= 0 and '@' .. stack.damage or '')
+end
+
+local function transitionRecipe(hw, pattern)
+  local observed = effectivePattern(hw.data, pattern)
+  local recipe = { kind = 'processing', inputs = {}, outputs = {} }
+  local removed = { inputs = {}, outputs = {} }
+  for _, which in ipairs({ 'inputs', 'outputs' }) do
+    for _, index in ipairs(U.keys(observed[which])) do
+      local stack = observed[which][index]
+      if U.exists(stack) then
+        local rules = which == 'inputs' and TransitionRules.explosives or TransitionRules.secondary
+        local label = stack.type ~= 'fluid' and rules[transitionId(stack)]
+        if label and (which == 'inputs' or #recipe.outputs > 0) then
+          local discarded = U.clone(stack)
+          discarded.label = label
+          removed[which][#removed[which] + 1] = discarded
+        else
+          recipe[which][#recipe[which] + 1] = U.clone(stack)
+        end
+      end
+    end
+  end
+  return recipe, removed
+end
+
+function C.transition.scan(c, progress, control)
+  local settings = c.programs.implosionTransition
+  U.check(settings.source ~= settings.destination, 'Old and new interface names must differ')
+  for _, name in ipairs({ settings.source, settings.destination }) do
+    U.check(
+      name ~= c.shared.editor and name ~= c.shared.donors,
+      'Transition interfaces must differ from the editor and donor buffer'
+    )
+  end
+  local hw = connect(c, progress, control)
+  local plan = {
+    kind = 'transition',
+    source = settings.source,
+    destination = settings.destination,
+    sourceBanks = 0,
+    targetBanks = 0,
+    occupied = 0,
+    free = 0,
+    scanned = 0,
+    skipped = 0,
+    entries = {},
+    transfers = {},
+    targets = {},
+    errors = {},
+    warnings = {},
+    bindings = {
+      terminal = hw.terminal.address,
+      direct = hw.direct.address,
+      data = hw.data.address,
+    },
+  }
+  local free = {}
+  for _, ref in ipairs(discover(hw, settings.destination)) do
+    local bank = current(hw, ref)
+    U.check(bank.name == settings.destination, 'Target interface renamed during scan')
+    plan.targetBanks = plan.targetBanks + 1
+    local target = { ref = endpoint(bank), patterns = {} }
+    for _, slot in ipairs(U.keys(bank.patterns)) do
+      local p = bank.patterns[slot]
+      if U.exists(p) then
+        target.patterns[slot] = U.canonical(compact(p))
+        plan.occupied = plan.occupied + 1
+      end
+    end
+    plan.targets[#plan.targets + 1] = target
+    for slot = 0, capacity(bank) - 1 do
+      if not U.exists(bank.patterns[slot]) then
+        free[#free + 1] = endpoint(bank, slot)
+      end
+    end
+  end
+  plan.free = #free
+  for _, ref in ipairs(discover(hw, settings.source)) do
+    local bank = current(hw, ref)
+    U.check(bank.name == settings.source, 'Source interface renamed during scan')
+    plan.sourceBanks = plan.sourceBanks + 1
+    for _, slot in ipairs(U.keys(bank.patterns)) do
+      gate()
+      local p = bank.patterns[slot]
+      if U.exists(p) then
+        plan.scanned = plan.scanned + 1
+        local reason = donorIssue(hw.data, p)
+        if not reason and not processing(p) then
+          reason = 'Crafting pattern: cannot change its crafting flag.'
+        end
+        local entry = {
+          from = endpoint(bank, slot),
+          fingerprint = U.canonical(compact(p)),
+          label = p.label or p.name,
+          reason = reason,
+        }
+        if not reason then
+          entry.recipe, entry.removed = transitionRecipe(hw, p)
+          entry.label = U.ingredientSummary(entry.recipe.outputs)
+          if #entry.recipe.inputs == 0 or #entry.recipe.outputs == 0 then
+            entry.reason = 'Cleanup would leave an empty recipe; left in the old interface.'
+          else
+            entry.to = free[#plan.transfers + 1]
+            plan.transfers[#plan.transfers + 1] = entry
+          end
+        end
+        if entry.reason then
+          plan.skipped = plan.skipped + 1
+        end
+        plan.entries[#plan.entries + 1] = entry
+      end
+    end
+    if progress then
+      progress('Read old interface at ' .. U.locationText(bank))
+    end
+  end
+  if plan.sourceBanks == 0 then
+    plan.errors[#plan.errors + 1] = 'No old interfaces named "' .. settings.source .. '".'
+  end
+  if plan.targetBanks == 0 then
+    plan.errors[#plan.errors + 1] = 'No new interfaces named "' .. settings.destination .. '".'
+  end
+  if #plan.transfers > #free then
+    plan.errors[#plan.errors + 1] = 'Insufficient free target slots: need '
+      .. #plan.transfers
+      .. ', have '
+      .. #free
+  end
+  plan.capacities =
+    Config.capacityReport({ [settings.destination] = plan.occupied + #plan.transfers })
+  if #plan.transfers > 0 then
+    for slot = 0, editorCapacity(hw) - 1 do
+      if not U.exists(direct(hw, 'getInterfacePattern', slot)) then
+        plan.workspace = endpoint(hw.buffer, slot)
+        break
+      end
+    end
+    if not plan.workspace then
+      plan.errors[#plan.errors + 1] = 'The pattern editor needs one empty slot.'
+    end
+  end
+  return plan, hw
+end
+
+function C.transition.preview(c, progress, control)
+  local plan = C.transition.scan(c, progress, control)
+  return plan, Preview.report(plan)
+end
+
+function C.transition.apply(c, plan, progress, control)
+  U.check(#plan.errors == 0, 'Resolve transition blockers first')
+  local fresh, hw = C.transition.scan(c, progress, control)
+  U.check(U.eq(fresh, plan), 'Interfaces or editor changed since preview. Scan again.')
+  writeFile(
+    paths.backup,
+    { config = U.clone(c), program = 'implosionTransition', moved = #plan.transfers }
+  )
+  for n, entry in ipairs(plan.transfers) do
+    gate()
+    local bank = current(hw, entry.from)
+    U.check(bank.name == plan.source, 'Source interface renamed before transfer')
+    U.check(
+      current(hw, entry.to).name == plan.destination,
+      'Target interface renamed before transfer'
+    )
+    local original = bank.patterns[entry.from.slot]
+    U.check(
+      U.canonical(compact(original)) == entry.fingerprint,
+      'Source pattern changed before transfer'
+    )
+    U.check(safeDonor(hw.data, original), 'Source pattern is no longer editable')
+    U.check(
+      not U.exists(direct(hw, 'getInterfacePattern', plan.workspace.slot)),
+      'Pattern editor workspace occupied'
+    )
+    local op = {
+      kind = 'transition',
+      slot = plan.workspace.slot,
+      source = entry.from,
+      destination = entry.to,
+      original = compact(original),
+      recipe = entry.recipe,
+    }
+    saveOp(hw, op)
+    finish(hw, op, progress)
+    clearOp()
+    if progress then
+      progress('Transitioned pattern ' .. n .. ' / ' .. #plan.transfers)
     end
   end
 end
@@ -5011,7 +5330,7 @@ local function runUI()
           or 'Choose a program to build a preview.',
         'muted'
       )
-    elseif p.kind == 'donorCleanup' then
+    elseif p.kind == 'donorCleanup' or p.kind == 'transition' then
       for _, row in ipairs(Preview.rows(state.section, p)) do
         add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
@@ -5513,7 +5832,20 @@ local function runUI()
       scrollRows(34, layout.body, 74, layout.bodyBottom - layout.body + 1)
       text(113, layout.body, 'Summary', 45, 'blue')
       if p then
-        if p.kind == 'donorCleanup' then
+        if p.kind == 'transition' then
+          text(
+            113,
+            layout.body + 2,
+            p.sourceBanks .. ' old / ' .. p.targetBanks .. ' new interfaces',
+            45,
+            'muted'
+          )
+          text(113, layout.body + 3, p.scanned .. ' encoded patterns scanned', 45)
+          text(113, layout.body + 4, #p.transfers .. ' patterns to move and clean', 45, 'green')
+          text(113, layout.body + 5, p.skipped .. ' skipped; see Patterns', 45, 'muted')
+          text(113, layout.body + 6, p.free .. ' free target slots', 45)
+          text(113, layout.body + 8, 'No disposable donors needed', 45, 'muted')
+        elseif p.kind == 'donorCleanup' then
           text(113, layout.body + 2, p.banks .. ' donor interfaces', 45, 'muted')
           text(113, layout.body + 3, p.scanned .. ' encoded patterns scanned', 45)
           text(113, layout.body + 4, #p.cleanups .. ' recipes to park', 45, 'yellow')
