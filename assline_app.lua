@@ -758,6 +758,13 @@ shaperFields[#shaperFields + 1] = formSwitches(
   'plate,turbineBlade'
 )
 shaperFields[#shaperFields + 1] = multiplier()
+shaperFields[#shaperFields + 1] = field(
+  'preferSolidIngots',
+  'Prefer solid ingot production',
+  'Skip ingot casts with a verified solid route. Off permits native ABS/liquid routes; the live ME check still applies.',
+  'on',
+  'toggle'
+)
 M.list = {
   {
     id = 'assline',
@@ -1072,6 +1079,13 @@ M.fields = {
     label = 'Resume work at energy %',
     help = 'At least 10 percentage points above the pause level; at most 95%.',
     default = '75',
+  },
+  {
+    key = 'networkAddress',
+    placeholder = 'auto',
+    label = 'ME network component address',
+    help = 'Ingot checks: blank uses the block editor or sole ME controller; otherwise enter a controller/block interface address prefix.',
+    default = '',
   },
 }
 M.defaults = { version = 2, shared = {}, batch = {}, programs = {} }
@@ -2796,6 +2810,7 @@ function M.plan(request, snapshot, checkpoint)
     moves = {},
     creates = {},
     resizes = {},
+    parks = {},
     resizeCount = 0,
     preserved = {},
     reused = 0,
@@ -2814,6 +2829,7 @@ function M.plan(request, snapshot, checkpoint)
     end
   end
   local groups, workspace, tokens, occupied = {}, nil, {}, {}
+  local parkCount = 0
   for _, i in ipairs(interfaces) do
     if checkpoint then
       checkpoint()
@@ -2831,6 +2847,12 @@ function M.plan(request, snapshot, checkpoint)
         g.slots[#g.slots + 1] = e
         local pattern = i.patterns[slot]
         if pattern then
+          if pattern.parkReason then
+            parkCount = parkCount + 1
+            if not pattern.donor then
+              block('Cannot disable ingot cast: ' .. (pattern.reason or 'unsupported metadata'))
+            end
+          end
           local t = { pattern = pattern, current = e }
           tokens[#tokens + 1] = t
           g.tokens[#g.tokens + 1] = t
@@ -2940,8 +2962,12 @@ function M.plan(request, snapshot, checkpoint)
       if not t.selected then
         n = n + 1
         t.goal = g.slots[n]
-        p.preserved[#p.preserved + 1] =
-          { from = t.current, to = t.goal, fingerprint = t.pattern.fingerprint }
+        p.preserved[#p.preserved + 1] = {
+          from = t.current,
+          to = t.goal,
+          fingerprint = t.pattern.fingerprint,
+          parkReason = t.pattern.parkReason,
+        }
       end
     end
     if n > #g.slots then
@@ -2960,8 +2986,12 @@ function M.plan(request, snapshot, checkpoint)
   for _, g in pairs(groups) do
     if #g.wanted == 0 then
       for _, t in ipairs(g.tokens) do
-        p.preserved[#p.preserved + 1] =
-          { from = t.current, to = t.current, fingerprint = t.pattern.fingerprint }
+        p.preserved[#p.preserved + 1] = {
+          from = t.current,
+          to = t.current,
+          fingerprint = t.pattern.fingerprint,
+          parkReason = t.pattern.parkReason,
+        }
       end
     end
   end
@@ -2983,8 +3013,12 @@ function M.plan(request, snapshot, checkpoint)
     end
   end
   if
-    (needsMoves or p.resizeCount > 0 or p.required.crafting + p.required.processing > 0)
-    and not workspace
+    (
+      needsMoves
+      or parkCount > 0
+      or p.resizeCount > 0
+      or p.required.crafting + p.required.processing > 0
+    ) and not workspace
   then
     block('Leave an empty slot in the dedicated editing/workspace interface')
   end
@@ -3023,6 +3057,16 @@ function M.plan(request, snapshot, checkpoint)
       move(stuck, workspace)
     end
   end
+  for _, entry in ipairs(p.preserved) do
+    if entry.parkReason then
+      p.parks[#p.parks + 1] = {
+        to = copy(entry.to),
+        workspace = copy(workspace),
+        fingerprint = entry.fingerprint,
+        reason = entry.parkReason,
+      }
+    end
+  end
   for _, entry in ipairs(p.layout) do
     if entry.resize then
       p.resizes[#p.resizes + 1] = {
@@ -3055,7 +3099,7 @@ end
 function M.revalidate(request, snapshot, preview, checkpoint)
   local fresh = M.plan(request, snapshot, checkpoint)
   local function operations(p)
-    return encoded({ p.layout, p.moves, p.creates, p.resizes, p.preserved, p.required })
+    return encoded({ p.layout, p.moves, p.creates, p.resizes, p.parks, p.preserved, p.required })
   end
   need(
     #fresh.errors == 0
@@ -3186,7 +3230,7 @@ function M.resolve(data, material, form)
   local item = registeredItem(data, resolveForm(data, material, form))
   return item
 end
-function M.eligible(data, material, rule)
+function M.eligible(data, material, rule, options)
   if (material.deny or {})[rule.id] then
     return false
   end
@@ -3213,10 +3257,13 @@ function M.eligible(data, material, rule)
     end
     if data.source.materialSourcePolicy and rule.outputs[1].f == 'ingot' then
       local sources = (data.origins or {})[material.o] or {}
+      if
+        sources.native_ingot
+        and (not sources.native_molten or not options or options.preferSolidIngots ~= false)
+      then
+        return false, 'Ingots have a direct solid production route.', true
+      end
       if not sources.native_molten then
-        if sources.native_ingot then
-          return false, 'Ingots have a direct solid route; no native liquid source.'
-        end
         return false, 'No verified native liquid source for ingots.'
       end
     end
@@ -3229,6 +3276,94 @@ function M.eligible(data, material, rule)
     return false, 'unused'
   end
   return true
+end
+local function ruleRecipe(
+  data,
+  material,
+  rule,
+  options,
+  recipeMultiplier,
+  batch,
+  unresolved,
+  unresolvedNames
+)
+  local function resolve(e, stocked)
+    if e.fluid == 'material' then
+      local fluid = U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
+      local size = e.n * (stocked and 1 or recipeMultiplier)
+      U.check(
+        U.integer(size) and size > 0,
+        'Pattern multiplier exceeds the supported fluid quantity'
+      )
+      return {
+        type = 'fluid',
+        name = fluid,
+        label = 'Molten ' .. material.name,
+        size = size,
+      }
+    end
+    local item
+    if e.f then
+      item = M.resolve(data, material, e.f)
+      item.label = material.name .. ' ' .. formLabel(e.f)
+    else
+      item = U.clone(U.check(data.items[e.i], 'Unknown shared item'))
+    end
+    if item.option and options[item.option] == false and not stocked then
+      return nil
+    end
+    item.option = nil
+    item.type = 'item'
+    item.size = e.n * (stocked and 1 or recipeMultiplier)
+    U.check(
+      U.integer(item.size) and item.size > 0,
+      'Pattern multiplier exceeds the supported ingredient quantity'
+    )
+    -- Oracle IDs are normalized to lower case. GT/Minecraft families above
+    -- have known spelling; other families still need a registry resolver.
+    local registered
+    item, registered = registeredItem(data, item)
+    if not stocked and not registered and not unresolved[item.name] then
+      unresolved[item.name] = true
+      if unresolvedNames then
+        unresolvedNames[#unresolvedNames + 1] = item.name
+      end
+    end
+    return item
+  end
+  local out = rule.outputs[1]
+  local label = formLabel(out.f)
+  local mode = rule.mode
+  local source = rule.inputs[1].f
+  local route = (mode == 'wiremill' or mode == 'bender')
+      and (' / from ' .. (labels[source] or source))
+    or ''
+  local recipe = {
+    kind = 'processing',
+    material = material.name,
+    outputForm = out.f,
+    outputLabel = label,
+    inputs = {},
+    outputs = {},
+    label = material.name .. ' / ' .. label .. route,
+    stock = {},
+    batch = batch,
+  }
+  for _, which in ipairs({ 'inputs', 'outputs' }) do
+    for _, e in ipairs(rule[which]) do
+      local item = resolve(e)
+      if item then
+        recipe[which][#recipe[which] + 1] = item
+      else
+        recipe.stock[#recipe.stock + 1] = resolve(e, true)
+      end
+    end
+  end
+  for _, e in ipairs(rule.stock or {}) do
+    recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
+  end
+  U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
+  return recipe
 end
 function M.compile(data, mode, options, checkpoint)
   options = U.clone(options or {})
@@ -3262,6 +3397,7 @@ function M.compile(data, mode, options, checkpoint)
       multiplier = multiplier,
       batch = U.clone(options.batch),
       formDivisors = U.clone(options.formDivisors),
+      preferSolidIngots = options.preferSolidIngots ~= false,
     },
     recipes = {},
     unusedExcluded = 0,
@@ -3271,7 +3407,7 @@ function M.compile(data, mode, options, checkpoint)
   }
   local seen, unresolved, skipped = {}, {}, {}
   manifest.unresolved = {}
-  local function exclude(material, rule, reason)
+  local function exclude(material, rule, reason, retire)
     local out = rule.outputs[1]
     local item = M.resolve(data, material, out.f)
     local key = item.name .. ':' .. item.damage
@@ -3284,6 +3420,7 @@ function M.compile(data, mode, options, checkpoint)
         name = item.name,
         damage = item.damage,
         reason = reason,
+        retireRecipe = retire and ruleRecipe(data, material, rule, options, 1, nil, {}) or nil,
       }
     end
   end
@@ -3298,12 +3435,12 @@ function M.compile(data, mode, options, checkpoint)
         and (not rule.polymer or rule.polymer == (polymer == 'none' and 'pvcSmall' or polymer))
         and (not options.sources or options.sources[rule.outputs[1].f] == rule.inputs[1].f)
       then
-        local eligible, reason = M.eligible(data, material, rule)
+        local eligible, reason, retire = M.eligible(data, material, rule, options)
         if reason == 'unused' then
           manifest.unusedExcluded = manifest.unusedExcluded + 1
           exclude(material, rule)
         elseif reason then
-          exclude(material, rule, reason)
+          exclude(material, rule, reason, retire)
         end
         if eligible then
           if not material.tier then
@@ -3343,80 +3480,16 @@ function M.compile(data, mode, options, checkpoint)
             manifest.tierExcluded = manifest.tierExcluded + 1
             exclude(material, rule, batch.excluded)
           else
-            local function resolve(e, stocked)
-              if e.fluid == 'material' then
-                local fluid =
-                  U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
-                local size = e.n * (stocked and 1 or recipeMultiplier)
-                U.check(
-                  U.integer(size) and size > 0,
-                  'Pattern multiplier exceeds the supported fluid quantity'
-                )
-                return {
-                  type = 'fluid',
-                  name = fluid,
-                  label = 'Molten ' .. material.name,
-                  size = size,
-                }
-              end
-              local item
-              if e.f then
-                item = M.resolve(data, material, e.f)
-                item.label = material.name .. ' ' .. formLabel(e.f)
-              else
-                item = U.clone(U.check(data.items[e.i], 'Unknown shared item'))
-              end
-              if item.option and options[item.option] == false and not stocked then
-                return nil
-              end
-              item.option = nil
-              item.type = 'item'
-              item.size = e.n * (stocked and 1 or recipeMultiplier)
-              U.check(
-                U.integer(item.size) and item.size > 0,
-                'Pattern multiplier exceeds the supported ingredient quantity'
-              )
-              -- Oracle IDs are normalized to lower case. GT/Minecraft families above
-              -- have known spelling; other families still need a registry resolver.
-              local registered
-              item, registered = registeredItem(data, item)
-              if not stocked and not registered and not unresolved[item.name] then
-                unresolved[item.name] = true
-                manifest.unresolved[#manifest.unresolved + 1] = item.name
-              end
-              return item
-            end
-            local out = rule.outputs[1]
-            local label = formLabel(out.f)
-            local source = rule.inputs[1].f
-            local route = (mode == 'wiremill' or mode == 'bender')
-                and (' / from ' .. (labels[source] or source))
-              or ''
-            local recipe = {
-              kind = 'processing',
-              material = material.name,
-              outputForm = out.f,
-              outputLabel = label,
-              inputs = {},
-              outputs = {},
-              label = material.name .. ' / ' .. label .. route,
-              stock = {},
-              batch = batch,
-            }
-            for _, which in ipairs({ 'inputs', 'outputs' }) do
-              for _, e in ipairs(rule[which]) do
-                local item = resolve(e)
-                if item then
-                  recipe[which][#recipe[which] + 1] = item
-                else
-                  recipe.stock[#recipe.stock + 1] = resolve(e, true)
-                end
-              end
-            end
-            for _, e in ipairs(rule.stock or {}) do
-              recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
-            end
-            U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
+            local recipe = ruleRecipe(
+              data,
+              material,
+              rule,
+              options,
+              recipeMultiplier,
+              batch,
+              unresolved,
+              manifest.unresolved
+            )
             local key = Planner.recipeKey(recipe)
             if not seen[key] then
               manifest.recipes[#manifest.recipes + 1] = recipe
@@ -3510,6 +3583,10 @@ function M.planRows(plan, manifest)
       plan.resizeCount .. ' reused patterns will be resized to the configured batch.',
       'yellow_lighter1'
     )
+  end
+  if #(plan.parks or {}) > 0 then
+    add(#plan.parks .. ' solid-route ingot casts will be disabled (PARK).', 'yellow')
+    add('Their encoded patterns stay in their slots as inert donor placeholders.', 'muted')
   end
   local group, bank, material
   for _, entry in ipairs(plan.layout) do
@@ -3625,7 +3702,8 @@ function M.existingRows(plan)
       add,
       '  |  ',
       entry.status .. '  slot ' .. entry.from.slot .. '  ' .. entry.label,
-      entry.status == 'RESIZE' and 'yellow_lighter1'
+      entry.status == 'PARK' and 'red'
+        or entry.status == 'RESIZE' and 'yellow_lighter1'
         or entry.status == 'KEEP' and 'yellow'
         or 'green'
     )
@@ -3681,7 +3759,10 @@ function M.excludedRows(manifest)
     #(manifest.skipped or {}) .. ' output forms excluded by material, use or tier policy.',
     'muted'
   )
-  add('Existing patterns for these outputs are kept; see Existing.', 'muted')
+  add(
+    'Existing patterns are kept except matching solid-route ingot casts (PARK); see Existing.',
+    'muted'
+  )
   local material
   for _, item in ipairs(manifest.skipped or {}) do
     if material ~= item.material then
@@ -3841,6 +3922,92 @@ local function patternRecipe(data, p, root)
   end
   return r
 end
+-- NetworkControl is exposed by a block ME interface or an ME controller,
+-- not by multipart interfaces. These queries are read-only; never submit a
+-- crafting job just to inspect whether an output already has a recipe.
+local function ingotNetwork(c)
+  local prefix = c.shared.networkAddress
+  if prefix == '' then
+    local editor = selectDevice('me_interface', c.shared.editorAddress)
+    if editor.getCraftable or editor.getCraftables then
+      return editor
+    end
+  end
+  local matches = {}
+  for _, kind in ipairs(prefix == '' and { 'me_controller' } or { 'me_controller', 'me_interface' }) do
+    for address, tp in component.list(kind, true) do
+      if tp == kind and address:sub(1, #prefix) == prefix then
+        local proxy = component.proxy(address)
+        if proxy.getCraftable or proxy.getCraftables then
+          matches[#matches + 1] = proxy
+        end
+      end
+    end
+  end
+  U.check(
+    #matches == 1,
+    'Ingot checks need one ME network component; set its address in Shared interfaces'
+  )
+  return matches[1]
+end
+local function filterCraftableIngots(c, hw, snapshot, manifest, destination)
+  if not manifest.policy or manifest.policy.mode ~= 'solidifier' then
+    return
+  end
+  manifest.requestedRecipes = manifest.requestedRecipes or manifest.recipes
+  local owned = {}
+  for _, bank in ipairs(snapshot.interfaces) do
+    if bank.role == 'destination' then
+      for _, p in pairs(bank.patterns) do
+        owned[bank.name .. ':' .. tostring(p.recipeKey)] = true
+      end
+    end
+  end
+  local skipped, recipes, checks, network = {}, {}, {}, nil
+  for _, entry in ipairs(manifest.skipped) do
+    if not entry.network then
+      skipped[#skipped + 1] = entry
+    end
+  end
+  for _, recipe in ipairs(manifest.requestedRecipes) do
+    local omit = false
+    if recipe.outputForm == 'ingot' then
+      network = network or ingotNetwork(c)
+      local output = recipe.outputs[1]
+      local filter = { name = output.name, damage = output.damage }
+      local craftable
+      if network.getCraftable then
+        craftable = invoke(network, 'getCraftable', filter, 'item') ~= nil
+      else
+        local found = invoke(network, 'getCraftables', filter)
+        U.check(type(found) == 'table', 'ME crafting query failed')
+        craftable = next(found) ~= nil
+      end
+      local key = recipeKey(hw.data, recipe)
+      -- ME advertises outputs, not competing recipe inputs. An installed,
+      -- matching cast must not make itself disappear on the next scan.
+      omit = craftable and not owned[destination(recipe) .. ':' .. key]
+      checks[output.name .. ':' .. output.damage] = craftable
+      if omit then
+        skipped[#skipped + 1] = {
+          material = recipe.material,
+          form = recipe.outputForm,
+          label = recipe.label,
+          name = output.name,
+          damage = output.damage,
+          network = true,
+          reason = 'Ingot already craftable in the ME network; no new cast added.',
+        }
+      end
+    end
+    if not omit then
+      recipes[#recipes + 1] = recipe
+    end
+  end
+  manifest.recipes, manifest.skipped = recipes, skipped
+  manifest.policy.ingotNetwork = network and network.address or nil
+  manifest.policy.ingotCraftables = checks
+end
 local function explainExisting(plan, snapshot, request, manifest)
   local function itemKey(item)
     return item and item.name and (item.name .. ':' .. tostring(item.damage or 0))
@@ -3895,12 +4062,18 @@ local function explainExisting(plan, snapshot, request, manifest)
         or outputKey
         or 'Unknown output'
       local reason
-      if reusedEntry then
+      if keptEntry and keptEntry.parkReason then
+        reason = keptEntry.parkReason .. ' Replace this cast with an inert donor placeholder.'
+      elseif reusedEntry then
         reason = reusedEntry.resize and 'Recipe matches; batch will be resized.'
           or 'Recipe matches the selected route.'
       elseif skippedItem then
         reason = 'Skipped: '
           .. (skippedItem.reason or 'no path to a non-recycling product in the recipe export.')
+        if skippedItem.retireRecipe and pattern.hasFluidInput then
+          plan.warnings[#plan.warnings + 1] = label
+            .. ': existing fluid-input recipe differs; inspect or remove it manually.'
+        end
       elseif wantedKeys[interface.name .. ':' .. tostring(pattern.recipeKey)] then
         reason = 'Duplicate of a selected recipe; kept after the planned patterns.'
       elseif wantedOutput and wantedOutput.destination ~= interface.name then
@@ -3917,7 +4090,9 @@ local function explainExisting(plan, snapshot, request, manifest)
         interface = interface.name,
         from = from,
         to = reusedEntry and reusedEntry.destination or keptEntry and keptEntry.to or from,
-        status = reusedEntry and (reusedEntry.resize and 'RESIZE' or 'REUSE') or 'KEEP',
+        status = keptEntry and keptEntry.parkReason and 'PARK'
+          or reusedEntry and (reusedEntry.resize and 'RESIZE' or 'REUSE')
+          or 'KEEP',
         label = label,
         output = pattern.output,
         inputs = pattern.inputSummary,
@@ -3961,7 +4136,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
       and type(manifest.source.targetVersion) == 'string',
     'Manifest must identify recipe and target versions'
   )
-  for _, recipe in ipairs(manifest.recipes) do
+  for _, recipe in ipairs(manifest.requestedRecipes or manifest.recipes) do
     group(destination(recipe), 'destination')
   end
   for _, item in ipairs(manifest.skipped or {}) do
@@ -3974,6 +4149,12 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     data = selectDevice('data', c.shared.dataAddress),
   }
   local snapshot = { terminal = hw.terminal.address, interfaces = {} }
+  local retireKeys = {}
+  for _, item in ipairs(manifest.skipped or {}) do
+    if item.retireRecipe then
+      retireKeys[recipeKey(hw.data, item.retireRecipe)] = item.reason
+    end
+  end
   for _, g in ipairs(groups) do
     local found = discover(hw, g.name)
     for _, entry in ipairs(found) do
@@ -4022,6 +4203,9 @@ local function scanManifest(c, manifest, routing, progress, control, started)
             local r, issue = patternRecipe(hw.data, p, root)
             if r then
               value.kind = r.kind
+              for _, input in pairs(r.inputs) do
+                value.hasFluidInput = value.hasFluidInput or input.type == 'fluid'
+              end
               value.inputSummary = U.ingredientSummary(r.inputs)
               if r.outputs[1] then
                 value.output = U.clone(r.outputs[1])
@@ -4030,6 +4214,9 @@ local function scanManifest(c, manifest, routing, progress, control, started)
               if valid then
                 value.recipeKey = key
                 value.scale = scale
+                if g.role == 'destination' then
+                  value.parkReason = retireKeys[key]
+                end
               else
                 value.matchIssue = 'Encoded ingredients could not be compared'
               end
@@ -4052,6 +4239,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
       )
     end
   end
+  filterCraftableIngots(c, hw, snapshot, manifest, destination)
   local request = {
     recipes = {},
     source = U.clone(manifest.source),
@@ -4131,6 +4319,7 @@ local function programRouting(c, id)
       forms = forms,
       sources = sources,
       formDivisors = formDivisors,
+      preferSolidIngots = values.preferSolidIngots ~= 'off',
     },
     program
 end
@@ -4235,7 +4424,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
   Planner.revalidate(request, snapshot, baseline, gate)
   local hw = connect(c, progress, control)
   local editor = current(hw, hw.buffer)
-  local firstEdit = plan.resizes[1] or plan.creates[1]
+  local firstEdit = plan.parks[1] or plan.resizes[1] or plan.creates[1]
   local slot = firstEdit and firstEdit.workspace.slot
   if slot then
     U.check(
@@ -4254,6 +4443,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     program = id,
     created = #plan.creates,
     resized = #plan.resizes,
+    parked = #plan.parks,
     sorted = #plan.moves,
   })
   if #plan.moves > 0 then
@@ -4277,6 +4467,26 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     end
   end
   local takeDonor = donorPool(hw, c.shared.donors, protected, progress)
+  local marker = #plan.parks > 0 and C.donors.marker(hw) or nil
+  for _, entry in ipairs(plan.parks) do
+    gate()
+    local original = current(hw, entry.to).patterns[entry.to.slot]
+    U.check(patternFingerprint(hw, original) == entry.fingerprint, 'Cast changed before parking')
+    U.check(safeDonor(hw.data, original), 'Cast is no longer editable')
+    local op = {
+      kind = 'park',
+      destination = entry.to,
+      slot = entry.workspace.slot,
+      original = compact(original),
+      recipe = marker,
+    }
+    saveOp(hw, op)
+    finish(hw, op, progress)
+    clearOp()
+    if progress then
+      progress('Disabled ingot cast in slot ' .. entry.to.slot)
+    end
+  end
   local function imprint(entry, resize)
     local recipe = recipes[entry.key]
     U.check(recipe and recipe.kind == 'processing', 'Unsupported pattern kind')
@@ -4334,7 +4544,7 @@ function C.runner.hasChanges(preview)
     return #plan.cleanups > 0
   end
   return preview.id == 'assline' and #plan.changes > 0
-    or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
+    or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes + #plan.parks) > 0
 end
 function C.runner.requiresVerification(preview)
   return Programs.byId[preview.id].requiresCapacityVerification ~= false
@@ -4434,6 +4644,7 @@ local function donorMarker(hw)
   local marker = { type = 'item', name = 'minecraft:paper', damage = 0, size = 1, tag = tag }
   return { kind = 'processing', inputs = { marker }, outputs = { U.clone(marker) } }
 end
+C.donors.marker = donorMarker
 
 function C.donors.scan(c, progress, control)
   local hw = connect(c, progress, control)
@@ -5434,6 +5645,9 @@ local function runUI()
             p.resizeCount > 0 and 'yellow_lighter1' or 'muted'
           )
           text(113, layout.body + 4, #p.preserved .. ' unrelated kept', 45, 'muted')
+          if #p.parks > 0 then
+            text(113, layout.body + 5, #p.parks .. ' ingot casts to disable', 45, 'yellow')
+          end
           text(
             113,
             layout.body + 6,

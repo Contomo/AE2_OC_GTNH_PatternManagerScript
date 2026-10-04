@@ -112,7 +112,7 @@ function M.resolve(data, material, form)
   local item = registeredItem(data, resolveForm(data, material, form))
   return item
 end
-function M.eligible(data, material, rule)
+function M.eligible(data, material, rule, options)
   if (material.deny or {})[rule.id] then
     return false
   end
@@ -139,10 +139,13 @@ function M.eligible(data, material, rule)
     end
     if data.source.materialSourcePolicy and rule.outputs[1].f == 'ingot' then
       local sources = (data.origins or {})[material.o] or {}
+      if
+        sources.native_ingot
+        and (not sources.native_molten or not options or options.preferSolidIngots ~= false)
+      then
+        return false, 'Ingots have a direct solid production route.', true
+      end
       if not sources.native_molten then
-        if sources.native_ingot then
-          return false, 'Ingots have a direct solid route; no native liquid source.'
-        end
         return false, 'No verified native liquid source for ingots.'
       end
     end
@@ -155,6 +158,94 @@ function M.eligible(data, material, rule)
     return false, 'unused'
   end
   return true
+end
+local function ruleRecipe(
+  data,
+  material,
+  rule,
+  options,
+  recipeMultiplier,
+  batch,
+  unresolved,
+  unresolvedNames
+)
+  local function resolve(e, stocked)
+    if e.fluid == 'material' then
+      local fluid = U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
+      local size = e.n * (stocked and 1 or recipeMultiplier)
+      U.check(
+        U.integer(size) and size > 0,
+        'Pattern multiplier exceeds the supported fluid quantity'
+      )
+      return {
+        type = 'fluid',
+        name = fluid,
+        label = 'Molten ' .. material.name,
+        size = size,
+      }
+    end
+    local item
+    if e.f then
+      item = M.resolve(data, material, e.f)
+      item.label = material.name .. ' ' .. formLabel(e.f)
+    else
+      item = U.clone(U.check(data.items[e.i], 'Unknown shared item'))
+    end
+    if item.option and options[item.option] == false and not stocked then
+      return nil
+    end
+    item.option = nil
+    item.type = 'item'
+    item.size = e.n * (stocked and 1 or recipeMultiplier)
+    U.check(
+      U.integer(item.size) and item.size > 0,
+      'Pattern multiplier exceeds the supported ingredient quantity'
+    )
+    -- Oracle IDs are normalized to lower case. GT/Minecraft families above
+    -- have known spelling; other families still need a registry resolver.
+    local registered
+    item, registered = registeredItem(data, item)
+    if not stocked and not registered and not unresolved[item.name] then
+      unresolved[item.name] = true
+      if unresolvedNames then
+        unresolvedNames[#unresolvedNames + 1] = item.name
+      end
+    end
+    return item
+  end
+  local out = rule.outputs[1]
+  local label = formLabel(out.f)
+  local mode = rule.mode
+  local source = rule.inputs[1].f
+  local route = (mode == 'wiremill' or mode == 'bender')
+      and (' / from ' .. (labels[source] or source))
+    or ''
+  local recipe = {
+    kind = 'processing',
+    material = material.name,
+    outputForm = out.f,
+    outputLabel = label,
+    inputs = {},
+    outputs = {},
+    label = material.name .. ' / ' .. label .. route,
+    stock = {},
+    batch = batch,
+  }
+  for _, which in ipairs({ 'inputs', 'outputs' }) do
+    for _, e in ipairs(rule[which]) do
+      local item = resolve(e)
+      if item then
+        recipe[which][#recipe[which] + 1] = item
+      else
+        recipe.stock[#recipe.stock + 1] = resolve(e, true)
+      end
+    end
+  end
+  for _, e in ipairs(rule.stock or {}) do
+    recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
+  end
+  U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
+  return recipe
 end
 function M.compile(data, mode, options, checkpoint)
   options = U.clone(options or {})
@@ -188,6 +279,7 @@ function M.compile(data, mode, options, checkpoint)
       multiplier = multiplier,
       batch = U.clone(options.batch),
       formDivisors = U.clone(options.formDivisors),
+      preferSolidIngots = options.preferSolidIngots ~= false,
     },
     recipes = {},
     unusedExcluded = 0,
@@ -197,7 +289,7 @@ function M.compile(data, mode, options, checkpoint)
   }
   local seen, unresolved, skipped = {}, {}, {}
   manifest.unresolved = {}
-  local function exclude(material, rule, reason)
+  local function exclude(material, rule, reason, retire)
     local out = rule.outputs[1]
     local item = M.resolve(data, material, out.f)
     local key = item.name .. ':' .. item.damage
@@ -210,6 +302,7 @@ function M.compile(data, mode, options, checkpoint)
         name = item.name,
         damage = item.damage,
         reason = reason,
+        retireRecipe = retire and ruleRecipe(data, material, rule, options, 1, nil, {}) or nil,
       }
     end
   end
@@ -224,12 +317,12 @@ function M.compile(data, mode, options, checkpoint)
         and (not rule.polymer or rule.polymer == (polymer == 'none' and 'pvcSmall' or polymer))
         and (not options.sources or options.sources[rule.outputs[1].f] == rule.inputs[1].f)
       then
-        local eligible, reason = M.eligible(data, material, rule)
+        local eligible, reason, retire = M.eligible(data, material, rule, options)
         if reason == 'unused' then
           manifest.unusedExcluded = manifest.unusedExcluded + 1
           exclude(material, rule)
         elseif reason then
-          exclude(material, rule, reason)
+          exclude(material, rule, reason, retire)
         end
         if eligible then
           if not material.tier then
@@ -269,80 +362,16 @@ function M.compile(data, mode, options, checkpoint)
             manifest.tierExcluded = manifest.tierExcluded + 1
             exclude(material, rule, batch.excluded)
           else
-            local function resolve(e, stocked)
-              if e.fluid == 'material' then
-                local fluid =
-                  U.check(material.molten, 'Missing verified molten fluid for ' .. material.name)
-                local size = e.n * (stocked and 1 or recipeMultiplier)
-                U.check(
-                  U.integer(size) and size > 0,
-                  'Pattern multiplier exceeds the supported fluid quantity'
-                )
-                return {
-                  type = 'fluid',
-                  name = fluid,
-                  label = 'Molten ' .. material.name,
-                  size = size,
-                }
-              end
-              local item
-              if e.f then
-                item = M.resolve(data, material, e.f)
-                item.label = material.name .. ' ' .. formLabel(e.f)
-              else
-                item = U.clone(U.check(data.items[e.i], 'Unknown shared item'))
-              end
-              if item.option and options[item.option] == false and not stocked then
-                return nil
-              end
-              item.option = nil
-              item.type = 'item'
-              item.size = e.n * (stocked and 1 or recipeMultiplier)
-              U.check(
-                U.integer(item.size) and item.size > 0,
-                'Pattern multiplier exceeds the supported ingredient quantity'
-              )
-              -- Oracle IDs are normalized to lower case. GT/Minecraft families above
-              -- have known spelling; other families still need a registry resolver.
-              local registered
-              item, registered = registeredItem(data, item)
-              if not stocked and not registered and not unresolved[item.name] then
-                unresolved[item.name] = true
-                manifest.unresolved[#manifest.unresolved + 1] = item.name
-              end
-              return item
-            end
-            local out = rule.outputs[1]
-            local label = formLabel(out.f)
-            local source = rule.inputs[1].f
-            local route = (mode == 'wiremill' or mode == 'bender')
-                and (' / from ' .. (labels[source] or source))
-              or ''
-            local recipe = {
-              kind = 'processing',
-              material = material.name,
-              outputForm = out.f,
-              outputLabel = label,
-              inputs = {},
-              outputs = {},
-              label = material.name .. ' / ' .. label .. route,
-              stock = {},
-              batch = batch,
-            }
-            for _, which in ipairs({ 'inputs', 'outputs' }) do
-              for _, e in ipairs(rule[which]) do
-                local item = resolve(e)
-                if item then
-                  recipe[which][#recipe[which] + 1] = item
-                else
-                  recipe.stock[#recipe.stock + 1] = resolve(e, true)
-                end
-              end
-            end
-            for _, e in ipairs(rule.stock or {}) do
-              recipe.stock[#recipe.stock + 1] = e.fluid and U.clone(e) or resolve(e, true)
-            end
-            U.check(#recipe.inputs > 0 and #recipe.outputs > 0, 'Rule contains no requested inputs')
+            local recipe = ruleRecipe(
+              data,
+              material,
+              rule,
+              options,
+              recipeMultiplier,
+              batch,
+              unresolved,
+              manifest.unresolved
+            )
             local key = Planner.recipeKey(recipe)
             if not seen[key] then
               manifest.recipes[#manifest.recipes + 1] = recipe

@@ -173,6 +173,38 @@ class TierTests(unittest.TestCase):
             refine_processed_quest_tiers('unused', reverse, result)
         self.assertEqual(result['alloy']['tier'], 'UV')
 
+    def test_raw_ingot_quest_is_refined_through_alloy_blast_gas_and_cooling(self):
+        reverse = {'test:base': ('base', 'dust'), 'test:dust': ('alloy', 'dust'),
+                   'test:hot': ('alloy', 'ingotHot'), 'test:ingot': ('alloy', 'ingot')}
+        result = {'base': {'tier': 'ZPM'},
+                  'alloy': {'tier': 'UIV', 'form': 'ingot', 'kind': 'quest item', 'quest': 'late'}}
+        blast = self.route('blast', ['test:dust'], 'test:hot', 1966080, 'Blast Furnace')
+        blast[2]['inputs'].append({'id': 'gas', 'kind': 'fluid', 'amount': 100})
+        gas = ('recipes', 'gas', {'id': 'gas', 'kind': 'world_fluid', 'eut': 0,
+                                'inputs': [], 'outputs': [{'id': 'gas', 'kind': 'fluid'}]})
+        rows = [self.route('mix', ['test:base'], 'test:dust', 122880), gas, blast,
+                self.route('cool', ['test:hot'], 'test:ingot', 122880, 'Vacuum Freezer')]
+        with patch('build_tiers.records', return_value=iter(rows)):
+            refine_processed_quest_tiers('unused', reverse, result)
+        evidence = result['alloy']
+        self.assertEqual(evidence['tier'], 'UHV')
+        self.assertEqual(evidence['questTier'], 'UIV')
+        self.assertEqual(evidence['route'], ['mix', 'gas', 'blast', 'cool'])
+        self.assertEqual(evidence['inputTiers'], {'base': 'ZPM'})
+
+    def test_fluid_recycling_replication_and_zero_eut_special_machine_do_not_unlock_ingots(self):
+        reverse = {'test:ingot': ('alloy', 'ingot')}
+        result = {'alloy': {'tier': 'UIV', 'form': 'ingot', 'kind': 'quest item', 'quest': 'late'}}
+        cast = self.route('cast', [], 'test:ingot', 8, 'Fluid Solidifier')
+        cast[2]['inputs'] = [{'id': 'molten.alloy', 'kind': 'fluid'}]
+        fake = ('recipes', 'special', {'id': 'special', 'kind': 'gregtech_machine',
+                'machineType': 'Eye of Harmony', 'eut': 0, 'inputs': [],
+                'outputs': [{'id': 'molten.alloy', 'kind': 'fluid'}]})
+        replication = self.route('replicate', [], 'test:ingot', 8, 'Replicator')
+        with patch('build_tiers.records', return_value=iter([cast, fake, replication])):
+            refine_processed_quest_tiers('unused', reverse, result)
+        self.assertEqual(result['alloy']['tier'], 'UIV')
+
     def test_production_refinement_keeps_later_ingredient_tier_and_existing_earlier_quest(self):
         reverse = {'test:a': ('a', 'dust'), 'test:ingot': ('alloy', 'ingot')}
         result = {'a': {'tier': 'LuV'},

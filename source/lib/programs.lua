@@ -109,6 +109,13 @@ shaperFields[#shaperFields + 1] = formSwitches(
   'plate,turbineBlade'
 )
 shaperFields[#shaperFields + 1] = multiplier()
+shaperFields[#shaperFields + 1] = field(
+  'preferSolidIngots',
+  'Prefer solid ingot production',
+  'Skip ingot casts with a verified solid route. Off permits native ABS/liquid routes; the live ME check still applies.',
+  'on',
+  'toggle'
+)
 M.list = {
   {
     id = 'assline',

@@ -296,45 +296,82 @@ def refine_processed_quest_tiers(export, reverse, result):
     Resolve raw-material production routes using their base voltage and known
     ingredient tiers. Follow same-material intermediates (dust -> hot ingot),
     requiring a real creation route instead of recycling the requested part.
-    Unknown inputs, fluids without material evidence and cyclic routes cannot
+    Resolve auxiliary fluids through their exported production routes too (for
+    example, blast-furnace gas). Unknown inputs and unseeded cyclic routes cannot
     establish an earlier tier. This remains an estimate, with route provenance.
     """
     raw = {'dust', 'dustSmall', 'dustTiny', 'ingot', 'ingotHot', 'gem', 'nugget'}
     routes = {}
     for section, _, recipe in records(export):
-        if section != 'recipes' or recipe.get('machineType') in RECOVERY_MACHINES | {'Arc Furnace'}:
+        if section != 'recipes' or recipe.get('machineType') in RECOVERY_MACHINES | {'Arc Furnace', 'Fluid Solidifier', 'Replicator'}:
             continue
         voltage = recipe.get('eut')
         if voltage is None:
             if recipe.get('kind') not in ('crafting', 'crafting_shaped', 'crafting_shapeless', 'furnace', 'smelting'):
                 continue
             voltage = 0
-        ins = [reverse.get(e['id']) for e in recipe['inputs'] if e.get('consumed', True)]
-        if not ins or any(not found or found[1] not in raw for found in ins):
+        def node(entry):
+            return ('fluid', entry['id']) if entry.get('kind') == 'fluid' else reverse.get(entry['id'])
+        # Replication needs material-specific scanned data, not just its cheap
+        # EU/t. It cannot establish earlier progression from an empty feed.
+        ins = [node(e) for e in recipe['inputs'] if e.get('consumed', True)]
+        if not ins and recipe.get('kind') == 'gregtech_machine' and voltage <= 0:
+            continue
+        if any(not found or (found[0] != 'fluid' and found[1] not in raw) for found in ins):
             continue
         tier = next((n for n, limit in zip(NAMES, DEFINITIONS['voltages']) if voltage <= limit), 'MAX')
         if recipe.get('minimumTier') in NAMES:
             tier = max(tier, recipe['minimumTier'], key=NAMES.index)
         for output in recipe['outputs']:
-            found = reverse.get(output['id'])
-            if not found or found[1] not in raw or output.get('chance', 1) != 1:
+            found = node(output)
+            if (not found or (found[0] != 'fluid' and (found[1] not in raw or not ins))
+                    or output.get('chance', 1) != 1):
                 continue
             routes.setdefault(found, []).append((recipe['id'], tier, voltage, ins, output['id']))
 
     original = dict(result)
+    # Auxiliary fluids are shared by many metals. Resolve them once, from
+    # seeded production paths; repeated recursive searches through chemical
+    # cycles are both expensive and unable to prove availability.
+    fluids = {}
+    while True:
+        changed = False
+        for target, alternatives in routes.items():
+            if target[0] != 'fluid':
+                continue
+            for recipe, tier, voltage, inputs, output in alternatives:
+                input_tiers, path = {}, []
+                for material, form in inputs:
+                    evidence = fluids.get(form) if material == 'fluid' else original.get(material)
+                    if not evidence:
+                        break
+                    tier = max(tier, evidence['tier'], key=NAMES.index)
+                    if material == 'fluid':
+                        input_tiers.update(evidence['inputTiers'])
+                        path.extend(evidence['route'])
+                    else:
+                        input_tiers[material] = evidence['tier']
+                else:
+                    prior = fluids.get(target[1])
+                    if not prior or NAMES.index(tier) < NAMES.index(prior['tier']):
+                        fluids[target[1]] = {'tier': tier, 'inputTiers': input_tiers,
+                                             'route': list(dict.fromkeys(path + [recipe]))}
+                        changed = True
+        if not changed:
+            break
     for key, prior in original.items():
-        if prior.get('kind') != 'quest item' or prior.get('form') in raw:
+        if prior.get('kind') != 'quest item':
             continue
-        def resolve(form, visiting):
-            node = (key, form)
-            if node in visiting:
+        def resolve(target, visiting):
+            if target in visiting:
                 return None
             best = None
-            for recipe, tier, voltage, inputs, output in routes.get(node, []):
+            for recipe, tier, voltage, inputs, output in routes.get(target, []):
                 input_tiers, path, unavailable = {}, [], False
                 for material, input_form in inputs:
-                    if material == key:
-                        step = resolve(input_form, visiting | {node})
+                    if material == key or material == 'fluid':
+                        step = (fluids.get(input_form) if material == 'fluid'
+                                else resolve((material, input_form), visiting | {target}))
                         if not step:
                             unavailable = True
                             break
@@ -351,7 +388,7 @@ def refine_processed_quest_tiers(export, reverse, result):
                     continue
                 candidate = {'tier': tier, 'recipe': recipe, 'eut': voltage,
                              'inputTiers': input_tiers, 'route': list(dict.fromkeys(path + [recipe])),
-                             'output': output, 'form': form}
+                             'output': output, 'form': target[1]}
                 if best is None or NAMES.index(tier) < NAMES.index(best['tier']):
                     best = candidate
             return best
@@ -360,7 +397,7 @@ def refine_processed_quest_tiers(export, reverse, result):
         # can use dust production evidence; a part conversion never creates metal.
         forms = {form for material, form in routes if material == key}
         bases = ('ingot', 'ingotHot') if forms & {'ingot', 'ingotHot'} else ('gem',) if 'gem' in forms else ('dust',)
-        candidates = [route for form in bases if (route := resolve(form, set()))]
+        candidates = [route for form in bases if (route := resolve((key, form), set()))]
         if not candidates:
             continue
         best = min(candidates, key=lambda route: NAMES.index(route['tier']))
@@ -408,7 +445,7 @@ def main():
     refine_processed_quest_tiers(args.recipes, reverse, materials)
     with open(args.archive, 'rb') as stream:
         digest = hashlib.file_digest(stream, 'sha256').hexdigest()
-    output = {'policy': 'quest-and-ore-access-v3', 'packVersion': args.pack_version,
+    output = {'policy': 'quest-and-ore-access-v4', 'packVersion': args.pack_version,
               'source': 'https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/tree/' + args.commit + '/config/betterquesting/DefaultQuests',
               'commit': args.commit, 'archiveSha256': digest, 'gtSourceSha256': hashlib.sha256(Path(args.gt_source).read_bytes()).hexdigest(), 'materials': materials}
     Path(args.output).write_text(json.dumps(output, indent=2) + '\n', encoding='utf-8')

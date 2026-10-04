@@ -128,7 +128,32 @@ It replaces disposable recipes and does not provide undo.
 
 The preview uses labels such as `30,720 EU/t (LuV)` with tier-colored text
 blended at 50%, and explains exclusions in Excluded and Existing. Existing patterns
-excluded by settings are kept. Selecting no recipes gives a non-executable preview.
+excluded by settings are kept. A Fluid Shaper preview can still execute when its
+only changes are disabling obsolete ingot casts.
+
+Fluid Shaper's **Prefer solid ingot production** defaults on: it skips casts with
+a verified solid production route, even when the export also contains a native
+molten route. Turning it off permits those native-liquid/ABS routes; materials
+whose molten form only comes from extraction remain excluded. New ingot casts are additionally
+skipped if the connected ME network already advertises the ingot as craftable.
+The block editor interface supplies this read-only query; a multipart editor uses
+the sole connected `me_controller` instead. The availability check is repeated
+before execution, and a changed result invalidates the preview.
+With multiple network components, select one using **ME network component
+address** under Shared interfaces.
+
+An existing cast matching an excluded solid-route ingot appears as **PARK** in
+Existing. Executing the preview replaces its recipe with the same inert donor
+placeholder used by Clean donor buffer, retaining its encoded item and original
+metadata. It stays in its destination slot and can be moved back to the donor
+buffer later. Nonmatching recipes remain untouched, with a warning for fluid-input
+recipes that need manual inspection. Parking uses the shared journal and editor;
+Pause, Stop and Continue work at the same operation boundaries.
+
+OC's ME crafting query exposes outputs, not each competing recipe's inputs. A
+matching cast already in its configured destination therefore does not exclude
+itself merely because ME advertises that output. The independent solid-route
+check is what retires such casts for materials such as Naquadah.
 
 Material tiers come from the pinned beta-3 questbook's item/ingredient lists,
 side-chapter prerequisites and pinned GT ore placement rules. Dusts, ores,
@@ -139,6 +164,9 @@ excluded. These are availability estimates rather than an exact tech-tree solver
 `data/material-tiers.json` retains paths, recipes, dimensions and production
 constraints for audit. Ore/recipe estimates are marked in the preview; remaining
 materials follow the chosen unclassified policy. EU/t comes from the recipe export.
+Late quests for ingots are also refined through earlier raw-material production,
+including exported auxiliary-gas supply and cooling routes. Casting, recycling,
+replication and unseeded cycles cannot establish an earlier material tier.
 The insulator selects PVC pulp, small PVC pulp, PDMS pulp, small PDMS pulp, or
 nothing. PPS sheets have a separate toggle. Normal piles use the scraped
 four-cable batches; small piles and nothing use single-cable batches. The scrape

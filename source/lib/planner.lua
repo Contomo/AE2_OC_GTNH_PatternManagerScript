@@ -139,6 +139,7 @@ function M.plan(request, snapshot, checkpoint)
     moves = {},
     creates = {},
     resizes = {},
+    parks = {},
     resizeCount = 0,
     preserved = {},
     reused = 0,
@@ -157,6 +158,7 @@ function M.plan(request, snapshot, checkpoint)
     end
   end
   local groups, workspace, tokens, occupied = {}, nil, {}, {}
+  local parkCount = 0
   for _, i in ipairs(interfaces) do
     if checkpoint then
       checkpoint()
@@ -174,6 +176,12 @@ function M.plan(request, snapshot, checkpoint)
         g.slots[#g.slots + 1] = e
         local pattern = i.patterns[slot]
         if pattern then
+          if pattern.parkReason then
+            parkCount = parkCount + 1
+            if not pattern.donor then
+              block('Cannot disable ingot cast: ' .. (pattern.reason or 'unsupported metadata'))
+            end
+          end
           local t = { pattern = pattern, current = e }
           tokens[#tokens + 1] = t
           g.tokens[#g.tokens + 1] = t
@@ -283,8 +291,12 @@ function M.plan(request, snapshot, checkpoint)
       if not t.selected then
         n = n + 1
         t.goal = g.slots[n]
-        p.preserved[#p.preserved + 1] =
-          { from = t.current, to = t.goal, fingerprint = t.pattern.fingerprint }
+        p.preserved[#p.preserved + 1] = {
+          from = t.current,
+          to = t.goal,
+          fingerprint = t.pattern.fingerprint,
+          parkReason = t.pattern.parkReason,
+        }
       end
     end
     if n > #g.slots then
@@ -303,8 +315,12 @@ function M.plan(request, snapshot, checkpoint)
   for _, g in pairs(groups) do
     if #g.wanted == 0 then
       for _, t in ipairs(g.tokens) do
-        p.preserved[#p.preserved + 1] =
-          { from = t.current, to = t.current, fingerprint = t.pattern.fingerprint }
+        p.preserved[#p.preserved + 1] = {
+          from = t.current,
+          to = t.current,
+          fingerprint = t.pattern.fingerprint,
+          parkReason = t.pattern.parkReason,
+        }
       end
     end
   end
@@ -326,8 +342,12 @@ function M.plan(request, snapshot, checkpoint)
     end
   end
   if
-    (needsMoves or p.resizeCount > 0 or p.required.crafting + p.required.processing > 0)
-    and not workspace
+    (
+      needsMoves
+      or parkCount > 0
+      or p.resizeCount > 0
+      or p.required.crafting + p.required.processing > 0
+    ) and not workspace
   then
     block('Leave an empty slot in the dedicated editing/workspace interface')
   end
@@ -366,6 +386,16 @@ function M.plan(request, snapshot, checkpoint)
       move(stuck, workspace)
     end
   end
+  for _, entry in ipairs(p.preserved) do
+    if entry.parkReason then
+      p.parks[#p.parks + 1] = {
+        to = copy(entry.to),
+        workspace = copy(workspace),
+        fingerprint = entry.fingerprint,
+        reason = entry.parkReason,
+      }
+    end
+  end
   for _, entry in ipairs(p.layout) do
     if entry.resize then
       p.resizes[#p.resizes + 1] = {
@@ -398,7 +428,7 @@ end
 function M.revalidate(request, snapshot, preview, checkpoint)
   local fresh = M.plan(request, snapshot, checkpoint)
   local function operations(p)
-    return encoded({ p.layout, p.moves, p.creates, p.resizes, p.preserved, p.required })
+    return encoded({ p.layout, p.moves, p.creates, p.resizes, p.parks, p.preserved, p.required })
   end
   need(
     #fresh.errors == 0

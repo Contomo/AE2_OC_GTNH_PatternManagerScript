@@ -871,6 +871,9 @@ local function runUI()
             p.resizeCount > 0 and 'yellow_lighter1' or 'muted'
           )
           text(113, layout.body + 4, #p.preserved .. ' unrelated kept', 45, 'muted')
+          if #p.parks > 0 then
+            text(113, layout.body + 5, #p.parks .. ' ingot casts to disable', 45, 'yellow')
+          end
           text(
             113,
             layout.body + 6,

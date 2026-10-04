@@ -79,6 +79,13 @@ M.fields = {
     help = 'At least 10 percentage points above the pause level; at most 95%.',
     default = '75',
   },
+  {
+    key = 'networkAddress',
+    placeholder = 'auto',
+    label = 'ME network component address',
+    help = 'Ingot checks: blank uses the block editor or sole ME controller; otherwise enter a controller/block interface address prefix.',
+    default = '',
+  },
 }
 M.defaults = { version = 2, shared = {}, batch = {}, programs = {} }
 for _, f in ipairs(M.fields) do

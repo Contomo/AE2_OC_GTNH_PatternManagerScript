@@ -321,21 +321,22 @@ test('Fluid Shaper ingots require native liquid production; solid-only and unkno
     fixture.materials[n]={name=name,family='gt',dsf=n,a=1,p=1,o=n,molten='molten.test'..n}
   end
   local manifest=M.compile(fixture,'solidifier')
-  assert(#manifest.recipes==6 and #manifest.skipped==2)
+  assert(#manifest.recipes==5 and #manifest.skipped==3)
   local counts={}
   for _,recipe in ipairs(manifest.recipes) do
     counts[recipe.material]=(counts[recipe.material] or 0)+1
   end
-  assert(counts.LiquidOnly==2 and counts.BothSources==2 and counts.SolidOnly==1 and counts.Unknown==1)
+  assert(counts.LiquidOnly==2 and counts.BothSources==1 and counts.SolidOnly==1 and counts.Unknown==1)
   for _,item in ipairs(manifest.skipped) do
     assert(item.form=='ingot')
-    assert(item.reason==(item.material=='SolidOnly'
-      and 'Ingots have a direct solid route; no native liquid source.'
+    assert(item.reason==(item.material~='Unknown'
+      and 'Ingots have a direct solid production route.'
       or 'No verified native liquid source for ingots.'))
+    assert((item.retireRecipe~=nil)==(item.material~='Unknown'))
   end
 end)
 
-test('scraped Vanadium Gallium ingots are excluded while its plates and native ABS ingots remain eligible',function()
+test('scraped solid-route ingots are excluded while plates remain; liquid preference permits native ABS casts',function()
   local manifest=M.compile(data,'solidifier',{forms={ingot=true,plate=true}})
   local vgPlate,absIngot,vgExcluded=false,false,false
   for _,recipe in ipairs(manifest.recipes) do
@@ -348,11 +349,17 @@ test('scraped Vanadium Gallium ingots are excluded while its plates and native A
   end
   for _,item in ipairs(manifest.skipped) do
     if item.material=='VanadiumGallium' and item.form=='ingot' then
-      assert(item.reason=='Ingots have a direct solid route; no native liquid source.')
+      assert(item.reason=='Ingots have a direct solid production route.')
       vgExcluded=true
     end
   end
-  assert(vgPlate and absIngot and vgExcluded)
+  assert(vgPlate and not absIngot and vgExcluded)
+  manifest=M.compile(data,'solidifier',{forms={ingot=true},preferSolidIngots=false})
+  for _,recipe in ipairs(manifest.recipes) do
+    if recipe.material=='AbyssalAlloy' then absIngot=true end
+    assert(recipe.material~='VanadiumGallium')
+  end
+  assert(absIngot)
 end)
 
 test('Fluid Shaper compiles only verified molten plate and turbine-blade routes',function()
@@ -382,10 +389,10 @@ end)
 
 test('Fluid Shaper compiles stocked pipe molds and the primary fluid for alternate melts',function()
   local manifest=M.compile(data,'solidifier',
-    {forms={ingot=true,nugget=true,pipeFluidTiny=true,pipeItemTiny=true}})
+    {forms={nugget=true,pipeFluidTiny=true,pipeItemTiny=true}})
   local seen={}
   for _,r in ipairs(manifest.recipes) do
-    if r.material=='Copper' and r.outputForm=='ingot' then
+    if r.material=='Copper' and r.outputForm=='nugget' then
       assert(r.inputs[1].name=='molten.copper')
       seen.copper=true
     elseif r.material=='Iron' and r.outputForm=='nugget' then
@@ -465,6 +472,27 @@ test('all scraped rules have material costs and Chromatic Glass dense plates sca
       assert(r.batch.divisorSource=='override' and r.inputs[1].size==261 and r.outputs[1].size==29)
     end
   end
+end)
+
+test('scraped Tairitsu ring is selected at UHV and Naquadah casts retire despite a native liquid route',function()
+  local batch=U.clone(require('assline_config').defaults.batch)
+  batch.mode='tiered';batch.currentTier='UHV'
+  local manifest=M.compile(data,'solidifier',{forms={ingot=true,ring=true},batch=batch})
+  local ring,retire=false,false
+  for _,r in ipairs(manifest.recipes) do
+    if r.material=='Tairitsu' and r.outputForm=='ring' then
+      assert(r.outputs[1].name=='bartworks:gt.bwMetaGeneratedring' and r.outputs[1].damage==10106)
+      assert(r.batch.materialTier=='UHV');ring=true
+    end
+    assert(not(r.material=='Naquadah' and r.outputForm=='ingot'))
+  end
+  for _,entry in ipairs(manifest.skipped) do
+    if entry.material=='Naquadah' and entry.form=='ingot' then
+      assert(entry.retireRecipe.inputs[1].name=='molten.naquadah')
+      retire=true
+    end
+  end
+  assert(ring and retire)
 end)
 
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

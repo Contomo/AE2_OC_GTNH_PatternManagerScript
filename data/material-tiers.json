@@ -1,5 +1,5 @@
 {
-  "policy": "quest-and-ore-access-v3",
+  "policy": "quest-and-ore-access-v4",
   "packVersion": "2.9.0-beta-3",
   "source": "https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/tree/27e61fbea6e245df80839885460994aa0ef9da9f/config/betterquesting/DefaultQuests",
   "commit": "27e61fbea6e245df80839885460994aa0ef9da9f",
@@ -55,12 +55,23 @@
       "kind": "quest item"
     },
     "sodiumhydroxide": {
-      "tier": "MV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/BiofortheMasses-AAAAAAAAAAAAAAAAAAAAFQ==/SodiumHydroxide-AAAAAAAAAAAAAAAAAAAMNg==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2685,
+      "tier": "LV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalbath:e0eec399f1ec4040",
+      "eut": 4,
+      "inputTiers": {
+        "sodium": "LV",
+        "lignite": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:002377d86a9d6916",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalbath:e0eec399f1ec4040"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/BiofortheMasses-AAAAAAAAAAAAAAAAAAAAFQ==/SodiumHydroxide-AAAAAAAAAAAAAAAAAAAMNg==.json",
+      "questTier": "MV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2685
     },
     "charcoal": {
       "tier": "ULV",
@@ -464,12 +475,22 @@
       "kind": "quest item"
     },
     "plutonium": {
-      "tier": "EV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/PowerfulNuclearP-AAAAAAAAAAAAAAAAAAAAGg==/Plutonium239-AAAAAAAAAAAAAAAAAAAMZA==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 11100,
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:57ff4ec44fbe882c",
+      "eut": 0,
+      "inputTiers": {
+        "tungsten": "HV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:kubatech-htgrrecipes:cb16e030db12ab89",
+        "oracle:local-2.9.0-beta-2:smelting:57ff4ec44fbe882c"
+      ],
       "form": "ingot",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/PowerfulNuclearP-AAAAAAAAAAAAAAAAAAAAGg==/Plutonium239-AAAAAAAAAAAAAAAAAAAMZA==.json",
+      "questTier": "EV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11100
     },
     "polybenzimidazole": {
       "tier": "IV",
@@ -504,12 +525,22 @@
       "kind": "quest item"
     },
     "uranium": {
-      "tier": "EV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/PowerfulNuclearP-AAAAAAAAAAAAAAAAAAAAGg==/CanWeGetUraniumH-AAAAAAAAAAAAAAAAAAAMYA==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 11098,
+      "tier": "ULV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:8544aa14aa434d9d",
+      "eut": 0,
+      "inputTiers": {
+        "glowstone": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:kubatech-htgrrecipes:40dcb5504e6592e3",
+        "oracle:local-2.9.0-beta-2:smelting:8544aa14aa434d9d"
+      ],
       "form": "ingot",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/PowerfulNuclearP-AAAAAAAAAAAAAAAAAAAAGg==/CanWeGetUraniumH-AAAAAAAAAAAAAAAAAAAMYA==.json",
+      "questTier": "EV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11098
     },
     "indiumgalliumphosphide": {
       "tier": "EV",
@@ -540,12 +571,26 @@
       "kind": "quest item"
     },
     "yttriumbariumcuprate": {
-      "tier": "IV",
+      "tier": "EV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:81e2af5ad7b1f58d",
+      "eut": 1920,
+      "inputTiers": {
+        "yttrium": "MV",
+        "barium": "HV",
+        "copper": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:1d0ba8b5493541df",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:abd2eccd11d6d51b",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:81e2af5ad7b1f58d"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/YttriumBariumCup-AAAAAAAAAAAAAAAAAAAGtg==.json",
+      "questTier": "IV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2358,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11358
     },
     "fierysteel": {
       "tier": "LuV",
@@ -661,14 +706,15 @@
     },
     "blacksteel": {
       "tier": "HV",
-      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:ed1fcf99d08c526c",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:052a8a9ddb971cbe",
       "eut": 120,
       "inputTiers": {
         "energeticalloy": "HV"
       },
       "route": [
         "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:f18c091c72c8017a",
-        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:ed1fcf99d08c526c"
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:052a8a9ddb971cbe"
       ],
       "form": "ingot",
       "kind": "production route estimate",
@@ -914,7 +960,9 @@
       },
       "route": [
         "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:910a83e4218b38c1",
-        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:a6041a2383ae825f",
+        "oracle:local-2.9.0-beta-2:underground-fluid:liquidair",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillationtower:c0bea576bf127fe5",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:b4f5cbb87d8ade76",
         "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:53007b4383af42ac"
       ],
       "form": "ingot",
@@ -1073,7 +1121,9 @@
       },
       "route": [
         "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:82aab70967fafdb4",
-        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:3d98a560a03bec62",
+        "oracle:local-2.9.0-beta-2:underground-fluid:liquidair",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillationtower:c0bea576bf127fe5",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:bb7ddcd342daf948",
         "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:f4c7baffec58a979"
       ],
       "form": "ingot",
@@ -1149,12 +1199,22 @@
       "kind": "quest item"
     },
     "thorium": {
-      "tier": "EV",
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:68ceb6a76e6e5fe2",
+      "eut": 0,
+      "inputTiers": {
+        "yttrialite": "MV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gtpp-recipe-multielectro:0f008269fc323225",
+        "oracle:local-2.9.0-beta-2:smelting:68ceb6a76e6e5fe2"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/MultipleQuestLine/UnfortunatelyThe-AAAAAAAAAAAAAAAAAAAHbA==.json",
+      "questTier": "EV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2096,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11096
     },
     "universium": {
       "tier": "UMV",
@@ -1335,12 +1395,23 @@
       "kind": "quest item"
     },
     "vanadium": {
-      "tier": "HV",
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:ff0cd99d10b37001",
+      "eut": 120,
+      "inputTiers": {
+        "vanadiumsteel": "LV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-centrifuge:80e29b128c3f92a8",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:b8e865fed34cd8aa",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:ff0cd99d10b37001"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/SpaceRace-AAAAAAAAAAAAAAAAAAAAIg==/FormaldehydeCata-AAAAAAAAAAAAAAAAAAAJWw==.json",
+      "questTier": "HV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2029,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11029
     },
     "meteoricsteel": {
       "tier": "HV",
@@ -1671,12 +1742,30 @@
       "kind": "quest item"
     },
     "tairitsu": {
-      "tier": "UIV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier11UIV-ytf2QCzUSk6ihcYeRbwblw==/SistersInArms-cmR_3Et6RMyXYfHzRf3Qjg==.json",
-      "item": "bartworks:gt.bwmetageneratedingot",
-      "damage": 10106,
+      "tier": "UHV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:e1c605485d550246",
+      "eut": 122880,
+      "inputTiers": {
+        "tungsten": "HV",
+        "naquadria": "ZPM",
+        "bedrockium": "EV",
+        "carbon": "LV",
+        "vanadium": "HV",
+        "blackplutonium": "ZPM"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:5a661fab99a51881",
+        "oracle:local-2.9.0-beta-2:underground-fluid:liquidair",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillationtower:c0bea576bf127fe5",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:4f3e4929442f2f6c",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:e1c605485d550246"
+      ],
       "form": "ingot",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier11UIV-ytf2QCzUSk6ihcYeRbwblw==/SistersInArms-cmR_3Et6RMyXYfHzRf3Qjg==.json",
+      "questTier": "UIV",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 10106
     },
     "shijima": {
       "tier": "UIV",
@@ -1719,20 +1808,41 @@
       "kind": "quest item"
     },
     "lead": {
-      "tier": "LV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/ALeadAboutLeadTh-AAAAAAAAAAAAAAAAAAACYA==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 11089,
+      "tier": "ULV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:b490fa9251857f64",
+      "eut": 0,
+      "inputTiers": {
+        "glowstone": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:kubatech-htgrrecipes:40dcb5504e6592e3",
+        "oracle:local-2.9.0-beta-2:smelting:b490fa9251857f64"
+      ],
       "form": "ingot",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/ALeadAboutLeadTh-AAAAAAAAAAAAAAAAAAACYA==.json",
+      "questTier": "LV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 11089
     },
     "brass": {
-      "tier": "LV",
+      "tier": "ULV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:b98afc634048252b",
+      "eut": 0,
+      "inputTiers": {
+        "copper": "ULV",
+        "zinc": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:e1aef7d7538a54bf",
+        "oracle:local-2.9.0-beta-2:smelting:b98afc634048252b"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier1LV-AAAAAAAAAAAAAAAAAAAAAw==/ANewAlloyCobaltB-AAAAAAAAAAAAAAAAAAACHQ==.json",
+      "questTier": "LV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2301,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11301
     },
     "cobalt": {
       "tier": "LV",
@@ -2002,28 +2112,56 @@
       "accessSource": "Overworld"
     },
     "manganese": {
-      "tier": "MV",
+      "tier": "LV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:467f8049e661b7d5",
+      "eut": 0,
+      "inputTiers": {
+        "pyrolusite": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:15692dfdd43aafd4",
+        "oracle:local-2.9.0-beta-2:smelting:467f8049e661b7d5"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/AreYouPreparedFo-AAAAAAAAAAAAAAAAAAAC7Q==.json",
+      "questTier": "MV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2031,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11031
     },
     "boron": {
-      "tier": "MV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/BoraxElectrolyzi-AAAAAAAAAAAAAAAAAAAH-w==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2009,
+      "tier": "LV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-centrifuge:f6ec34ef3054d8f8",
+      "eut": 10,
+      "inputTiers": {
+        "borosilicateglass": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-centrifuge:f6ec34ef3054d8f8"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/BoraxElectrolyzi-AAAAAAAAAAAAAAAAAAAH-w==.json",
+      "questTier": "MV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2009
     },
     "silicondioxide": {
-      "tier": "MV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/ClayElectrolyzin-AAAAAAAAAAAAAAAAAAAC-A==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2837,
+      "tier": "ULV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-centrifuge:d705777f31b80e8f",
+      "eut": 5,
+      "inputTiers": {
+        "flint": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-centrifuge:d705777f31b80e8f"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/ClayElectrolyzin-AAAAAAAAAAAAAAAAAAAC-A==.json",
+      "questTier": "MV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2837
     },
     "darksteel": {
       "tier": "MV",
@@ -2138,12 +2276,22 @@
       "kind": "quest item"
     },
     "sodiumbisulfate": {
-      "tier": "MV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/SodiumPersulfate-AAAAAAAAAAAAAAAAAAAD_Q==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2630,
+      "tier": "LV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:983ef35e8438a9d2",
+      "eut": 30,
+      "inputTiers": {
+        "salt": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:sulfuricacid",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:983ef35e8438a9d2"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier2MV-AAAAAAAAAAAAAAAAAAAABA==/SodiumPersulfate-AAAAAAAAAAAAAAAAAAAD_Q==.json",
+      "questTier": "MV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2630
     },
     "saltpeter": {
       "tier": "MV",
@@ -2278,12 +2426,26 @@
       "kind": "quest item"
     },
     "potassiumfluorosilicate": {
-      "tier": "HV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/Fluorowhonow-EnwtQDaiQEWhwc7G6oJHWQ==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 99,
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:8db683e2d493a8f6",
+      "eut": 7,
+      "inputTiers": {
+        "rocksalt": "ULV",
+        "silicon": "LV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:underground-fluid:fluorine",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:bf4180d8ad179833",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b9b9b0a69c742b36",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:8db683e2d493a8f6"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/Fluorowhonow-EnwtQDaiQEWhwc7G6oJHWQ==.json",
+      "questTier": "HV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 99
     },
     "potassiumcarbonate": {
       "tier": "HV",
@@ -2324,12 +2486,21 @@
       "kind": "quest item"
     },
     "quicklime": {
-      "tier": "HV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/Galliumandmore-AAAAAAAAAAAAAAAAAAALoA==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2622,
+      "tier": "LV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:995968ef35885ef7",
+      "eut": 30,
+      "inputTiers": {
+        "calcite": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:995968ef35885ef7"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/Galliumandmore-AAAAAAAAAAAAAAAAAAALoA==.json",
+      "questTier": "HV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2622
     },
     "platinummetallicpowder": {
       "tier": "HV",
@@ -2340,12 +2511,22 @@
       "kind": "quest item"
     },
     "barium": {
-      "tier": "HV",
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:94cbf35aeb3b536c",
+      "eut": 0,
+      "inputTiers": {
+        "barite": "LV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:094a29e83f079fb3",
+        "oracle:local-2.9.0-beta-2:smelting:94cbf35aeb3b536c"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/HVSuperconductor-AAAAAAAAAAAAAAAAAAAFfQ==.json",
+      "questTier": "HV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2063,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11063
     },
     "superconductorhvbase": {
       "tier": "HV",
@@ -2364,12 +2545,23 @@
       "kind": "quest item"
     },
     "magnesia": {
-      "tier": "HV",
+      "tier": "LV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:fb02870112291e1c",
+      "eut": 0,
+      "inputTiers": {
+        "netherquartz": "ULV",
+        "magnesium": "LV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:fc707c4dace077f1",
+        "oracle:local-2.9.0-beta-2:smelting:fb02870112291e1c"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/MeltingandRefree-RSeerR8bQ6advk1NkOU8NQ==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2621,
-      "form": "dust",
-      "kind": "quest item"
+      "questTier": "HV",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 32237
     },
     "fluorophlogopite": {
       "tier": "HV",
@@ -2380,20 +2572,49 @@
       "kind": "quest item"
     },
     "phosphorus": {
-      "tier": "HV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/PhosphorusDopedM-AAAAAAAAAAAAAAAAAAAE1Q==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2021,
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gtpp-recipe-multielectro:3d0394e2ed56109a",
+      "eut": 120,
+      "inputTiers": {
+        "apatite": "ULV",
+        "lignite": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:sulfuricacid",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:002377d86a9d6916",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:66a4bd5c0c830b70",
+        "oracle:local-2.9.0-beta-2:gregtech:gtpp-recipe-multielectro:3d0394e2ed56109a"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/PhosphorusDopedM-AAAAAAAAAAAAAAAAAAAE1Q==.json",
+      "questTier": "HV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2021
     },
     "polydimethylsiloxane": {
-      "tier": "HV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/Polydimethylsilo-AAAAAAAAAAAAAAAAAAAGfw==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2633,
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:d1f385afe8f44e70",
+      "eut": 96,
+      "inputTiers": {
+        "lignite": "ULV",
+        "silicon": "LV",
+        "salt": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:002377d86a9d6916",
+        "oracle:local-2.9.0-beta-2:underground-fluid:methane",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:11d0a618fa03bb46",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:57fbc6276633f89f",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:e07377fc969beb64",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:d1f385afe8f44e70"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier3HV-AAAAAAAAAAAAAAAAAAAABQ==/Polydimethylsilo-AAAAAAAAAAAAAAAAAAAGfw==.json",
+      "questTier": "HV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2633
     },
     "rawstyrenebutadienerubber": {
       "tier": "HV",
@@ -2462,20 +2683,48 @@
       "kind": "quest item"
     },
     "niobium": {
-      "tier": "EV",
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:d7b0bd9102d1d3b6",
+      "eut": 120,
+      "inputTiers": {
+        "pyrochlore": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:3d67c3cbce57cae1",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:38f1af301ac6e343",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:d7b0bd9102d1d3b6"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/AdvancedIlmenite-AAAAAAAAAAAAAAAAAAAKAg==.json",
+      "questTier": "EV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2047,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11047
     },
     "tantalum": {
-      "tier": "EV",
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalbath:c3bd1d7fc6b859f4",
+      "eut": 120,
+      "inputTiers": {
+        "tantalite": "ULV",
+        "lapis": "ULV",
+        "lignite": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:8f3e0bacef8ac363",
+        "oracle:local-2.9.0-beta-2:underground-fluid:liquidair",
+        "oracle:local-2.9.0-beta-2:gregtech:gtpp-recipe-multicentrifuge:f20d3ce02aa56aee",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:f63e5525c99d0184",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:002377d86a9d6916",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:4d9b1beb117a50a4",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalbath:c3bd1d7fc6b859f4"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/AdvancedIlmenite-AAAAAAAAAAAAAAAAAAAKAg==.json",
+      "questTier": "EV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2080,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11080
     },
     "refinedplatinumsalt": {
       "tier": "EV",
@@ -2486,12 +2735,23 @@
       "kind": "quest item"
     },
     "rosegold": {
-      "tier": "EV",
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:b2a706e1c6d5179f",
+      "eut": 120,
+      "inputTiers": {
+        "copper": "ULV",
+        "gold": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:9677d4369bcd0eeb",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:b2a706e1c6d5179f"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/BlueSteel-AAAAAAAAAAAAAAAAAAAE7w==.json",
+      "questTier": "EV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2351,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11351
     },
     "bluesteel": {
       "tier": "EV",
@@ -2558,12 +2818,22 @@
       "kind": "quest item"
     },
     "indium": {
-      "tier": "EV",
+      "tier": "ULV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:1194381ca6ebfb44",
+      "eut": 0,
+      "inputTiers": {
+        "silver": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:kubatech-htgrrecipes:c6a966d2f600738d",
+        "oracle:local-2.9.0-beta-2:smelting:1194381ca6ebfb44"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/Indium-AAAAAAAAAAAAAAAAAAAD7Q==.json",
+      "questTier": "EV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2056,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11056
     },
     "bismuth": {
       "tier": "EV",
@@ -2582,52 +2852,166 @@
       "kind": "quest item"
     },
     "reprecipitatedplatinum": {
-      "tier": "EV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PlatinumProcessi-AAAAAAAAAAAAAAAAAAAI-A==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 51,
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b115f82c785073db",
+      "eut": 480,
+      "inputTiers": {
+        "platinummetallicpowder": "HV",
+        "salt": "ULV",
+        "sugar": "ULV",
+        "redstone": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:11d0a618fa03bb46",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b5c155dbd13edef0",
+        "oracle:local-2.9.0-beta-2:underground-fluid:nitrogen",
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:c5b117e502699f51",
+        "oracle:local-2.9.0-beta-2:gregtech:gtpp-recipe-multimixer:52b04a33ca0d8618",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:3179b4d4d8c3dfdb",
+        "oracle:local-2.9.0-beta-2:underground-fluid:ic2distilledwater",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-brewer:1e10d6724c51d5ae",
+        "oracle:local-2.9.0-beta-2:gregtech:bw-recipe-bacteriavat:453f13f67bdcb106",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-brewer:491d7056b57c64b2",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillery:c20c095969861ef1",
+        "oracle:local-2.9.0-beta-2:gregtech:bw-recipe-bacteriavat:65b3bf1fe8f44280",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillery:b26b9fcebb380394",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:68ea689e580d953b",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b115f82c785073db"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PlatinumProcessi-AAAAAAAAAAAAAAAAAAAI-A==.json",
+      "questTier": "EV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 51
     },
     "calcium": {
-      "tier": "EV",
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:4b78df3fe799264c",
+      "eut": 120,
+      "inputTiers": {
+        "tricalciumphosphate": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-centrifuge:27f7cbc6378fc5a2",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:4b78df3fe799264c"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PlatinumProcessi-AAAAAAAAAAAAAAAAAAAI-A==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2026,
-      "form": "dust",
-      "kind": "quest item"
+      "questTier": "EV",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 40
     },
     "calciumchloride": {
-      "tier": "EV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PlatinumProcessi-AAAAAAAAAAAAAAAAAAAI-A==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 63,
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:4ff7b5560e66863f",
+      "eut": 120,
+      "inputTiers": {
+        "calcite": "ULV",
+        "salt": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:11d0a618fa03bb46",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b5c155dbd13edef0",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:4ff7b5560e66863f"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PlatinumProcessi-AAAAAAAAAAAAAAAAAAAI-A==.json",
+      "questTier": "EV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 63
     },
     "platinumsalt": {
-      "tier": "EV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PlatinumProcessi-AAAAAAAAAAAAAAAAAAAI-Q==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 45,
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b115f82c785073db",
+      "eut": 480,
+      "inputTiers": {
+        "platinummetallicpowder": "HV",
+        "salt": "ULV",
+        "sugar": "ULV",
+        "redstone": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:11d0a618fa03bb46",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b5c155dbd13edef0",
+        "oracle:local-2.9.0-beta-2:underground-fluid:nitrogen",
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:c5b117e502699f51",
+        "oracle:local-2.9.0-beta-2:gregtech:gtpp-recipe-multimixer:52b04a33ca0d8618",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:3179b4d4d8c3dfdb",
+        "oracle:local-2.9.0-beta-2:underground-fluid:ic2distilledwater",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-brewer:1e10d6724c51d5ae",
+        "oracle:local-2.9.0-beta-2:gregtech:bw-recipe-bacteriavat:453f13f67bdcb106",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-brewer:491d7056b57c64b2",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillery:c20c095969861ef1",
+        "oracle:local-2.9.0-beta-2:gregtech:bw-recipe-bacteriavat:65b3bf1fe8f44280",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillery:b26b9fcebb380394",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:68ea689e580d953b",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b115f82c785073db"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PlatinumProcessi-AAAAAAAAAAAAAAAAAAAI-Q==.json",
+      "questTier": "EV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 45
     },
     "platinumresidue": {
-      "tier": "EV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PlatinumProcessi-AAAAAAAAAAAAAAAAAAAI-w==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 49,
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:3179b4d4d8c3dfdb",
+      "eut": 30,
+      "inputTiers": {
+        "platinummetallicpowder": "HV",
+        "salt": "ULV",
+        "sugar": "ULV",
+        "redstone": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:11d0a618fa03bb46",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b5c155dbd13edef0",
+        "oracle:local-2.9.0-beta-2:underground-fluid:ic2distilledwater",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-brewer:1e10d6724c51d5ae",
+        "oracle:local-2.9.0-beta-2:gregtech:bw-recipe-bacteriavat:453f13f67bdcb106",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-brewer:491d7056b57c64b2",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillery:c20c095969861ef1",
+        "oracle:local-2.9.0-beta-2:gregtech:bw-recipe-bacteriavat:65b3bf1fe8f44280",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillery:b26b9fcebb380394",
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:dae4ae578e441826",
+        "oracle:local-2.9.0-beta-2:gregtech:gtpp-recipe-multimixer:52b04a33ca0d8618",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:3179b4d4d8c3dfdb"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PlatinumProcessi-AAAAAAAAAAAAAAAAAAAI-w==.json",
+      "questTier": "EV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 49
     },
     "sodiumsulfide": {
-      "tier": "EV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PolyphenyleneSul-AAAAAAAAAAAAAAAAAAAJkQ==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2719,
+      "tier": "LV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:b06eed24896ade92",
+      "eut": 30,
+      "inputTiers": {
+        "sodium": "LV",
+        "sulfur": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:b06eed24896ade92"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier4EV-AAAAAAAAAAAAAAAAAAAABg==/PolyphenyleneSul-AAAAAAAAAAAAAAAAAAAJkQ==.json",
+      "questTier": "EV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2719
     },
     "endstone": {
       "tier": "EV",
@@ -2662,12 +3046,26 @@
       "kind": "quest item"
     },
     "sodiumsulfate": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/AnotherAcidtoWor-AAAAAAAAAAAAAAAAAAAJBQ==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 57,
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:2f7180d6aba4fb15",
+      "eut": 30,
+      "inputTiers": {
+        "sodiumhydroxide": "MV",
+        "coal": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:sulfuricacid",
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:6b995de230c28fb9",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:9285b162e690c68c",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:2f7180d6aba4fb15"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/AnotherAcidtoWor-AAAAAAAAAAAAAAAAAAAJBQ==.json",
+      "questTier": "IV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 57
     },
     "cruderhodiummetal": {
       "tier": "IV",
@@ -2694,12 +3092,23 @@
       "kind": "quest item"
     },
     "chromiumdioxide": {
-      "tier": "IV",
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:695513f397cb89a4",
+      "eut": 0,
+      "inputTiers": {
+        "chrome": "MV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:e48ed4a969a16773",
+        "oracle:local-2.9.0-beta-2:smelting:695513f397cb89a4"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/ChromiumTrioxide-AAAAAAAAAAAAAAAAAAAGqA==.json",
+      "questTier": "IV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2361,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11361
     },
     "chromiumtrioxide": {
       "tier": "IV",
@@ -2718,20 +3127,43 @@
       "kind": "quest item"
     },
     "iridiumdioxide": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/DissolveIr-AAAAAAAAAAAAAAAAAAAJDA==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 73,
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:543bf2ac3625e8bb",
+      "eut": 120,
+      "inputTiers": {
+        "iridiummetalresidue": "HV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:543bf2ac3625e8bb"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/DissolveIr-AAAAAAAAAAAAAAAAAAAJDA==.json",
+      "questTier": "IV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 73
     },
     "magnesiumchloride": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/EBFTime-AAAAAAAAAAAAAAAAAAAL6Q==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2377,
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:1892b621a4631b60",
+      "eut": 480,
+      "inputTiers": {
+        "magnesium": "LV",
+        "rutile": "HV",
+        "carbon": "LV",
+        "salt": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:11d0a618fa03bb46",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:d859ee80119a6564",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:1892b621a4631b60"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/EBFTime-AAAAAAAAAAAAAAAAAAAL6Q==.json",
+      "questTier": "IV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2377
     },
     "iridiumchloride": {
       "tier": "IV",
@@ -2782,20 +3214,54 @@
       "kind": "quest item"
     },
     "thorium232": {
-      "tier": "IV",
+      "tier": "EV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:c8a7b9343f7a8c48",
+      "eut": 120,
+      "inputTiers": {
+        "thorium": "EV",
+        "borax": "EV",
+        "salt": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:ic2distilledwater",
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-electrolyzer:11d0a618fa03bb46",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:b5c155dbd13edef0",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:2801ee3f935d45c8",
+        "oracle:local-2.9.0-beta-2:gregtech:gtpp-recipe-fluidchemicaleactor:f4758b9547d637a9",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:c8a7b9343f7a8c48"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/Longtermplanner-fvz-5lJaRAqfsM1hcAYOng==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 30,
-      "form": "dust",
-      "kind": "quest item"
+      "questTier": "IV",
+      "item": "bartworks:gt.bwmetageneratedingot",
+      "damage": 30
     },
     "thoriumhydroxide": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/Longtermplanner-fvz-5lJaRAqfsM1hcAYOng==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 10017,
+      "tier": "EV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:b5d450677ec9fc41",
+      "eut": 120,
+      "inputTiers": {
+        "sodiumhydroxide": "MV",
+        "thorium": "EV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:underground-fluid:fluorine",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:bf4180d8ad179833",
+        "oracle:local-2.9.0-beta-2:underground-fluid:nitrogen",
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:c5b117e502699f51",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:85d9c1064469f111",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:b5d450677ec9fc41"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/Longtermplanner-fvz-5lJaRAqfsM1hcAYOng==.json",
+      "questTier": "IV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 10017
     },
     "osmiridium": {
       "tier": "IV",
@@ -2806,20 +3272,46 @@
       "kind": "quest item"
     },
     "reprecipitatedpalladium": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/Palladium-AAAAAAAAAAAAAAAAAAALPg==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 54,
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:71aad39cc7d01a37",
+      "eut": 30,
+      "inputTiers": {
+        "palladiummetallicpowder": "HV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:nitrogen",
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:5137b54129cef521",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:644237d49af75dc6",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:71aad39cc7d01a37"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/Palladium-AAAAAAAAAAAAAAAAAAALPg==.json",
+      "questTier": "IV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 54
     },
     "palladiumsalt": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/PalladiumProcess-AAAAAAAAAAAAAAAAAAAI_w==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 55,
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:bf8a176e8a9b4964",
+      "eut": 30,
+      "inputTiers": {
+        "palladiummetallicpowder": "HV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:nitrogen",
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:5137b54129cef521",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:644237d49af75dc6",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:bf8a176e8a9b4964"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/PalladiumProcess-AAAAAAAAAAAAAAAAAAAI_w==.json",
+      "questTier": "IV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 55
     },
     "potassiumdichromate": {
       "tier": "IV",
@@ -2854,12 +3346,21 @@
       "kind": "quest item"
     },
     "sludgedustresidue": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/RemovingSludgeFr-AAAAAAAAAAAAAAAAAAAJCQ==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 71,
+      "tier": "HV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:543bf2ac3625e8bb",
+      "eut": 120,
+      "inputTiers": {
+        "iridiummetalresidue": "HV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:543bf2ac3625e8bb"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/RemovingSludgeFr-AAAAAAAAAAAAAAAAAAAJCQ==.json",
+      "questTier": "IV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 71
     },
     "rhodiumplatedpalladium": {
       "tier": "IV",
@@ -2870,12 +3371,22 @@
       "kind": "quest item"
     },
     "thorianite": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/SamariumTheOther-AAAAAAAAAAAAAAAAAAAMCw==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 18,
+      "tier": "EV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:62c1bc58ff583ca3",
+      "eut": 480,
+      "inputTiers": {
+        "thorium": "EV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:62c1bc58ff583ca3"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/SamariumTheOther-AAAAAAAAAAAAAAAAAAAMCw==.json",
+      "questTier": "IV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 18
     },
     "sodiumruthenate": {
       "tier": "IV",
@@ -2894,28 +3405,67 @@
       "kind": "quest item"
     },
     "sodiumnitrate": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/SodiumNitrate-AAAAAAAAAAAAAAAAAAALQA==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 82,
+      "tier": "MV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:75813391158b17df",
+      "eut": 60,
+      "inputTiers": {
+        "sodium": "LV",
+        "sugar": "ULV",
+        "redstone": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:ic2distilledwater",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-brewer:1e10d6724c51d5ae",
+        "oracle:local-2.9.0-beta-2:gregtech:bw-recipe-bacteriavat:453f13f67bdcb106",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-brewer:491d7056b57c64b2",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillery:c20c095969861ef1",
+        "oracle:local-2.9.0-beta-2:gregtech:bw-recipe-bacteriavat:65b3bf1fe8f44280",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillery:b26b9fcebb380394",
+        "oracle:local-2.9.0-beta-2:underground-fluid:oxygen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:dae4ae578e441826",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:75813391158b17df"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/SodiumNitrate-AAAAAAAAAAAAAAAAAAALQA==.json",
+      "questTier": "IV",
+      "item": "miscutils:itemdustsodiumnitrate",
+      "damage": 0
     },
     "phosphate": {
-      "tier": "IV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/ThoriumandPhosph-AAAAAAAAAAAAAAAAAAAL8g==.json",
-      "item": "gregtech:gt.metaitem.01",
-      "damage": 2833,
+      "tier": "LV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-centrifuge:27f7cbc6378fc5a2",
+      "eut": 10,
+      "inputTiers": {
+        "tricalciumphosphate": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-centrifuge:27f7cbc6378fc5a2"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/ThoriumandPhosph-AAAAAAAAAAAAAAAAAAAL8g==.json",
+      "questTier": "IV",
+      "item": "gregtech:gt.metaitem.01",
+      "damage": 2833
     },
     "uranium235": {
-      "tier": "IV",
+      "tier": "ULV",
+      "recipe": "oracle:local-2.9.0-beta-2:smelting:362866b0b06211e9",
+      "eut": 0,
+      "inputTiers": {
+        "silver": "ULV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:gregtech:kubatech-htgrrecipes:c6a966d2f600738d",
+        "oracle:local-2.9.0-beta-2:smelting:362866b0b06211e9"
+      ],
+      "form": "ingot",
+      "kind": "production route estimate",
       "quest": "config/betterquesting/DefaultQuests/Quests/Tier5IV-AAAAAAAAAAAAAAAAAAAABw==/Uranium-AAAAAAAAAAAAAAAAAAAL9Q==.json",
+      "questTier": "IV",
       "item": "gregtech:gt.metaitem.01",
-      "damage": 2097,
-      "form": "dust",
-      "kind": "quest item"
+      "damage": 11097
     },
     "naquadahine": {
       "tier": "LuV",
@@ -2934,12 +3484,23 @@
       "kind": "quest item"
     },
     "dibismuthhydroborat": {
-      "tier": "LuV",
-      "quest": "config/betterquesting/DefaultQuests/Quests/Tier6LuV-AAAAAAAAAAAAAAAAAAAACA==/FetchQuests-AAAAAAAAAAAAAAAAAAAKKA==.json",
-      "item": "bartworks:gt.bwmetagenerateddust",
-      "damage": 33,
+      "tier": "EV",
+      "recipe": "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:37858226c3878ad3",
+      "eut": 90,
+      "inputTiers": {
+        "bismuth": "EV",
+        "boron": "MV"
+      },
+      "route": [
+        "oracle:local-2.9.0-beta-2:underground-fluid:hydrogen",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-chemicalreactor:37858226c3878ad3"
+      ],
       "form": "dust",
-      "kind": "quest item"
+      "kind": "production route estimate",
+      "quest": "config/betterquesting/DefaultQuests/Quests/Tier6LuV-AAAAAAAAAAAAAAAAAAAACA==/FetchQuests-AAAAAAAAAAAAAAAAAAAKKA==.json",
+      "questTier": "LuV",
+      "item": "bartworks:gt.bwmetagenerateddust",
+      "damage": 33
     },
     "cubiczirconia": {
       "tier": "LuV",
@@ -3087,7 +3648,9 @@
       },
       "route": [
         "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-mixer:739a2281cb401a04",
-        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:9e6e5a183de17663",
+        "oracle:local-2.9.0-beta-2:underground-fluid:liquidair",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-distillationtower:c0bea576bf127fe5",
+        "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-blastfurnace:7c279894306d81ef",
         "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-vacuumfreezer:7843a67214d41ed8"
       ],
       "form": "ingot",

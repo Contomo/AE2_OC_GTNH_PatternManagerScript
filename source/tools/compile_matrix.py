@@ -23,7 +23,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
         if material_sources.get('recipeExportSha256') != catalog['source'].get('sha256'):
             raise ValueError('Material sources and recipe catalog came from different exports')
     if material_tiers:
-        if material_tiers.get('policy') not in ('first-solid-task-v1', 'quest-and-ore-access-v2', 'quest-and-ore-access-v3'):
+        if material_tiers.get('policy') not in ('first-solid-task-v1', 'quest-and-ore-access-v2', 'quest-and-ore-access-v3', 'quest-and-ore-access-v4'):
             raise ValueError('Unsupported material tier policy')
         if material_tiers.get('packVersion') != catalog['source'].get('targetVersion'):
             raise ValueError('Material tiers and target pack version differ')
