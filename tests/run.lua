@@ -2779,6 +2779,86 @@ test('saved continuation does not cover program choices and its right edge invok
   api.runUI()
 end)
 
+local function singularityFixture()
+  cfg.programs.singularities.singularity='Singularity recipes'
+  cfg.programs.singularities.block='Block recipes'
+  target.name='Singularity recipes';target.patterns={}
+  dest1.name='Block recipes';dest1.patterns={}
+  local banks={target,iface(target.name,101),iface(target.name,102),dest1,iface(dest1.name,81),iface(dest1.name,82)}
+  for n=0,3 do
+    local bank=n==0 and buffer or iface(cfg.shared.donors,50+n)
+    bank.patterns={}
+    for slot=0,35 do bank.patterns[slot]=pattern({item('Disposable input',1,789)}) end
+  end
+  return banks
+end
+
+test('singularity line plans both destinations through the shared maker and executes all 126 patterns',function()
+  local banks=singularityFixture()
+  local preview=api.runner.preview(cfg,'singularities')
+  assert(mutations==0 and #preview.manifest.recipes==126 and #preview.plan.errors==0)
+  assert(preview.plan.required.processing==126 and #preview.plan.capacities==2)
+  assert(preview.report:find('One singularity per pattern',1,true))
+  assert(preview.report:find('7',1,true) and preview.report:find('Mobius',1,true))
+  api.runner.execute(cfg,preview)
+  local count,iron,mobius=0,false,false
+  for _,bank in ipairs(banks) do
+    for _,p in pairs(bank.patterns) do
+      count=count+1
+      if p.outputs[1].name=='Avaritia:Singularity' and p.outputs[1].damage==0 then
+        assert(p.inputs[1].name=='minecraft:iron_block' and p.inputs[1].size==7296 and p.outputs[1].size==1);iron=true
+      elseif p.inputs[1].name=='ExtraUtilities:unstableingot' then
+        assert(p.inputs[1].damage==2 and p.inputs[1].size==9);mobius=true
+      end
+    end
+  end
+  assert(count==126 and iron and mobius and next(editor.patterns)==nil and not api.runner.hasSaved())
+  local again=api.runner.preview(cfg,'singularities')
+  assert(again.plan.reused==126 and again.plan.required.processing==0 and not api.runner.hasChanges(again))
+end)
+
+test('singularity line recognizes multiplied ordinary patterns and resizes them to exact native counts',function()
+  singularityFixture()
+  cfg.programs.singularities.forms='singularity'
+  local block={name='minecraft:iron_block',damage=0,size=14592,label='Iron blocks'}
+  local output={name='Avaritia:Singularity',damage=0,size=2,label='Iron singularity'}
+  target.patterns[7]=pattern({block},{output})
+  local preview=api.runner.preview(cfg,'singularities')
+  assert(#preview.manifest.recipes==63 and preview.plan.reused==1 and preview.plan.resizeCount==1)
+  assert(preview.plan.required.processing==62 and #preview.plan.capacities==1)
+  api.runner.execute(cfg,preview)
+  local found
+  for _,bank in ipairs(interfaces) do
+    if bank.name=='Singularity recipes' then
+      for _,p in pairs(bank.patterns) do
+        if p.outputs[1].name=='Avaritia:Singularity' and p.outputs[1].damage==0 then found=p end
+      end
+    end
+  end
+  assert(found and found.outputs[1].size==1 and found.inputs[1].size==7296 and next(editor.patterns)==nil)
+end)
+
+test('singularity program controls and preview remain visible without covering the continuation footer',function()
+  singularityFixture();files[api.paths.config]=ser(cfg)
+  queue(click('[ Singularity line ]'),click('[ Preview selected ]',47),function()
+    assert(frame[2]:find('Preview - Singularity line',1,true))
+    assert(frame[4]:find('Existing',1,true) and frame[4]:find('Excluded',1,true))
+    snapshot('singularity_line_preview')
+    return click('[ Details ]',4)()
+  end,function()
+    assert(frame[7]:find('ETERNAL SINGULARITY CHAIN',1,true))
+    assert(frame[8]:find('7 combined singularities / 63 base singularities',1,true))
+    return click('[ Program settings ]',47)()
+  end,function()
+    assert(frame[6]:find('Neutronium compressor interface name',1,true))
+    assert(frame[7]:find('[ X ]',1,true) and frame[7]:find('Singularity recipes',1,true))
+    assert(frame[10]:find('Block compressor interface name',1,true))
+    snapshot('singularity_line_settings')
+    return 'interrupted'
+  end)
+  api.runUI()
+end)
+
 local function transitionFixture()
   cfg.programs.implosionTransition.source='Old implosion'
   cfg.programs.implosionTransition.destination='Electric implosion'

@@ -3,6 +3,7 @@
 local U = require('assline_util')
 local Planner = require('assline_planner')
 local Batch = require('assline_batch')
+local Singularities = require('assline_singularities')
 local M = {}
 local aliases = {
   rod = 'stick',
@@ -242,6 +243,9 @@ local function ruleRecipe(
   return recipe
 end
 function M.compile(data, mode, options, checkpoint)
+  if mode == 'singularities' then
+    return Singularities.compile(data, options, checkpoint)
+  end
   options = U.clone(options or {})
   local multiplier = options.multiplier or 1
   U.check(

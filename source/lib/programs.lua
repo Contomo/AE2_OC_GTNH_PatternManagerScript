@@ -338,16 +338,56 @@ M.list[#M.list + 1] = {
   },
   previewTabs = { { 'changes', 'Patterns' }, { 'capacity', 'Capacity' }, { 'details', 'Details' } },
 }
+local singularityForms = { { 'singularity', 'Singularities' }, { 'block', 'Blocks' } }
+local singularityMultiplier = multiplier()
+singularityMultiplier.label = 'Block pattern multiplier'
+singularityMultiplier.help =
+  'Block recipes only. Singularity patterns always request the exact amount for one output.'
+M.list[#M.list + 1] = {
+  id = 'singularities',
+  name = 'Singularity line',
+  mode = 'singularities',
+  description = 'The 63 Eternal-chain singularities and their ordinary compressor block recipes.',
+  formChoices = singularityForms,
+  formSwitch = 'forms',
+  switchByDestination = true,
+  outputs = { singularity = 'singularity', block = 'block' },
+  costForms = { block = true },
+  fields = {
+    enabledDestination(
+      'singularity',
+      'Neutronium compressor interface name',
+      'All enabled singularity patterns go here. Exact input quantities for one singularity.'
+    ),
+    enabledDestination(
+      'block',
+      'Block compressor interface name',
+      'Ordinary ingot/gem/dust to block recipes; excludes stabilized black holes.'
+    ),
+    formSwitches(singularityForms, '', '', true),
+    choice(
+      'unstable',
+      'Unstable-block input',
+      { { 'mobius', 'Mobius stable ingots' }, { 'unstable', 'Unstable ingots' } },
+      'mobius',
+      'Select one of the two scraped compressor routes; never installs both.'
+    ),
+    singularityMultiplier,
+  },
+}
 M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
   if program.mode and program.formChoices then
     for _, entry in ipairs(program.formChoices) do
-      local f = field(Batch.divisorKey(entry[1]), entry[2], '', '', 'optionalPositiveInteger', true)
-      f.costDivisor, f.group, f.compact, f.placeholder = entry[1], 'Batch divisors', true, 'Auto'
-      f.tableLabel, f.valueLabel = 'OUTPUT FORM', 'BATCH DIVISOR'
-      f.tableHelp =
-        'Blank uses material input cost. A divisor of 1 keeps the full batch; 4 quarters it.'
-      program.fields[#program.fields + 1] = f
+      if not program.costForms or program.costForms[entry[1]] then
+        local f =
+          field(Batch.divisorKey(entry[1]), entry[2], '', '', 'optionalPositiveInteger', true)
+        f.costDivisor, f.group, f.compact, f.placeholder = entry[1], 'Batch divisors', true, 'Auto'
+        f.tableLabel, f.valueLabel = 'OUTPUT FORM', 'BATCH DIVISOR'
+        f.tableHelp =
+          'Blank uses material input cost. A divisor of 1 keeps the full batch; 4 quarters it.'
+        program.fields[#program.fields + 1] = f
+      end
     end
   end
   M.byId[program.id] = program

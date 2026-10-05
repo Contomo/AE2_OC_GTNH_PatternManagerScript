@@ -416,6 +416,7 @@ local function programRouting(c, id)
       forms = forms,
       sources = sources,
       formDivisors = formDivisors,
+      unstable = values.unstable,
     },
     program
 end
@@ -423,7 +424,8 @@ function C.maker.preview(c, id, progress, control)
   validate(c)
   startWork(c, progress, control)
   local routing, options, program = programRouting(c, id)
-  local manifest = Modes.compile(require('assline_data'), program.mode, options, gate)
+  local data = program.mode == 'singularities' and SingularityData or require('assline_data')
+  local manifest = Modes.compile(data, program.mode, options, gate)
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)
   local groups = {}
   for _, recipe in ipairs(manifest.recipes) do

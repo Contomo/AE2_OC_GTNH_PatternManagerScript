@@ -483,4 +483,67 @@ test('Tairitsu ring stays UHV and a scraped dust-to-ingot endpoint does not excl
 
 end)
 
+test('Eternal chain resolves exactly 63 solid singularities and 63 ordinary blocks with scraped names',function()
+  local catalog=require('assline_singularity_data')
+  local result=M.compile(catalog,'singularities',{multiplier=1,unstable='mobius'})
+  assert(#result.recipes==126 and #result.unresolved==0 and #result.skipped==0)
+  local singularities,blocks,seen=0,0,{}
+  local iron,mobius,quartz,diamond=false,false,false,false
+  for _,r in ipairs(result.recipes) do
+    assert(r.kind=='processing' and #r.stock==0 and #r.inputs==1 and #r.outputs==1)
+    local output=r.outputs[1]
+    local identity=output.name..':'..output.damage
+    assert(not seen[identity]);seen[identity]=true
+    if r.outputForm=='singularity' then
+      singularities=singularities+1
+      assert(output.size==1 and r.batch.multiplier==1 and r.batch.eut==480)
+      if output.name=='Avaritia:Singularity' and output.damage==0 then
+        assert(r.inputs[1].size==7296 and r.inputs[1].name=='minecraft:iron_block');iron=true
+      end
+    else
+      blocks=blocks+1
+      assert(output.size==1 and r.batch.eut==2)
+      assert(r.inputs[1].size==4 or r.inputs[1].size==9)
+      if r.inputs[1].name=='ExtraUtilities:unstableingot' then
+        assert(r.inputs[1].damage==2 and r.inputs[1].size==9);mobius=true
+      elseif output.name=='minecraft:quartz_block' then assert(r.inputs[1].name=='minecraft:quartz');quartz=true
+      elseif output.name=='minecraft:diamond_block' then assert(r.inputs[1].name=='minecraft:diamond');diamond=true end
+    end
+  end
+  assert(singularities==63 and blocks==63 and iron and mobius and quartz and diamond)
+end)
+
+test('singularity requirements stay indivisible above item limits while block batches use shared scaling',function()
+  local batch=U.clone(require('assline_config').defaults.batch)
+  batch.mode='tiered';batch.currentTier='MAX';batch.itemLimit='4096'
+  batch.voltagePolicy='off';batch.unknownPolicy='voltage';batch.costScaling='on'
+  local result=M.compile(require('assline_singularity_data'),'singularities',{batch=batch,multiplier=4096})
+  local count=0
+  for _,r in ipairs(result.recipes) do
+    if r.outputForm=='singularity' then
+      count=count+1;assert(r.batch.multiplier==1 and r.outputs[1].size==1)
+    else
+      assert(r.inputs[1].size<=4096 and r.batch.materialCost==r.inputs[1].size/r.batch.multiplier)
+      assert(r.batch.divisor==r.batch.materialCost)
+    end
+  end
+  assert(count==63)
+end)
+
+test('singularity stages can be disabled independently and unstable input selects only one route',function()
+  local catalog=require('assline_singularity_data')
+  local result=M.compile(catalog,'singularities',{forms={block=true},multiplier=3,unstable='unstable'})
+  assert(#result.recipes==63)
+  local found=false
+  for _,r in ipairs(result.recipes) do
+    assert(r.outputForm=='block' and r.outputs[1].size==3)
+    if r.inputs[1].name=='ExtraUtilities:unstableingot' then assert(r.inputs[1].damage==0);found=true end
+  end
+  assert(found)
+  result=M.compile(catalog,'singularities',{forms={singularity=true},multiplier=4096})
+  assert(#result.recipes==63)
+  for _,r in ipairs(result.recipes) do assert(r.outputForm=='singularity' and r.outputs[1].size==1) end
+  assert(#M.compile(catalog,'singularities',{forms={}}).recipes==0)
+end)
+
 print('SUCCESS: '..tests..' tests (material/rule compiler)')

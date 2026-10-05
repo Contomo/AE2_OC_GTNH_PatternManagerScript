@@ -12,7 +12,8 @@ import zipfile
 from pathlib import Path
 
 
-def recover(archive, registry, catalog, enderio_item, enderio_objects, item_registry=None):
+def recover(archive, registry, catalog, enderio_item, enderio_objects, item_registry=None,
+            reference_archives=()):
     names, evidence = {}, {}
     wanted = {e['id'].split('@')[0] for r in catalog['recipes']
               for e in r['inputs'] + r['outputs'] if e['kind'] == 'item'}
@@ -34,13 +35,15 @@ def recover(archive, registry, catalog, enderio_item, enderio_objects, item_regi
         constants = dict(re.findall(r'String\s+(\w+)\s*=\s*"([^"]+)"', mods))
         mod_ids = {name: constants[key] for name, key in
                    re.findall(r'(\w+)\(ModIDs\.(\w+)\)', mods) if key in constants}
+        def references(text, path):
+            for mod, item in re.findall(r'getModItem\(\s*(\w+)\.ID\s*,\s*"([^"]+)"', text):
+                if mod in mod_ids:
+                    add(mod_ids[mod] + ':' + item, path.split('/src/', 1)[-1])
         for path in z.namelist():
             if not path.endswith('.java'):
                 continue
             text = z.read(path).decode('utf-8')
-            for mod, item in re.findall(r'getModItem\(\s*(\w+)\.ID\s*,\s*"([^"]+)"', text):
-                if mod in mod_ids:
-                    add(mod_ids[mod] + ':' + item, path.split('/src/', 1)[-1])
+            references(text, path)
 
         component = source('gtPlusPlus/core/item/base/BaseItemComponent.java')
         assert '"item" + componentType.COMPONENT_NAME + material.getUnlocalizedName()' in component
@@ -58,6 +61,12 @@ def recover(archive, registry, catalog, enderio_item, enderio_objects, item_regi
         for forms in registry['prefixes'].values():
             for form in forms:
                 add('bartworks:gt.bwMetaGenerated' + form, 'bartworks/system/material/BWMetaGeneratedItems.java + gregtech/api/items/GTGenericItem.java')
+
+    for reference_archive in reference_archives:
+        with zipfile.ZipFile(reference_archive) as z:
+            for path in z.namelist():
+                if path.endswith('.java'):
+                    references(z.read(path).decode('utf-8'), path)
 
     # EnderIO registers the enum's unlocalisedName, which is exactly name().
     item_text = Path(enderio_item).read_text()
@@ -89,9 +98,11 @@ if __name__ == '__main__':
     for key in ('archive', 'registry', 'catalog', 'enderio_item', 'enderio_objects', 'output'):
         p.add_argument(key)
     p.add_argument('--item-registry', help='GTNH NEI item configuration with case-preserving Forge IDs')
+    p.add_argument('--reference-archive', action='append', default=[],
+                   help='Additional pinned mod source archive with case-preserving getModItem references')
     a = p.parse_args()
     result = recover(a.archive, json.loads(Path(a.registry).read_text()),
                      json.load(gzip.open(a.catalog, 'rt')), a.enderio_item, a.enderio_objects,
-                     a.item_registry)
+                     a.item_registry, a.reference_archive)
     Path(a.output).write_text(json.dumps(result, indent=2) + '\n')
     print(len(result['names']), 'case-preserving registry IDs recovered')

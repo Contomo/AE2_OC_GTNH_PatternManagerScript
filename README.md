@@ -200,6 +200,30 @@ recipes and their electric counterparts by `source/tools/build_transition.py`,
 with tiny forms verified against the ore registry. The preview names removals,
 source slots, target slots and skipped-pattern reasons. Pause, Stop and Continue
 use the same transaction journal as the other programs.
+
+**Singularity line** covers the original Eternal Singularity route: 7 combined
+singularities with 9 distinct base singularities each, for **63 neutronium-compressor
+patterns and 63 ordinary compressor block patterns**. Configure its two destination
+names in Settings, then preview and execute with the regular maker. Each destination
+can be enabled independently. Ordinary compressor inputs include ingots, gems and
+raw dust/items such as redstone and quicksilver; molten routes and stabilized-black-hole
+shortcuts are excluded. Quartz uses ordinary quartz, diamond uses ordinary diamonds,
+and unstable blocks default to Mobius stable ingots, with a selectable alternative.
+
+Singularity patterns preserve the exact recipe for one output, including Iron's
+7,296-block requirement. They are indivisible and therefore bypass the global batch
+multiplier and per-item limit. Block-making recipes follow the existing batch,
+material-cost, tier and quantity-limit settings. If these settings exclude a block
+route, the Excluded tab identifies it; its singularity input must be supplied by
+another route. Existing proportional patterns are recognized and resized, and the
+normal sorting, donor refills, Pause/Stop/Continue and transaction recovery apply.
+
+The extreme crafting steps remain manual. They are read only to identify the
+dependencies, from the beta 3 pack's pinned `NewHorizonsCoreMod` 2.9.61 source.
+`source/tools/build_singularities.py` combines that chain with the full machine
+export, ore registry, material tiers and source-verified registry spellings. The
+result, `source/data/singularities.json`, contains 63 material rows, 190 shared item
+identities and only two shared compressor rules (9:1 and quartz's 4:1).
 Thus an existing 256 → 512 pattern matches a requested 1 → 2 recipe. It appears
 as **RESIZE** when its batch differs from the configured multiplier, and its
 existing pattern item is edited through the shared editor without using a donor.

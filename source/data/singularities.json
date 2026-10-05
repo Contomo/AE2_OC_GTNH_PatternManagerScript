@@ -1,0 +1,1872 @@
+{
+  "names": [
+    "minecraft:dye",
+    "minecraft:lapis_block",
+    "Avaritia:Singularity",
+    "minecraft:gold_ingot",
+    "minecraft:gold_block",
+    "gregtech:gt.metaitem.01",
+    "gregtech:gt.blockmetal6",
+    "minecraft:iron_ingot",
+    "minecraft:iron_block",
+    "minecraft:redstone",
+    "minecraft:redstone_block",
+    "gregtech:gt.blockmetal7",
+    "gregtech:gt.blockmetal4",
+    "gregtech:gt.blockmetal2",
+    "minecraft:quartz",
+    "minecraft:quartz_block",
+    "gregtech:gt.blockmetal5",
+    "gregtech:gt.blockmetal3",
+    "minecraft:coal",
+    "minecraft:coal_block",
+    "universalsingularities:universal.vanilla.singularity",
+    "minecraft:diamond",
+    "minecraft:diamond_block",
+    "minecraft:emerald",
+    "minecraft:emerald_block",
+    "gregtech:gt.blockgem3",
+    "universalsingularities:universal.general.singularity",
+    "gregtech:gt.blockmetal1",
+    "gregtech:gt.blockgem2",
+    "gregtech:gt.blockmetal8",
+    "Thaumcraft:ItemResource",
+    "thaumicbases:quicksilverBlock",
+    "minecraft:nether_star",
+    "DraconicEvolution:draconium",
+    "universalsingularities:universal.draconicEvolution.singularity",
+    "DraconicEvolution:draconicBlock",
+    "EnderIO:blockIngotStorage",
+    "universalsingularities:universal.enderIO.singularity",
+    "EnderIO:itemAlloy",
+    "ExtraUtilities:unstableingot",
+    "ExtraUtilities:decorativeBlock1",
+    "universalsingularities:universal.extraUtilities.singularity",
+    "ProjRed|Core:projectred.core.part",
+    "ProjRed|Exploration:projectred.exploration.stone",
+    "universalsingularities:universal.projectRed.singularity",
+    "TConstruct:MetalBlock",
+    "universalsingularities:universal.tinkersConstruct.singularity",
+    "minecraft:ender_pearl",
+    "gregtech:gt.blockgem1"
+  ],
+  "items": [
+    {
+      "name": 1,
+      "damage": 4,
+      "label": "Lapis Lazuli"
+    },
+    {
+      "name": 2,
+      "damage": 0,
+      "label": "Lapis Lazuli Block"
+    },
+    {
+      "name": 3,
+      "damage": 2,
+      "label": "Lapis Singularity"
+    },
+    {
+      "name": 4,
+      "damage": 0,
+      "label": "Gold Ingot"
+    },
+    {
+      "name": 5,
+      "damage": 0,
+      "label": "Block of Gold"
+    },
+    {
+      "name": 3,
+      "damage": 1,
+      "label": "Golden Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11054,
+      "label": "Silver Ingot"
+    },
+    {
+      "name": 7,
+      "damage": 10,
+      "label": "Block of Silver"
+    },
+    {
+      "name": 3,
+      "damage": 8,
+      "label": "Silver Singularity"
+    },
+    {
+      "name": 8,
+      "damage": 0,
+      "label": "Iron Ingot"
+    },
+    {
+      "name": 9,
+      "damage": 0,
+      "label": "Block of Iron"
+    },
+    {
+      "name": 3,
+      "damage": 0,
+      "label": "Iron Singularity"
+    },
+    {
+      "name": 10,
+      "damage": 0,
+      "label": "Redstone Dust"
+    },
+    {
+      "name": 11,
+      "damage": 0,
+      "label": "Block of Redstone"
+    },
+    {
+      "name": 3,
+      "damage": 3,
+      "label": "Redstone Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11057,
+      "label": "Tin Ingot"
+    },
+    {
+      "name": 12,
+      "damage": 7,
+      "label": "Block of Tin"
+    },
+    {
+      "name": 3,
+      "damage": 6,
+      "label": "Tin Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11089,
+      "label": "Lead Ingot"
+    },
+    {
+      "name": 13,
+      "damage": 2,
+      "label": "Block of Lead"
+    },
+    {
+      "name": 3,
+      "damage": 7,
+      "label": "Leaden Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11035,
+      "label": "Copper Ingot"
+    },
+    {
+      "name": 14,
+      "damage": 7,
+      "label": "Block of Copper"
+    },
+    {
+      "name": 3,
+      "damage": 5,
+      "label": "Copper Singularity"
+    },
+    {
+      "name": 15,
+      "damage": 0,
+      "label": "Nether Quartz"
+    },
+    {
+      "name": 16,
+      "damage": 0,
+      "label": "Block of Quartz"
+    },
+    {
+      "name": 3,
+      "damage": 4,
+      "label": "Nether Quartz Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11034,
+      "label": "Nickel Ingot"
+    },
+    {
+      "name": 17,
+      "damage": 4,
+      "label": "Block of Nickel"
+    },
+    {
+      "name": 3,
+      "damage": 9,
+      "label": "Nickel Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11321,
+      "label": "Enderium Ingot"
+    },
+    {
+      "name": 18,
+      "damage": 1,
+      "label": "Block of Enderium"
+    },
+    {
+      "name": 3,
+      "damage": 10,
+      "label": "Enderium Singularity"
+    },
+    {
+      "name": 19,
+      "damage": 0,
+      "label": "Coal"
+    },
+    {
+      "name": 20,
+      "damage": 0,
+      "label": "Block of Coal"
+    },
+    {
+      "name": 21,
+      "damage": 0,
+      "label": "Coal Singularity"
+    },
+    {
+      "name": 22,
+      "damage": 0,
+      "label": "Diamond"
+    },
+    {
+      "name": 23,
+      "damage": 0,
+      "label": "Block of Diamond"
+    },
+    {
+      "name": 21,
+      "damage": 2,
+      "label": "Diamond Singularity"
+    },
+    {
+      "name": 24,
+      "damage": 0,
+      "label": "Emerald"
+    },
+    {
+      "name": 25,
+      "damage": 0,
+      "label": "Block of Emerald"
+    },
+    {
+      "name": 21,
+      "damage": 1,
+      "label": "Emerald Singularity"
+    },
+    {
+      "name": 19,
+      "damage": 1,
+      "label": "Charcoal"
+    },
+    {
+      "name": 26,
+      "damage": 4,
+      "label": "Block of Charcoal"
+    },
+    {
+      "name": 27,
+      "damage": 3,
+      "label": "Charcoal Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11019,
+      "label": "Aluminium Ingot"
+    },
+    {
+      "name": 28,
+      "damage": 1,
+      "label": "Block of Aluminium"
+    },
+    {
+      "name": 27,
+      "damage": 0,
+      "label": "Aluminum Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11301,
+      "label": "Brass Ingot"
+    },
+    {
+      "name": 28,
+      "damage": 15,
+      "label": "Block of Brass"
+    },
+    {
+      "name": 27,
+      "damage": 1,
+      "label": "Brass Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11300,
+      "label": "Bronze Ingot"
+    },
+    {
+      "name": 14,
+      "damage": 0,
+      "label": "Block of Bronze"
+    },
+    {
+      "name": 27,
+      "damage": 2,
+      "label": "Bronze Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11303,
+      "label": "Electrum Ingot"
+    },
+    {
+      "name": 14,
+      "damage": 15,
+      "label": "Block of Electrum"
+    },
+    {
+      "name": 27,
+      "damage": 4,
+      "label": "Electrum Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11302,
+      "label": "Invar Ingot"
+    },
+    {
+      "name": 18,
+      "damage": 11,
+      "label": "Block of Invar"
+    },
+    {
+      "name": 27,
+      "damage": 5,
+      "label": "Invar Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11018,
+      "label": "Magnesium Ingot"
+    },
+    {
+      "name": 13,
+      "damage": 5,
+      "label": "Block of Magnesium"
+    },
+    {
+      "name": 27,
+      "damage": 6,
+      "label": "Magnesium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11083,
+      "label": "Osmium Ingot"
+    },
+    {
+      "name": 17,
+      "damage": 9,
+      "label": "Block of Osmium"
+    },
+    {
+      "name": 27,
+      "damage": 7,
+      "label": "Osmium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 8505,
+      "label": "Olivine"
+    },
+    {
+      "name": 29,
+      "damage": 4,
+      "label": "Block of Olivine"
+    },
+    {
+      "name": 27,
+      "damage": 8,
+      "label": "Peridot Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 8502,
+      "label": "Ruby"
+    },
+    {
+      "name": 29,
+      "damage": 11,
+      "label": "Block of Ruby"
+    },
+    {
+      "name": 27,
+      "damage": 9,
+      "label": "Ruby Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 8503,
+      "label": "Sapphire"
+    },
+    {
+      "name": 29,
+      "damage": 12,
+      "label": "Block of Sapphire"
+    },
+    {
+      "name": 27,
+      "damage": 10,
+      "label": "Sapphire Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11305,
+      "label": "Steel Ingot"
+    },
+    {
+      "name": 7,
+      "damage": 13,
+      "label": "Block of Steel"
+    },
+    {
+      "name": 27,
+      "damage": 11,
+      "label": "Steel Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11028,
+      "label": "Titanium Ingot"
+    },
+    {
+      "name": 12,
+      "damage": 9,
+      "label": "Block of Titanium"
+    },
+    {
+      "name": 27,
+      "damage": 12,
+      "label": "Titanium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11081,
+      "label": "Tungsten Ingot"
+    },
+    {
+      "name": 12,
+      "damage": 11,
+      "label": "Block of Tungsten"
+    },
+    {
+      "name": 27,
+      "damage": 13,
+      "label": "Tungsten Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11098,
+      "label": "Uranium 238 Ingot"
+    },
+    {
+      "name": 12,
+      "damage": 14,
+      "label": "Block of Uranium 238"
+    },
+    {
+      "name": 27,
+      "damage": 14,
+      "label": "Uranium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11036,
+      "label": "Zinc Ingot"
+    },
+    {
+      "name": 30,
+      "damage": 6,
+      "label": "Block of Zinc"
+    },
+    {
+      "name": 27,
+      "damage": 15,
+      "label": "Zinc Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 8534,
+      "label": "Tricalcium Phosphate"
+    },
+    {
+      "name": 29,
+      "damage": 8,
+      "label": "Block of Tricalcium Phosphate"
+    },
+    {
+      "name": 27,
+      "damage": 16,
+      "label": "Tricalcium Phosphate Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11052,
+      "label": "Palladium Ingot"
+    },
+    {
+      "name": 17,
+      "damage": 10,
+      "label": "Block of Palladium"
+    },
+    {
+      "name": 27,
+      "damage": 17,
+      "label": "Palladium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11335,
+      "label": "Damascus Steel Ingot"
+    },
+    {
+      "name": 14,
+      "damage": 9,
+      "label": "Block of Damascus Steel"
+    },
+    {
+      "name": 27,
+      "damage": 18,
+      "label": "Damascus Steel Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11334,
+      "label": "Black Steel Ingot"
+    },
+    {
+      "name": 28,
+      "damage": 12,
+      "label": "Block of Black Steel"
+    },
+    {
+      "name": 27,
+      "damage": 19,
+      "label": "Black Steel Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11320,
+      "label": "Fluxed Electrum Ingot"
+    },
+    {
+      "name": 18,
+      "damage": 0,
+      "label": "Block of Fluxed Electrum"
+    },
+    {
+      "name": 27,
+      "damage": 20,
+      "label": "Fluxed Electrum Singularity"
+    },
+    {
+      "name": 31,
+      "damage": 3,
+      "label": "Quicksilver"
+    },
+    {
+      "name": 32,
+      "damage": 0,
+      "label": "Quicksilver Block"
+    },
+    {
+      "name": 27,
+      "damage": 21,
+      "label": "Quicksilver Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11337,
+      "label": "Shadow Steel Ingot"
+    },
+    {
+      "name": 7,
+      "damage": 8,
+      "label": "Block of Shadow Steel"
+    },
+    {
+      "name": 27,
+      "damage": 22,
+      "label": "Shadow Steel Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11084,
+      "label": "Iridium Ingot"
+    },
+    {
+      "name": 18,
+      "damage": 12,
+      "label": "Block of Iridium"
+    },
+    {
+      "name": 27,
+      "damage": 23,
+      "label": "Iridium Singularity"
+    },
+    {
+      "name": 33,
+      "damage": 0,
+      "label": "Nether Star"
+    },
+    {
+      "name": 26,
+      "damage": 3,
+      "label": "Block of Nether Star"
+    },
+    {
+      "name": 27,
+      "damage": 24,
+      "label": "Nether Star Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11085,
+      "label": "Platinum Ingot"
+    },
+    {
+      "name": 17,
+      "damage": 12,
+      "label": "Block of Platinum"
+    },
+    {
+      "name": 27,
+      "damage": 25,
+      "label": "Platinum Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11327,
+      "label": "Naquadria Ingot"
+    },
+    {
+      "name": 13,
+      "damage": 15,
+      "label": "Block of Naquadria"
+    },
+    {
+      "name": 27,
+      "damage": 26,
+      "label": "Naquadria Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11100,
+      "label": "Plutonium 239 Ingot"
+    },
+    {
+      "name": 17,
+      "damage": 13,
+      "label": "Block of Plutonium 239"
+    },
+    {
+      "name": 27,
+      "damage": 27,
+      "label": "Plutonium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11340,
+      "label": "Meteoric Iron Ingot"
+    },
+    {
+      "name": 13,
+      "damage": 7,
+      "label": "Block of Meteoric Iron"
+    },
+    {
+      "name": 27,
+      "damage": 28,
+      "label": "Meteoric Iron Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11884,
+      "label": "Desh Ingot"
+    },
+    {
+      "name": 14,
+      "damage": 12,
+      "label": "Block of Desh"
+    },
+    {
+      "name": 27,
+      "damage": 29,
+      "label": "Desh Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11070,
+      "label": "Europium Ingot"
+    },
+    {
+      "name": 18,
+      "damage": 3,
+      "label": "Block of Europium"
+    },
+    {
+      "name": 27,
+      "damage": 30,
+      "label": "Europium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11975,
+      "label": "Draconium Ingot"
+    },
+    {
+      "name": 34,
+      "damage": 0,
+      "label": "Draconium Block"
+    },
+    {
+      "name": 35,
+      "damage": 0,
+      "label": "Draconium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11976,
+      "label": "Awakened Draconium Ingot"
+    },
+    {
+      "name": 36,
+      "damage": 0,
+      "label": "Awakened Draconium Block"
+    },
+    {
+      "name": 35,
+      "damage": 1,
+      "label": "Awakened Draconium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11369,
+      "label": "Conductive Iron Ingot"
+    },
+    {
+      "name": 37,
+      "damage": 4,
+      "label": "Conductive Iron Block"
+    },
+    {
+      "name": 38,
+      "damage": 0,
+      "label": "Conductive Iron Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11365,
+      "label": "Electrical Steel Ingot"
+    },
+    {
+      "name": 37,
+      "damage": 0,
+      "label": "Electrical Steel Block"
+    },
+    {
+      "name": 38,
+      "damage": 1,
+      "label": "Electrical Steel Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11366,
+      "label": "Energetic Alloy Ingot"
+    },
+    {
+      "name": 37,
+      "damage": 1,
+      "label": "Energetic Alloy Block"
+    },
+    {
+      "name": 38,
+      "damage": 2,
+      "label": "Energetic Alloy Singularity"
+    },
+    {
+      "name": 39,
+      "damage": 6,
+      "label": "Dark Steel"
+    },
+    {
+      "name": 37,
+      "damage": 6,
+      "label": "Dark Steel Block"
+    },
+    {
+      "name": 38,
+      "damage": 3,
+      "label": "Dark Steel Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11378,
+      "label": "Pulsating Iron Ingot"
+    },
+    {
+      "name": 37,
+      "damage": 5,
+      "label": "Pulsating Iron Block"
+    },
+    {
+      "name": 38,
+      "damage": 4,
+      "label": "Pulsating Iron Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11381,
+      "label": "Redstone Alloy Ingot"
+    },
+    {
+      "name": 37,
+      "damage": 3,
+      "label": "Redstone Alloy Block"
+    },
+    {
+      "name": 38,
+      "damage": 5,
+      "label": "Redstone Alloy Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11379,
+      "label": "Soularium Ingot"
+    },
+    {
+      "name": 37,
+      "damage": 7,
+      "label": "Soularium Block"
+    },
+    {
+      "name": 38,
+      "damage": 6,
+      "label": "Soularium Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11367,
+      "label": "Vibrant Alloy Ingot"
+    },
+    {
+      "name": 37,
+      "damage": 2,
+      "label": "Vibrant Alloy Block"
+    },
+    {
+      "name": 38,
+      "damage": 7,
+      "label": "Vibrant Alloy Singularity"
+    },
+    {
+      "name": 40,
+      "damage": 0,
+      "label": "Unstable Ingot"
+    },
+    {
+      "name": 41,
+      "damage": 5,
+      "label": "Unstable Ingot Block"
+    },
+    {
+      "name": 42,
+      "damage": 0,
+      "label": "Unstable Ingot Singularity"
+    },
+    {
+      "name": 40,
+      "damage": 2,
+      "label": "Mobius \"Unstable/Stable\" Ingot"
+    },
+    {
+      "name": 43,
+      "damage": 56,
+      "label": "Electrotine"
+    },
+    {
+      "name": 44,
+      "damage": 11,
+      "label": "Block of Electrotine"
+    },
+    {
+      "name": 45,
+      "damage": 0,
+      "label": "Electrotine Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11351,
+      "label": "Rose Gold Ingot"
+    },
+    {
+      "name": 7,
+      "damage": 3,
+      "label": "Block of Rose Gold"
+    },
+    {
+      "name": 27,
+      "damage": 32,
+      "label": "Rose Gold Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11400,
+      "label": "Obzinite Ingot"
+    },
+    {
+      "name": 46,
+      "damage": 8,
+      "label": "Block of Obzinite"
+    },
+    {
+      "name": 47,
+      "damage": 1,
+      "label": "Obzinite Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11382,
+      "label": "Ardite Ingot"
+    },
+    {
+      "name": 46,
+      "damage": 1,
+      "label": "Block of Ardite"
+    },
+    {
+      "name": 47,
+      "damage": 2,
+      "label": "Ardite Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11033,
+      "label": "Cobalt Ingot"
+    },
+    {
+      "name": 14,
+      "damage": 5,
+      "label": "Block of Cobalt"
+    },
+    {
+      "name": 47,
+      "damage": 3,
+      "label": "Cobalt Singularity"
+    },
+    {
+      "name": 48,
+      "damage": 0,
+      "label": "Ender Pearl"
+    },
+    {
+      "name": 49,
+      "damage": 8,
+      "label": "Block of Enderpearl"
+    },
+    {
+      "name": 47,
+      "damage": 4,
+      "label": "Ender Singularity"
+    },
+    {
+      "name": 6,
+      "damage": 11386,
+      "label": "Manyullyn Ingot"
+    },
+    {
+      "name": 46,
+      "damage": 2,
+      "label": "Block of Manyullyn"
+    },
+    {
+      "name": 47,
+      "damage": 6,
+      "label": "Manyullyn Singularity"
+    }
+  ],
+  "rules": [
+    {
+      "input": 9,
+      "output": 1,
+      "eut": 2
+    },
+    {
+      "input": 4,
+      "output": 1,
+      "eut": 2
+    }
+  ],
+  "groups": [
+    "Nitronic Singularity",
+    "Psychotic Singularity",
+    "Spaghettic Singularity",
+    "Pneumatic Singularity",
+    "Cryptic Singularity",
+    "Historic Singularity",
+    "Meteoric Singularity"
+  ],
+  "materials": [
+    {
+      "label": "Lapis",
+      "group": 1,
+      "raw": 1,
+      "block": 2,
+      "singularity": 3,
+      "blocks": 1215,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Golden",
+      "group": 1,
+      "raw": 4,
+      "block": 5,
+      "singularity": 6,
+      "blocks": 1215,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Silver",
+      "group": 1,
+      "raw": 7,
+      "block": 8,
+      "singularity": 9,
+      "blocks": 7296,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest recipe ingredient"
+    },
+    {
+      "label": "Iron",
+      "group": 1,
+      "raw": 10,
+      "block": 11,
+      "singularity": 12,
+      "blocks": 7296,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Redstone",
+      "group": 1,
+      "raw": 13,
+      "block": 14,
+      "singularity": 15,
+      "blocks": 7296,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Tin",
+      "group": 1,
+      "raw": 16,
+      "block": 17,
+      "singularity": 18,
+      "blocks": 3648,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Leaden",
+      "group": 1,
+      "raw": 19,
+      "block": 20,
+      "singularity": 21,
+      "blocks": 3648,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "production route estimate"
+    },
+    {
+      "label": "Copper",
+      "group": 1,
+      "raw": 22,
+      "block": 23,
+      "singularity": 24,
+      "blocks": 3648,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Nether Quartz",
+      "group": 1,
+      "raw": 25,
+      "block": 26,
+      "singularity": 27,
+      "blocks": 1215,
+      "yield": 1,
+      "compressor": 2,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Nickel",
+      "group": 2,
+      "raw": 28,
+      "block": 29,
+      "singularity": 30,
+      "blocks": 3648,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "ore access estimate"
+    },
+    {
+      "label": "Enderium",
+      "group": 2,
+      "raw": 31,
+      "block": 32,
+      "singularity": 33,
+      "blocks": 608,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "IV",
+      "tierSource": "quest recipe ingredient"
+    },
+    {
+      "label": "Coal",
+      "group": 2,
+      "raw": 34,
+      "block": 35,
+      "singularity": 36,
+      "blocks": 3648,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Diamond",
+      "group": 2,
+      "raw": 37,
+      "block": 38,
+      "singularity": 39,
+      "blocks": 729,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Emerald",
+      "group": 2,
+      "raw": 40,
+      "block": 41,
+      "singularity": 42,
+      "blocks": 729,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Charcoal",
+      "group": 2,
+      "raw": 43,
+      "block": 44,
+      "singularity": 45,
+      "blocks": 7296,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Aluminum",
+      "group": 2,
+      "raw": 46,
+      "block": 47,
+      "singularity": 48,
+      "blocks": 1824,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "LV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Brass",
+      "group": 2,
+      "raw": 49,
+      "block": 50,
+      "singularity": 51,
+      "blocks": 1824,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "production route estimate"
+    },
+    {
+      "label": "Bronze",
+      "group": 2,
+      "raw": 52,
+      "block": 53,
+      "singularity": 54,
+      "blocks": 1824,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Electrum",
+      "group": 3,
+      "raw": 55,
+      "block": 56,
+      "singularity": 57,
+      "blocks": 912,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "production route estimate"
+    },
+    {
+      "label": "Invar",
+      "group": 3,
+      "raw": 58,
+      "block": 59,
+      "singularity": 60,
+      "blocks": 1824,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Magnesium",
+      "group": 3,
+      "raw": 61,
+      "block": 62,
+      "singularity": 63,
+      "blocks": 3648,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "LV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Osmium",
+      "group": 3,
+      "raw": 64,
+      "block": 65,
+      "singularity": 66,
+      "blocks": 406,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "IV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Peridot",
+      "group": 3,
+      "raw": 67,
+      "block": 68,
+      "singularity": 69,
+      "blocks": 608,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "UV",
+      "tierSource": "ore access estimate"
+    },
+    {
+      "label": "Ruby",
+      "group": 3,
+      "raw": 70,
+      "block": 71,
+      "singularity": 72,
+      "blocks": 608,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Sapphire",
+      "group": 3,
+      "raw": 73,
+      "block": 74,
+      "singularity": 75,
+      "blocks": 608,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480
+    },
+    {
+      "label": "Steel",
+      "group": 3,
+      "raw": 76,
+      "block": 77,
+      "singularity": 78,
+      "blocks": 912,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Titanium",
+      "group": 3,
+      "raw": 79,
+      "block": 80,
+      "singularity": 81,
+      "blocks": 2024,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Tungsten",
+      "group": 4,
+      "raw": 82,
+      "block": 83,
+      "singularity": 84,
+      "blocks": 244,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Uranium",
+      "group": 4,
+      "raw": 85,
+      "block": 86,
+      "singularity": 87,
+      "blocks": 507,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "production route estimate"
+    },
+    {
+      "label": "Zinc",
+      "group": 4,
+      "raw": 88,
+      "block": 89,
+      "singularity": 90,
+      "blocks": 3648,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "ore access estimate"
+    },
+    {
+      "label": "Tricalcium Phosphate",
+      "group": 4,
+      "raw": 91,
+      "block": 92,
+      "singularity": 93,
+      "blocks": 365,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Palladium",
+      "group": 4,
+      "raw": 94,
+      "block": 95,
+      "singularity": 96,
+      "blocks": 136,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "IV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Damascus Steel",
+      "group": 4,
+      "raw": 97,
+      "block": 98,
+      "singularity": 99,
+      "blocks": 153,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "LV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Black Steel",
+      "group": 4,
+      "raw": 100,
+      "block": 101,
+      "singularity": 102,
+      "blocks": 304,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "production route estimate"
+    },
+    {
+      "label": "Fluxed Electrum",
+      "group": 4,
+      "raw": 103,
+      "block": 104,
+      "singularity": 105,
+      "blocks": 16,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480
+    },
+    {
+      "label": "Quicksilver",
+      "group": 4,
+      "raw": 106,
+      "block": 107,
+      "singularity": 108,
+      "blocks": 1824,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480
+    },
+    {
+      "label": "Shadow Steel",
+      "group": 5,
+      "raw": 109,
+      "block": 110,
+      "singularity": 111,
+      "blocks": 406,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480
+    },
+    {
+      "label": "Iridium",
+      "group": 5,
+      "raw": 112,
+      "block": 113,
+      "singularity": 114,
+      "blocks": 62,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "IV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Nether Star",
+      "group": 5,
+      "raw": 115,
+      "block": 116,
+      "singularity": 117,
+      "blocks": 512,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "LV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Platinum",
+      "group": 5,
+      "raw": 118,
+      "block": 119,
+      "singularity": 120,
+      "blocks": 406,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Naquadria",
+      "group": 5,
+      "raw": 121,
+      "block": 122,
+      "singularity": 123,
+      "blocks": 66,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ZPM",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Plutonium",
+      "group": 5,
+      "raw": 124,
+      "block": 125,
+      "singularity": 126,
+      "blocks": 244,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "production route estimate"
+    },
+    {
+      "label": "Meteoric Iron",
+      "group": 5,
+      "raw": 127,
+      "block": 128,
+      "singularity": 129,
+      "blocks": 912,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Desh",
+      "group": 5,
+      "raw": 130,
+      "block": 131,
+      "singularity": 132,
+      "blocks": 203,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Europium",
+      "group": 5,
+      "raw": 133,
+      "block": 134,
+      "singularity": 135,
+      "blocks": 62,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "IV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Draconium",
+      "group": 6,
+      "raw": 136,
+      "block": 137,
+      "singularity": 138,
+      "blocks": 1296,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "EV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Awakened Draconium",
+      "group": 6,
+      "raw": 139,
+      "block": 140,
+      "singularity": 141,
+      "blocks": 760,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "UHV",
+      "tierSource": "ore access estimate"
+    },
+    {
+      "label": "Conductive Iron",
+      "group": 6,
+      "raw": 142,
+      "block": 143,
+      "singularity": 144,
+      "blocks": 912,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "MV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Electrical Steel",
+      "group": 6,
+      "raw": 145,
+      "block": 146,
+      "singularity": 147,
+      "blocks": 912,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "MV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Energetic Alloy",
+      "group": 6,
+      "raw": 148,
+      "block": 149,
+      "singularity": 150,
+      "blocks": 191,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Dark Steel",
+      "group": 6,
+      "raw": 151,
+      "block": 152,
+      "singularity": 153,
+      "blocks": 912,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "MV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Pulsating Iron",
+      "group": 6,
+      "raw": 154,
+      "block": 155,
+      "singularity": 156,
+      "blocks": 912,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "MV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Redstone Alloy",
+      "group": 6,
+      "raw": 157,
+      "block": 158,
+      "singularity": 159,
+      "blocks": 912,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "LV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Soularium",
+      "group": 6,
+      "raw": 160,
+      "block": 161,
+      "singularity": 162,
+      "blocks": 456,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "MV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Vibrant Alloy",
+      "group": 7,
+      "raw": 163,
+      "block": 164,
+      "singularity": 165,
+      "blocks": 145,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Unstable Ingot",
+      "group": 7,
+      "raw": 166,
+      "block": 167,
+      "singularity": 168,
+      "blocks": 66,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "HV",
+      "tierSource": "quest recipe ingredient",
+      "alternatives": [
+        {
+          "key": "unstable",
+          "raw": 166,
+          "compressor": 1
+        },
+        {
+          "key": "mobius",
+          "raw": 169,
+          "compressor": 1
+        }
+      ]
+    },
+    {
+      "label": "Electrotine",
+      "group": 7,
+      "raw": 170,
+      "block": 171,
+      "singularity": 172,
+      "blocks": 1215,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "LV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Rose Gold",
+      "group": 7,
+      "raw": 173,
+      "block": 174,
+      "singularity": 175,
+      "blocks": 1824,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "MV",
+      "tierSource": "production route estimate"
+    },
+    {
+      "label": "Obzinite",
+      "group": 7,
+      "raw": 176,
+      "block": 177,
+      "singularity": 178,
+      "blocks": 229,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Ardite",
+      "group": 7,
+      "raw": 179,
+      "block": 180,
+      "singularity": 181,
+      "blocks": 304,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "LV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Cobalt",
+      "group": 7,
+      "raw": 182,
+      "block": 183,
+      "singularity": 184,
+      "blocks": 1824,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "LV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Ender",
+      "group": 7,
+      "raw": 185,
+      "block": 186,
+      "singularity": 187,
+      "blocks": 608,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480,
+      "tier": "ULV",
+      "tierSource": "quest item"
+    },
+    {
+      "label": "Manyullyn",
+      "group": 7,
+      "raw": 188,
+      "block": 189,
+      "singularity": 190,
+      "blocks": 308,
+      "yield": 1,
+      "compressor": 1,
+      "eut": 480
+    }
+  ],
+  "version": 1,
+  "source": {
+    "recipeVersion": "2.9.0-beta-2",
+    "targetVersion": "2.9.0-beta-3",
+    "datasetId": "local-2.9.0-beta-2",
+    "baseSingularities": 63,
+    "combinedSingularities": 7,
+    "root": "Eternal Singularity",
+    "chainSource": "https://github.com/GTNewHorizons/NewHorizonsCoreMod/blob/2.9.61/src/main/java/com/dreammaster/scripts/ScriptAvaritia.java",
+    "batchPolicy": "One singularity per pattern; block recipes follow global batch settings."
+  },
+  "evidence": {
+    "exports": {
+      "recipes.json.gz": "2c09a018091ea934c1cf8f612f447796f17e31e4f9d9cb3b01b894746abe0fed",
+      "NewHorizonsCoreMod-2.9.61.zip": "11688b8b3bf3adb688865becf7e3e21b8e854968baa5df125b97819998856c71",
+      "ores.json.gz": "07c9526c3e78b9e1a5104c76c89013997a3b7b687ecc2b356150a72441fc23c2",
+      "singularity-registry-names.json": "3fed6e35727aecd920cfc1fdc77adde8c5a0cf0159b37f5f574be820ab4bca62",
+      "Eternal-Singularity-1.4.3.zip": "861630d1ced5594baa1cbe1b68b676b1405826d75bc9f5643b6633f91f307b94",
+      "Draconic-Evolution-1.5.33-GTNH.zip": "a66d56bb4374c186c71535fb408b83365a620a159e8ad263b0f8b53d409294c3",
+      "ProjectRed-4.12.43-GTNH.zip": "9c32b1d0dc92f5d469f38231921e468cae8e29708474e4d342b441c4e1e0e5ca"
+    },
+    "chain": "6045bf12e1ea66d751d2a1b15456462dd4396498a379e8d38df918ed749e2ad1"
+  }
+}

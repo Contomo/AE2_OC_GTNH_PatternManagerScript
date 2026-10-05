@@ -342,6 +342,23 @@ local function runUI()
         add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
     elseif state.section == 'details' and preview.manifest then
+      if preview.id == 'singularities' then
+        add('ETERNAL SINGULARITY CHAIN', 'blue')
+        add(
+          preview.manifest.source.combinedSingularities
+            .. ' combined singularities / '
+            .. preview.manifest.source.baseSingularities
+            .. ' base singularities.'
+        )
+        add('Extreme crafting is used to trace dependencies; its recipes are not patterned.')
+        add(preview.manifest.source.batchPolicy, 'muted')
+        add(
+          'Native singularity counts can exceed the global per-item limit; they stay exact.',
+          'muted'
+        )
+        add('Molten shortcuts and stabilized-black-hole block recipes are excluded.', 'muted')
+        add('')
+      end
       if preview.id == 'bender' or preview.id == 'fluidShaper' then
         add('STOCKED IN MACHINE', 'blue')
         add('These reusable items stay in the machine and are omitted from patterns.')
