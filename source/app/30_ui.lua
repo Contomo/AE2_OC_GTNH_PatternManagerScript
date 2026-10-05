@@ -213,7 +213,7 @@ local function runUI()
       action('history')
     end
   end
-  local function editorRow(x, y, width, f)
+  local function editorRow(x, y, width, f, active)
     local value = values()[f.key]
     local first, cursor = 1, nil
     if edit and edit.key == f.key and edit.section == state.settings then
@@ -222,14 +222,21 @@ local function runUI()
       value = unicode.sub(edit.value, first, edit.cursor - 1)
         .. '|'
         .. unicode.sub(edit.value, edit.cursor)
-      text(x, y, value, width, edit.selectAll and 'yellow' or 'blue', 'panel')
+      text(
+        x,
+        y,
+        value,
+        width,
+        active == false and 'muted' or edit.selectAll and 'yellow' or 'blue',
+        'panel'
+      )
     else
       text(
         x,
         y,
         value == '' and (f.placeholder or '(not configured)') or value,
         width,
-        value == '' and 'muted' or 'text',
+        (value == '' or active == false) and 'muted' or 'text',
         'panel'
       )
     end
@@ -643,30 +650,11 @@ local function runUI()
         end)
       end
       local section = Config.section(state.settings)
-      local pageRow = layout.scrollFooter + (section.pageSize == 9 and 1 or 0)
-      local pages = { {} }
-      for _, f in ipairs(fields()) do
-        local page = pages[#pages]
-        if
-          #page > 0
-          and (#page >= (f.compact and 16 or section.pageSize or 8) or page[1].group ~= f.group)
-        then
-          page = {}
-          pages[#pages + 1] = page
-        end
-        page[#page + 1] = f
-      end
+      local pageRow, top = layout.scrollFooter, layout.body - 1
+      local pages = Settings.pages(fields(), 124, layout.bodyBottom - top + 1, unicode)
       state.settingsPage = math.min(state.settingsPage, #pages)
       local page = pages[state.settingsPage]
-      text(
-        34,
-        layout.title,
-        'SETTINGS / '
-          .. section.name
-          .. (page[1] and page[1].group and (' / ' .. page[1].group) or ''),
-        124,
-        'blue'
-      )
+      text(34, layout.title, 'SETTINGS / ' .. section.name, 124, 'blue')
       text(
         34,
         layout.subtitle,
@@ -674,110 +662,120 @@ local function runUI()
         124,
         'muted'
       )
-      local y = layout.body - (section.pageSize == 9 and 2 or 1)
-      local compact = page[1] and page[1].compact
-      if compact then
-        local overrides = page[1].group == 'Tier overrides'
-        text(
-          34,
-          layout.body - 2,
-          page[1].tableLabel or (overrides and 'MATERIAL TIER' or 'RELATIVE TIER'),
-          42,
-          'blue'
-        )
-        text(
-          80,
-          layout.body - 2,
-          page[1].valueLabel or (overrides and 'OVERRIDE' or 'MULTIPLIER'),
-          22,
-          'blue'
-        )
-        if overrides then
-          text(115, layout.body - 2, 'EFFECTIVE', 40, 'blue')
+      local function helpLines(y, content)
+        for index, line in ipairs(content) do
+          text(34, y + index - 1, line, 124, 'muted')
         end
-        text(
-          34,
-          pageRow - 1,
-          page[1].tableHelp
-            or (
-              overrides and 'Blank follows the curve. Later tiers remain skipped unless enabled.'
-              or 'One multiplier per relative tier. Maximum and quantity limits still apply.'
-            ),
-          124,
-          'muted'
-        )
-        y = layout.body
       end
-      for _, f in ipairs(page) do
-        if compact then
+      local function optionButtons(block, x, y, key, choices, active)
+        local selected = choices and Config.selected(values()[key], choices)
+        for _, option in ipairs(block.options or {}) do
+          local value = option.choice[1]
+          local callback = function()
+            if choices then
+              toggleForm(key, choices, value)
+            else
+              chooseValue(key, value)
+            end
+          end
+          if choices then
+            toggleButton(
+              x + option.x,
+              y + option.row,
+              selected[value],
+              callback,
+              active,
+              option.choice[2]
+            )
+          else
+            button(
+              x + option.x,
+              y + option.row,
+              option.choice[2],
+              callback,
+              active,
+              values()[key] == value
+            )
+          end
+        end
+      end
+      local function destinationRow(block, y)
+        local f, program = block.field, Programs.byId[state.settings]
+        local active = Config.destinationEnabled(cfg, state.settings, f.key)
+        toggleButton(34, y, active, function()
+          toggleForm(program.destinationSwitch, program.destinationChoices, f.key)
+        end, true)
+        local annotation = f.annotation or ''
+        local width = 116 - (annotation ~= '' and unicode.wlen(annotation) + 2 or 0)
+        editorRow(42, y, width, f, active)
+        if annotation ~= '' then
+          text(44 + width, y, annotation, unicode.wlen(annotation), 'muted')
+        end
+      end
+      for _, block in ipairs(page.blocks) do
+        local y, f = top + block.row, block.field
+        if block.kind == 'heading' then
+          text(34, y, block.label, 124, 'blue')
+          helpLines(y + 1, block.help)
+        elseif block.kind == 'tableHeading' then
+          local overrides = f.group == 'Tier overrides'
+          text(
+            34,
+            y,
+            f.tableLabel or (overrides and 'MATERIAL TIER' or 'RELATIVE TIER'),
+            42,
+            'blue'
+          )
+          text(80, y, f.valueLabel or (overrides and 'OVERRIDE' or 'MULTIPLIER'), 22, 'blue')
+          if overrides then
+            text(115, y, 'EFFECTIVE', 40, 'blue')
+          end
+          helpLines(y + 1, block.help)
+        elseif block.kind == 'destination' then
+          destinationRow(block, y)
+        elseif block.kind == 'table' then
           text(34, y, f.label, 42, 'text')
           editorRow(80, y, f.valueWidth or 22, f)
-          if page[1].group == 'Tier overrides' then
+          if f.group == 'Tier overrides' then
             local budget = Batch.budget(cfg.batch, f.label)
             text(115, y, budget == 0 and 'Skipped' or budget .. 'x', 40, 'muted')
           end
-          y = y + 2
+        elseif block.kind == 'checkbox' then
+          local key, choices = f.key, f.toggleValues or { 'off', 'on' }
+          checkbox(34, y, f.label, values()[key] == choices[2], function()
+            chooseValue(key, values()[key] == choices[2] and choices[1] or choices[2])
+          end)
+          helpLines(y + 1, block.help)
         else
-          local helpY, height = y + 2, 4
-          local isCheckbox = f.toggleValues or f.kind == 'toggle'
-          if not isCheckbox then
-            text(34, y, f.label, 124, 'blue')
+          for index, label in ipairs(block.labels) do
+            text(34, y + index - 1, label, 124, 'blue')
           end
-          if isCheckbox then
-            local key = f.key
-            local choices = f.toggleValues or { 'off', 'on' }
-            checkbox(34, y, f.label, values()[key] == choices[2], function()
-              chooseValue(key, values()[key] == choices[2] and choices[1] or choices[2])
-            end)
-            helpY, height = y + 1, f.help and f.help ~= '' and 3 or 2
-          elseif f.kind == 'multiToggle' then
-            local x, row = 34, y + 1
-            local selected = Config.selected(values()[f.key], f.choices)
-            for _, option in ipairs(f.choices) do
-              local key, choice = f.key, option[1]
-              if x + unicode.wlen('[ X ' .. option[2] .. ' ]') - 1 > 157 then
-                x, row = 34, row + 1
-              end
-              x = toggleButton(x, row, selected[choice], function()
-                toggleForm(key, f.choices, choice)
-              end, true, option[2])
-            end
-            helpY, height = row + 1, row - y + 4
-          elseif f.enableForm then
-            local program = Programs.byId[state.settings]
-            local choice = f.enableForm
-            local selected = Config.selected(values()[program.formSwitch], program.formChoices)
-            toggleButton(34, y + 1, selected[choice], function()
-              toggleForm(program.formSwitch, program.formChoices, choice)
-            end, true)
-            editorRow(42, y + 1, 116, f)
-          elseif f.kind == 'select' then
+          local controlY = y + block.control
+          if f.kind == 'select' then
             local label, selected = values()[f.key], 1
             for n, option in ipairs(f.choices) do
               if option[1] == values()[f.key] then
                 label, selected = option[2], n
               end
             end
-            button(34, y + 1, label, function()
+            button(34, controlY, label, function()
               commitEdit()
               state.choice =
                 { key = f.key, label = f.label, choices = f.choices, selected = selected }
             end)
           elseif f.choices then
-            local x = 34
-            for _, option in ipairs(f.choices) do
-              local key, value = f.key, option[1]
-              x = button(x, y + 1, option[2], function()
-                chooseValue(key, value)
-              end, true, values()[key] == value)
-            end
+            optionButtons(
+              block,
+              34,
+              controlY,
+              f.key,
+              f.kind == 'multiToggle' and f.choices or nil,
+              true
+            )
           else
-            editorRow(34, y + 1, 124, f)
+            editorRow(34, controlY, 124, f)
           end
-          if f.help and f.help ~= '' then
-            text(34, helpY, f.help, 124, 'muted')
-          end
-          y = y + height
+          helpLines(y + block.helpRow, block.help)
         end
       end
       if #pages > 1 then

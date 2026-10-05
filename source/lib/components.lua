@@ -52,72 +52,81 @@ function M.compile(data, options, checkpoint)
       checkpoint()
     end
     local component = U.check(data.components[row.component], 'Unknown component group')
-    local output = ingredient(row.output, row.yield)
-    local _, batch =
-      Batch.resolve(options.batch, row.tier, row.eut, 1, nil, 'component casing', { native = true })
-    local reason = row.casing > casingIndex and ('Requires ' .. row.tier .. ' component casings')
-      or batch.excluded
-    local choices = {}
-    if not reason then
-      for variantIndex = 0, #row.variants do
-        local amounts = {}
-        for _, pair in ipairs(row.inputs) do
-          amounts[pair[1]] = pair[2]
-        end
-        if variantIndex > 0 then
-          local delta = row.variants[variantIndex]
-          for _, index in ipairs(delta.remove) do
-            amounts[index] = nil
-          end
-          for _, pair in ipairs(delta.set) do
+    if not options.forms or options.forms[component.key] then
+      local output = ingredient(row.output, row.yield)
+      local _, batch = Batch.resolve(
+        options.batch,
+        row.tier,
+        row.eut,
+        1,
+        nil,
+        'component casing',
+        { native = true }
+      )
+      local reason = row.casing > casingIndex and ('Requires ' .. row.tier .. ' component casings')
+        or batch.excluded
+      local choices = {}
+      if not reason then
+        for variantIndex = 0, #row.variants do
+          local amounts = {}
+          for _, pair in ipairs(row.inputs) do
             amounts[pair[1]] = pair[2]
           end
-        end
-        local compatible, inputs = true, {}
-        for _, index in ipairs(U.keys(amounts)) do
-          local material = data.items[index].polymer
-          if material and material ~= polymer then
-            compatible = false
+          if variantIndex > 0 then
+            local delta = row.variants[variantIndex]
+            for _, index in ipairs(delta.remove) do
+              amounts[index] = nil
+            end
+            for _, pair in ipairs(delta.set) do
+              amounts[pair[1]] = pair[2]
+            end
           end
-          inputs[#inputs + 1] = ingredient(index, amounts[index])
-        end
-        if compatible then
-          local stock = {}
-          for _, pair in ipairs(row.stock) do
-            stock[#stock + 1] = ingredient(pair[1], pair[2])
+          local compatible, inputs = true, {}
+          for _, index in ipairs(U.keys(amounts)) do
+            local material = data.items[index].polymer
+            if material and material ~= polymer then
+              compatible = false
+            end
+            inputs[#inputs + 1] = ingredient(index, amounts[index])
           end
-          choices[#choices + 1] = {
-            kind = 'processing',
-            material = component.label,
-            outputForm = component.key,
-            outputLabel = row.tier,
-            label = component.label .. ' / ' .. row.tier,
-            inputs = inputs,
-            outputs = { U.clone(output) },
-            stock = stock,
-            casingTier = row.tier,
-            componentCircuit = component.circuit,
-            batch = U.clone(batch),
-          }
+          if compatible then
+            local stock = {}
+            for _, pair in ipairs(row.stock) do
+              stock[#stock + 1] = ingredient(pair[1], pair[2])
+            end
+            choices[#choices + 1] = {
+              kind = 'processing',
+              material = component.label,
+              outputForm = component.key,
+              outputLabel = row.tier,
+              label = component.label .. ' / ' .. row.tier,
+              inputs = inputs,
+              outputs = { U.clone(output) },
+              stock = stock,
+              casingTier = row.tier,
+              componentCircuit = component.circuit,
+              batch = U.clone(batch),
+            }
+          end
+        end
+        if #choices == 0 then
+          reason = 'No native route using the selected rubber'
         end
       end
-      if #choices == 0 then
-        reason = 'No native route using the selected rubber'
+      if reason then
+        manifest.tierExcluded = manifest.tierExcluded + 1
+        manifest.skipped[#manifest.skipped + 1] = {
+          material = component.label,
+          form = component.key,
+          label = output.label,
+          name = output.name,
+          damage = output.damage,
+          reason = reason,
+        }
+      else
+        manifest.recipes[#manifest.recipes + 1] = choices[1]
+        manifest.choices[#manifest.recipes] = choices
       end
-    end
-    if reason then
-      manifest.tierExcluded = manifest.tierExcluded + 1
-      manifest.skipped[#manifest.skipped + 1] = {
-        material = component.label,
-        form = component.key,
-        label = output.label,
-        name = output.name,
-        damage = output.damage,
-        reason = reason,
-      }
-    else
-      manifest.recipes[#manifest.recipes + 1] = choices[1]
-      manifest.choices[#manifest.recipes] = choices
     end
   end
   return manifest

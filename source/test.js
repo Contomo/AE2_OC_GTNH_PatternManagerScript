@@ -13,8 +13,8 @@ try { cli = require.resolve('fengari-node-cli/src/lua-cli.js'); } catch (_) {
   }
 }
 if (!cli) throw Error('Install fengari-node-cli to run tests');
-for (const file of ['assline_app.lua', 'interface_probe.lua', 'source/lib/planner.lua','source/lib/modes.lua','source/lib/components.lua','source/lib/batch.lua','install.lua']) {
-  const harness = file.startsWith('interface_probe') ? 'tests/probe.lua' : file==='source/lib/planner.lua' ? 'tests/planner.lua' : file==='source/lib/modes.lua' ? 'tests/modes.lua' : file==='source/lib/components.lua' ? 'tests/components.lua' : file==='source/lib/batch.lua' ? 'tests/batch.lua' : file==='install.lua' ? 'tests/install.lua' : 'tests/run.lua';
+for (const file of ['assline_app.lua', 'interface_probe.lua', 'source/lib/planner.lua','source/lib/modes.lua','source/lib/components.lua','source/lib/settings.lua','source/lib/batch.lua','install.lua']) {
+  const harness = file.startsWith('interface_probe') ? 'tests/probe.lua' : file==='source/lib/planner.lua' ? 'tests/planner.lua' : file==='source/lib/modes.lua' ? 'tests/modes.lua' : file==='source/lib/components.lua' ? 'tests/components.lua' : file==='source/lib/settings.lua' ? 'tests/settings.lua' : file==='source/lib/batch.lua' ? 'tests/batch.lua' : file==='install.lua' ? 'tests/install.lua' : 'tests/run.lua';
   const r = spawnSync(process.execPath, [cli, harness, file], {cwd:root, encoding:'utf8',maxBuffer:8*1024*1024});
   const output = (r.stdout || '').split('\n').filter(line => {
     const match = /^SNAPSHOT (\w+) (.+)$/.exec(line);

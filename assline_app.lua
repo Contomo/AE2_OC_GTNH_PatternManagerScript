@@ -751,20 +751,10 @@ local function formSwitches(choices, label, help, hidden, default)
   f.hidden = hidden
   return f
 end
-local function enabledDestination(form, label, help)
-  local f = field(form, label, help, '', 'text', true)
-  f.enableForm = form
-  return f
-end
 local shaperOutputs = {}
 local shaperFields = {}
 for _, entry in ipairs(shaperForms) do
-  local key, label = entry[1], entry[2]
-  shaperFields[#shaperFields + 1] = enabledDestination(
-    key,
-    label .. ' interface name',
-    'Destination for ' .. label:lower() .. ' patterns; keep its mold stocked in the machine.'
-  )
+  local key = entry[1]
   if key:match('^pipe') then
     local size = key:sub(5)
     shaperOutputs['pipeFluid' .. size] = key
@@ -814,11 +804,6 @@ M.list = {
     formChoices = cableForms,
     description = 'Plan insulation patterns in material and cable-size order.',
     fields = {
-      field(
-        'destination',
-        'Insulator interface name',
-        'All interfaces with this exact name receive insulation patterns.'
-      ),
       choice(
         'polymer',
         'Insulation polymer',
@@ -851,16 +836,6 @@ M.list = {
     outputs = { wire1 = 'wire1', wireFine = 'wireFine' },
     sources = { fields = { wire1 = 'wireSource', wireFine = 'fineSource' } },
     fields = {
-      field(
-        'wire1',
-        '1x wire interface name',
-        'All matching interfaces receive recipes producing 1x wire.'
-      ),
-      field(
-        'wireFine',
-        'Fine wire interface name',
-        'All matching interfaces receive recipes producing fine wire.'
-      ),
       choice('wireSource', '1x wire input', { { 'ingot', 'Ingot' }, { 'stick', 'Rod' } }),
       choice(
         'fineSource',
@@ -875,14 +850,7 @@ M.list = {
     name = 'Wire combining',
     unavailable = 'Combining recipe rules are not implemented yet.',
     description = 'Combine wire and cable sizes in a molecular assembler.',
-    fields = {
-      field('wire', 'Bare wire interface name', 'Destination bank for combined bare-wire sizes.'),
-      field(
-        'cable',
-        'Insulated cable interface name',
-        'Destination bank for combined insulated-cable sizes.'
-      ),
-    },
+    fields = {},
   },
   {
     id = 'bender',
@@ -891,18 +859,6 @@ M.list = {
     description = 'Scraped plate, foil, sheet-metal and spring routes with selectable inputs.',
     formChoices = benderForms,
     formSwitch = 'forms',
-    outputs = {
-      plate = 'plate',
-      plateDouble = 'plate',
-      plateTriple = 'plate',
-      plateQuadruple = 'plate',
-      plateQuintuple = 'plate',
-      plateDense = 'plate',
-      foil = 'foil',
-      sheetmetal = 'sheetMetal',
-      springSmall = 'spring',
-      spring = 'spring',
-    },
     sources = {
       fixed = { plate = 'ingot', sheetmetal = 'plate', spring = 'stickLong' },
       fields = {
@@ -916,43 +872,7 @@ M.list = {
       },
     },
     fields = {
-      field(
-        'plate',
-        'Plate interface name',
-        'All enabled plate sizes share this destination.',
-        '',
-        'text',
-        true
-      ),
-      field(
-        'foil',
-        'Foil interface name',
-        'Destination bank for the selected foil input route.',
-        '',
-        'text',
-        true
-      ),
-      field(
-        'sheetMetal',
-        'Sheet metal interface name',
-        'Destination bank for plate to sheet-metal patterns.',
-        '',
-        'text',
-        true
-      ),
-      formSwitches(
-        benderForms,
-        'Enabled bending outputs',
-        'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.'
-      ),
-      field(
-        'spring',
-        'Spring interface name',
-        'Destination bank for enabled small and large springs.',
-        '',
-        'text',
-        true
-      ),
+      formSwitches(benderForms, '', '', true),
       choice(
         'plateSource',
         'Larger plate / foil input',
@@ -1026,16 +946,6 @@ M.list[#M.list + 1] = {
   outputs = { singularity = 'singularity', block = 'block' },
   costForms = { block = true },
   fields = {
-    enabledDestination(
-      'singularity',
-      'Neutronium compressor interface name',
-      'All enabled singularity patterns go here. Exact input quantities for one singularity.'
-    ),
-    enabledDestination(
-      'block',
-      'Block compressor interface name',
-      'Ordinary ingot/gem/dust to block recipes; excludes stabilized black holes.'
-    ),
     formSwitches(singularityForms, '', '', true),
     choice(
       'unstable',
@@ -1073,6 +983,7 @@ local componentProgram = {
   mode = 'components',
   description = 'Eight component banks, filtered by installed casing tier.',
   distinctDestinations = true,
+  costForms = {},
   outputs = {},
   fields = { casingField, rubberField },
   stockedForms = {},
@@ -1081,18 +992,104 @@ for _, component in ipairs(ComponentData.components) do
   local key = component.key
   componentProgram.outputs[key] = key
   componentProgram.stockedForms[#componentProgram.stockedForms + 1] = { key, component.label }
-  local f = field(
-    key,
-    component.label .. ' (circuit ' .. component.circuit .. ')',
-    '',
-    'Component Assembly Line ' .. component.label
-  )
-  f.compact, f.group, f.valueWidth = true, 'Destinations', 78
-  f.tableLabel, f.valueLabel = 'COMPONENT', 'INTERFACE NAME'
-  f.tableHelp = 'Circuits stay stocked in each bank (IV+). LV-EV recipes need no circuit.'
-  componentProgram.fields[#componentProgram.fields + 1] = f
 end
 M.list[#M.list + 1] = componentProgram
+-- Each output has one editable destination and one switch. Configuration,
+-- validation, routing and rendering all consume this same field schema.
+local function destinationFields(program, definitions, help)
+  local fields = {}
+  program.destinationChoices = program.formChoices
+  program.formSwitch, program.destinationSwitch, program.switchByDestination =
+    'forms', 'forms', true
+  for _, definition in ipairs(definitions) do
+    local key, subtype, prefix, legacyKey =
+      definition[1], definition[2], definition[3], definition[4]
+    local f = field(
+      key,
+      subtype .. ' interface name',
+      '',
+      (prefix or program.name:gsub('%f[%a]%a', string.upper)) .. ' (' .. subtype .. ')',
+      'destination',
+      true
+    )
+    f.group, f.groupHelp, f.legacyKey = 'Interface Names', help, legacyKey
+    if program.mode == 'components' then
+      for _, component in ipairs(ComponentData.components) do
+        if component.key == key then
+          f.annotation = 'Circuit ' .. component.circuit
+        end
+      end
+    end
+    fields[#fields + 1] = f
+  end
+  local switch
+  for _, f in ipairs(program.fields) do
+    if f.key == 'forms' then
+      f.hidden, switch = true, f
+    end
+    fields[#fields + 1] = f
+  end
+  if not switch then
+    fields[#fields + 1] = formSwitches(program.formChoices, '', '', true)
+  end
+  program.fields = fields
+end
+local definitions = {
+  insulator = {},
+  wiremill = { { 'wire1', 'Wires' }, { 'wireFine', 'Fine Wires' } },
+  combining = {
+    { 'wire', 'Wires', 'Large Molecular Assembler' },
+    { 'cable', 'Cables', 'Large Molecular Assembler' },
+  },
+  bender = {
+    { 'plate', 'Plate' },
+    { 'plateDouble', 'Double Plate', nil, 'plate' },
+    { 'plateTriple', 'Triple Plate', nil, 'plate' },
+    { 'plateQuadruple', 'Quadruple Plate', nil, 'plate' },
+    { 'plateQuintuple', 'Quintuple Plate', nil, 'plate' },
+    { 'plateDense', 'Dense Plate', nil, 'plate' },
+    { 'foil', 'Foil' },
+    { 'sheetmetal', 'Sheet Metal', nil, 'sheetMetal' },
+    { 'springSmall', 'Small Spring', nil, 'spring' },
+    { 'spring', 'Spring' },
+  },
+  fluidShaper = {},
+  singularities = {
+    { 'singularity', 'Singularities', 'Neutronium Compressor' },
+    { 'block', 'Blocks', 'Compressor' },
+  },
+  componentAssembly = {},
+}
+for _, entry in ipairs(cableForms) do
+  definitions.insulator[#definitions.insulator + 1] = { entry[1], entry[2], nil, 'destination' }
+end
+for _, entry in ipairs(shaperForms) do
+  local subtype = entry[1] == 'plate' and 'Plate' or entry[2]:gsub('%f[%a]%a', string.upper)
+  definitions.fluidShaper[#definitions.fluidShaper + 1] = { entry[1], subtype }
+end
+for _, component in ipairs(ComponentData.components) do
+  definitions.componentAssembly[#definitions.componentAssembly + 1] =
+    { component.key, component.label }
+end
+componentProgram.formChoices = componentProgram.stockedForms
+for _, program in ipairs(M.list) do
+  if program.id == 'insulator' or program.id == 'bender' then
+    program.outputs = {}
+    for _, entry in ipairs(program.formChoices) do
+      program.outputs[entry[1]] = entry[1]
+    end
+  elseif program.id == 'combining' then
+    program.formChoices = { { 'wire', 'Wires' }, { 'cable', 'Cables' } }
+    program.outputs = { wire = 'wire', cable = 'cable' }
+  end
+  if definitions[program.id] then
+    local help = program.id == 'fluidShaper'
+        and 'Destinations for patterns; keep the matching mold stocked in each machine.'
+      or program.id == 'componentAssembly' and 'Separate component banks; circuits stay stocked (IV+). LV-EV recipes need no circuit.'
+      or 'Destinations for patterns. Every interface with the same exact name is included.'
+    destinationFields(program, definitions[program.id], help)
+  end
+end
 M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
   if program.mode and program.formChoices then
@@ -1222,7 +1219,7 @@ for _, f in ipairs(Batch.fields) do
 end
 M.sections = {
   shared = { name = 'Shared interfaces', fields = M.fields },
-  batch = { name = 'Tier multipliers', fields = Batch.fields, pageSize = 9 },
+  batch = { name = 'Tier multipliers', fields = Batch.fields },
 }
 function M.section(id)
   return U.check(M.sections[id] or Programs.byId[id], 'Unknown settings section')
@@ -1389,8 +1386,12 @@ function M.migrate(old)
     for _, p in ipairs(Programs.list) do
       for _, f in ipairs(p.fields) do
         local values = old.programs and old.programs[p.id]
-        if values and values[f.key] ~= nil then
-          c.programs[p.id][f.key] = values[f.key]
+        local value = values and values[f.key]
+        if value == nil and f.legacyKey then
+          value = values and values[f.legacyKey]
+        end
+        if value ~= nil and not (f.kind == 'destination' and value == '') then
+          c.programs[p.id][f.key] = value
         end
       end
     end
@@ -1421,7 +1422,9 @@ function M.migrate(old)
     end
     if old.makerDestination then
       if old.makerMode == 'coating' then
-        c.programs.insulator.destination = old.makerDestination
+        for _, entry in ipairs(Programs.byId.insulator.formChoices) do
+          c.programs.insulator[entry[1]] = old.makerDestination
+        end
       else
         c.programs.wiremill.wire1 = old.makerDestination
         c.programs.wiremill.wireFine = old.makerDestination
@@ -1453,6 +1456,23 @@ function M.values(c, section)
   return M.sections[section] and c[section]
     or U.check(c.programs[section], 'Unknown settings section')
 end
+function M.destinationEnabled(c, id, key)
+  local program = Programs.byId[id]
+  return M.selected(c.programs[id][program.destinationSwitch], program.destinationChoices)[key]
+    == true
+end
+function M.enabledOutputs(c, id)
+  local program, result = Programs.byId[id], {}
+  if not program.outputs then
+    return result
+  end
+  local selected = program.formSwitch
+    and M.selected(c.programs[id][program.formSwitch], program.formChoices)
+  for form in pairs(program.outputs) do
+    result[form] = not selected or selected[Programs.switchKey(program, form)] == true
+  end
+  return result
+end
 function M.requireProgram(c, id)
   M.validate(c)
   local p = U.check(Programs.byId[id], 'Unknown program')
@@ -1470,25 +1490,19 @@ function M.requireProgram(c, id)
       'Set ' .. f.label .. ' in Settings > ' .. p.name
     )
   end
-  if p.distinctDestinations then
-    local assigned = {}
-    for _, key in pairs(p.outputs) do
-      local name = c.programs[id][key]
-      U.check(not assigned[name], 'Each component needs a distinct destination name: ' .. name)
-      assigned[name] = true
+  local needed, assigned = {}, {}
+  for form, enabled in pairs(M.enabledOutputs(c, id)) do
+    if enabled then
+      needed[p.outputs[form]] = true
     end
   end
-  if p.formSwitch and p.outputs then
-    local selected = M.selected(c.programs[id][p.formSwitch], p.formChoices)
-    local needed = {}
-    for form, key in pairs(p.outputs) do
-      if selected[Programs.switchKey(p, form)] then
-        needed[key] = true
-      end
-    end
-    for _, f in ipairs(p.fields) do
-      if needed[f.key] then
-        U.check(c.programs[id][f.key] ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
+  for _, f in ipairs(p.fields) do
+    if needed[f.key] then
+      local name = c.programs[id][f.key]
+      U.check(name ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
+      if p.distinctDestinations then
+        U.check(not assigned[name], 'Each component needs a distinct destination name: ' .. name)
+        assigned[name] = true
       end
     end
   end
@@ -3379,72 +3393,81 @@ function M.compile(data, options, checkpoint)
       checkpoint()
     end
     local component = U.check(data.components[row.component], 'Unknown component group')
-    local output = ingredient(row.output, row.yield)
-    local _, batch =
-      Batch.resolve(options.batch, row.tier, row.eut, 1, nil, 'component casing', { native = true })
-    local reason = row.casing > casingIndex and ('Requires ' .. row.tier .. ' component casings')
-      or batch.excluded
-    local choices = {}
-    if not reason then
-      for variantIndex = 0, #row.variants do
-        local amounts = {}
-        for _, pair in ipairs(row.inputs) do
-          amounts[pair[1]] = pair[2]
-        end
-        if variantIndex > 0 then
-          local delta = row.variants[variantIndex]
-          for _, index in ipairs(delta.remove) do
-            amounts[index] = nil
-          end
-          for _, pair in ipairs(delta.set) do
+    if not options.forms or options.forms[component.key] then
+      local output = ingredient(row.output, row.yield)
+      local _, batch = Batch.resolve(
+        options.batch,
+        row.tier,
+        row.eut,
+        1,
+        nil,
+        'component casing',
+        { native = true }
+      )
+      local reason = row.casing > casingIndex and ('Requires ' .. row.tier .. ' component casings')
+        or batch.excluded
+      local choices = {}
+      if not reason then
+        for variantIndex = 0, #row.variants do
+          local amounts = {}
+          for _, pair in ipairs(row.inputs) do
             amounts[pair[1]] = pair[2]
           end
-        end
-        local compatible, inputs = true, {}
-        for _, index in ipairs(U.keys(amounts)) do
-          local material = data.items[index].polymer
-          if material and material ~= polymer then
-            compatible = false
+          if variantIndex > 0 then
+            local delta = row.variants[variantIndex]
+            for _, index in ipairs(delta.remove) do
+              amounts[index] = nil
+            end
+            for _, pair in ipairs(delta.set) do
+              amounts[pair[1]] = pair[2]
+            end
           end
-          inputs[#inputs + 1] = ingredient(index, amounts[index])
-        end
-        if compatible then
-          local stock = {}
-          for _, pair in ipairs(row.stock) do
-            stock[#stock + 1] = ingredient(pair[1], pair[2])
+          local compatible, inputs = true, {}
+          for _, index in ipairs(U.keys(amounts)) do
+            local material = data.items[index].polymer
+            if material and material ~= polymer then
+              compatible = false
+            end
+            inputs[#inputs + 1] = ingredient(index, amounts[index])
           end
-          choices[#choices + 1] = {
-            kind = 'processing',
-            material = component.label,
-            outputForm = component.key,
-            outputLabel = row.tier,
-            label = component.label .. ' / ' .. row.tier,
-            inputs = inputs,
-            outputs = { U.clone(output) },
-            stock = stock,
-            casingTier = row.tier,
-            componentCircuit = component.circuit,
-            batch = U.clone(batch),
-          }
+          if compatible then
+            local stock = {}
+            for _, pair in ipairs(row.stock) do
+              stock[#stock + 1] = ingredient(pair[1], pair[2])
+            end
+            choices[#choices + 1] = {
+              kind = 'processing',
+              material = component.label,
+              outputForm = component.key,
+              outputLabel = row.tier,
+              label = component.label .. ' / ' .. row.tier,
+              inputs = inputs,
+              outputs = { U.clone(output) },
+              stock = stock,
+              casingTier = row.tier,
+              componentCircuit = component.circuit,
+              batch = U.clone(batch),
+            }
+          end
+        end
+        if #choices == 0 then
+          reason = 'No native route using the selected rubber'
         end
       end
-      if #choices == 0 then
-        reason = 'No native route using the selected rubber'
+      if reason then
+        manifest.tierExcluded = manifest.tierExcluded + 1
+        manifest.skipped[#manifest.skipped + 1] = {
+          material = component.label,
+          form = component.key,
+          label = output.label,
+          name = output.name,
+          damage = output.damage,
+          reason = reason,
+        }
+      else
+        manifest.recipes[#manifest.recipes + 1] = choices[1]
+        manifest.choices[#manifest.recipes] = choices
       end
-    end
-    if reason then
-      manifest.tierExcluded = manifest.tierExcluded + 1
-      manifest.skipped[#manifest.skipped + 1] = {
-        material = component.label,
-        form = component.key,
-        label = output.label,
-        name = output.name,
-        damage = output.damage,
-        reason = reason,
-      }
-    else
-      manifest.recipes[#manifest.recipes + 1] = choices[1]
-      manifest.choices[#manifest.recipes] = choices
     end
   end
   return manifest
@@ -4304,6 +4327,109 @@ end
 return M
 
 end)()
+local Settings=(function()
+-- Source: source/lib/settings.lua
+-- Measure settings once, then use those exact rows for pagination and drawing.
+-- Destination lists, tables and ordinary controls all share the same page area.
+local U = U
+local M = {}
+
+local function lines(value, width, unicode)
+  local result = {}
+  if value and value ~= '' then
+    for _, row in ipairs(U.wrapRow({ value }, width, unicode)) do
+      result[#result + 1] = row[1]
+    end
+  end
+  return result
+end
+
+function M.buttons(choices, width, unicode, toggles)
+  local result, x, y = {}, 0, 0
+  for _, choice in ipairs(choices or {}) do
+    local length = unicode.wlen('[ ' .. (toggles and 'X ' or '') .. choice[2] .. ' ]')
+    U.check(length <= width, 'Setting option is wider than its control area')
+    if x > 0 and x + length > width then
+      x, y = 0, y + 1
+    end
+    result[#result + 1] = { choice = choice, x = x, row = y }
+    x = x + length + 2
+  end
+  return result, #result > 0 and y + 1 or 0
+end
+
+function M.measure(field, width, unicode)
+  local kind = field.kind
+  local block = { field = field, kind = kind, help = lines(field.help, width, unicode) }
+  if kind == 'destination' then
+    block.height = 1
+  elseif field.compact then
+    block.kind, block.height = 'table', 2
+  elseif field.toggleValues or kind == 'toggle' then
+    block.kind, block.control, block.height = 'checkbox', 0, #block.help + 2
+  else
+    block.labels = lines(field.label, width, unicode)
+    block.control = #block.labels
+    local rows = 1
+    if field.choices and kind ~= 'select' then
+      block.options, rows = M.buttons(field.choices, width, unicode, kind == 'multiToggle')
+    end
+    block.helpRow = block.control + rows
+    block.height = block.helpRow + #block.help + 1
+  end
+  return block
+end
+
+local function heading(field, width, unicode)
+  if field.kind == 'destination' then
+    local help = lines(field.groupHelp, width, unicode)
+    return { kind = 'heading', label = 'Interface Names', help = help, height = #help + 2 }
+  elseif field.compact then
+    local help = lines(field.tableHelp, width, unicode)
+    return { kind = 'tableHeading', field = field, help = help, height = #help + 2 }
+  elseif field.group then
+    return { kind = 'heading', label = field.group, help = {}, height = 2 }
+  end
+end
+
+function M.pages(fields, width, height, unicode)
+  local pages = { { blocks = {}, height = 0 } }
+  local group
+  for _, field in ipairs(fields) do
+    local page, block = pages[#pages], M.measure(field, width, unicode)
+    local changed = field.group ~= group
+    local header = (changed or #page.blocks == 0) and heading(field, width, unicode) or nil
+    -- Ordinary first-page group names already appear in the settings title.
+    if #pages == 1 and #page.blocks == 0 and not field.compact and field.kind ~= 'destination' then
+      header = nil
+    end
+    local gap = changed and #page.blocks > 0 and 1 or 0
+    if page.height + gap + (header and header.height or 0) + block.height > height then
+      U.check(#page.blocks > 0, 'Setting control exceeds available page height')
+      page = { blocks = {}, height = 0 }
+      pages[#pages + 1] = page
+      header, gap = heading(field, width, unicode), 0
+    end
+    U.check(
+      (header and header.height or 0) + block.height <= height,
+      'Setting control exceeds available page height'
+    )
+    page.height = page.height + gap
+    if header then
+      header.row = page.height
+      page.blocks[#page.blocks + 1] = header
+      page.height = page.height + header.height
+    end
+    block.row = page.height
+    page.blocks[#page.blocks + 1] = block
+    page.height, group = page.height + block.height, field.group
+  end
+  return pages
+end
+
+return M
+
+end)()
 -- Source: source/app/25_maker.lua
 -- Shared named-interface adapter. Planning is read-only; execution uses the
 -- same editor, durable operations and recovery as the assembly-line program.
@@ -4713,21 +4839,13 @@ C.maker = {
 local function programRouting(c, id)
   local program = Config.requireProgram(c, id)
   local values = c.programs[id]
-  local routing =
-    { donors = c.shared.donors, workspace = c.shared.editor, destination = values.destination }
+  local routing = { donors = c.shared.donors, workspace = c.shared.editor }
   local forms
   if program.outputs then
-    forms = {}
+    forms = Config.enabledOutputs(c, id)
     routing.destinations = {}
     for form, key in pairs(program.outputs) do
-      forms[form] = true
       routing.destinations[form] = values[key]
-    end
-    if program.formSwitch then
-      local selected = Config.selected(values[program.formSwitch], program.formChoices)
-      for form in pairs(forms) do
-        forms[form] = selected[Programs.switchKey(program, form)] == true
-      end
     end
   end
   local sources
@@ -5611,7 +5729,7 @@ local function runUI()
       action('history')
     end
   end
-  local function editorRow(x, y, width, f)
+  local function editorRow(x, y, width, f, active)
     local value = values()[f.key]
     local first, cursor = 1, nil
     if edit and edit.key == f.key and edit.section == state.settings then
@@ -5620,14 +5738,21 @@ local function runUI()
       value = unicode.sub(edit.value, first, edit.cursor - 1)
         .. '|'
         .. unicode.sub(edit.value, edit.cursor)
-      text(x, y, value, width, edit.selectAll and 'yellow' or 'blue', 'panel')
+      text(
+        x,
+        y,
+        value,
+        width,
+        active == false and 'muted' or edit.selectAll and 'yellow' or 'blue',
+        'panel'
+      )
     else
       text(
         x,
         y,
         value == '' and (f.placeholder or '(not configured)') or value,
         width,
-        value == '' and 'muted' or 'text',
+        (value == '' or active == false) and 'muted' or 'text',
         'panel'
       )
     end
@@ -6041,30 +6166,11 @@ local function runUI()
         end)
       end
       local section = Config.section(state.settings)
-      local pageRow = layout.scrollFooter + (section.pageSize == 9 and 1 or 0)
-      local pages = { {} }
-      for _, f in ipairs(fields()) do
-        local page = pages[#pages]
-        if
-          #page > 0
-          and (#page >= (f.compact and 16 or section.pageSize or 8) or page[1].group ~= f.group)
-        then
-          page = {}
-          pages[#pages + 1] = page
-        end
-        page[#page + 1] = f
-      end
+      local pageRow, top = layout.scrollFooter, layout.body - 1
+      local pages = Settings.pages(fields(), 124, layout.bodyBottom - top + 1, unicode)
       state.settingsPage = math.min(state.settingsPage, #pages)
       local page = pages[state.settingsPage]
-      text(
-        34,
-        layout.title,
-        'SETTINGS / '
-          .. section.name
-          .. (page[1] and page[1].group and (' / ' .. page[1].group) or ''),
-        124,
-        'blue'
-      )
+      text(34, layout.title, 'SETTINGS / ' .. section.name, 124, 'blue')
       text(
         34,
         layout.subtitle,
@@ -6072,110 +6178,120 @@ local function runUI()
         124,
         'muted'
       )
-      local y = layout.body - (section.pageSize == 9 and 2 or 1)
-      local compact = page[1] and page[1].compact
-      if compact then
-        local overrides = page[1].group == 'Tier overrides'
-        text(
-          34,
-          layout.body - 2,
-          page[1].tableLabel or (overrides and 'MATERIAL TIER' or 'RELATIVE TIER'),
-          42,
-          'blue'
-        )
-        text(
-          80,
-          layout.body - 2,
-          page[1].valueLabel or (overrides and 'OVERRIDE' or 'MULTIPLIER'),
-          22,
-          'blue'
-        )
-        if overrides then
-          text(115, layout.body - 2, 'EFFECTIVE', 40, 'blue')
+      local function helpLines(y, content)
+        for index, line in ipairs(content) do
+          text(34, y + index - 1, line, 124, 'muted')
         end
-        text(
-          34,
-          pageRow - 1,
-          page[1].tableHelp
-            or (
-              overrides and 'Blank follows the curve. Later tiers remain skipped unless enabled.'
-              or 'One multiplier per relative tier. Maximum and quantity limits still apply.'
-            ),
-          124,
-          'muted'
-        )
-        y = layout.body
       end
-      for _, f in ipairs(page) do
-        if compact then
+      local function optionButtons(block, x, y, key, choices, active)
+        local selected = choices and Config.selected(values()[key], choices)
+        for _, option in ipairs(block.options or {}) do
+          local value = option.choice[1]
+          local callback = function()
+            if choices then
+              toggleForm(key, choices, value)
+            else
+              chooseValue(key, value)
+            end
+          end
+          if choices then
+            toggleButton(
+              x + option.x,
+              y + option.row,
+              selected[value],
+              callback,
+              active,
+              option.choice[2]
+            )
+          else
+            button(
+              x + option.x,
+              y + option.row,
+              option.choice[2],
+              callback,
+              active,
+              values()[key] == value
+            )
+          end
+        end
+      end
+      local function destinationRow(block, y)
+        local f, program = block.field, Programs.byId[state.settings]
+        local active = Config.destinationEnabled(cfg, state.settings, f.key)
+        toggleButton(34, y, active, function()
+          toggleForm(program.destinationSwitch, program.destinationChoices, f.key)
+        end, true)
+        local annotation = f.annotation or ''
+        local width = 116 - (annotation ~= '' and unicode.wlen(annotation) + 2 or 0)
+        editorRow(42, y, width, f, active)
+        if annotation ~= '' then
+          text(44 + width, y, annotation, unicode.wlen(annotation), 'muted')
+        end
+      end
+      for _, block in ipairs(page.blocks) do
+        local y, f = top + block.row, block.field
+        if block.kind == 'heading' then
+          text(34, y, block.label, 124, 'blue')
+          helpLines(y + 1, block.help)
+        elseif block.kind == 'tableHeading' then
+          local overrides = f.group == 'Tier overrides'
+          text(
+            34,
+            y,
+            f.tableLabel or (overrides and 'MATERIAL TIER' or 'RELATIVE TIER'),
+            42,
+            'blue'
+          )
+          text(80, y, f.valueLabel or (overrides and 'OVERRIDE' or 'MULTIPLIER'), 22, 'blue')
+          if overrides then
+            text(115, y, 'EFFECTIVE', 40, 'blue')
+          end
+          helpLines(y + 1, block.help)
+        elseif block.kind == 'destination' then
+          destinationRow(block, y)
+        elseif block.kind == 'table' then
           text(34, y, f.label, 42, 'text')
           editorRow(80, y, f.valueWidth or 22, f)
-          if page[1].group == 'Tier overrides' then
+          if f.group == 'Tier overrides' then
             local budget = Batch.budget(cfg.batch, f.label)
             text(115, y, budget == 0 and 'Skipped' or budget .. 'x', 40, 'muted')
           end
-          y = y + 2
+        elseif block.kind == 'checkbox' then
+          local key, choices = f.key, f.toggleValues or { 'off', 'on' }
+          checkbox(34, y, f.label, values()[key] == choices[2], function()
+            chooseValue(key, values()[key] == choices[2] and choices[1] or choices[2])
+          end)
+          helpLines(y + 1, block.help)
         else
-          local helpY, height = y + 2, 4
-          local isCheckbox = f.toggleValues or f.kind == 'toggle'
-          if not isCheckbox then
-            text(34, y, f.label, 124, 'blue')
+          for index, label in ipairs(block.labels) do
+            text(34, y + index - 1, label, 124, 'blue')
           end
-          if isCheckbox then
-            local key = f.key
-            local choices = f.toggleValues or { 'off', 'on' }
-            checkbox(34, y, f.label, values()[key] == choices[2], function()
-              chooseValue(key, values()[key] == choices[2] and choices[1] or choices[2])
-            end)
-            helpY, height = y + 1, f.help and f.help ~= '' and 3 or 2
-          elseif f.kind == 'multiToggle' then
-            local x, row = 34, y + 1
-            local selected = Config.selected(values()[f.key], f.choices)
-            for _, option in ipairs(f.choices) do
-              local key, choice = f.key, option[1]
-              if x + unicode.wlen('[ X ' .. option[2] .. ' ]') - 1 > 157 then
-                x, row = 34, row + 1
-              end
-              x = toggleButton(x, row, selected[choice], function()
-                toggleForm(key, f.choices, choice)
-              end, true, option[2])
-            end
-            helpY, height = row + 1, row - y + 4
-          elseif f.enableForm then
-            local program = Programs.byId[state.settings]
-            local choice = f.enableForm
-            local selected = Config.selected(values()[program.formSwitch], program.formChoices)
-            toggleButton(34, y + 1, selected[choice], function()
-              toggleForm(program.formSwitch, program.formChoices, choice)
-            end, true)
-            editorRow(42, y + 1, 116, f)
-          elseif f.kind == 'select' then
+          local controlY = y + block.control
+          if f.kind == 'select' then
             local label, selected = values()[f.key], 1
             for n, option in ipairs(f.choices) do
               if option[1] == values()[f.key] then
                 label, selected = option[2], n
               end
             end
-            button(34, y + 1, label, function()
+            button(34, controlY, label, function()
               commitEdit()
               state.choice =
                 { key = f.key, label = f.label, choices = f.choices, selected = selected }
             end)
           elseif f.choices then
-            local x = 34
-            for _, option in ipairs(f.choices) do
-              local key, value = f.key, option[1]
-              x = button(x, y + 1, option[2], function()
-                chooseValue(key, value)
-              end, true, values()[key] == value)
-            end
+            optionButtons(
+              block,
+              34,
+              controlY,
+              f.key,
+              f.kind == 'multiToggle' and f.choices or nil,
+              true
+            )
           else
-            editorRow(34, y + 1, 124, f)
+            editorRow(34, controlY, 124, f)
           end
-          if f.help and f.help ~= '' then
-            text(34, helpY, f.help, 124, 'muted')
-          end
-          y = y + height
+          helpLines(y + block.helpRow, block.help)
         end
       end
       if #pages > 1 then

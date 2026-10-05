@@ -406,21 +406,13 @@ C.maker = {
 local function programRouting(c, id)
   local program = Config.requireProgram(c, id)
   local values = c.programs[id]
-  local routing =
-    { donors = c.shared.donors, workspace = c.shared.editor, destination = values.destination }
+  local routing = { donors = c.shared.donors, workspace = c.shared.editor }
   local forms
   if program.outputs then
-    forms = {}
+    forms = Config.enabledOutputs(c, id)
     routing.destinations = {}
     for form, key in pairs(program.outputs) do
-      forms[form] = true
       routing.destinations[form] = values[key]
-    end
-    if program.formSwitch then
-      local selected = Config.selected(values[program.formSwitch], program.formChoices)
-      for form in pairs(forms) do
-        forms[form] = selected[Programs.switchKey(program, form)] == true
-      end
     end
   end
   local sources

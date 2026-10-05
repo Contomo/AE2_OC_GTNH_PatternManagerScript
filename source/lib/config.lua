@@ -96,7 +96,7 @@ for _, f in ipairs(Batch.fields) do
 end
 M.sections = {
   shared = { name = 'Shared interfaces', fields = M.fields },
-  batch = { name = 'Tier multipliers', fields = Batch.fields, pageSize = 9 },
+  batch = { name = 'Tier multipliers', fields = Batch.fields },
 }
 function M.section(id)
   return U.check(M.sections[id] or Programs.byId[id], 'Unknown settings section')
@@ -263,8 +263,12 @@ function M.migrate(old)
     for _, p in ipairs(Programs.list) do
       for _, f in ipairs(p.fields) do
         local values = old.programs and old.programs[p.id]
-        if values and values[f.key] ~= nil then
-          c.programs[p.id][f.key] = values[f.key]
+        local value = values and values[f.key]
+        if value == nil and f.legacyKey then
+          value = values and values[f.legacyKey]
+        end
+        if value ~= nil and not (f.kind == 'destination' and value == '') then
+          c.programs[p.id][f.key] = value
         end
       end
     end
@@ -295,7 +299,9 @@ function M.migrate(old)
     end
     if old.makerDestination then
       if old.makerMode == 'coating' then
-        c.programs.insulator.destination = old.makerDestination
+        for _, entry in ipairs(Programs.byId.insulator.formChoices) do
+          c.programs.insulator[entry[1]] = old.makerDestination
+        end
       else
         c.programs.wiremill.wire1 = old.makerDestination
         c.programs.wiremill.wireFine = old.makerDestination
@@ -327,6 +333,23 @@ function M.values(c, section)
   return M.sections[section] and c[section]
     or U.check(c.programs[section], 'Unknown settings section')
 end
+function M.destinationEnabled(c, id, key)
+  local program = Programs.byId[id]
+  return M.selected(c.programs[id][program.destinationSwitch], program.destinationChoices)[key]
+    == true
+end
+function M.enabledOutputs(c, id)
+  local program, result = Programs.byId[id], {}
+  if not program.outputs then
+    return result
+  end
+  local selected = program.formSwitch
+    and M.selected(c.programs[id][program.formSwitch], program.formChoices)
+  for form in pairs(program.outputs) do
+    result[form] = not selected or selected[Programs.switchKey(program, form)] == true
+  end
+  return result
+end
 function M.requireProgram(c, id)
   M.validate(c)
   local p = U.check(Programs.byId[id], 'Unknown program')
@@ -344,25 +367,19 @@ function M.requireProgram(c, id)
       'Set ' .. f.label .. ' in Settings > ' .. p.name
     )
   end
-  if p.distinctDestinations then
-    local assigned = {}
-    for _, key in pairs(p.outputs) do
-      local name = c.programs[id][key]
-      U.check(not assigned[name], 'Each component needs a distinct destination name: ' .. name)
-      assigned[name] = true
+  local needed, assigned = {}, {}
+  for form, enabled in pairs(M.enabledOutputs(c, id)) do
+    if enabled then
+      needed[p.outputs[form]] = true
     end
   end
-  if p.formSwitch and p.outputs then
-    local selected = M.selected(c.programs[id][p.formSwitch], p.formChoices)
-    local needed = {}
-    for form, key in pairs(p.outputs) do
-      if selected[Programs.switchKey(p, form)] then
-        needed[key] = true
-      end
-    end
-    for _, f in ipairs(p.fields) do
-      if needed[f.key] then
-        U.check(c.programs[id][f.key] ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
+  for _, f in ipairs(p.fields) do
+    if needed[f.key] then
+      local name = c.programs[id][f.key]
+      U.check(name ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
+      if p.distinctDestinations then
+        U.check(not assigned[name], 'Each component needs a distinct destination name: ' .. name)
+        assigned[name] = true
       end
     end
   end

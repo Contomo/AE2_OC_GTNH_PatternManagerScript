@@ -80,20 +80,10 @@ local function formSwitches(choices, label, help, hidden, default)
   f.hidden = hidden
   return f
 end
-local function enabledDestination(form, label, help)
-  local f = field(form, label, help, '', 'text', true)
-  f.enableForm = form
-  return f
-end
 local shaperOutputs = {}
 local shaperFields = {}
 for _, entry in ipairs(shaperForms) do
-  local key, label = entry[1], entry[2]
-  shaperFields[#shaperFields + 1] = enabledDestination(
-    key,
-    label .. ' interface name',
-    'Destination for ' .. label:lower() .. ' patterns; keep its mold stocked in the machine.'
-  )
+  local key = entry[1]
   if key:match('^pipe') then
     local size = key:sub(5)
     shaperOutputs['pipeFluid' .. size] = key
@@ -143,11 +133,6 @@ M.list = {
     formChoices = cableForms,
     description = 'Plan insulation patterns in material and cable-size order.',
     fields = {
-      field(
-        'destination',
-        'Insulator interface name',
-        'All interfaces with this exact name receive insulation patterns.'
-      ),
       choice(
         'polymer',
         'Insulation polymer',
@@ -180,16 +165,6 @@ M.list = {
     outputs = { wire1 = 'wire1', wireFine = 'wireFine' },
     sources = { fields = { wire1 = 'wireSource', wireFine = 'fineSource' } },
     fields = {
-      field(
-        'wire1',
-        '1x wire interface name',
-        'All matching interfaces receive recipes producing 1x wire.'
-      ),
-      field(
-        'wireFine',
-        'Fine wire interface name',
-        'All matching interfaces receive recipes producing fine wire.'
-      ),
       choice('wireSource', '1x wire input', { { 'ingot', 'Ingot' }, { 'stick', 'Rod' } }),
       choice(
         'fineSource',
@@ -204,14 +179,7 @@ M.list = {
     name = 'Wire combining',
     unavailable = 'Combining recipe rules are not implemented yet.',
     description = 'Combine wire and cable sizes in a molecular assembler.',
-    fields = {
-      field('wire', 'Bare wire interface name', 'Destination bank for combined bare-wire sizes.'),
-      field(
-        'cable',
-        'Insulated cable interface name',
-        'Destination bank for combined insulated-cable sizes.'
-      ),
-    },
+    fields = {},
   },
   {
     id = 'bender',
@@ -220,18 +188,6 @@ M.list = {
     description = 'Scraped plate, foil, sheet-metal and spring routes with selectable inputs.',
     formChoices = benderForms,
     formSwitch = 'forms',
-    outputs = {
-      plate = 'plate',
-      plateDouble = 'plate',
-      plateTriple = 'plate',
-      plateQuadruple = 'plate',
-      plateQuintuple = 'plate',
-      plateDense = 'plate',
-      foil = 'foil',
-      sheetmetal = 'sheetMetal',
-      springSmall = 'spring',
-      spring = 'spring',
-    },
     sources = {
       fixed = { plate = 'ingot', sheetmetal = 'plate', spring = 'stickLong' },
       fields = {
@@ -245,43 +201,7 @@ M.list = {
       },
     },
     fields = {
-      field(
-        'plate',
-        'Plate interface name',
-        'All enabled plate sizes share this destination.',
-        '',
-        'text',
-        true
-      ),
-      field(
-        'foil',
-        'Foil interface name',
-        'Destination bank for the selected foil input route.',
-        '',
-        'text',
-        true
-      ),
-      field(
-        'sheetMetal',
-        'Sheet metal interface name',
-        'Destination bank for plate to sheet-metal patterns.',
-        '',
-        'text',
-        true
-      ),
-      formSwitches(
-        benderForms,
-        'Enabled bending outputs',
-        'Only scraped routes for the selected inputs are included. Foil yields 4 per ingot or plate.'
-      ),
-      field(
-        'spring',
-        'Spring interface name',
-        'Destination bank for enabled small and large springs.',
-        '',
-        'text',
-        true
-      ),
+      formSwitches(benderForms, '', '', true),
       choice(
         'plateSource',
         'Larger plate / foil input',
@@ -355,16 +275,6 @@ M.list[#M.list + 1] = {
   outputs = { singularity = 'singularity', block = 'block' },
   costForms = { block = true },
   fields = {
-    enabledDestination(
-      'singularity',
-      'Neutronium compressor interface name',
-      'All enabled singularity patterns go here. Exact input quantities for one singularity.'
-    ),
-    enabledDestination(
-      'block',
-      'Block compressor interface name',
-      'Ordinary ingot/gem/dust to block recipes; excludes stabilized black holes.'
-    ),
     formSwitches(singularityForms, '', '', true),
     choice(
       'unstable',
@@ -402,6 +312,7 @@ local componentProgram = {
   mode = 'components',
   description = 'Eight component banks, filtered by installed casing tier.',
   distinctDestinations = true,
+  costForms = {},
   outputs = {},
   fields = { casingField, rubberField },
   stockedForms = {},
@@ -410,18 +321,104 @@ for _, component in ipairs(ComponentData.components) do
   local key = component.key
   componentProgram.outputs[key] = key
   componentProgram.stockedForms[#componentProgram.stockedForms + 1] = { key, component.label }
-  local f = field(
-    key,
-    component.label .. ' (circuit ' .. component.circuit .. ')',
-    '',
-    'Component Assembly Line ' .. component.label
-  )
-  f.compact, f.group, f.valueWidth = true, 'Destinations', 78
-  f.tableLabel, f.valueLabel = 'COMPONENT', 'INTERFACE NAME'
-  f.tableHelp = 'Circuits stay stocked in each bank (IV+). LV-EV recipes need no circuit.'
-  componentProgram.fields[#componentProgram.fields + 1] = f
 end
 M.list[#M.list + 1] = componentProgram
+-- Each output has one editable destination and one switch. Configuration,
+-- validation, routing and rendering all consume this same field schema.
+local function destinationFields(program, definitions, help)
+  local fields = {}
+  program.destinationChoices = program.formChoices
+  program.formSwitch, program.destinationSwitch, program.switchByDestination =
+    'forms', 'forms', true
+  for _, definition in ipairs(definitions) do
+    local key, subtype, prefix, legacyKey =
+      definition[1], definition[2], definition[3], definition[4]
+    local f = field(
+      key,
+      subtype .. ' interface name',
+      '',
+      (prefix or program.name:gsub('%f[%a]%a', string.upper)) .. ' (' .. subtype .. ')',
+      'destination',
+      true
+    )
+    f.group, f.groupHelp, f.legacyKey = 'Interface Names', help, legacyKey
+    if program.mode == 'components' then
+      for _, component in ipairs(ComponentData.components) do
+        if component.key == key then
+          f.annotation = 'Circuit ' .. component.circuit
+        end
+      end
+    end
+    fields[#fields + 1] = f
+  end
+  local switch
+  for _, f in ipairs(program.fields) do
+    if f.key == 'forms' then
+      f.hidden, switch = true, f
+    end
+    fields[#fields + 1] = f
+  end
+  if not switch then
+    fields[#fields + 1] = formSwitches(program.formChoices, '', '', true)
+  end
+  program.fields = fields
+end
+local definitions = {
+  insulator = {},
+  wiremill = { { 'wire1', 'Wires' }, { 'wireFine', 'Fine Wires' } },
+  combining = {
+    { 'wire', 'Wires', 'Large Molecular Assembler' },
+    { 'cable', 'Cables', 'Large Molecular Assembler' },
+  },
+  bender = {
+    { 'plate', 'Plate' },
+    { 'plateDouble', 'Double Plate', nil, 'plate' },
+    { 'plateTriple', 'Triple Plate', nil, 'plate' },
+    { 'plateQuadruple', 'Quadruple Plate', nil, 'plate' },
+    { 'plateQuintuple', 'Quintuple Plate', nil, 'plate' },
+    { 'plateDense', 'Dense Plate', nil, 'plate' },
+    { 'foil', 'Foil' },
+    { 'sheetmetal', 'Sheet Metal', nil, 'sheetMetal' },
+    { 'springSmall', 'Small Spring', nil, 'spring' },
+    { 'spring', 'Spring' },
+  },
+  fluidShaper = {},
+  singularities = {
+    { 'singularity', 'Singularities', 'Neutronium Compressor' },
+    { 'block', 'Blocks', 'Compressor' },
+  },
+  componentAssembly = {},
+}
+for _, entry in ipairs(cableForms) do
+  definitions.insulator[#definitions.insulator + 1] = { entry[1], entry[2], nil, 'destination' }
+end
+for _, entry in ipairs(shaperForms) do
+  local subtype = entry[1] == 'plate' and 'Plate' or entry[2]:gsub('%f[%a]%a', string.upper)
+  definitions.fluidShaper[#definitions.fluidShaper + 1] = { entry[1], subtype }
+end
+for _, component in ipairs(ComponentData.components) do
+  definitions.componentAssembly[#definitions.componentAssembly + 1] =
+    { component.key, component.label }
+end
+componentProgram.formChoices = componentProgram.stockedForms
+for _, program in ipairs(M.list) do
+  if program.id == 'insulator' or program.id == 'bender' then
+    program.outputs = {}
+    for _, entry in ipairs(program.formChoices) do
+      program.outputs[entry[1]] = entry[1]
+    end
+  elseif program.id == 'combining' then
+    program.formChoices = { { 'wire', 'Wires' }, { 'cable', 'Cables' } }
+    program.outputs = { wire = 'wire', cable = 'cable' }
+  end
+  if definitions[program.id] then
+    local help = program.id == 'fluidShaper'
+        and 'Destinations for patterns; keep the matching mold stocked in each machine.'
+      or program.id == 'componentAssembly' and 'Separate component banks; circuits stay stocked (IV+). LV-EV recipes need no circuit.'
+      or 'Destinations for patterns. Every interface with the same exact name is included.'
+    destinationFields(program, definitions[program.id], help)
+  end
+end
 M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
   if program.mode and program.formChoices then

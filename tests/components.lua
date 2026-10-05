@@ -152,7 +152,7 @@ test(
     local values = cfg.programs.componentAssembly
     assert(values.casingTier == 'LuV' and values.rubber == 'sbr')
     for _, component in ipairs(data.components) do
-      assert(values[component.key] == 'Component Assembly Line ' .. component.label)
+      assert(values[component.key] == 'Component Assembly Line (' .. component.label .. ')')
     end
     assert(Config.requireProgram(cfg, 'componentAssembly'))
     values.piston = values.motor

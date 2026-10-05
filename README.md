@@ -203,8 +203,8 @@ use the same transaction journal as the other programs.
 
 **Component Assembly Line** patterns the eight component groups: Motor, Piston,
 Pump, Robot Arm, Conveyor, Emitter, Sensor and Field Generator. Each group gets
-its own destination bank, defaulting to `Component Assembly Line <component>`.
-These eight names must be distinct; multiple interfaces with the same group name
+its own destination bank, defaulting to `Component Assembly Line (<component>)`.
+Enabled component names must be distinct; multiple interfaces with the same group name
 are all included. Shared editor/donor settings, capacity verification, sorting,
 refills and Pause/Stop/Continue work through the existing maker.
 
@@ -213,7 +213,9 @@ scraped casing requirement (LV through UXV), separately from recipe voltage.
 In tiered mode the shared progression and voltage gates also apply. The **Component
 rubber** selector chooses SBR, silicone or ordinary rubber. Ordinary rubber has
 no pump/conveyor route at IV through UMV; those exclusions are shown explicitly.
-The interface names are edited together in the Destinations table on settings page 2.
+The eight interface names appear in one compact checkbox/name list. Disable banks
+you do not want in this run; disabled groups are excluded before recipe planning
+and their interfaces are not scanned.
 
 Circuit assignments are Motor 1, Piston 2, Pump 3, Robot Arm 4, Conveyor 5,
 Emitter 6, Sensor 7 and Field Generator 8. These circuits stay stocked in their
@@ -264,10 +266,13 @@ ingredient, ingredient NBT or substitution policy is still a different recipe.
 Normal PVC's base batch is 4 wires + 1 pulp → 4 cables; multiplier `2` gives
 8 wires + 2 pulp → 8 cables. The multiplier does not change the selected polymer.
 
-The bending machine has ten independent output switches: 1x, 2x, 3x, 4x, 5x
-and dense plates, foil, sheet metal, small springs and large springs. New
+The bending machine has ten independent checkbox/name rows: Plate, Double Plate,
+Triple Plate, Quadruple Plate, Quintuple Plate, Dense Plate, Foil, Sheet Metal,
+Small Spring and Spring. Each output has its own editable destination; there is
+no parent plate bank or separate plate-size switch row. New
 installations start with all ten on. Existing settings retain their selected
-outputs; the three newly added switches start off until selected.
+outputs. Previously shared plate and spring destinations migrate into each
+corresponding output row, preserving custom names.
 **Larger plate / foil input** chooses Ingot or 1x plate for 2x–5x and dense
 plates and foil. 1x plates always use ingots. Sheet metal always uses 1x plates;
 large springs use long rods. **Small spring input** independently chooses Rod or
@@ -379,11 +384,19 @@ obsolete slot limits are not carried forward.
 | --- | --- |
 | Shared interfaces | Pattern editor name, new pattern buffer name, terminal/editor/Data Card addresses, energy thresholds |
 | Assembly line renamer | Target interface, item-name template, rename-destination template |
-| Wire insulator | Destination interface name, five-way polymer selector, request PPS |
+| Wire insulator | Checkbox/name per cable size, five-way polymer selector, request PPS |
 | Wiremill | 1x wire and fine-wire destination names; separate input routes, default Ingot |
 | Wire combining | Bare-wire destination, insulated-cable destination (future rules) |
-| Bending machine | Plate, foil, sheet-metal and spring destinations; ten output switches, larger-plate/foil and small-spring input selectors, pattern multiplier |
-| Fluid Shaper | An interface and inline enable switch per mold (including shared fluid/item pipe molds); molten fluid is requested, and the reusable mold stays in the machine. Settings use pages. |
+| Bending machine | Ten checkbox/name destinations, larger-plate/foil and small-spring input selectors, pattern multiplier |
+| Fluid Shaper | An interface and inline enable switch per mold (including shared fluid/item pipe molds); molten fluid is requested, and the reusable mold stays in the machine. Pages are measured from the space available. |
+
+Recipe destination settings share one **Interface Names** heading, one help line,
+and one checkbox/name row per output. Prefilled names use title case and a
+parenthesized subtype, such as `Bending Machine (Double Plate)`. Unchecked rows
+keep their names editable but dim their text. Existing nonblank names and output
+selections are retained; blank destination names receive the new defaults.
+Pagination measures headings, wrapped help, controls and list rows against the
+available height, so lists that fit are kept on one page.
 
 Shared default names are `OC Pattern Editor` and `OC Pattern Buffer`. Component
 addresses are optional when only one component of each type is connected.

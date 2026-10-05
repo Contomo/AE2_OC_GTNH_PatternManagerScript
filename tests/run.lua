@@ -2,6 +2,7 @@ package.path='tests/lib/?.lua;'..package.path
 -- Contract mocks based on GTNH source, including terminal zero-based slots,
 -- part-interface hidden side argument, typed NBT, and list-removing clears.
 local artifact=... or 'assline_app.lua'
+local testFilter=select(2,...)
 -- OC does not expose manual collection. Do not mask accidental calls in tests.
 collectgarbage=nil
 local function cp(t) if type(t)~='table' then return t end local r={} for k,v in pairs(t) do r[k]=cp(v) end return r end
@@ -22,6 +23,7 @@ local powerDropAt,gpuFills=nil,0
 local gpuWrites={}
 local callCost,callCounts,pollEvents=0,{},{}
 local networkCraftables={}
+local queriedNames={}
 local networkController=false
 local function typed(kind,value) return {__nbt_type=kind,__value=value} end
 local function compound(value) return typed('compound',value or {}) end
@@ -80,6 +82,14 @@ local function iface(name,x,patterns,side)
   local t={name=name,location={x=x,y=64,z=0,dimId=0},side=side or 6,patterns=patterns or {}}
   interfaces[#interfaces+1]=t;return t
 end
+local function cableDestinations(c, name)
+  for _,size in ipairs({1,2,4,8,12,16}) do c.programs.insulator['cable'..size]=name end
+end
+local function plateDestinations(c, name)
+  for _,form in ipairs({'plate','plateDouble','plateTriple','plateQuadruple','plateQuintuple','plateDense'}) do
+    c.programs.bender[form]=name
+  end
+end
 local target,buffer,editor,dest1,dest2,wrongDirect
 local function byref(ref)
   for _,v in ipairs(interfaces) do if v.location.x==ref.location.x and v.side==ref.side then return v end end
@@ -106,6 +116,7 @@ local function mutate(label)
 end
 local proxies={}
 proxies.terminal={address='terminal',getInterfacesByName=function(name)
+  queriedNames[name]=(queriedNames[name] or 0)+1
   local r={};for _,i in ipairs(interfaces) do if i.name==name then r[#r+1]=i end end;return iterator(r)
 end,getInterfacesByLocation=function(loc,side)
   local r={};for _,i in ipairs(interfaces) do if i.location.x==loc.x and i.side==side then r[#r+1]=i end end;return iterator(r)
@@ -285,6 +296,7 @@ local function reset()
   gpuWrites={}
   callCost,callCounts,pollEvents=0,{},{}
   networkCraftables={}
+  queriedNames={}
   networkController=false
   cfg=cp(api.defaults)
   cfg.batch.mode='fixed'
@@ -299,6 +311,7 @@ local function reset()
 end
 local tests=0
 local function test(name,f)
+  if testFilter and not name:find(testFilter,1,true) then return end
   reset();local ok,err=pcall(f);if not ok then error(name..': '..tostring(err),0) end
   tests=tests+1;print('PASS '..name)
 end
@@ -602,7 +615,7 @@ test('old settings migrate once into shared and per-program sections without slo
     makerDonors='Remote banks',makerMode='coating',makerDestination='Insulator',makerPVC='off',makerPPS='on',
     bufferSlots='9',renameSlots='36',terminalAddress='terminal-prefix'})
   assert(c.version==2 and c.shared.editor=='Chosen editor' and c.shared.donors=='Remote banks')
-  assert(c.programs.assline.target=='My assline' and c.programs.insulator.destination=='Insulator')
+  assert(c.programs.assline.target=='My assline' and c.programs.insulator.cable1=='Insulator')
   assert(c.programs.insulator.polymer=='none' and c.shared.terminalAddress=='terminal-prefix')
   assert(c.bufferSlots==nil and c.renameSlots==nil and ser(api.config.migrate(c))==ser(c))
 end)
@@ -636,15 +649,51 @@ local function nav(label)
 end
 local function field(label)
   return function()
-    for y=5,43 do
-      if frame[y] and frame[y]:sub(34):find(label,1,true) then
-        local compact=frame[5] and (frame[5]:find('MATERIAL TIER',1,true) or frame[5]:find('RELATIVE TIER',1,true) or frame[5]:find('OUTPUT FORM',1,true) or frame[5]:find('COMPONENT',1,true))
-        local inline=frame[y]:sub(34):match('^%[ [X ] %] ')
-        return 'touch','screen',compact and 80 or 34,(compact or inline) and y or y+1,0
+    local saved=unser(files[api.paths.config]) or cfg
+    local definitions
+    for id,section in pairs(api.config.sections) do
+      if frame[2]:find('SETTINGS / '..section.name,1,true) then definitions=section.fields end
+    end
+    local program
+    for _,section in ipairs(api.programs.settings) do
+      if frame[2]:find('SETTINGS / '..section.name,1,true) then definitions=section.fields;program=section end
+    end
+    local definition
+    for _,f in ipairs(definitions or {}) do if f.label==label then definition=f end end
+    if definition and definition.kind=='destination' then
+      local value=saved.programs[program.id][definition.key]
+      local visible=value=='' and 'Auto' or value
+      for y=6,42 do
+        if frame[y]:sub(42):find(visible,1,true) then return 'touch','screen',42,y,0 end
+      end
+    else
+      for y=5,43 do
+        if frame[y] and frame[y]:sub(34):find(label,1,true) then
+          local inline=frame[y]:sub(34):match('^%[ [X ] %] ')
+          local compact=definition and definition.compact
+          return 'touch','screen',compact and 80 or 34,(compact or inline) and y or y+1,0
+        end
       end
     end
     error('Settings field missing: '..label)
   end
+end
+local function option(label,value)
+  return function()
+    local _,_,_,y=field(label)()
+    return click('[ '..value..' ]',y)()
+  end
+end
+-- Follow the measured layout rather than assuming a fixed page number.
+local function settingsPageWith(label)
+  local seek
+  seek=function()
+    local ok=pcall(field(label))
+    if ok then return 'key_up','kbd',0,0 end
+    table.insert(events,1,seek)
+    return click('[ Next ]',44)()
+  end
+  return seek
 end
 local function replace(label,value)
   return {field(label),function() controlDown=true;return 'key_down','kbd',97,30 end,
@@ -692,11 +741,11 @@ end)
 test('leaving an active field saves it and program settings do not overwrite shared settings',function()
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),field('New pattern buffer name'),function() controlDown=true;return 'key_down','kbd',97,30 end,
-    {'clipboard','kbd','Uncommitted banks'},nav('Wire insulator'),replace('Insulator interface name','Latex destinations'),
-    click('[ Nothing ]',11),nav('Wiremill'),replace('1x wire interface name','1x wires'),replace('Fine wire interface name','Fine wires'),
+    {'clipboard','kbd','Uncommitted banks'},nav('Wire insulator'),replace('1x Cable interface name','Latex destinations'),
+    option('Insulation polymer','Nothing'),nav('Wiremill'),replace('Wires interface name','1x wires'),replace('Fine Wires interface name','Fine wires'),
     nav('Wire insulator'),function()
       local c=unser(files[api.paths.config])
-      assert(c.shared.donors=='Uncommitted banks' and c.programs.insulator.destination=='Latex destinations')
+      assert(c.shared.donors=='Uncommitted banks' and c.programs.insulator.cable1=='Latex destinations')
       assert(c.programs.insulator.polymer=='none' and c.programs.insulator.pps=='on')
       assert(c.programs.wiremill.wire1=='1x wires' and c.programs.wiremill.wireFine=='Fine wires')
       assert(c.programs.assline.target==cfg.programs.assline.target);snapshot('insulator_settings');return quit()
@@ -774,7 +823,7 @@ local function withMatrix(f)
   local ok,why=pcall(f);package.loaded.assline_data=saved;assert(ok,why)
 end
 local function insulator()
-  cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+  cableDestinations(cfg,cfg.programs.assline.target);target.patterns={}
   return api.runner.preview(cfg,'insulator')
 end
 
@@ -1000,7 +1049,7 @@ end
 
 test('journal changes during execution do not repaint unchanged preview panels',function()
   withMatrix(function()
-    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    cableDestinations(cfg,cfg.programs.assline.target);target.patterns={}
     files[api.paths.config]=ser(cfg)
     local fills,writes,polls,pendingSeen,clearedSeen
     queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',34),function()
@@ -1205,7 +1254,7 @@ test('ordinary processing patterns use ItemStack size even when amount is zero',
 end)
 test('new Cnt patterns scan, resize and verify with Count left at zero',function()
   withMatrix(function()
-    cfg.programs.insulator.destination=cfg.programs.assline.target
+    cableDestinations(cfg,cfg.programs.assline.target)
     target.patterns={}
     local first=api.runner.preview(cfg,'insulator')
     local recipe=first.manifest.recipes[1]
@@ -1413,7 +1462,7 @@ test('70 recipes require two 36-slot destination interfaces and donor slots need
     local data=package.loaded.assline_data;data.materials={}
     for n=1,70 do data.materials[n]={name=string.format('M%03d',n),family='gt',dsf=n,a=1,p=1,coating='standard',
       conductor={name='gregtech:gt.blockmachines',base=n*100}} end
-    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    cableDestinations(cfg,cfg.programs.assline.target);target.patterns={}
     iface(cfg.programs.assline.target,50)
     buffer.patterns={};for n=0,69 do buffer.patterns[n+100]=pattern({item('Donor',1,900)}) end
     local preview=api.runner.preview(cfg,'insulator')
@@ -1433,7 +1482,7 @@ end)
 
 test('Run program chooser and insulator preview share the same settings and execution flow',function()
   withMatrix(function()
-    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={};files[api.paths.config]=ser(cfg)
+    cableDestinations(cfg,cfg.programs.assline.target);target.patterns={};files[api.paths.config]=ser(cfg)
     queue(nav('History'),click('[ Run program ]',47),click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
       assert(frame[2]:find('Preview - Wire insulator',1,true) and mutations==0);snapshot('insulator_preview')
       return 'touch','screen',118,34,0
@@ -1458,7 +1507,7 @@ test('material cost rescales existing dense plates without donors and applies fo
         inputs={{f='ingot',n=1}},outputs={{f='plate',n=1}},stock={}},
       {id='dense',mode='bender',process='ingot_plateDense',eut=1966080,requires={'ingot','plateDense'},
         inputs={{f='ingot',n=9}},outputs={{f='plateDense',n=1}},stock={}}}
-    cfg.programs.bender.plate=cfg.programs.assline.target;cfg.programs.bender.forms='plate,plateDense'
+    plateDestinations(cfg,cfg.programs.assline.target);cfg.programs.bender.forms='plate,plateDense'
     cfg.batch.mode='tiered';cfg.batch.costScaling='on';cfg.batch.currentTier='UHV'
     cfg.batch.overrideUHV='29';cfg.batch.voltagePolicy='off'
     target.patterns={[0]=pattern({item('A Ingot',29,11001)},{item('A Plate',29,17001)}),
@@ -1483,16 +1532,18 @@ end)
 test('form divisor settings use the shared compact table and save inline edits',function()
   cfg.batch.costScaling='on';files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Bending machine'),click('[ Next ]',44),function()
-    assert(frame[5]:find('OUTPUT FORM',1,true) and frame[5]:find('BATCH DIVISOR',1,true))
-    assert(frame[17]:find('Auto',1,true))
+    assert(table.concat(frame,'\n'):find('OUTPUT FORM',1,true))
+    assert(table.concat(frame,'\n'):find('BATCH DIVISOR',1,true))
+    local _,_,_,y=field('Dense (9x)')()
+    assert(frame[y]:find('Auto',1,true))
     return field('Dense (9x)')()
   end,{'clipboard','kbd','3'},{'key_down','kbd',13,28},function()
     assert(unser(files[api.paths.config]).programs.bender.divisorplateDense=='3')
-    assert(frame[43]:sub(34):find('Blank uses material input cost.',1,true))
-    assert(frame[44]:sub(34):find('Settings page 2/2',1,true))
+    assert(table.concat(frame,'\n'):find('Blank uses material input cost.',1,true))
+    assert(frame[44]:sub(34):find('Settings page',1,true))
     assert(not frame[44]:find('quarters',1,true))
     snapshot('form_divisors');return nav('Tier multipliers')()
-  end,click('[ Next ]',45),click('Scale batches by material input'),nav('Bending machine'),function()
+  end,settingsPageWith('Scale batches by material input'),click('Scale batches by material input'),nav('Bending machine'),function()
     assert(unser(files[api.paths.config]).batch.costScaling=='off')
     assert(not table.concat(frame,'\n'):find('BATCH DIVISOR',1,true))
     assert(not frame[44]:find('[ Next ]',1,true))
@@ -1514,7 +1565,7 @@ test('bender imprints ingot routes, stores circuits externally and switches 1x p
       requires={'ingot','plate'},inputs={{f='ingot',n=1}},outputs={{f='plate',n=1}},stock={{i=2,n=1}}}
     data.rules[#data.rules+1]={id='bend-2',mode='bender',process='ingot_plateDouble',
       requires={'ingot','plateDouble'},inputs={{f='ingot',n=2}},outputs={{f='plateDouble',n=1}},stock={{i=3,n=1}}}
-    cfg.programs.bender.plate=cfg.programs.assline.target
+    plateDestinations(cfg,cfg.programs.assline.target)
     cfg.programs.bender.foil='';cfg.programs.bender.forms='plate,plateDouble'
     target.patterns={}
     buffer.patterns[2]=cp(buffer.patterns[0]);buffer.patterns[3]=cp(buffer.patterns[0])
@@ -1548,6 +1599,38 @@ test('bender imprints ingot routes, stores circuits externally and switches 1x p
   end)
 end)
 
+test('bender routes individual plate sizes into different banks and does not scan a disabled size',function()
+  withMatrix(function()
+    local data=package.loaded.assline_data
+    data.capabilities[1].plate=true;data.capabilities[1].plateDouble=true
+    data.production={{ingot_plate=true,ingot_plateDouble=true}}
+    data.families.gt.plate={name='gregtech:gt.metaitem.01',prefix=17000}
+    data.families.gt.plateDouble={name='gregtech:gt.metaitem.01',prefix=18000}
+    data.rules={
+      {id='single',mode='bender',process='ingot_plate',requires={'ingot','plate'},
+        inputs={{f='ingot',n=1}},outputs={{f='plate',n=1}},stock={}},
+      {id='double',mode='bender',process='ingot_plateDouble',requires={'ingot','plateDouble'},
+        inputs={{f='ingot',n=2}},outputs={{f='plateDouble',n=1}},stock={}}}
+    local v=cfg.programs.bender
+    v.forms='plate,plateDouble'
+    local single=iface(v.plate,70)
+    local double=iface(v.plateDouble,71)
+    for slot=0,3 do buffer.patterns[slot]=pattern({item('Disposable',1,789)}) end
+    local preview=api.runner.preview(cfg,'bender')
+    assert(#preview.plan.errors==0 and #preview.plan.capacities==2 and #preview.plan.creates==4)
+    api.runner.execute(cfg,preview)
+    for _,p in pairs(single.patterns) do assert(p.outputs[1].damage==17001 or p.outputs[1].damage==17002) end
+    for _,p in pairs(double.patterns) do assert(p.outputs[1].damage==18001 or p.outputs[1].damage==18002) end
+    assert(single.patterns[0] and single.patterns[1] and double.patterns[0] and double.patterns[1])
+    local before=ser(single.patterns)
+    v.forms='plateDouble';queriedNames={}
+    preview=api.runner.preview(cfg,'bender')
+    assert(preview.plan.reused==2 and #preview.plan.capacities==1 and not api.runner.hasChanges(preview))
+    assert(not queriedNames[single.name] and queriedNames[double.name])
+    assert(ser(single.patterns)==before)
+  end)
+end)
+
 test('bender output switches toggle independently and migrate into the unified settings',function()
   local old=cp(cfg);old.programs.bender.forms=nil
   local migrated=api.config.migrate(old)
@@ -1559,8 +1642,12 @@ test('bender output switches toggle independently and migrate into the unified s
   assert(migrated.programs.bender.plateSource=='ingot' and migrated.programs.bender.springSmallSource=='stick')
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Bending machine'),function()
-    assert(frame[19]:find('[ X 1x ]',1,true) and frame[19]:find('[ X 2x ]',1,true))
-    return click('[ X 1x ]',19)()
+    local _,_,_,y=field('Plate interface name')()
+    assert(frame[y]:find('[ X ]',1,true))
+    local _,_,_,doubleY=field('Double Plate interface name')()
+    assert(doubleY==y+1 and frame[doubleY]:find('[ X ]',1,true))
+    assert(not table.concat(frame,'\n'):find('[ X 1x ]',1,true))
+    return 'touch','screen',34,y,0
   end,function()
     local c=unser(files[api.paths.config])
     local choices=api.programs.byId.bender.formChoices
@@ -1572,35 +1659,30 @@ test('bender output switches toggle independently and migrate into the unified s
   api.runUI()
 end)
 
-test('Fluid Shaper enables each destination beside its interface field',function()
+test('Fluid Shaper uses one named interface list with muted disabled values',function()
   local v=cfg.programs.fluidShaper
-  v.plate='Plates'
-  v.turbineBlade=''
-  mustFail(function() api.config.requireProgram(cfg,'fluidShaper') end,
-    'Turbine blade interface name')
-  files[api.paths.config]=ser(cfg)
+  v.plate='Plates';v.turbineBlade=''
+  mustFail(function() api.config.requireProgram(cfg,'fluidShaper') end,'Turbine Blade interface name')
+  v.turbineBlade='Turbine Blades';files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Fluid Shaper'),function()
-    assert(frame[7]:find('[   ]',1,true) and frame[7]:find('(not configured)',1,true))
-    assert(frame[15]:find('[ X ]',1,true) and frame[15]:find('Plates',1,true))
-    assert(frame[44]:find('Settings page 1/3',1,true))
+    local _,_,_,ingotY=field('Ingot interface name')()
+    local _,_,_,plateY=field('Plate interface name')()
+    assert(frame[ingotY]:find('[   ]',1,true) and foreground[ingotY][42]==0x8297AB)
+    assert(frame[plateY]:find('[ X ]',1,true) and foreground[plateY][42]==0xDCE6EF)
+    assert(not table.concat(frame,'\n'):find('interface name',1,true))
+    assert(not frame[44]:find('Settings page',1,true))
+    for _,name in ipairs({'Small Pipe','Huge Pipe','Turbine Blades'}) do
+      assert(table.concat(frame,'\n'):find(name,1,true))
+    end
     snapshot('fluid_shaper_settings')
-    return click('[ Next ]',44)()
-  end,function()
-    assert(frame[31]:find('[ X ]',1,true) and frame[31]:find('(not configured)',1,true))
-    snapshot('fluid_shaper_settings_page_2')
-    return click('[ Next ]',44)()
-  end,function()
-    assert(frame[6]:find('Small pipe interface name',1,true))
-    assert(frame[18]:find('Huge pipe interface name',1,true))
-    assert(frame[22]:find('Pattern multiplier',1,true))
-    return click('[ Previous ]',44)()
-  end,function()
-    return click('[ X ]',31)()
+    local _,_,_,y=field('Turbine Blade interface name')()
+    return 'touch','screen',34,y,0
   end,function()
     local saved=unser(files[api.paths.config])
     assert(saved.programs.fluidShaper.forms=='plate')
     api.config.requireProgram(saved,'fluidShaper')
-    assert(frame[31]:find('[   ]',1,true))
+    local _,_,_,y=field('Turbine Blade interface name')()
+    assert(frame[y]:find('[   ]',1,true) and foreground[y][42]==0x8297AB)
     return quit()
   end)
   api.runUI()
@@ -1608,9 +1690,9 @@ end)
 
 test('Fluid Shaper pipe mold uses one switch and destination for both pipe types',function()
   local v=cfg.programs.fluidShaper
-  v.forms='pipeTiny'
+  v.forms='pipeTiny';v.pipeTiny=''
   mustFail(function() api.config.requireProgram(cfg,'fluidShaper') end,
-    'Tiny pipe interface name')
+    'Tiny Pipe interface name')
   v.pipeTiny='Tiny Pipes'
   api.config.requireProgram(cfg,'fluidShaper')
   local program=api.programs.byId.fluidShaper
@@ -1619,12 +1701,12 @@ test('Fluid Shaper pipe mold uses one switch and destination for both pipe types
 end)
 
 test('enabled bending outputs require only their own destination name',function()
-  cfg.programs.bender.forms='sheetmetal'
-  mustFail(function() api.config.requireProgram(cfg,'bender') end,'Sheet metal interface name')
-  cfg.programs.bender.sheetMetal='Sheets'
+  cfg.programs.bender.forms='sheetmetal';cfg.programs.bender.sheetmetal=''
+  mustFail(function() api.config.requireProgram(cfg,'bender') end,'Sheet Metal interface name')
+  cfg.programs.bender.sheetmetal='Sheets'
   api.config.requireProgram(cfg,'bender')
-  cfg.programs.bender.forms='springSmall'
-  mustFail(function() api.config.requireProgram(cfg,'bender') end,'Spring interface name')
+  cfg.programs.bender.forms='springSmall';cfg.programs.bender.springSmall=''
+  mustFail(function() api.config.requireProgram(cfg,'bender') end,'Small Spring interface name')
 end)
 
 test('bender input choices select one scraped route per output and keep fixed inputs',function()
@@ -1659,7 +1741,7 @@ test('bender input choices select one scraped route per output and keep fixed in
     rule('wire1_springSmall','wire1','springSmall',1,2,2)
     rule('stickLong_spring','stickLong','spring',1,1,2)
     local v=cfg.programs.bender
-    v.plate=cfg.programs.assline.target;v.sheetMetal='Sheets';v.spring='Springs'
+    plateDestinations(cfg,cfg.programs.assline.target);v.sheetmetal='Sheets';v.spring='Springs';v.springSmall='Springs'
     v.forms='plate,plateDouble,sheetmetal,springSmall,spring'
     iface('Sheets',60);iface('Springs',61);target.patterns={}
     local first=api.runner.preview(cfg,'bender')
@@ -1808,7 +1890,7 @@ test('tier settings use a modal selector, save globally and show the shifted bud
     end,function()
       local c=unser(files[api.paths.config])
       assert(c.batch.mode=='tiered' and c.batch.currentTier=='UV')
-      assert(frame[10]:find('[ UV ]',1,true))
+      assert(table.concat(frame,'\n'):find('[ UV ]',1,true))
       snapshot('tier_settings')
       return click('[ Effective tiers ]',47)()
     end,function()
@@ -1817,14 +1899,14 @@ test('tier settings use a modal selector, save globally and show the shifted bud
       assert(frame[28]:find('ZPM  8x',1,true))
       snapshot('tier_budgets')
       return 'key_down','kbd',0,1
-    end,click('[ Next ]',45),click('[ Custom table ]'),click('[ Next ]',45),replace('2 tiers below','96'),
+    end,settingsPageWith('Multiplier curve'),click('[ Custom table ]'),settingsPageWith('2 tiers below'),replace('2 tiers below','96'),
     function()
       assert(unser(files[api.paths.config]).batch.below2=='96')
       return quit()
     end)
   api.runUI()
   queue(nav('Settings'),nav('Tier multipliers'),function()
-    assert(frame[10]:find('[ UV ]',1,true))
+    assert(table.concat(frame,'\n'):find('[ UV ]',1,true))
     assert(unser(files[api.paths.config]).batch.below2=='96')
     return quit()
   end)
@@ -1839,13 +1921,13 @@ test('batch UI hides inactive controls and edits overrides in one compact table'
     end,nav('Wiremill'),function()
       assert(not table.concat(frame,'\n'):find('Pattern multiplier',1,true))
       return nav('Tier multipliers')()
-    end,click('[ Next ]',45),function()
+    end,settingsPageWith('Tiers below until maximum'),function()
       snapshot('tier_curve')
       assert(table.concat(frame,'\n'):find('Tiers below until maximum',1,true))
-      return click('[ Next ]',45)()
-    end,replace('UHV','2'),function()
+      return 'key_up','kbd',0,0
+    end,settingsPageWith('UHV'),replace('UHV','2'),function()
       assert(unser(files[api.paths.config]).batch.overrideUHV=='2')
-      assert(frame[5]:find('MATERIAL TIER',1,true) and frame[5]:find('EFFECTIVE',1,true))
+      assert(table.concat(frame,'\n'):find('MATERIAL TIER',1,true) and table.concat(frame,'\n'):find('EFFECTIVE',1,true))
       snapshot('tier_overrides')
       return quit()
     end)
@@ -1886,7 +1968,7 @@ test('word wrapping preserves tree guides, words, quantities and voltage accents
 end)
 test('settings sidebar separates Current preview and auto addresses remain blank in saved config',function()
   withMatrix(function()
-    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    cableDestinations(cfg,cfg.programs.assline.target);target.patterns={}
     files[api.paths.config]=ser(cfg)
     queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),nav('Settings'),
       nav('Shared interfaces'),function()
@@ -2007,7 +2089,7 @@ end)
 
 test('shortage preview allows Execute and the UI Stop button stops refill waiting',function()
   withMatrix(function()
-    cfg.programs.insulator.destination=cfg.programs.assline.target
+    cableDestinations(cfg,cfg.programs.assline.target)
     target.patterns={};buffer.patterns={};files[api.paths.config]=ser(cfg)
     queue(nav('Programs'),click('[ Wire insulator ]'),click('[ Preview selected ]',47),function()
       assert(((frame[17] or '')..(frame[18] or '')..(frame[19] or '')):find('wait for refills.',1,true))
@@ -2040,9 +2122,9 @@ end)
 test('bender settings are editable and wire combining remains unavailable',function()
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),nav('Bending machine'),replace('Plate interface name','Plates'),replace('Foil interface name','Foils'),
-    replace('Sheet metal interface name','Sheets'),function()
+    replace('Sheet Metal interface name','Sheets'),function()
       local c=unser(files[api.paths.config]);assert(c.programs.bender.plate=='Plates' and c.programs.bender.foil=='Foils')
-      assert(c.programs.bender.sheetMetal=='Sheets' and mutations==0)
+      assert(c.programs.bender.sheetmetal=='Sheets' and mutations==0)
       snapshot('bender_settings')
       return nav('Programs')()
     end,click('[ Wire combining ]'),function()
@@ -2074,12 +2156,14 @@ end)
 test('wiremill route choices save independently and default to ingots',function()
   files[api.paths.config]=ser(cfg)
   assert(cfg.programs.wiremill.wireSource=='ingot' and cfg.programs.wiremill.fineSource=='ingot')
-  queue(nav('Settings'),nav('Wiremill'),click('[ Rod ]',15),click('[ 1x wire ]',19),
+  queue(nav('Settings'),nav('Wiremill'),option('1x wire input','Rod'),option('Fine wire input','1x wire'),
     nav('Programs'),nav('Settings'),function()
       local v=unser(files[api.paths.config]).programs.wiremill
       assert(v.wireSource=='stick' and v.fineSource=='wire1')
-      assert(background[15][frame[15]:find('[ Rod ]',1,true)]==0x246B47)
-      assert(background[19][frame[19]:find('[ 1x wire ]',1,true)]==0x246B47)
+      local _,_,_,wireY=field('1x wire input')()
+      local _,_,_,fineY=field('Fine wire input')()
+      assert(background[wireY][frame[wireY]:find('[ Rod ]',1,true)]==0x246B47)
+      assert(background[fineY][frame[fineY]:find('[ 1x wire ]',1,true)]==0x246B47)
       snapshot('wiremill_settings');return quit()
     end)
   api.runUI()
@@ -2164,7 +2248,7 @@ test('real insulation preview shows named ingredients, capacity and reused cable
     if material.name=='Copper' or material.name=='NiobiumTitanium' then subset.materials[#subset.materials+1]=material end
   end
   package.loaded.assline_data=subset
-  cfg.programs.insulator.destination='Wire insulator';target.name='Wire insulator';target.patterns={}
+  cableDestinations(cfg,'Wire insulator');target.name='Wire insulator';target.patterns={}
   for slot=0,11 do buffer.patterns[slot]=pattern({},{}) end
   local preview=api.runner.preview(cfg,'insulator')
   assert(#preview.plan.errors==0 and #preview.manifest.recipes==11)
@@ -2186,7 +2270,7 @@ test('preview identifies kept encoded outputs, excluded forms and labeled sortin
   fixture.materials[1].u=1;fixture.materials[2].u=2
   package.loaded.assline_data=fixture
   local ok,why=pcall(function()
-    cfg.programs.insulator.destination='Diagnosis';target.name='Diagnosis';target.patterns={}
+    cableDestinations(cfg,'Diagnosis');target.name='Diagnosis';target.patterns={}
     local first=api.runner.preview(cfg,'insulator')
     assert(#first.manifest.recipes==1 and #first.manifest.skipped==1)
     local wanted=first.manifest.recipes[1]
@@ -2239,15 +2323,16 @@ test('five polymer choices save immediately with one highlighted choice and inde
   files[api.paths.config]=ser(cfg)
   local choices={{'PVC pulp','pvc'},{'Small PVC pulp','pvcSmall'},{'PDMS pulp','pdms'},{'Small PDMS pulp','pdmsSmall'},{'Nothing','none'}}
   local steps={nav('Settings'),nav('Wire insulator')}
-  for _,option in ipairs(choices) do
-    local label,value=option[1],option[2]
-    steps[#steps+1]=click('[ '..label..' ]',11)
+  for _,entry in ipairs(choices) do
+    local label,value=entry[1],entry[2]
+    steps[#steps+1]=option('Insulation polymer',label)
     steps[#steps+1]=function()
       assert(unser(files[api.paths.config]).programs.insulator.polymer==value)
       assert(unser(files[api.paths.config]).programs.insulator.pps=='on')
       for _,other in ipairs(choices) do
-        local x=assert(frame[11]:find('[ '..other[1]..' ]',1,true))
-        assert(background[11][x]==(other[2]==value and 0x246B47 or 0x27465E))
+        local _,_,_,row=field('Insulation polymer')()
+        local x=assert(frame[row]:find('[ '..other[1]..' ]',1,true))
+        assert(background[row][x]==(other[2]==value and 0x246B47 or 0x27465E))
       end
       return 'key_up','kbd',0,0
     end
@@ -2298,7 +2383,7 @@ test('destination links jump between grouped banks after wrapping and align shor
       {id='spring',mode='bender',process='stick_springSmall',requires={'stick','springSmall'},
         inputs={{f='stick',n=1}},outputs={{f='springSmall',n=2}},stock={}}}
     local foils='Foils with a long destination name that wraps across multiple lines in the preview'
-    cfg.programs.bender.plate='Plates';cfg.programs.bender.foil=foils;cfg.programs.bender.spring='Springs'
+    plateDestinations(cfg,'Plates');cfg.programs.bender.foil=foils;cfg.programs.bender.springSmall='Springs'
     cfg.programs.bender.forms='plate,foil,springSmall'
     target.name='Plates';target.patterns={[0]=pattern({item('Unrelated',1,900)})}
     iface('Plates',30);iface(foils,40,{[0]=pattern({item('Unrelated',1,901)})});iface(foils,50)
@@ -2515,7 +2600,7 @@ test('discard archives two valid records whose combined size exceeds the active-
 end)
 test('UI Pause Resume Stop and optional continuation remain usable during an active pattern transaction',function()
   withMatrix(function()
-    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    cableDestinations(cfg,cfg.programs.assline.target);target.patterns={}
     files[api.paths.config]=ser(cfg)
     queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',34),function()
       callCost=0.05
@@ -2579,7 +2664,7 @@ test('Stop saved is optional and its discard dialog lets a new preview replace a
 end)
 test('Quit during Pause finishes the current transaction and leaves optional continuation for next launch',function()
   withMatrix(function()
-    cfg.programs.insulator.destination=cfg.programs.assline.target;target.patterns={}
+    cableDestinations(cfg,cfg.programs.assline.target);target.patterns={}
     files[api.paths.config]=ser(cfg)
     queue(click('[ Wire insulator ]'),click('[ Preview selected ]',47),click('[ Verify 36 slots ]',34),function()
       callCost=0.05
@@ -2858,9 +2943,11 @@ test('singularity program controls and preview remain visible without covering t
     assert(frame[8]:find('7 combined singularities / 63 base singularities',1,true))
     return click('[ Program settings ]',47)()
   end,function()
-    assert(frame[6]:find('Neutronium compressor interface name',1,true))
-    assert(frame[7]:find('[ X ]',1,true) and frame[7]:find('Singularity recipes',1,true))
-    assert(frame[10]:find('Block compressor interface name',1,true))
+    assert(frame[6]:find('Interface Names',1,true))
+    local _,_,_,singularityY=field('Singularities interface name')()
+    local _,_,_,blockY=field('Blocks interface name')()
+    assert(blockY==singularityY+1 and frame[singularityY]:find('[ X ]',1,true))
+    assert(frame[blockY]:find('[ X ]',1,true))
     snapshot('singularity_line_settings')
     return 'interrupted'
   end)
@@ -3057,6 +3144,29 @@ test('component program discovers eight named banks and installs all native item
   assert(again.plan.reused==104 and again.plan.resizeCount==0 and not api.runner.hasChanges(again))
 end)
 
+test('component selection scans only enabled banks and installs only their recipes',function()
+  cfg.programs.componentAssembly.forms='motor'
+  cfg.programs.componentAssembly.casingTier='IV'
+  local motor=iface(cfg.programs.componentAssembly.motor,201)
+  -- A disabled bank is deliberately present with an unreadable pattern.
+  local piston=iface(cfg.programs.componentAssembly.piston,202,{[0]={name='bad:pattern',tag=nil}})
+  for _,component in ipairs(require('assline_component_data').components) do
+    if component.key~='motor' then cfg.programs.componentAssembly[component.key]='' end
+  end
+  for slot=0,4 do buffer.patterns[slot]=pattern({item('Disposable',1,789)}) end
+  local preview=api.runner.preview(cfg,'componentAssembly')
+  assert(#preview.manifest.recipes==5 and #preview.manifest.skipped==8)
+  assert(#preview.plan.capacities==1 and #preview.plan.errors==0)
+  assert(queriedNames[motor.name] and not queriedNames[piston.name])
+  local count=0;for _ in pairs(queriedNames) do count=count+1 end
+  assert(count==3,'Disabled component banks were scanned')
+  for _,row in ipairs(preview.manifest.recipes) do assert(row.outputForm=='motor') end
+  for _,row in ipairs(preview.manifest.skipped) do assert(row.form=='motor') end
+  api.runner.execute(cfg,preview)
+  count=0;for _,p in pairs(motor.patterns) do count=count+1;assert(p.outputs[1].size==64) end
+  assert(count==5 and piston.patterns[0].name=='bad:pattern')
+end)
+
 test('component motor alternatives reuse and resize an existing multiplied recipe instead of duplicating it',function()
   local banks=componentFixture('LV')
   local preview=api.runner.preview(cfg,'componentAssembly')
@@ -3075,7 +3185,7 @@ test('component motor alternatives reuse and resize an existing multiplied recip
   assert(again.plan.reused==8 and not api.runner.hasChanges(again))
 end)
 
-test('component casing, rubber and all eight names share settings without covering preview navigation',function()
+test('component casing, rubber and eight togglable names share one measured settings page',function()
   local banks=componentFixture('IV');files[api.paths.config]=ser(cfg)
   queue(click('[ Component Assembly Line ]'),click('[ Preview selected ]',47),function()
     assert(frame[2]:find('Preview - Component Assembly Line',1,true))
@@ -3089,27 +3199,33 @@ test('component casing, rubber and all eight names share settings without coveri
     end
     return click('[ Program settings ]',47)()
   end,function()
-    assert(frame[6]:find('Installed component casing tier',1,true))
-    assert(frame[10]:find('Component rubber',1,true))
+    assert(frame[6]:find('Interface Names',1,true))
+    assert(not frame[44]:sub(34):find('Settings page',1,true))
     assert(frame[44]:sub(1,29):find('Current preview',1,true))
-    return click('[ IV ]',7)()
-  end,click('LuV'),function()
-    assert(unser(files[api.paths.config]).programs.componentAssembly.casingTier=='LuV')
-    return click('[ SBR ]',11)()
-  end,function()
-    assert(table.concat(frame,'\n'):find('Silicone',1,true))
-    return click('Silicone')()
-  end,function()
-    assert(unser(files[api.paths.config]).programs.componentAssembly.rubber=='silicone')
-    return click('[ Next ]',44)()
-  end,function()
-    assert(frame[5]:sub(34):find('COMPONENT',1,true))
+    local first
     for _,group in ipairs(require('assline_component_data').components) do
-      assert(table.concat(frame,'\n'):find('Component Assembly Line '..group.label,1,true))
+      local _,_,_,y=field(group.label..' interface name')()
+      first=first or y
+      assert(frame[y]:find('[ X ]',1,true))
+      assert(frame[y]:find('Component Assembly Line ('..group.label..')',1,true))
+      assert(frame[y]:find('Circuit '..group.circuit,1,true))
     end
     snapshot('component_assembly_destinations')
+    return option('Installed component casing tier','IV')()
+  end,click('LuV'),function()
+    assert(unser(files[api.paths.config]).programs.componentAssembly.casingTier=='LuV')
+    return option('Component rubber','SBR')()
+  end,click('Silicone'),function()
+    assert(unser(files[api.paths.config]).programs.componentAssembly.rubber=='silicone')
+    local _,_,_,y=field('Piston interface name')()
+    return 'touch','screen',34,y,0
+  end,function()
+    local saved=unser(files[api.paths.config])
+    assert(not api.config.enabledOutputs(saved,'componentAssembly').piston)
+    local _,_,_,y=field('Piston interface name')()
+    assert(frame[y]:find('[   ]',1,true) and foreground[y][42]==0x8297AB)
     return 'key_up','kbd',0,0
-  end,replace('Motor (circuit 1)','Motor destination changed'),function()
+  end,replace('Motor interface name','Motor destination changed'),function()
     assert(unser(files[api.paths.config]).programs.componentAssembly.motor=='Motor destination changed')
     assert(not frame[44]:sub(1,29):find('Current preview',1,true),'Settings edit retained a stale preview')
     banks.motor.name='Motor destination changed'
