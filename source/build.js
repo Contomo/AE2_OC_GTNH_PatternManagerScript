@@ -24,11 +24,14 @@ const tierDefinitions = '-- Source: source/data/tiers.json\nreturn '+lua(JSON.pa
 const materialUnits = '-- Source: source/data/material_units.json\nreturn '+lua(JSON.parse(read('source/data/material_units.json')))+'\n';
 const transitionRules = '-- Source: source/data/transition.json\nreturn '+lua(JSON.parse(read('source/data/transition.json')))+'\n';
 const singularityData = '-- Source: source/data/singularities.json\nreturn '+lua(JSON.parse(read('source/data/singularities.json')))+'\n';
+const componentData = '-- Source: source/data/components.json\nreturn '+lua(JSON.parse(read('source/data/components.json')))+'\n';
 const inline = source => source.replaceAll("require('assline_util')",'U')
   .replaceAll("require('assline_tier_definitions')",'TierDefinitions')
   .replaceAll("require('assline_material_units')",'MaterialUnits')
   .replaceAll("require('assline_batch')",'Batch')
   .replaceAll("require('assline_singularities')",'Singularities')
+  .replaceAll("require('assline_components')",'Components')
+  .replaceAll("require('assline_component_data')",'ComponentData')
   .replaceAll("require('assline_programs')",'Programs').replaceAll("require('assline_config')",'Config')
   .replaceAll("require('assline_planner')",'Planner').replaceAll("require('assline_modes')",'Modes');
 const pure = (name,file) => 'local '+name+'=(function()\n'+inline(section(file))+'\nend)()\n';
@@ -36,9 +39,10 @@ const body = pure('U','source/lib/util.lua')+'local TierDefinitions=(function()\
   'local MaterialUnits=(function()\n'+materialUnits+'end)()\n'+
   'local TransitionRules=(function()\n'+transitionRules+'end)()\n'+
   'local SingularityData=(function()\n'+singularityData+'end)()\n'+
+  'local ComponentData=(function()\n'+componentData+'end)()\n'+
   pure('Batch','source/lib/batch.lua')+pure('Programs','source/lib/programs.lua')+pure('Config','source/lib/config.lua')+
   inline(['source/app/00_core.lua','source/app/10_plan.lua','source/app/20_apply.lua'].map(section).join('\n'))+'\n'+
-  pure('Planner','source/lib/planner.lua')+pure('Singularities','source/lib/singularities.lua')+pure('Modes','source/lib/modes.lua')+
+  pure('Planner','source/lib/planner.lua')+pure('Singularities','source/lib/singularities.lua')+pure('Components','source/lib/components.lua')+pure('Modes','source/lib/modes.lua')+
   pure('Preview','source/lib/preview.lua')+
   inline(section('source/app/25_maker.lua'))+'\n'+section('source/app/26_donors.lua')+'\n'+section('source/app/27_transition.lua')+'\n'+section('source/app/30_ui.lua')+'\n'+section('source/app/90_main.lua');
 const entry = `-- Readable application bundle, generated from the source files named below.
@@ -68,7 +72,8 @@ return result
 emit('tests/lib/assline_tier_definitions.lua',tierDefinitions,true);
 emit('tests/lib/assline_material_units.lua',materialUnits,true);
 emit('tests/lib/assline_singularity_data.lua',singularityData,true);
-for (const [name,file] of [['util','source/lib/util.lua'],['batch','source/lib/batch.lua'],['programs','source/lib/programs.lua'],['config','source/lib/config.lua'],['planner','source/lib/planner.lua'],['singularities','source/lib/singularities.lua'],['modes','source/lib/modes.lua'],['preview','source/lib/preview.lua']]) {
+emit('tests/lib/assline_component_data.lua',componentData,true);
+for (const [name,file] of [['util','source/lib/util.lua'],['batch','source/lib/batch.lua'],['programs','source/lib/programs.lua'],['config','source/lib/config.lua'],['planner','source/lib/planner.lua'],['singularities','source/lib/singularities.lua'],['components','source/lib/components.lua'],['modes','source/lib/modes.lua'],['preview','source/lib/preview.lua']]) {
   emit('tests/lib/assline_'+name+'.lua',read(file),true);
 }
 // Remove obsolete artifacts owned by the previous single-line/chunked build.

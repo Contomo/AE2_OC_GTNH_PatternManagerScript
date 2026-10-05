@@ -344,6 +344,14 @@ function M.requireProgram(c, id)
       'Set ' .. f.label .. ' in Settings > ' .. p.name
     )
   end
+  if p.distinctDestinations then
+    local assigned = {}
+    for _, key in pairs(p.outputs) do
+      local name = c.programs[id][key]
+      U.check(not assigned[name], 'Each component needs a distinct destination name: ' .. name)
+      assigned[name] = true
+    end
+  end
   if p.formSwitch and p.outputs then
     local selected = M.selected(c.programs[id][p.formSwitch], p.formChoices)
     local needed = {}

@@ -359,20 +359,25 @@ local function runUI()
         add('Molten shortcuts and stabilized-black-hole block recipes are excluded.', 'muted')
         add('')
       end
-      if preview.id == 'bender' or preview.id == 'fluidShaper' then
+      if preview.id == 'componentAssembly' then
+        add('COMPONENT ASSEMBLY LINE', 'blue')
+        add('Installed casings: ' .. preview.manifest.policy.casingTier)
+        add(preview.manifest.source.batchPolicy, 'muted')
+        add('One recipe per component/tier. Compatible installed alternatives are reused.', 'muted')
+        add('')
+      end
+      if Programs.byId[preview.id].stockedForms then
         add('STOCKED IN MACHINE', 'blue')
         add('These reusable items stay in the machine and are omitted from patterns.')
         local stocked = {}
         local program = Programs.byId[preview.id]
         for _, recipe in ipairs(preview.manifest.recipes) do
           local key = Programs.switchKey(program, recipe.outputForm)
-          stocked[key] = stocked[key]
-            or {
-              label = recipe.outputLabel,
-              items = recipe.stock or {},
-            }
+          if not stocked[key] or #stocked[key].items == 0 then
+            stocked[key] = { label = recipe.outputLabel, items = recipe.stock or {} }
+          end
         end
-        for _, entry in ipairs(program.formChoices) do
+        for _, entry in ipairs(program.stockedForms) do
           local group = stocked[entry[1]]
           if group and #group.items > 0 then
             local names = {}
@@ -382,7 +387,11 @@ local function runUI()
                 or tostring(item.label or item.name)
             end
             add(
-              (program.switchByDestination and entry[2] or group.label or entry[2])
+              (
+                (program.switchByDestination or program.mode == 'components') and entry[2]
+                or group.label
+                or entry[2]
+              )
                 .. ': '
                 .. table.concat(names, ', ')
             )
@@ -620,9 +629,16 @@ local function runUI()
       nav(layout.body + 12, 'Shared interfaces', state.settings == 'shared', function()
         navigate('settings', 'shared')
       end)
+      -- Sidebar sections have their own bounds; derive spacing so adding a
+      -- program cannot cover Current preview or bottom actions.
+      local sectionTop = layout.body + 15
+      local sectionStep = math.min(
+        3,
+        math.floor((layout.scrollFooter - 2 - sectionTop) / math.max(1, #Programs.settings - 1))
+      )
       for n, p in ipairs(Programs.settings) do
         local id = p.id
-        nav(layout.body + 12 + n * 3, p.name, state.settings == id, function()
+        nav(sectionTop + (n - 1) * sectionStep, p.name, state.settings == id, function()
           navigate('settings', id)
         end)
       end
@@ -695,7 +711,7 @@ local function runUI()
       for _, f in ipairs(page) do
         if compact then
           text(34, y, f.label, 42, 'text')
-          editorRow(80, y, 22, f)
+          editorRow(80, y, f.valueWidth or 22, f)
           if page[1].group == 'Tier overrides' then
             local budget = Batch.budget(cfg.batch, f.label)
             text(115, y, budget == 0 and 'Skipped' or budget .. 'x', 40, 'muted')

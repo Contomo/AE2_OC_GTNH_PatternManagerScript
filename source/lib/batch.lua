@@ -284,6 +284,7 @@ function M.resolve(values, materialTier, eut, factor, quantities, materialSource
     recipeTier = recipeTier,
     eut = eut,
     materialSource = materialSource,
+    native = scaling and scaling.native or nil,
   }
   local function scale(target)
     detail.unscaledMultiplier = target
@@ -299,7 +300,7 @@ function M.resolve(values, materialTier, eut, factor, quantities, materialSource
     return target
   end
   if not values or values.mode == 'fixed' then
-    detail.multiplier = scale(factor)
+    detail.multiplier = detail.native and 1 or scale(factor)
     return detail.multiplier, detail
   end
   M.validate(values)
@@ -332,6 +333,12 @@ function M.resolve(values, materialTier, eut, factor, quantities, materialSource
     detail.multiplier = 0
     return 0, detail
   end
+  -- Indivisible machine recipes retain one full native cycle. Tier/voltage
+  -- eligibility still applies, but their ingredients cannot be clamped down.
+  if detail.native then
+    detail.multiplier = 1
+    return 1, detail
+  end
   target = math.min(target, tonumber(values.maxMultiplier))
   target = scale(target)
   for _, q in ipairs(quantities or {}) do
@@ -353,6 +360,9 @@ function M.voltageText(detail)
 end
 
 function M.describe(detail)
+  if detail.native then
+    return 'Native batch  |  Component ' .. detail.materialTier .. '  |  ' .. M.voltageText(detail)
+  end
   local material = detail.materialTier
     or (detail.effectiveTier and (detail.effectiveTier .. ' estimated') or 'unclassified')
   if detail.materialTier and detail.materialSource and detail.materialSource ~= 'quest item' then

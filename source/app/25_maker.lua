@@ -213,6 +213,37 @@ local function explainExisting(plan, snapshot, request, manifest)
     end
   end
 end
+-- Resolve alternate native routes against the same snapshot used for planning.
+-- This reuses installed alternatives without creating competing output recipes.
+local function selectRecipeChoices(hw, manifest, snapshot, destination)
+  if not manifest.choices then
+    return
+  end
+  for index, choices in ipairs(manifest.choices) do
+    gate()
+    local candidateKeys, selected = {}, choices[1]
+    for _, recipe in ipairs(choices) do
+      candidateKeys[recipeKey(hw.data, recipe)] = recipe
+    end
+    local found = false
+    for _, bank in ipairs(snapshot.interfaces) do
+      if bank.role == 'destination' and bank.name == destination(selected) then
+        for _, slot in ipairs(U.keys(bank.patterns)) do
+          local pattern = bank.patterns[slot]
+          local candidate = pattern.kind == 'processing' and candidateKeys[pattern.recipeKey]
+          if candidate then
+            selected, found = candidate, true
+            break
+          end
+        end
+      end
+      if found then
+        break
+      end
+    end
+    manifest.recipes[index] = U.clone(selected)
+  end
+end
 local function scanManifest(c, manifest, routing, progress, control, started)
   validate(c)
   if not started then
@@ -336,6 +367,7 @@ local function scanManifest(c, manifest, routing, progress, control, started)
       )
     end
   end
+  selectRecipeChoices(hw, manifest, snapshot, destination)
   filterCraftableIngots(c, hw, snapshot, manifest, destination)
   local request = {
     recipes = {},
@@ -417,6 +449,8 @@ local function programRouting(c, id)
       sources = sources,
       formDivisors = formDivisors,
       unstable = values.unstable,
+      casingTier = values.casingTier,
+      rubber = values.rubber,
     },
     program
 end
@@ -424,7 +458,8 @@ function C.maker.preview(c, id, progress, control)
   validate(c)
   startWork(c, progress, control)
   local routing, options, program = programRouting(c, id)
-  local data = program.mode == 'singularities' and SingularityData or require('assline_data')
+  local catalogs = { singularities = SingularityData, components = ComponentData }
+  local data = catalogs[program.mode] or require('assline_data')
   local manifest = Modes.compile(data, program.mode, options, gate)
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)
   local groups = {}

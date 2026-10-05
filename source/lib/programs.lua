@@ -1,5 +1,6 @@
 -- Program definitions shared by configuration, navigation and execution.
 local Batch = require('assline_batch')
+local ComponentData = require('assline_component_data')
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -375,6 +376,52 @@ M.list[#M.list + 1] = {
     singularityMultiplier,
   },
 }
+local casingChoices = {}
+for _, name in ipairs(ComponentData.casings) do
+  casingChoices[#casingChoices + 1] = { name, name }
+end
+local casingField = choice(
+  'casingTier',
+  'Installed component casing tier',
+  casingChoices,
+  'LuV',
+  'Upper limit by machine casing; shared progression and voltage constraints still apply.'
+)
+casingField.kind, casingField.group = 'select', 'Recipe selection'
+local rubberField = choice(
+  'rubber',
+  'Component rubber',
+  { { 'sbr', 'SBR' }, { 'silicone', 'Silicone' }, { 'rubber', 'Rubber (LV-EV only)' } },
+  'sbr',
+  'Choose one route. Rubber has no pump/conveyor route at IV through UMV.'
+)
+rubberField.kind, rubberField.group = 'select', 'Recipe selection'
+local componentProgram = {
+  id = 'componentAssembly',
+  name = 'Component Assembly Line',
+  mode = 'components',
+  description = 'Eight component banks, filtered by installed casing tier.',
+  distinctDestinations = true,
+  outputs = {},
+  fields = { casingField, rubberField },
+  stockedForms = {},
+}
+for _, component in ipairs(ComponentData.components) do
+  local key = component.key
+  componentProgram.outputs[key] = key
+  componentProgram.stockedForms[#componentProgram.stockedForms + 1] = { key, component.label }
+  local f = field(
+    key,
+    component.label .. ' (circuit ' .. component.circuit .. ')',
+    '',
+    'Component Assembly Line ' .. component.label
+  )
+  f.compact, f.group, f.valueWidth = true, 'Destinations', 78
+  f.tableLabel, f.valueLabel = 'COMPONENT', 'INTERFACE NAME'
+  f.tableHelp = 'Circuits stay stocked in each bank (IV+). LV-EV recipes need no circuit.'
+  componentProgram.fields[#componentProgram.fields + 1] = f
+end
+M.list[#M.list + 1] = componentProgram
 M.byId, M.settings = {}, {}
 for _, program in ipairs(M.list) do
   if program.mode and program.formChoices then
@@ -389,6 +436,9 @@ for _, program in ipairs(M.list) do
         program.fields[#program.fields + 1] = f
       end
     end
+  end
+  if program.id == 'bender' or program.id == 'fluidShaper' then
+    program.stockedForms = program.formChoices
   end
   M.byId[program.id] = program
   if #program.fields > 0 then

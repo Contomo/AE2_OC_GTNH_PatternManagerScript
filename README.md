@@ -201,6 +201,38 @@ with tiny forms verified against the ore registry. The preview names removals,
 source slots, target slots and skipped-pattern reasons. Pause, Stop and Continue
 use the same transaction journal as the other programs.
 
+**Component Assembly Line** patterns the eight component groups: Motor, Piston,
+Pump, Robot Arm, Conveyor, Emitter, Sensor and Field Generator. Each group gets
+its own destination bank, defaulting to `Component Assembly Line <component>`.
+These eight names must be distinct; multiple interfaces with the same group name
+are all included. Shared editor/donor settings, capacity verification, sorting,
+refills and Pause/Stop/Continue work through the existing maker.
+
+Its **Installed component casing tier** selector limits recipes by their actual
+scraped casing requirement (LV through UXV), separately from recipe voltage.
+In tiered mode the shared progression and voltage gates also apply. The **Component
+rubber** selector chooses SBR, silicone or ordinary rubber. Ordinary rubber has
+no pump/conveyor route at IV through UMV; those exclusions are shown explicitly.
+The interface names are edited together in the Destinations table on settings page 2.
+
+Circuit assignments are Motor 1, Piston 2, Pump 3, Robot Arm 4, Conveyor 5,
+Emitter 6, Sensor 7 and Field Generator 8. These circuits stay stocked in their
+respective buffers and are omitted from patterns. Recipes below IV need no circuit.
+Each pattern requests the complete native batch for **64 components**. Batch
+curves and per-ingredient quantity limits do not shrink or multiply these cycles;
+some native fluid quantities exceed the global default limit. Existing proportional
+patterns are recognized and resized to the native amounts. Compatible installed
+motor and high-tier material alternatives are preferred to a new competing route.
+Changing rubber does not delete old patterns for another rubber; they remain
+visible in Existing as other patterns kept by the shared planner.
+
+`source/tools/build_components.py` checks casing, output and circuit assignments
+against the pack's pinned GT 5.09.54.133 source and obtains identities/counts from
+the full machine export. `source/data/components.json` stores 104 component/tier
+outputs, 282 shared item/fluid identities, and only the ingredient changes for
+the 38 alternate routes. Runtime resolution lives in `source/lib/components.lua`;
+editing, NBT parsing and transfers remain shared application services.
+
 **Singularity line** covers the original Eternal Singularity route: 7 combined
 singularities with 9 distinct base singularities each, for **63 neutronium-compressor
 patterns and 63 ordinary compressor block patterns**. Configure its two destination

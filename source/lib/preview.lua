@@ -38,11 +38,8 @@ function M.planRows(plan, manifest)
   )
   if manifest.source.batchPolicy then
     add(manifest.source.batchPolicy, 'muted')
-    if manifest.tierExcluded > 0 then
-      add(
-        manifest.tierExcluded .. ' block routes excluded by tier settings; see Excluded.',
-        'yellow'
-      )
+    if (manifest.tierExcluded or 0) > 0 then
+      add(manifest.tierExcluded .. ' routes excluded by settings; see Excluded.', 'yellow')
     end
   elseif manifest.policy and manifest.policy.batch and manifest.policy.batch.mode == 'tiered' then
     add(

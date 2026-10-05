@@ -1,0 +1,6839 @@
+{
+  "components": [
+    {
+      "key": "motor",
+      "label": "Motor",
+      "circuit": 1
+    },
+    {
+      "key": "piston",
+      "label": "Piston",
+      "circuit": 2
+    },
+    {
+      "key": "pump",
+      "label": "Pump",
+      "circuit": 3
+    },
+    {
+      "key": "robotArm",
+      "label": "Robot Arm",
+      "circuit": 4
+    },
+    {
+      "key": "conveyor",
+      "label": "Conveyor",
+      "circuit": 5
+    },
+    {
+      "key": "emitter",
+      "label": "Emitter",
+      "circuit": 6
+    },
+    {
+      "key": "sensor",
+      "label": "Sensor",
+      "circuit": 7
+    },
+    {
+      "key": "fieldGenerator",
+      "label": "Field Generator",
+      "circuit": 8
+    }
+  ],
+  "casings": [
+    "LV",
+    "MV",
+    "HV",
+    "EV",
+    "IV",
+    "LuV",
+    "ZPM",
+    "UV",
+    "UHV",
+    "UEV",
+    "UIV",
+    "UMV",
+    "UXV"
+  ],
+  "names": [
+    "gregtech:gt.blockmachines",
+    "gregtech:gt.integrated_circuit",
+    "molten.mutatedlivingsolder",
+    "dimensionallyshiftedsuperfluid",
+    "protohalkonitebase",
+    "molten.infinity",
+    "molten.transcendentmetal",
+    "molten.tengampurified",
+    "molten.celestialtungsten",
+    "gregtech:gt.metaitem.01",
+    "molten.creon",
+    "molten.mellion",
+    "molten.hypogen",
+    "molten.spacetime",
+    "GoodGenerator:circuitWrap",
+    "gregtech:gt.metaitem.03",
+    "molten.magnetohydrodynamicallyconstrainedstarmatter",
+    "molten.eternity",
+    "molten.universium",
+    "molten.magmatter",
+    "molten.superconductorumvbase",
+    "molten.silicone",
+    "molten.draconiumawakened",
+    "molten.styrenebutadienerubber",
+    "molten.radoxpoly",
+    "molten.kevlar",
+    "molten.quantium",
+    "gregtech:gt.blockframes",
+    "molten.arceusalloy2b",
+    "molten.lafiumcompound",
+    "molten.cinobitea243",
+    "molten.pikyonium64b",
+    "molten.quantum",
+    "molten.astraltitanium",
+    "molten.titansteel",
+    "lubricant",
+    "molten.cosmicneutronium",
+    "molten.indalloy140",
+    "molten.neutronium",
+    "molten.naquadria",
+    "molten.samarium",
+    "gregtech:gt.metaitem.02",
+    "molten.ruridit",
+    "molten.hsss",
+    "molten.europium",
+    "molten.naquadahalloy",
+    "molten.americium",
+    "molten.rubber",
+    "molten.niobiumtitanium",
+    "molten.enderium",
+    "molten.naquadah",
+    "molten.vanadiumgallium",
+    "molten.bedrockium",
+    "molten.draconium",
+    "molten.redsteel",
+    "molten.titanium",
+    "minecraft:nether_star",
+    "molten.hssg",
+    "molten.tritanium",
+    "molten.brass",
+    "minecraft:ender_pearl",
+    "molten.electrum",
+    "minecraft:ender_eye",
+    "molten.chrome",
+    "molten.platinum",
+    "molten.iridium",
+    "molten.gallium",
+    "molten.trinium",
+    "molten.osmiridium",
+    "molten.electrumflux",
+    "molten.infinitycatalyst",
+    "bartworks:gt.bwMetaGeneratedplateDense"
+  ],
+  "items": [
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Nether Star Cable",
+      "damage": 11361
+    },
+    {
+      "type": "item",
+      "name": 2,
+      "label": "Programmed Circuit",
+      "damage": 1
+    },
+    {
+      "type": "fluid",
+      "name": 3,
+      "label": "Mutated Living Solder"
+    },
+    {
+      "type": "fluid",
+      "name": 4,
+      "label": "Dimensionally Shifted Superfluid"
+    },
+    {
+      "type": "fluid",
+      "name": 5,
+      "label": "Molten Proto-Halkonite Steel Base"
+    },
+    {
+      "type": "fluid",
+      "name": 6,
+      "label": "Molten Infinity"
+    },
+    {
+      "type": "fluid",
+      "name": 7,
+      "label": "Molten Transcendent Metal"
+    },
+    {
+      "type": "fluid",
+      "name": 8,
+      "label": "Molten Purified Tengam"
+    },
+    {
+      "type": "fluid",
+      "name": 9,
+      "label": "Molten Celestial Tungsten"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (UIV)",
+      "damage": 32017
+    },
+    {
+      "type": "fluid",
+      "name": 11,
+      "label": "Molten Creon"
+    },
+    {
+      "type": "fluid",
+      "name": 12,
+      "label": "Molten Mellion"
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Quantium Cable",
+      "damage": 11381
+    },
+    {
+      "type": "fluid",
+      "name": 13,
+      "label": "Molten Hypogen"
+    },
+    {
+      "type": "fluid",
+      "name": 14,
+      "label": "Molten SpaceTime"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (UMV)",
+      "damage": 32018
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Energised Tesseract",
+      "damage": 32417
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of UHV Circuits",
+      "damage": 9
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x SpaceTime Wire",
+      "damage": 2611
+    },
+    {
+      "type": "item",
+      "name": 16,
+      "label": "Gold Nanites",
+      "damage": 4086
+    },
+    {
+      "type": "fluid",
+      "name": 17,
+      "label": "Molten Magnetohydrodynamically Constrained Star Matter"
+    },
+    {
+      "type": "fluid",
+      "name": 18,
+      "label": "Molten Eternity"
+    },
+    {
+      "type": "fluid",
+      "name": 19,
+      "label": "Molten Universium"
+    },
+    {
+      "type": "fluid",
+      "name": 20,
+      "label": "Molten Magmatter"
+    },
+    {
+      "type": "fluid",
+      "name": 21,
+      "label": "Molten Superconductor Base UMV"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (UXV)",
+      "damage": 32019
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Transcendent Metal Plate",
+      "damage": 22581
+    },
+    {
+      "type": "item",
+      "name": 2,
+      "label": "Programmed Circuit",
+      "damage": 2
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (UIV)",
+      "damage": 32021
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense SpaceTime Plate",
+      "damage": 22588
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (UMV)",
+      "damage": 32022
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (UXV)",
+      "damage": 32023
+    },
+    {
+      "type": "item",
+      "name": 2,
+      "label": "Programmed Circuit",
+      "damage": 3
+    },
+    {
+      "type": "fluid",
+      "name": 22,
+      "label": "Molten Silicone Rubber",
+      "polymer": "silicone"
+    },
+    {
+      "type": "fluid",
+      "name": 23,
+      "label": "Molten Awakened Draconium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (UIV)",
+      "damage": 32025
+    },
+    {
+      "type": "fluid",
+      "name": 24,
+      "label": "Molten Styrene-Butadiene Rubber (SBR)",
+      "polymer": "sbr"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (UMV)",
+      "damage": 32026
+    },
+    {
+      "type": "fluid",
+      "name": 25,
+      "label": "Molten Radox Polymer"
+    },
+    {
+      "type": "fluid",
+      "name": 26,
+      "label": "Molten Kevlar"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (UXV)",
+      "damage": 32027
+    },
+    {
+      "type": "item",
+      "name": 2,
+      "label": "Programmed Circuit",
+      "damage": 5
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (UIV)",
+      "damage": 32029
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (UMV)",
+      "damage": 32030
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (UXV)",
+      "damage": 32031
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of UIV Circuits",
+      "damage": 11
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of UEV Circuits",
+      "damage": 10
+    },
+    {
+      "type": "item",
+      "name": 2,
+      "label": "Programmed Circuit",
+      "damage": 4
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (UIV)",
+      "damage": 32033
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of UMV Circuits",
+      "damage": 12
+    },
+    {
+      "type": "fluid",
+      "name": 27,
+      "label": "Molten Quantium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (UMV)",
+      "damage": 32034
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of UXV Circuits",
+      "damage": 13
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (UXV)",
+      "damage": 32035
+    },
+    {
+      "type": "item",
+      "name": 28,
+      "label": "Transcendent Metal Frame Box",
+      "damage": 581
+    },
+    {
+      "type": "item",
+      "name": 16,
+      "label": "Nuclear Star",
+      "damage": 32230
+    },
+    {
+      "type": "item",
+      "name": 2,
+      "label": "Programmed Circuit",
+      "damage": 6
+    },
+    {
+      "type": "fluid",
+      "name": 29,
+      "label": "Molten Arceus Alloy 2B"
+    },
+    {
+      "type": "fluid",
+      "name": 30,
+      "label": "Molten Lafium Compound"
+    },
+    {
+      "type": "fluid",
+      "name": 31,
+      "label": "Molten Cinobite A243"
+    },
+    {
+      "type": "fluid",
+      "name": 32,
+      "label": "Molten Pikyonium 64B"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (UIV)",
+      "damage": 32037
+    },
+    {
+      "type": "item",
+      "name": 28,
+      "label": "SpaceTime Frame Box",
+      "damage": 588
+    },
+    {
+      "type": "fluid",
+      "name": 33,
+      "label": "Molten Quantum"
+    },
+    {
+      "type": "fluid",
+      "name": 34,
+      "label": "Molten Astral Titanium"
+    },
+    {
+      "type": "fluid",
+      "name": 35,
+      "label": "Molten Titansteel"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (UMV)",
+      "damage": 32038
+    },
+    {
+      "type": "item",
+      "name": 28,
+      "label": "Magnetohydrodynamically Constrained Star Matter Frame Box",
+      "damage": 583
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (UXV)",
+      "damage": 32039
+    },
+    {
+      "type": "item",
+      "name": 2,
+      "label": "Programmed Circuit",
+      "damage": 7
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (UIV)",
+      "damage": 32041
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (UMV)",
+      "damage": 32042
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (UXV)",
+      "damage": 32043
+    },
+    {
+      "type": "item",
+      "name": 2,
+      "label": "Programmed Circuit",
+      "damage": 8
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (UIV)",
+      "damage": 32045
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (UMV)",
+      "damage": 32046
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of MAX Circuits",
+      "damage": 14
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (UXV)",
+      "damage": 32047
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Draconium Cable",
+      "damage": 11341
+    },
+    {
+      "type": "fluid",
+      "name": 36,
+      "label": "Lubricant"
+    },
+    {
+      "type": "fluid",
+      "name": 37,
+      "label": "Molten Cosmic Neutronium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (UEV)",
+      "damage": 32595
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Bedrockium Cable",
+      "damage": 11321
+    },
+    {
+      "type": "fluid",
+      "name": 38,
+      "label": "Molten Indalloy 140"
+    },
+    {
+      "type": "fluid",
+      "name": 39,
+      "label": "Molten Neutronium"
+    },
+    {
+      "type": "fluid",
+      "name": 40,
+      "label": "Molten Naquadria"
+    },
+    {
+      "type": "fluid",
+      "name": 41,
+      "label": "Molten Samarium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (UHV)",
+      "damage": 32596
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Magnetic Iron Rod",
+      "damage": 22354
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Iron Rod",
+      "damage": 22032
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Copper Wire",
+      "damage": 1365
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Tin Cable",
+      "damage": 1251
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (LV)",
+      "damage": 32600
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Magnetic Steel Rod",
+      "damage": 22355
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Steel Rod",
+      "damage": 22305
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Annealed Copper Wire",
+      "damage": 1385
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Aluminium Rod",
+      "damage": 22019
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Cupronickel Wire",
+      "damage": 1345
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Copper Cable",
+      "damage": 1371
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (MV)",
+      "damage": 32601
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Annealed Copper Cable",
+      "damage": 1391
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Stainless Steel Rod",
+      "damage": 22306
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Electrum Wire",
+      "damage": 1445
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Silver Cable",
+      "damage": 1471
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (HV)",
+      "damage": 32602
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Magnetic Neodymium Rod",
+      "damage": 22356
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Titanium Rod",
+      "damage": 22028
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Black Steel Wire",
+      "damage": 1545
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Aluminium Cable",
+      "damage": 1591
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (EV)",
+      "damage": 32603
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Tungstensteel Rod",
+      "damage": 22316
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Graphene Wire",
+      "damage": 1605
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Tungsten Cable",
+      "damage": 1691
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (IV)",
+      "damage": 32604
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Magnetic Samarium Rod",
+      "damage": 22399
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Yttrium Barium Cuprate Cable",
+      "damage": 1771
+    },
+    {
+      "type": "fluid",
+      "name": 43,
+      "label": "Molten Ruridit"
+    },
+    {
+      "type": "fluid",
+      "name": 44,
+      "label": "Molten HSS-S"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (LuV)",
+      "damage": 32606
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Vanadium-Gallium Cable",
+      "damage": 1751
+    },
+    {
+      "type": "fluid",
+      "name": 45,
+      "label": "Molten Europium"
+    },
+    {
+      "type": "fluid",
+      "name": 46,
+      "label": "Molten Naquadah Alloy"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (ZPM)",
+      "damage": 32607
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Naquadah Alloy Cable",
+      "damage": 1811
+    },
+    {
+      "type": "fluid",
+      "name": 47,
+      "label": "Molten Americium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Motor (UV)",
+      "damage": 32608
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Tin Rotor",
+      "damage": 21057
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Tin Screw",
+      "damage": 27057
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "Bronze Fluid Pipe",
+      "damage": 5122
+    },
+    {
+      "type": "fluid",
+      "name": 48,
+      "label": "Molten Rubber",
+      "polymer": "rubber"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (LV)",
+      "damage": 32610
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Bronze Rotor",
+      "damage": 21300
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Bronze Screw",
+      "damage": 27300
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "Steel Fluid Pipe",
+      "damage": 5132
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (MV)",
+      "damage": 32611
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Steel Rotor",
+      "damage": 21305
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Steel Screw",
+      "damage": 27305
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "16x Gold Cable",
+      "damage": 1431
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "Stainless Steel Fluid Pipe",
+      "damage": 5142
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (HV)",
+      "damage": 32612
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Stainless Steel Rotor",
+      "damage": 21306
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Stainless Steel Screw",
+      "damage": 27306
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "Titanium Fluid Pipe",
+      "damage": 5152
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (EV)",
+      "damage": 32613
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Tungstensteel Rotor",
+      "damage": 21316
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Tungstensteel Screw",
+      "damage": 27316
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "Tungstensteel Fluid Pipe",
+      "damage": 5162
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (IV)",
+      "damage": 32614
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense HSS-S Plate",
+      "damage": 22374
+    },
+    {
+      "type": "fluid",
+      "name": 49,
+      "label": "Molten Niobium-Titanium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (LuV)",
+      "damage": 32615
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Naquadah Alloy Plate",
+      "damage": 22325
+    },
+    {
+      "type": "fluid",
+      "name": 50,
+      "label": "Molten Enderium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (ZPM)",
+      "damage": 32616
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Neutronium Plate",
+      "damage": 22129
+    },
+    {
+      "type": "fluid",
+      "name": 51,
+      "label": "Molten Naquadah"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (UV)",
+      "damage": 32617
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Cosmic Neutronium Plate",
+      "damage": 22982
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (UHV)",
+      "damage": 32618
+    },
+    {
+      "type": "item",
+      "name": 1,
+      "label": "Large Nether Star Fluid Pipe",
+      "damage": 5223
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Infinity Plate",
+      "damage": 22397
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Pump (UEV)",
+      "damage": 32619
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Rubber Sheet",
+      "polymer": "rubber",
+      "damage": 22880
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (LV)",
+      "damage": 32630
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Silicone Rubber Sheet",
+      "polymer": "silicone",
+      "damage": 22471
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Styrene-Butadiene Rubber (SBR) Sheet",
+      "polymer": "sbr",
+      "damage": 22635
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (MV)",
+      "damage": 32631
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (HV)",
+      "damage": 32632
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (EV)",
+      "damage": 32633
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (IV)",
+      "damage": 32634
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (LuV)",
+      "damage": 32635
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (ZPM)",
+      "damage": 32636
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (UV)",
+      "damage": 32637
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (UHV)",
+      "damage": 32638
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Conveyor Module (UEV)",
+      "damage": 32639
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Steel Plate",
+      "damage": 22305
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Steel Gear",
+      "damage": 31305
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (LV)",
+      "damage": 32640
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Aluminium Plate",
+      "damage": 22019
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Aluminium Gear",
+      "damage": 31019
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (MV)",
+      "damage": 32641
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Stainless Steel Plate",
+      "damage": 22306
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Stainless Steel Gear",
+      "damage": 31306
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (HV)",
+      "damage": 32642
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Titanium Plate",
+      "damage": 22028
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Titanium Gear",
+      "damage": 31028
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (EV)",
+      "damage": 32643
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Tungstensteel Plate",
+      "damage": 22316
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Tungstensteel Gear",
+      "damage": 31316
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (IV)",
+      "damage": 32644
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (LuV)",
+      "damage": 32645
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (ZPM)",
+      "damage": 32646
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (UV)",
+      "damage": 32647
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (UHV)",
+      "damage": 32648
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Electric Piston (UEV)",
+      "damage": 32649
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of LV Circuits",
+      "damage": 1
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (LV)",
+      "damage": 32650
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of MV Circuits",
+      "damage": 2
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (MV)",
+      "damage": 32651
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of HV Circuits",
+      "damage": 3
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (HV)",
+      "damage": 32652
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of EV Circuits",
+      "damage": 4
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (EV)",
+      "damage": 32653
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of IV Circuits",
+      "damage": 5
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (IV)",
+      "damage": 32654
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of LuV Circuits",
+      "damage": 6
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (LuV)",
+      "damage": 32655
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of ZPM Circuits",
+      "damage": 7
+    },
+    {
+      "type": "fluid",
+      "name": 52,
+      "label": "Molten Vanadium-Gallium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (ZPM)",
+      "damage": 32656
+    },
+    {
+      "type": "item",
+      "name": 15,
+      "label": "Wrap of UV Circuits",
+      "damage": 8
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (UV)",
+      "damage": 32657
+    },
+    {
+      "type": "fluid",
+      "name": 53,
+      "label": "Molten Bedrockium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (UHV)",
+      "damage": 32658
+    },
+    {
+      "type": "fluid",
+      "name": 54,
+      "label": "Molten Draconium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Robot Arm (UEV)",
+      "damage": 32659
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Enderpearl Plate",
+      "damage": 17532
+    },
+    {
+      "type": "fluid",
+      "name": 55,
+      "label": "Molten Red Steel"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (LV)",
+      "damage": 32670
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Endereye Plate",
+      "damage": 17533
+    },
+    {
+      "type": "fluid",
+      "name": 56,
+      "label": "Molten Titanium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (MV)",
+      "damage": 32671
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Quantum Eye",
+      "damage": 32724
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (HV)",
+      "damage": 32672
+    },
+    {
+      "type": "item",
+      "name": 57,
+      "label": "Nether Star",
+      "damage": 0
+    },
+    {
+      "type": "fluid",
+      "name": 58,
+      "label": "Molten HSS-G"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (EV)",
+      "damage": 32673
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Quantum Star",
+      "damage": 32725
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (IV)",
+      "damage": 32674
+    },
+    {
+      "type": "item",
+      "name": 28,
+      "label": "HSS-S Frame Box",
+      "damage": 374
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (LuV)",
+      "damage": 32685
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (LuV)",
+      "damage": 32675
+    },
+    {
+      "type": "item",
+      "name": 28,
+      "label": "Naquadah Alloy Frame Box",
+      "damage": 325
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (ZPM)",
+      "damage": 32686
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (ZPM)",
+      "damage": 32676
+    },
+    {
+      "type": "item",
+      "name": 28,
+      "label": "Neutronium Frame Box",
+      "damage": 129
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Gravi Star",
+      "damage": 32726
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (UV)",
+      "damage": 32687
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (UV)",
+      "damage": 32677
+    },
+    {
+      "type": "item",
+      "name": 28,
+      "label": "Cosmic Neutronium Frame Box",
+      "damage": 982
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (UHV)",
+      "damage": 32688
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (UHV)",
+      "damage": 32678
+    },
+    {
+      "type": "item",
+      "name": 28,
+      "label": "Infinity Frame Box",
+      "damage": 397
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (UEV)",
+      "damage": 32689
+    },
+    {
+      "type": "fluid",
+      "name": 59,
+      "label": "Molten Tritanium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Field Generator (UEV)",
+      "damage": 32679
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Certus Quartz",
+      "damage": 8516
+    },
+    {
+      "type": "fluid",
+      "name": 60,
+      "label": "Molten Brass"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (LV)",
+      "damage": 32680
+    },
+    {
+      "type": "item",
+      "name": 61,
+      "label": "Ender Pearl",
+      "damage": 0
+    },
+    {
+      "type": "fluid",
+      "name": 62,
+      "label": "Molten Electrum"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (MV)",
+      "damage": 32681
+    },
+    {
+      "type": "item",
+      "name": 63,
+      "label": "Eye of Ender",
+      "damage": 0
+    },
+    {
+      "type": "fluid",
+      "name": 64,
+      "label": "Molten Chrome"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (HV)",
+      "damage": 32682
+    },
+    {
+      "type": "fluid",
+      "name": 65,
+      "label": "Molten Platinum"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (EV)",
+      "damage": 32683
+    },
+    {
+      "type": "fluid",
+      "name": 66,
+      "label": "Molten Iridium"
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Emitter (IV)",
+      "damage": 32684
+    },
+    {
+      "type": "fluid",
+      "name": 67,
+      "label": "Molten Gallium"
+    },
+    {
+      "type": "fluid",
+      "name": 68,
+      "label": "Molten Trinium"
+    },
+    {
+      "type": "fluid",
+      "name": 69,
+      "label": "Molten Osmiridium"
+    },
+    {
+      "type": "fluid",
+      "name": 70,
+      "label": "Molten Fluxed Electrum"
+    },
+    {
+      "type": "fluid",
+      "name": 71,
+      "label": "Molten Infinity Catalyst"
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Brass Rod",
+      "damage": 22301
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (LV)",
+      "damage": 32690
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Flawless Emerald",
+      "damage": 29501
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Electrum Rod",
+      "damage": 22303
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (MV)",
+      "damage": 32691
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Chrome Rod",
+      "damage": 22030
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (HV)",
+      "damage": 32692
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Platinum Rod",
+      "damage": 22085
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (EV)",
+      "damage": 32693
+    },
+    {
+      "type": "item",
+      "name": 42,
+      "label": "Long Iridium Rod",
+      "damage": 22084
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (IV)",
+      "damage": 32694
+    },
+    {
+      "type": "item",
+      "name": 72,
+      "label": "Dense Ruridit Plate",
+      "damage": 90
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (LuV)",
+      "damage": 32695
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Dense Osmiridium Plate",
+      "damage": 22317
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (ZPM)",
+      "damage": 32696
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (UV)",
+      "damage": 32697
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (UHV)",
+      "damage": 32698
+    },
+    {
+      "type": "item",
+      "name": 10,
+      "label": "Sensor (UEV)",
+      "damage": 32699
+    }
+  ],
+  "recipes": [
+    {
+      "component": 1,
+      "tier": "LV",
+      "casing": 1,
+      "output": 93,
+      "yield": 64,
+      "eut": 7,
+      "inputs": [
+        [
+          94,
+          24
+        ],
+        [
+          95,
+          48
+        ],
+        [
+          96,
+          12
+        ],
+        [
+          92,
+          6
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            96
+          ],
+          "set": [
+            [
+              91,
+              12
+            ]
+          ]
+        },
+        {
+          "remove": [
+            94,
+            95
+          ],
+          "set": [
+            [
+              89,
+              24
+            ],
+            [
+              90,
+              48
+            ]
+          ]
+        },
+        {
+          "remove": [
+            94,
+            95,
+            96
+          ],
+          "set": [
+            [
+              89,
+              24
+            ],
+            [
+              90,
+              48
+            ],
+            [
+              91,
+              12
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 1,
+      "tier": "MV",
+      "casing": 2,
+      "output": 100,
+      "yield": 64,
+      "eut": 30,
+      "inputs": [
+        [
+          94,
+          24
+        ],
+        [
+          97,
+          48
+        ],
+        [
+          98,
+          24
+        ],
+        [
+          101,
+          6
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            101
+          ],
+          "set": [
+            [
+              99,
+              6
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 1,
+      "tier": "HV",
+      "casing": 3,
+      "output": 105,
+      "yield": 64,
+      "eut": 120,
+      "inputs": [
+        [
+          94,
+          24
+        ],
+        [
+          102,
+          48
+        ],
+        [
+          103,
+          48
+        ],
+        [
+          104,
+          12
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 1,
+      "tier": "EV",
+      "casing": 4,
+      "output": 110,
+      "yield": 64,
+      "eut": 480,
+      "inputs": [
+        [
+          106,
+          24
+        ],
+        [
+          107,
+          48
+        ],
+        [
+          108,
+          48
+        ],
+        [
+          109,
+          12
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 1,
+      "tier": "IV",
+      "casing": 5,
+      "output": 114,
+      "yield": 64,
+      "eut": 1920,
+      "inputs": [
+        [
+          106,
+          24
+        ],
+        [
+          111,
+          48
+        ],
+        [
+          112,
+          48
+        ],
+        [
+          113,
+          12
+        ]
+      ],
+      "stock": [
+        [
+          2,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 1,
+      "tier": "LuV",
+      "casing": 6,
+      "output": 119,
+      "yield": 64,
+      "eut": 7680,
+      "inputs": [
+        [
+          115,
+          24
+        ],
+        [
+          116,
+          6
+        ],
+        [
+          84,
+          6912
+        ],
+        [
+          80,
+          12000
+        ],
+        [
+          117,
+          110592
+        ],
+        [
+          118,
+          13824
+        ]
+      ],
+      "stock": [
+        [
+          2,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 1,
+      "tier": "ZPM",
+      "casing": 7,
+      "output": 123,
+      "yield": 64,
+      "eut": 30720,
+      "inputs": [
+        [
+          115,
+          48
+        ],
+        [
+          120,
+          24
+        ],
+        [
+          84,
+          13824
+        ],
+        [
+          80,
+          36000
+        ],
+        [
+          121,
+          165888
+        ],
+        [
+          122,
+          46848
+        ]
+      ],
+      "stock": [
+        [
+          2,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 1,
+      "tier": "UV",
+      "casing": 8,
+      "output": 126,
+      "yield": 64,
+      "eut": 122880,
+      "inputs": [
+        [
+          124,
+          24
+        ],
+        [
+          84,
+          62208
+        ],
+        [
+          80,
+          96000
+        ],
+        [
+          125,
+          331776
+        ],
+        [
+          86,
+          62208
+        ],
+        [
+          85,
+          46848
+        ],
+        [
+          87,
+          13824
+        ]
+      ],
+      "stock": [
+        [
+          2,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 1,
+      "tier": "UHV",
+      "casing": 9,
+      "output": 88,
+      "yield": 64,
+      "eut": 491520,
+      "inputs": [
+        [
+          83,
+          24
+        ],
+        [
+          84,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          85,
+          442368
+        ],
+        [
+          86,
+          124416
+        ],
+        [
+          81,
+          93696
+        ],
+        [
+          87,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          2,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 1,
+      "tier": "UEV",
+      "casing": 10,
+      "output": 82,
+      "yield": 64,
+      "eut": 1966080,
+      "inputs": [
+        [
+          79,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          81,
+          442368
+        ],
+        [
+          6,
+          148992
+        ],
+        [
+          51,
+          124416
+        ],
+        [
+          8,
+          55296
+        ]
+      ],
+      "stock": [
+        [
+          2,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 1,
+      "tier": "UIV",
+      "casing": 11,
+      "output": 10,
+      "yield": 64,
+      "eut": 7864320,
+      "inputs": [
+        [
+          1,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          302592
+        ],
+        [
+          5,
+          442368
+        ],
+        [
+          6,
+          442368
+        ],
+        [
+          7,
+          148992
+        ],
+        [
+          8,
+          110592
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          2,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            6
+          ],
+          "set": [
+            [
+              5,
+              221184
+            ],
+            [
+              11,
+              221184
+            ],
+            [
+              12,
+              221184
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 1,
+      "tier": "UMV",
+      "casing": 12,
+      "output": 16,
+      "yield": 64,
+      "eut": 31457280,
+      "inputs": [
+        [
+          13,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          192000
+        ],
+        [
+          14,
+          470016
+        ],
+        [
+          8,
+          221184
+        ],
+        [
+          15,
+          148992
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          2,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 1,
+      "tier": "UXV",
+      "casing": 13,
+      "output": 26,
+      "yield": 64,
+      "eut": 125829120,
+      "inputs": [
+        [
+          17,
+          48
+        ],
+        [
+          18,
+          114
+        ],
+        [
+          19,
+          48
+        ],
+        [
+          20,
+          12
+        ],
+        [
+          4,
+          384000
+        ],
+        [
+          21,
+          287232
+        ],
+        [
+          22,
+          259584
+        ],
+        [
+          23,
+          138240
+        ],
+        [
+          24,
+          110592
+        ],
+        [
+          25,
+          110592
+        ],
+        [
+          15,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          2,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "LV",
+      "casing": 1,
+      "output": 178,
+      "yield": 64,
+      "eut": 7,
+      "inputs": [
+        [
+          93,
+          48
+        ],
+        [
+          176,
+          16
+        ],
+        [
+          95,
+          48
+        ],
+        [
+          92,
+          6
+        ],
+        [
+          177,
+          12
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "MV",
+      "casing": 2,
+      "output": 181,
+      "yield": 64,
+      "eut": 30,
+      "inputs": [
+        [
+          100,
+          48
+        ],
+        [
+          179,
+          16
+        ],
+        [
+          97,
+          48
+        ],
+        [
+          99,
+          6
+        ],
+        [
+          180,
+          12
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "HV",
+      "casing": 3,
+      "output": 184,
+      "yield": 64,
+      "eut": 120,
+      "inputs": [
+        [
+          105,
+          48
+        ],
+        [
+          182,
+          16
+        ],
+        [
+          102,
+          48
+        ],
+        [
+          138,
+          6
+        ],
+        [
+          183,
+          12
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "EV",
+      "casing": 4,
+      "output": 187,
+      "yield": 64,
+      "eut": 480,
+      "inputs": [
+        [
+          110,
+          48
+        ],
+        [
+          185,
+          16
+        ],
+        [
+          107,
+          48
+        ],
+        [
+          109,
+          6
+        ],
+        [
+          186,
+          12
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "IV",
+      "casing": 5,
+      "output": 190,
+      "yield": 64,
+      "eut": 1920,
+      "inputs": [
+        [
+          114,
+          48
+        ],
+        [
+          188,
+          16
+        ],
+        [
+          111,
+          48
+        ],
+        [
+          113,
+          6
+        ],
+        [
+          189,
+          12
+        ]
+      ],
+      "stock": [
+        [
+          28,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "LuV",
+      "casing": 6,
+      "output": 191,
+      "yield": 64,
+      "eut": 7680,
+      "inputs": [
+        [
+          119,
+          48
+        ],
+        [
+          149,
+          32
+        ],
+        [
+          116,
+          12
+        ],
+        [
+          84,
+          6912
+        ],
+        [
+          80,
+          12000
+        ],
+        [
+          118,
+          86784
+        ]
+      ],
+      "stock": [
+        [
+          28,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "ZPM",
+      "casing": 7,
+      "output": 192,
+      "yield": 64,
+      "eut": 30720,
+      "inputs": [
+        [
+          123,
+          48
+        ],
+        [
+          152,
+          32
+        ],
+        [
+          120,
+          48
+        ],
+        [
+          84,
+          13824
+        ],
+        [
+          80,
+          36000
+        ],
+        [
+          122,
+          86784
+        ]
+      ],
+      "stock": [
+        [
+          28,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "UV",
+      "casing": 8,
+      "output": 193,
+      "yield": 64,
+      "eut": 122880,
+      "inputs": [
+        [
+          126,
+          48
+        ],
+        [
+          155,
+          32
+        ],
+        [
+          124,
+          48
+        ],
+        [
+          84,
+          62208
+        ],
+        [
+          80,
+          96000
+        ],
+        [
+          85,
+          86784
+        ],
+        [
+          86,
+          62208
+        ]
+      ],
+      "stock": [
+        [
+          28,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "UHV",
+      "casing": 9,
+      "output": 194,
+      "yield": 64,
+      "eut": 491520,
+      "inputs": [
+        [
+          88,
+          48
+        ],
+        [
+          158,
+          32
+        ],
+        [
+          83,
+          48
+        ],
+        [
+          84,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          81,
+          173568
+        ],
+        [
+          86,
+          124416
+        ]
+      ],
+      "stock": [
+        [
+          28,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "UEV",
+      "casing": 10,
+      "output": 195,
+      "yield": 64,
+      "eut": 1966080,
+      "inputs": [
+        [
+          82,
+          48
+        ],
+        [
+          161,
+          32
+        ],
+        [
+          79,
+          48
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          6,
+          173568
+        ],
+        [
+          51,
+          124416
+        ]
+      ],
+      "stock": [
+        [
+          28,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "UIV",
+      "casing": 11,
+      "output": 29,
+      "yield": 64,
+      "eut": 7864320,
+      "inputs": [
+        [
+          10,
+          48
+        ],
+        [
+          27,
+          32
+        ],
+        [
+          1,
+          48
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          192000
+        ],
+        [
+          7,
+          173568
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          28,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "UMV",
+      "casing": 12,
+      "output": 31,
+      "yield": 64,
+      "eut": 31457280,
+      "inputs": [
+        [
+          16,
+          48
+        ],
+        [
+          30,
+          32
+        ],
+        [
+          13,
+          48
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          192000
+        ],
+        [
+          15,
+          173568
+        ],
+        [
+          14,
+          27648
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          28,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 2,
+      "tier": "UXV",
+      "casing": 13,
+      "output": 32,
+      "yield": 64,
+      "eut": 125829120,
+      "inputs": [
+        [
+          26,
+          48
+        ],
+        [
+          18,
+          84
+        ],
+        [
+          20,
+          12
+        ],
+        [
+          4,
+          384000
+        ],
+        [
+          21,
+          242688
+        ],
+        [
+          22,
+          215040
+        ],
+        [
+          15,
+          138240
+        ],
+        [
+          24,
+          82944
+        ],
+        [
+          23,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          28,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 3,
+      "tier": "LV",
+      "casing": 1,
+      "output": 131,
+      "yield": 64,
+      "eut": 7,
+      "inputs": [
+        [
+          93,
+          48
+        ],
+        [
+          127,
+          48
+        ],
+        [
+          128,
+          48
+        ],
+        [
+          92,
+          3
+        ],
+        [
+          129,
+          48
+        ],
+        [
+          37,
+          3456
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            37
+          ],
+          "set": [
+            [
+              130,
+              3456
+            ]
+          ]
+        },
+        {
+          "remove": [
+            37
+          ],
+          "set": [
+            [
+              34,
+              3456
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "MV",
+      "casing": 2,
+      "output": 135,
+      "yield": 64,
+      "eut": 30,
+      "inputs": [
+        [
+          100,
+          48
+        ],
+        [
+          132,
+          48
+        ],
+        [
+          133,
+          48
+        ],
+        [
+          99,
+          3
+        ],
+        [
+          134,
+          48
+        ],
+        [
+          130,
+          3456
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            130
+          ],
+          "set": [
+            [
+              37,
+              3456
+            ]
+          ]
+        },
+        {
+          "remove": [
+            130
+          ],
+          "set": [
+            [
+              34,
+              3456
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "HV",
+      "casing": 3,
+      "output": 140,
+      "yield": 64,
+      "eut": 120,
+      "inputs": [
+        [
+          105,
+          48
+        ],
+        [
+          136,
+          48
+        ],
+        [
+          137,
+          48
+        ],
+        [
+          138,
+          3
+        ],
+        [
+          139,
+          48
+        ],
+        [
+          130,
+          3456
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            130
+          ],
+          "set": [
+            [
+              37,
+              3456
+            ]
+          ]
+        },
+        {
+          "remove": [
+            130
+          ],
+          "set": [
+            [
+              34,
+              3456
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "EV",
+      "casing": 4,
+      "output": 144,
+      "yield": 64,
+      "eut": 480,
+      "inputs": [
+        [
+          110,
+          48
+        ],
+        [
+          141,
+          48
+        ],
+        [
+          142,
+          48
+        ],
+        [
+          109,
+          3
+        ],
+        [
+          143,
+          48
+        ],
+        [
+          37,
+          3456
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            37
+          ],
+          "set": [
+            [
+              34,
+              3456
+            ]
+          ]
+        },
+        {
+          "remove": [
+            37
+          ],
+          "set": [
+            [
+              130,
+              3456
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "IV",
+      "casing": 5,
+      "output": 148,
+      "yield": 64,
+      "eut": 1920,
+      "inputs": [
+        [
+          114,
+          48
+        ],
+        [
+          145,
+          48
+        ],
+        [
+          146,
+          48
+        ],
+        [
+          113,
+          3
+        ],
+        [
+          147,
+          48
+        ],
+        [
+          34,
+          3456
+        ]
+      ],
+      "stock": [
+        [
+          33,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            34
+          ],
+          "set": [
+            [
+              37,
+              3456
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "LuV",
+      "casing": 6,
+      "output": 151,
+      "yield": 64,
+      "eut": 7680,
+      "inputs": [
+        [
+          119,
+          48
+        ],
+        [
+          149,
+          10
+        ],
+        [
+          116,
+          6
+        ],
+        [
+          84,
+          6912
+        ],
+        [
+          80,
+          12000
+        ],
+        [
+          118,
+          64896
+        ],
+        [
+          150,
+          13824
+        ],
+        [
+          34,
+          6912
+        ]
+      ],
+      "stock": [
+        [
+          33,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            34
+          ],
+          "set": [
+            [
+              37,
+              6912
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "ZPM",
+      "casing": 7,
+      "output": 154,
+      "yield": 64,
+      "eut": 30720,
+      "inputs": [
+        [
+          123,
+          48
+        ],
+        [
+          152,
+          10
+        ],
+        [
+          120,
+          24
+        ],
+        [
+          84,
+          13824
+        ],
+        [
+          80,
+          36000
+        ],
+        [
+          122,
+          64896
+        ],
+        [
+          153,
+          41472
+        ],
+        [
+          37,
+          13824
+        ]
+      ],
+      "stock": [
+        [
+          33,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            37
+          ],
+          "set": [
+            [
+              34,
+              13824
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "UV",
+      "casing": 8,
+      "output": 157,
+      "yield": 64,
+      "eut": 122880,
+      "inputs": [
+        [
+          126,
+          48
+        ],
+        [
+          155,
+          10
+        ],
+        [
+          124,
+          24
+        ],
+        [
+          84,
+          62208
+        ],
+        [
+          80,
+          96000
+        ],
+        [
+          156,
+          82944
+        ],
+        [
+          85,
+          64896
+        ],
+        [
+          86,
+          62208
+        ],
+        [
+          34,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          33,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            34
+          ],
+          "set": [
+            [
+              37,
+              27648
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "UHV",
+      "casing": 9,
+      "output": 159,
+      "yield": 64,
+      "eut": 491520,
+      "inputs": [
+        [
+          88,
+          48
+        ],
+        [
+          158,
+          21
+        ],
+        [
+          83,
+          24
+        ],
+        [
+          84,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          81,
+          129792
+        ],
+        [
+          86,
+          124416
+        ],
+        [
+          85,
+          82944
+        ],
+        [
+          37,
+          55296
+        ]
+      ],
+      "stock": [
+        [
+          33,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            37
+          ],
+          "set": [
+            [
+              34,
+              55296
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "UEV",
+      "casing": 10,
+      "output": 162,
+      "yield": 64,
+      "eut": 1966080,
+      "inputs": [
+        [
+          82,
+          48
+        ],
+        [
+          160,
+          96
+        ],
+        [
+          161,
+          21
+        ],
+        [
+          79,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          6,
+          129792
+        ],
+        [
+          51,
+          124416
+        ],
+        [
+          37,
+          110592
+        ]
+      ],
+      "stock": [
+        [
+          33,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            37
+          ],
+          "set": [
+            [
+              34,
+              110592
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "UIV",
+      "casing": 11,
+      "output": 36,
+      "yield": 64,
+      "eut": 7864320,
+      "inputs": [
+        [
+          10,
+          48
+        ],
+        [
+          27,
+          21
+        ],
+        [
+          1,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          192000
+        ],
+        [
+          7,
+          129792
+        ],
+        [
+          34,
+          110592
+        ],
+        [
+          35,
+          82944
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          33,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            34
+          ],
+          "set": [
+            [
+              37,
+              110592
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "UMV",
+      "casing": 12,
+      "output": 38,
+      "yield": 64,
+      "eut": 31457280,
+      "inputs": [
+        [
+          16,
+          48
+        ],
+        [
+          30,
+          21
+        ],
+        [
+          13,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          192000
+        ],
+        [
+          15,
+          129792
+        ],
+        [
+          34,
+          110592
+        ],
+        [
+          6,
+          82944
+        ],
+        [
+          14,
+          27648
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          33,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            34
+          ],
+          "set": [
+            [
+              37,
+              110592
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 3,
+      "tier": "UXV",
+      "casing": 13,
+      "output": 41,
+      "yield": 64,
+      "eut": 125829120,
+      "inputs": [
+        [
+          26,
+          48
+        ],
+        [
+          18,
+          42
+        ],
+        [
+          19,
+          48
+        ],
+        [
+          20,
+          12
+        ],
+        [
+          4,
+          384000
+        ],
+        [
+          21,
+          185088
+        ],
+        [
+          22,
+          157440
+        ],
+        [
+          24,
+          117504
+        ],
+        [
+          39,
+          110592
+        ],
+        [
+          40,
+          110592
+        ],
+        [
+          15,
+          110592
+        ],
+        [
+          23,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          33,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "LV",
+      "casing": 1,
+      "output": 197,
+      "yield": 64,
+      "eut": 7,
+      "inputs": [
+        [
+          93,
+          96
+        ],
+        [
+          178,
+          48
+        ],
+        [
+          95,
+          48
+        ],
+        [
+          196,
+          3
+        ],
+        [
+          92,
+          9
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "MV",
+      "casing": 2,
+      "output": 199,
+      "yield": 64,
+      "eut": 30,
+      "inputs": [
+        [
+          100,
+          96
+        ],
+        [
+          181,
+          48
+        ],
+        [
+          97,
+          48
+        ],
+        [
+          198,
+          3
+        ],
+        [
+          99,
+          9
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "HV",
+      "casing": 3,
+      "output": 201,
+      "yield": 64,
+      "eut": 120,
+      "inputs": [
+        [
+          105,
+          96
+        ],
+        [
+          184,
+          48
+        ],
+        [
+          102,
+          48
+        ],
+        [
+          200,
+          3
+        ],
+        [
+          138,
+          9
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "EV",
+      "casing": 4,
+      "output": 203,
+      "yield": 64,
+      "eut": 480,
+      "inputs": [
+        [
+          110,
+          96
+        ],
+        [
+          187,
+          48
+        ],
+        [
+          107,
+          48
+        ],
+        [
+          202,
+          3
+        ],
+        [
+          109,
+          9
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "IV",
+      "casing": 5,
+      "output": 205,
+      "yield": 64,
+      "eut": 1920,
+      "inputs": [
+        [
+          114,
+          96
+        ],
+        [
+          190,
+          48
+        ],
+        [
+          111,
+          48
+        ],
+        [
+          204,
+          3
+        ],
+        [
+          113,
+          9
+        ]
+      ],
+      "stock": [
+        [
+          48,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "LuV",
+      "casing": 6,
+      "output": 207,
+      "yield": 64,
+      "eut": 7680,
+      "inputs": [
+        [
+          119,
+          96
+        ],
+        [
+          191,
+          48
+        ],
+        [
+          206,
+          6
+        ],
+        [
+          204,
+          12
+        ],
+        [
+          202,
+          24
+        ],
+        [
+          116,
+          18
+        ],
+        [
+          84,
+          27648
+        ],
+        [
+          80,
+          12000
+        ],
+        [
+          118,
+          76032
+        ]
+      ],
+      "stock": [
+        [
+          48,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "ZPM",
+      "casing": 7,
+      "output": 210,
+      "yield": 64,
+      "eut": 30720,
+      "inputs": [
+        [
+          123,
+          96
+        ],
+        [
+          192,
+          48
+        ],
+        [
+          208,
+          6
+        ],
+        [
+          206,
+          12
+        ],
+        [
+          204,
+          24
+        ],
+        [
+          84,
+          55296
+        ],
+        [
+          80,
+          36000
+        ],
+        [
+          209,
+          82944
+        ],
+        [
+          122,
+          76032
+        ]
+      ],
+      "stock": [
+        [
+          48,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "UV",
+      "casing": 8,
+      "output": 212,
+      "yield": 64,
+      "eut": 122880,
+      "inputs": [
+        [
+          126,
+          96
+        ],
+        [
+          193,
+          48
+        ],
+        [
+          211,
+          6
+        ],
+        [
+          208,
+          12
+        ],
+        [
+          206,
+          24
+        ],
+        [
+          84,
+          110592
+        ],
+        [
+          80,
+          96000
+        ],
+        [
+          122,
+          82944
+        ],
+        [
+          85,
+          76032
+        ],
+        [
+          86,
+          62208
+        ]
+      ],
+      "stock": [
+        [
+          48,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "UHV",
+      "casing": 9,
+      "output": 214,
+      "yield": 64,
+      "eut": 491520,
+      "inputs": [
+        [
+          88,
+          96
+        ],
+        [
+          194,
+          48
+        ],
+        [
+          18,
+          6
+        ],
+        [
+          211,
+          12
+        ],
+        [
+          208,
+          24
+        ],
+        [
+          84,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          81,
+          152064
+        ],
+        [
+          86,
+          124416
+        ],
+        [
+          213,
+          82944
+        ]
+      ],
+      "stock": [
+        [
+          48,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "UEV",
+      "casing": 10,
+      "output": 216,
+      "yield": 64,
+      "eut": 1966080,
+      "inputs": [
+        [
+          82,
+          96
+        ],
+        [
+          195,
+          48
+        ],
+        [
+          47,
+          6
+        ],
+        [
+          18,
+          12
+        ],
+        [
+          211,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          6,
+          152064
+        ],
+        [
+          51,
+          124416
+        ],
+        [
+          215,
+          82944
+        ]
+      ],
+      "stock": [
+        [
+          48,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "UIV",
+      "casing": 11,
+      "output": 49,
+      "yield": 64,
+      "eut": 7864320,
+      "inputs": [
+        [
+          10,
+          96
+        ],
+        [
+          29,
+          48
+        ],
+        [
+          46,
+          6
+        ],
+        [
+          47,
+          12
+        ],
+        [
+          18,
+          24
+        ],
+        [
+          1,
+          72
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          192000
+        ],
+        [
+          7,
+          152064
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          48,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "UMV",
+      "casing": 12,
+      "output": 52,
+      "yield": 64,
+      "eut": 31457280,
+      "inputs": [
+        [
+          16,
+          96
+        ],
+        [
+          31,
+          48
+        ],
+        [
+          50,
+          6
+        ],
+        [
+          46,
+          12
+        ],
+        [
+          47,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          192000
+        ],
+        [
+          15,
+          152064
+        ],
+        [
+          51,
+          82944
+        ],
+        [
+          14,
+          27648
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          48,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 4,
+      "tier": "UXV",
+      "casing": 13,
+      "output": 54,
+      "yield": 64,
+      "eut": 125829120,
+      "inputs": [
+        [
+          26,
+          96
+        ],
+        [
+          32,
+          48
+        ],
+        [
+          53,
+          6
+        ],
+        [
+          50,
+          12
+        ],
+        [
+          46,
+          24
+        ],
+        [
+          18,
+          54
+        ],
+        [
+          20,
+          24
+        ],
+        [
+          4,
+          384000
+        ],
+        [
+          15,
+          193536
+        ],
+        [
+          21,
+          179712
+        ],
+        [
+          22,
+          152064
+        ],
+        [
+          24,
+          96768
+        ],
+        [
+          23,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          48,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 5,
+      "tier": "LV",
+      "casing": 1,
+      "output": 164,
+      "yield": 64,
+      "eut": 7,
+      "inputs": [
+        [
+          93,
+          96
+        ],
+        [
+          166,
+          32
+        ],
+        [
+          92,
+          3
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            166
+          ],
+          "set": [
+            [
+              163,
+              32
+            ]
+          ]
+        },
+        {
+          "remove": [
+            166
+          ],
+          "set": [
+            [
+              165,
+              32
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "MV",
+      "casing": 2,
+      "output": 167,
+      "yield": 64,
+      "eut": 30,
+      "inputs": [
+        [
+          100,
+          96
+        ],
+        [
+          163,
+          32
+        ],
+        [
+          99,
+          3
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            163
+          ],
+          "set": [
+            [
+              165,
+              32
+            ]
+          ]
+        },
+        {
+          "remove": [
+            163
+          ],
+          "set": [
+            [
+              166,
+              32
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "HV",
+      "casing": 3,
+      "output": 168,
+      "yield": 64,
+      "eut": 120,
+      "inputs": [
+        [
+          105,
+          96
+        ],
+        [
+          163,
+          32
+        ],
+        [
+          138,
+          3
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            163
+          ],
+          "set": [
+            [
+              165,
+              32
+            ]
+          ]
+        },
+        {
+          "remove": [
+            163
+          ],
+          "set": [
+            [
+              166,
+              32
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "EV",
+      "casing": 4,
+      "output": 169,
+      "yield": 64,
+      "eut": 480,
+      "inputs": [
+        [
+          110,
+          96
+        ],
+        [
+          165,
+          32
+        ],
+        [
+          109,
+          3
+        ]
+      ],
+      "stock": [],
+      "variants": [
+        {
+          "remove": [
+            165
+          ],
+          "set": [
+            [
+              163,
+              32
+            ]
+          ]
+        },
+        {
+          "remove": [
+            165
+          ],
+          "set": [
+            [
+              166,
+              32
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "IV",
+      "casing": 5,
+      "output": 170,
+      "yield": 64,
+      "eut": 1920,
+      "inputs": [
+        [
+          114,
+          96
+        ],
+        [
+          165,
+          32
+        ],
+        [
+          113,
+          3
+        ]
+      ],
+      "stock": [
+        [
+          42,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            165
+          ],
+          "set": [
+            [
+              166,
+              32
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "LuV",
+      "casing": 6,
+      "output": 171,
+      "yield": 64,
+      "eut": 7680,
+      "inputs": [
+        [
+          119,
+          96
+        ],
+        [
+          149,
+          10
+        ],
+        [
+          116,
+          6
+        ],
+        [
+          165,
+          53
+        ],
+        [
+          84,
+          6912
+        ],
+        [
+          80,
+          12000
+        ],
+        [
+          118,
+          31488
+        ]
+      ],
+      "stock": [
+        [
+          42,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            165
+          ],
+          "set": [
+            [
+              166,
+              53
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "ZPM",
+      "casing": 7,
+      "output": 172,
+      "yield": 64,
+      "eut": 30720,
+      "inputs": [
+        [
+          123,
+          96
+        ],
+        [
+          152,
+          10
+        ],
+        [
+          120,
+          24
+        ],
+        [
+          84,
+          13824
+        ],
+        [
+          80,
+          36000
+        ],
+        [
+          34,
+          137376
+        ],
+        [
+          122,
+          31488
+        ]
+      ],
+      "stock": [
+        [
+          42,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            34
+          ],
+          "set": [
+            [
+              37,
+              137376
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "UV",
+      "casing": 8,
+      "output": 173,
+      "yield": 64,
+      "eut": 122880,
+      "inputs": [
+        [
+          126,
+          96
+        ],
+        [
+          155,
+          10
+        ],
+        [
+          124,
+          24
+        ],
+        [
+          84,
+          62208
+        ],
+        [
+          80,
+          96000
+        ],
+        [
+          34,
+          276048
+        ],
+        [
+          86,
+          62208
+        ],
+        [
+          85,
+          31488
+        ]
+      ],
+      "stock": [
+        [
+          42,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            34
+          ],
+          "set": [
+            [
+              37,
+              276048
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "UHV",
+      "casing": 9,
+      "output": 174,
+      "yield": 64,
+      "eut": 491520,
+      "inputs": [
+        [
+          88,
+          96
+        ],
+        [
+          158,
+          10
+        ],
+        [
+          83,
+          24
+        ],
+        [
+          84,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          37,
+          276048
+        ],
+        [
+          86,
+          124416
+        ],
+        [
+          81,
+          62976
+        ]
+      ],
+      "stock": [
+        [
+          42,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            37
+          ],
+          "set": [
+            [
+              34,
+              276048
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "UEV",
+      "casing": 10,
+      "output": 175,
+      "yield": 64,
+      "eut": 1966080,
+      "inputs": [
+        [
+          82,
+          96
+        ],
+        [
+          161,
+          10
+        ],
+        [
+          79,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          80,
+          192000
+        ],
+        [
+          34,
+          552096
+        ],
+        [
+          51,
+          124416
+        ],
+        [
+          6,
+          62976
+        ]
+      ],
+      "stock": [
+        [
+          42,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            34
+          ],
+          "set": [
+            [
+              37,
+              552096
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "UIV",
+      "casing": 11,
+      "output": 43,
+      "yield": 64,
+      "eut": 7864320,
+      "inputs": [
+        [
+          10,
+          96
+        ],
+        [
+          27,
+          10
+        ],
+        [
+          1,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          192000
+        ],
+        [
+          34,
+          552096
+        ],
+        [
+          7,
+          62976
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          42,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            34
+          ],
+          "set": [
+            [
+              37,
+              552096
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "UMV",
+      "casing": 12,
+      "output": 44,
+      "yield": 64,
+      "eut": 31457280,
+      "inputs": [
+        [
+          16,
+          96
+        ],
+        [
+          30,
+          10
+        ],
+        [
+          13,
+          24
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          192000
+        ],
+        [
+          37,
+          552096
+        ],
+        [
+          15,
+          62976
+        ],
+        [
+          14,
+          27648
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          42,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            37
+          ],
+          "set": [
+            [
+              34,
+              552096
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 5,
+      "tier": "UXV",
+      "casing": 13,
+      "output": 45,
+      "yield": 64,
+      "eut": 125829120,
+      "inputs": [
+        [
+          26,
+          96
+        ],
+        [
+          18,
+          36
+        ],
+        [
+          19,
+          48
+        ],
+        [
+          20,
+          12
+        ],
+        [
+          4,
+          384000
+        ],
+        [
+          39,
+          552096
+        ],
+        [
+          40,
+          552096
+        ],
+        [
+          21,
+          104448
+        ],
+        [
+          22,
+          76800
+        ],
+        [
+          15,
+          27648
+        ],
+        [
+          23,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          42,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "LV",
+      "casing": 1,
+      "output": 249,
+      "yield": 64,
+      "eut": 7,
+      "inputs": [
+        [
+          247,
+          48
+        ],
+        [
+          196,
+          6
+        ],
+        [
+          92,
+          6
+        ],
+        [
+          248,
+          13824
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "MV",
+      "casing": 2,
+      "output": 252,
+      "yield": 64,
+      "eut": 30,
+      "inputs": [
+        [
+          250,
+          48
+        ],
+        [
+          198,
+          6
+        ],
+        [
+          99,
+          6
+        ],
+        [
+          251,
+          13824
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "HV",
+      "casing": 3,
+      "output": 255,
+      "yield": 64,
+      "eut": 120,
+      "inputs": [
+        [
+          253,
+          48
+        ],
+        [
+          200,
+          6
+        ],
+        [
+          138,
+          6
+        ],
+        [
+          254,
+          13824
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "EV",
+      "casing": 4,
+      "output": 257,
+      "yield": 64,
+      "eut": 480,
+      "inputs": [
+        [
+          223,
+          48
+        ],
+        [
+          202,
+          6
+        ],
+        [
+          109,
+          6
+        ],
+        [
+          256,
+          13824
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "IV",
+      "casing": 5,
+      "output": 259,
+      "yield": 64,
+      "eut": 1920,
+      "inputs": [
+        [
+          228,
+          48
+        ],
+        [
+          204,
+          6
+        ],
+        [
+          113,
+          6
+        ],
+        [
+          258,
+          13824
+        ]
+      ],
+      "stock": [
+        [
+          57,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "LuV",
+      "casing": 6,
+      "output": 231,
+      "yield": 64,
+      "eut": 7680,
+      "inputs": [
+        [
+          230,
+          48
+        ],
+        [
+          119,
+          48
+        ],
+        [
+          228,
+          48
+        ],
+        [
+          206,
+          12
+        ],
+        [
+          116,
+          21
+        ],
+        [
+          84,
+          27648
+        ],
+        [
+          260,
+          331776
+        ],
+        [
+          117,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          57,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "ZPM",
+      "casing": 7,
+      "output": 234,
+      "yield": 64,
+      "eut": 30720,
+      "inputs": [
+        [
+          233,
+          48
+        ],
+        [
+          123,
+          48
+        ],
+        [
+          228,
+          96
+        ],
+        [
+          208,
+          12
+        ],
+        [
+          84,
+          55296
+        ],
+        [
+          261,
+          331776
+        ],
+        [
+          209,
+          96768
+        ],
+        [
+          262,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          57,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "UV",
+      "casing": 8,
+      "output": 238,
+      "yield": 64,
+      "eut": 122880,
+      "inputs": [
+        [
+          236,
+          48
+        ],
+        [
+          126,
+          48
+        ],
+        [
+          237,
+          192
+        ],
+        [
+          211,
+          12
+        ],
+        [
+          84,
+          110592
+        ],
+        [
+          86,
+          393984
+        ],
+        [
+          122,
+          96768
+        ],
+        [
+          85,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          57,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "UHV",
+      "casing": 9,
+      "output": 241,
+      "yield": 64,
+      "eut": 491520,
+      "inputs": [
+        [
+          240,
+          48
+        ],
+        [
+          88,
+          48
+        ],
+        [
+          237,
+          384
+        ],
+        [
+          18,
+          12
+        ],
+        [
+          84,
+          124416
+        ],
+        [
+          263,
+          442368
+        ],
+        [
+          86,
+          124416
+        ],
+        [
+          213,
+          96768
+        ],
+        [
+          81,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          57,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "UEV",
+      "casing": 10,
+      "output": 244,
+      "yield": 64,
+      "eut": 1966080,
+      "inputs": [
+        [
+          243,
+          48
+        ],
+        [
+          82,
+          48
+        ],
+        [
+          237,
+          768
+        ],
+        [
+          47,
+          12
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          264,
+          442368
+        ],
+        [
+          51,
+          124416
+        ],
+        [
+          215,
+          96768
+        ],
+        [
+          6,
+          55296
+        ]
+      ],
+      "stock": [
+        [
+          57,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "UIV",
+      "casing": 11,
+      "output": 62,
+      "yield": 64,
+      "eut": 7864320,
+      "inputs": [
+        [
+          55,
+          48
+        ],
+        [
+          10,
+          48
+        ],
+        [
+          56,
+          96
+        ],
+        [
+          46,
+          12
+        ],
+        [
+          1,
+          84
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          58,
+          110592
+        ],
+        [
+          59,
+          110592
+        ],
+        [
+          60,
+          110592
+        ],
+        [
+          61,
+          110592
+        ],
+        [
+          7,
+          55296
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          57,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "UMV",
+      "casing": 12,
+      "output": 67,
+      "yield": 64,
+      "eut": 31457280,
+      "inputs": [
+        [
+          63,
+          48
+        ],
+        [
+          16,
+          48
+        ],
+        [
+          56,
+          192
+        ],
+        [
+          50,
+          12
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          9,
+          138240
+        ],
+        [
+          64,
+          110592
+        ],
+        [
+          65,
+          110592
+        ],
+        [
+          66,
+          110592
+        ],
+        [
+          51,
+          96768
+        ],
+        [
+          15,
+          55296
+        ],
+        [
+          14,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          57,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 6,
+      "tier": "UXV",
+      "casing": 13,
+      "output": 69,
+      "yield": 64,
+      "eut": 125829120,
+      "inputs": [
+        [
+          68,
+          48
+        ],
+        [
+          26,
+          48
+        ],
+        [
+          56,
+          768
+        ],
+        [
+          53,
+          12
+        ],
+        [
+          18,
+          48
+        ],
+        [
+          20,
+          24
+        ],
+        [
+          3,
+          691200
+        ],
+        [
+          15,
+          331776
+        ],
+        [
+          21,
+          193536
+        ],
+        [
+          22,
+          165888
+        ],
+        [
+          23,
+          138240
+        ],
+        [
+          24,
+          110592
+        ]
+      ],
+      "stock": [
+        [
+          57,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "LV",
+      "casing": 1,
+      "output": 266,
+      "yield": 64,
+      "eut": 7,
+      "inputs": [
+        [
+          247,
+          48
+        ],
+        [
+          176,
+          21
+        ],
+        [
+          265,
+          24
+        ],
+        [
+          196,
+          3
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "MV",
+      "casing": 2,
+      "output": 269,
+      "yield": 64,
+      "eut": 30,
+      "inputs": [
+        [
+          267,
+          48
+        ],
+        [
+          179,
+          21
+        ],
+        [
+          268,
+          24
+        ],
+        [
+          198,
+          3
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "HV",
+      "casing": 3,
+      "output": 271,
+      "yield": 64,
+      "eut": 120,
+      "inputs": [
+        [
+          253,
+          48
+        ],
+        [
+          182,
+          21
+        ],
+        [
+          270,
+          24
+        ],
+        [
+          200,
+          3
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "EV",
+      "casing": 4,
+      "output": 273,
+      "yield": 64,
+      "eut": 480,
+      "inputs": [
+        [
+          223,
+          48
+        ],
+        [
+          185,
+          21
+        ],
+        [
+          272,
+          24
+        ],
+        [
+          202,
+          3
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "IV",
+      "casing": 5,
+      "output": 275,
+      "yield": 64,
+      "eut": 1920,
+      "inputs": [
+        [
+          228,
+          48
+        ],
+        [
+          188,
+          21
+        ],
+        [
+          274,
+          24
+        ],
+        [
+          204,
+          3
+        ]
+      ],
+      "stock": [
+        [
+          70,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "LuV",
+      "casing": 6,
+      "output": 277,
+      "yield": 64,
+      "eut": 7680,
+      "inputs": [
+        [
+          230,
+          48
+        ],
+        [
+          119,
+          48
+        ],
+        [
+          276,
+          42
+        ],
+        [
+          228,
+          48
+        ],
+        [
+          206,
+          12
+        ],
+        [
+          116,
+          21
+        ],
+        [
+          84,
+          27648
+        ],
+        [
+          260,
+          331776
+        ]
+      ],
+      "stock": [
+        [
+          70,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "ZPM",
+      "casing": 7,
+      "output": 279,
+      "yield": 64,
+      "eut": 30720,
+      "inputs": [
+        [
+          233,
+          48
+        ],
+        [
+          123,
+          48
+        ],
+        [
+          278,
+          42
+        ],
+        [
+          228,
+          96
+        ],
+        [
+          208,
+          12
+        ],
+        [
+          84,
+          55296
+        ],
+        [
+          261,
+          331776
+        ],
+        [
+          209,
+          96768
+        ]
+      ],
+      "stock": [
+        [
+          70,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "UV",
+      "casing": 8,
+      "output": 280,
+      "yield": 64,
+      "eut": 122880,
+      "inputs": [
+        [
+          236,
+          48
+        ],
+        [
+          126,
+          48
+        ],
+        [
+          155,
+          42
+        ],
+        [
+          237,
+          192
+        ],
+        [
+          211,
+          12
+        ],
+        [
+          84,
+          110592
+        ],
+        [
+          86,
+          393984
+        ],
+        [
+          122,
+          96768
+        ]
+      ],
+      "stock": [
+        [
+          70,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "UHV",
+      "casing": 9,
+      "output": 281,
+      "yield": 64,
+      "eut": 491520,
+      "inputs": [
+        [
+          240,
+          48
+        ],
+        [
+          88,
+          48
+        ],
+        [
+          158,
+          42
+        ],
+        [
+          237,
+          384
+        ],
+        [
+          18,
+          12
+        ],
+        [
+          84,
+          124416
+        ],
+        [
+          263,
+          442368
+        ],
+        [
+          86,
+          124416
+        ],
+        [
+          213,
+          96768
+        ]
+      ],
+      "stock": [
+        [
+          70,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "UEV",
+      "casing": 10,
+      "output": 282,
+      "yield": 64,
+      "eut": 1966080,
+      "inputs": [
+        [
+          243,
+          48
+        ],
+        [
+          82,
+          48
+        ],
+        [
+          161,
+          42
+        ],
+        [
+          237,
+          768
+        ],
+        [
+          47,
+          12
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          264,
+          442368
+        ],
+        [
+          51,
+          124416
+        ],
+        [
+          215,
+          96768
+        ]
+      ],
+      "stock": [
+        [
+          70,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "UIV",
+      "casing": 11,
+      "output": 71,
+      "yield": 64,
+      "eut": 7864320,
+      "inputs": [
+        [
+          55,
+          48
+        ],
+        [
+          10,
+          48
+        ],
+        [
+          27,
+          42
+        ],
+        [
+          56,
+          96
+        ],
+        [
+          46,
+          12
+        ],
+        [
+          1,
+          84
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          58,
+          110592
+        ],
+        [
+          59,
+          110592
+        ],
+        [
+          60,
+          110592
+        ],
+        [
+          61,
+          110592
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          70,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "UMV",
+      "casing": 12,
+      "output": 72,
+      "yield": 64,
+      "eut": 31457280,
+      "inputs": [
+        [
+          63,
+          48
+        ],
+        [
+          16,
+          48
+        ],
+        [
+          30,
+          42
+        ],
+        [
+          56,
+          192
+        ],
+        [
+          50,
+          12
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          9,
+          138240
+        ],
+        [
+          64,
+          110592
+        ],
+        [
+          65,
+          110592
+        ],
+        [
+          66,
+          110592
+        ],
+        [
+          51,
+          96768
+        ],
+        [
+          14,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          70,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 7,
+      "tier": "UXV",
+      "casing": 13,
+      "output": 73,
+      "yield": 64,
+      "eut": 125829120,
+      "inputs": [
+        [
+          68,
+          48
+        ],
+        [
+          26,
+          48
+        ],
+        [
+          56,
+          768
+        ],
+        [
+          53,
+          12
+        ],
+        [
+          18,
+          48
+        ],
+        [
+          20,
+          24
+        ],
+        [
+          3,
+          691200
+        ],
+        [
+          15,
+          331776
+        ],
+        [
+          21,
+          193536
+        ],
+        [
+          22,
+          165888
+        ],
+        [
+          23,
+          138240
+        ],
+        [
+          24,
+          110592
+        ]
+      ],
+      "stock": [
+        [
+          70,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "LV",
+      "casing": 1,
+      "output": 219,
+      "yield": 64,
+      "eut": 7,
+      "inputs": [
+        [
+          217,
+          48
+        ],
+        [
+          200,
+          12
+        ],
+        [
+          218,
+          13824
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "MV",
+      "casing": 2,
+      "output": 222,
+      "yield": 64,
+      "eut": 30,
+      "inputs": [
+        [
+          220,
+          48
+        ],
+        [
+          202,
+          12
+        ],
+        [
+          221,
+          13824
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "HV",
+      "casing": 3,
+      "output": 224,
+      "yield": 64,
+      "eut": 120,
+      "inputs": [
+        [
+          223,
+          48
+        ],
+        [
+          204,
+          12
+        ],
+        [
+          150,
+          27648
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "EV",
+      "casing": 4,
+      "output": 227,
+      "yield": 64,
+      "eut": 480,
+      "inputs": [
+        [
+          225,
+          48
+        ],
+        [
+          206,
+          12
+        ],
+        [
+          226,
+          27648
+        ]
+      ],
+      "stock": [],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "IV",
+      "casing": 5,
+      "output": 229,
+      "yield": 64,
+      "eut": 1920,
+      "inputs": [
+        [
+          228,
+          48
+        ],
+        [
+          208,
+          12
+        ],
+        [
+          118,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          74,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "LuV",
+      "casing": 6,
+      "output": 232,
+      "yield": 64,
+      "eut": 7680,
+      "inputs": [
+        [
+          230,
+          48
+        ],
+        [
+          149,
+          32
+        ],
+        [
+          228,
+          96
+        ],
+        [
+          231,
+          192
+        ],
+        [
+          208,
+          12
+        ],
+        [
+          116,
+          24
+        ],
+        [
+          84,
+          27648
+        ],
+        [
+          117,
+          221184
+        ]
+      ],
+      "stock": [
+        [
+          74,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "ZPM",
+      "casing": 7,
+      "output": 235,
+      "yield": 64,
+      "eut": 30720,
+      "inputs": [
+        [
+          233,
+          48
+        ],
+        [
+          152,
+          32
+        ],
+        [
+          228,
+          96
+        ],
+        [
+          234,
+          192
+        ],
+        [
+          211,
+          12
+        ],
+        [
+          84,
+          55296
+        ],
+        [
+          121,
+          221184
+        ],
+        [
+          209,
+          110592
+        ]
+      ],
+      "stock": [
+        [
+          74,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "UV",
+      "casing": 8,
+      "output": 239,
+      "yield": 64,
+      "eut": 122880,
+      "inputs": [
+        [
+          236,
+          48
+        ],
+        [
+          155,
+          32
+        ],
+        [
+          237,
+          96
+        ],
+        [
+          238,
+          192
+        ],
+        [
+          18,
+          12
+        ],
+        [
+          84,
+          110592
+        ],
+        [
+          125,
+          331776
+        ],
+        [
+          122,
+          110592
+        ],
+        [
+          86,
+          62208
+        ]
+      ],
+      "stock": [
+        [
+          74,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "UHV",
+      "casing": 9,
+      "output": 242,
+      "yield": 64,
+      "eut": 491520,
+      "inputs": [
+        [
+          240,
+          48
+        ],
+        [
+          158,
+          32
+        ],
+        [
+          237,
+          192
+        ],
+        [
+          241,
+          192
+        ],
+        [
+          47,
+          12
+        ],
+        [
+          84,
+          124416
+        ],
+        [
+          85,
+          442368
+        ],
+        [
+          86,
+          124416
+        ],
+        [
+          213,
+          110592
+        ]
+      ],
+      "stock": [
+        [
+          74,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "UEV",
+      "casing": 10,
+      "output": 246,
+      "yield": 64,
+      "eut": 1966080,
+      "inputs": [
+        [
+          243,
+          48
+        ],
+        [
+          161,
+          32
+        ],
+        [
+          237,
+          384
+        ],
+        [
+          244,
+          192
+        ],
+        [
+          46,
+          12
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          245,
+          442368
+        ],
+        [
+          51,
+          124416
+        ],
+        [
+          215,
+          110592
+        ]
+      ],
+      "stock": [
+        [
+          74,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "UIV",
+      "casing": 11,
+      "output": 75,
+      "yield": 64,
+      "eut": 7864320,
+      "inputs": [
+        [
+          55,
+          48
+        ],
+        [
+          27,
+          32
+        ],
+        [
+          56,
+          48
+        ],
+        [
+          62,
+          192
+        ],
+        [
+          50,
+          12
+        ],
+        [
+          1,
+          96
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          4,
+          110592
+        ],
+        [
+          5,
+          221184
+        ],
+        [
+          11,
+          221184
+        ],
+        [
+          12,
+          221184
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          74,
+          1
+        ]
+      ],
+      "variants": [
+        {
+          "remove": [
+            11,
+            12
+          ],
+          "set": [
+            [
+              5,
+              442368
+            ],
+            [
+              6,
+              442368
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "component": 8,
+      "tier": "UMV",
+      "casing": 12,
+      "output": 76,
+      "yield": 64,
+      "eut": 31457280,
+      "inputs": [
+        [
+          63,
+          48
+        ],
+        [
+          30,
+          32
+        ],
+        [
+          56,
+          96
+        ],
+        [
+          67,
+          192
+        ],
+        [
+          53,
+          12
+        ],
+        [
+          3,
+          124416
+        ],
+        [
+          14,
+          470016
+        ],
+        [
+          51,
+          110592
+        ],
+        [
+          9,
+          27648
+        ]
+      ],
+      "stock": [
+        [
+          74,
+          1
+        ]
+      ],
+      "variants": []
+    },
+    {
+      "component": 8,
+      "tier": "UXV",
+      "casing": 13,
+      "output": 78,
+      "yield": 64,
+      "eut": 125829120,
+      "inputs": [
+        [
+          68,
+          48
+        ],
+        [
+          56,
+          3072
+        ],
+        [
+          69,
+          192
+        ],
+        [
+          77,
+          12
+        ],
+        [
+          18,
+          66
+        ],
+        [
+          20,
+          36
+        ],
+        [
+          3,
+          691200
+        ],
+        [
+          15,
+          248832
+        ],
+        [
+          21,
+          179712
+        ],
+        [
+          22,
+          152064
+        ],
+        [
+          23,
+          138240
+        ],
+        [
+          24,
+          110592
+        ],
+        [
+          25,
+          110592
+        ]
+      ],
+      "stock": [
+        [
+          74,
+          1
+        ]
+      ],
+      "variants": []
+    }
+  ],
+  "version": 1,
+  "source": {
+    "recipeVersion": "2.9.0-beta-2",
+    "targetVersion": "2.9.0-beta-3",
+    "datasetId": "local-2.9.0-beta-2",
+    "routes": 142,
+    "recipeSource": "https://github.com/GTNewHorizons/GT5-Unofficial/blob/5.09.54.133/src/main/java/goodgenerator/loader/ComponentAssemblyLineLoader.java",
+    "batchPolicy": "Native batches of 64 components; shared tier gates and casing limit apply."
+  },
+  "evidence": {
+    "loader": "efb805c09383ded4f62bda937501337710df64667437737dd52ed4e5cfa5f26f",
+    "machine": "478c4355439be58254c7ffca9692aefefd96ec4b6cc0484c537337ccc997501c",
+    "exports": {
+      "recipes.json.gz": "2c09a018091ea934c1cf8f612f447796f17e31e4f9d9cb3b01b894746abe0fed",
+      "gt-5.09.54.133.zip": "a5993a25fbf464348182baac16539bcf08bdfa18d22ef0217dc84fc4c14ca03e",
+      "registry-names.json": "1ab9505d6e2e0c1c59300908801927e0da04edc506ba53b0e21f67e531657e9a",
+      "ores.json.gz": "07c9526c3e78b9e1a5104c76c89013997a3b7b687ecc2b356150a72441fc23c2"
+    }
+  }
+}

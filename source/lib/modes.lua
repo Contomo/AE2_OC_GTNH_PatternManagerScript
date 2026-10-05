@@ -1,6 +1,7 @@
 -- Compact runtime recipe compiler. This module has no component/UI calls.
 -- Eligibility uses form capabilities, production flags and rare exceptions.
 local U = require('assline_util')
+local Components = require('assline_components')
 local Planner = require('assline_planner')
 local Batch = require('assline_batch')
 local Singularities = require('assline_singularities')
@@ -243,6 +244,9 @@ local function ruleRecipe(
   return recipe
 end
 function M.compile(data, mode, options, checkpoint)
+  if mode == 'components' then
+    return Components.compile(data, options, checkpoint)
+  end
   if mode == 'singularities' then
     return Singularities.compile(data, options, checkpoint)
   end

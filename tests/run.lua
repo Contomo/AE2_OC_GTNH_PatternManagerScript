@@ -638,7 +638,7 @@ local function field(label)
   return function()
     for y=5,43 do
       if frame[y] and frame[y]:sub(34):find(label,1,true) then
-        local compact=frame[5] and (frame[5]:find('MATERIAL TIER',1,true) or frame[5]:find('RELATIVE TIER',1,true) or frame[5]:find('OUTPUT FORM',1,true))
+        local compact=frame[5] and (frame[5]:find('MATERIAL TIER',1,true) or frame[5]:find('RELATIVE TIER',1,true) or frame[5]:find('OUTPUT FORM',1,true) or frame[5]:find('COMPONENT',1,true))
         local inline=frame[y]:sub(34):match('^%[ [X ] %] ')
         return 'touch','screen',compact and 80 or 34,(compact or inline) and y or y+1,0
       end
@@ -1892,7 +1892,15 @@ test('settings sidebar separates Current preview and auto addresses remain blank
       nav('Shared interfaces'),function()
         assert(frame[14]:find('SETTINGS SECTIONS',1,true))
         assert(frame[44]:sub(1,29):find('Current preview',1,true))
-        assert(frame[37]:sub(1,29):find('Fluid Shaper',1,true))
+        local sections={}
+        for y=22,42 do
+          for _,program in ipairs(api.programs.settings) do
+            if frame[y]:sub(1,29):find(program.name,1,true) then
+              assert(not sections[program.id]);sections[program.id]=y
+            end
+          end
+        end
+        for _,program in ipairs(api.programs.settings) do assert(sections[program.id]) end
         for _,y in ipairs({15,19,23}) do
           assert(frame[y]:sub(34,37)=='auto' and foreground[y][34]==0x8297AB)
         end
@@ -3001,6 +3009,116 @@ test('transition chooser, settings and unified preview show capacity verificatio
   end,function()
     assert(frame[6]:find('Old interface name',1,true) and frame[10]:find('New interface name',1,true))
     assert(frame[7]:find('Old implosion',1,true) and frame[11]:find('Electric implosion',1,true))
+    return 'interrupted'
+  end)
+  api.runUI()
+end)
+
+local function componentFixture(casing)
+  cfg.programs.componentAssembly.casingTier=casing or 'UXV'
+  local catalog=require('assline_component_data')
+  local banks={}
+  for n,group in ipairs(catalog.components) do
+    banks[group.key]=iface(cfg.programs.componentAssembly[group.key],200+n,{},2)
+  end
+  for n=0,3 do
+    local bank=n==0 and buffer or iface(cfg.shared.donors,50+n)
+    bank.patterns={}
+    for slot=0,35 do bank.patterns[slot]=pattern({item('Disposable input',1,789)}) end
+  end
+  return banks
+end
+
+test('component program discovers eight named banks and installs all native item/fluid routes through the shared editor',function()
+  local banks=componentFixture()
+  local preview=api.runner.preview(cfg,'componentAssembly')
+  assert(mutations==0 and #preview.manifest.recipes==104 and #preview.plan.errors==0)
+  assert(#preview.plan.capacities==8 and preview.plan.required.processing==104)
+  for _,capacity in ipairs(preview.plan.capacities) do assert(capacity.patterns==13 and capacity.interfaces==1) end
+  api.runner.execute(cfg,preview)
+  local count,large,extended=0,false,false
+  for _,bank in pairs(banks) do
+    for _,p in pairs(bank.patterns) do
+      count=count+1
+      assert(p.outputs[1].size==64 and p.isCraftable==false)
+      local inputCount=0
+      for _,input in pairs(p.inputs) do
+        inputCount=inputCount+1
+        assert(input.name~='gregtech:gt.integrated_circuit')
+        large=large or input.size>589824
+      end
+      extended=extended or inputCount>9
+      assert(unser(p.tag).__value.preserved.__value==42)
+    end
+  end
+  assert(count==104 and large and extended and next(editor.patterns)==nil)
+  assert(not api.runner.hasSaved())
+  local again=api.runner.preview(cfg,'componentAssembly')
+  assert(again.plan.reused==104 and again.plan.resizeCount==0 and not api.runner.hasChanges(again))
+end)
+
+test('component motor alternatives reuse and resize an existing multiplied recipe instead of duplicating it',function()
+  local banks=componentFixture('LV')
+  local preview=api.runner.preview(cfg,'componentAssembly')
+  local candidate=cp(preview.manifest.choices[1][4])
+  for _,which in ipairs({'inputs','outputs'}) do
+    for _,stack in ipairs(candidate[which]) do stack.size=stack.size*2 end
+  end
+  banks.motor.patterns[12]=pattern(candidate.inputs,candidate.outputs)
+  preview=api.runner.preview(cfg,'componentAssembly')
+  assert(preview.plan.reused==1 and preview.plan.resizeCount==1 and preview.plan.required.processing==7)
+  local P=require('assline_planner')
+  assert(P.recipeKey(preview.manifest.recipes[1])==P.recipeKey(candidate))
+  api.runner.execute(cfg,preview)
+  assert(banks.motor.patterns[0].outputs[1].size==64)
+  local again=api.runner.preview(cfg,'componentAssembly')
+  assert(again.plan.reused==8 and not api.runner.hasChanges(again))
+end)
+
+test('component casing, rubber and all eight names share settings without covering preview navigation',function()
+  local banks=componentFixture('IV');files[api.paths.config]=ser(cfg)
+  queue(click('[ Component Assembly Line ]'),click('[ Preview selected ]',47),function()
+    assert(frame[2]:find('Preview - Component Assembly Line',1,true))
+    snapshot('component_assembly_preview')
+    return click('[ Details ]',4)()
+  end,function()
+    local text=table.concat(frame,'\n')
+    assert(text:find('Installed casings: IV',1,true))
+    for _,group in ipairs(require('assline_component_data').components) do
+      assert(text:find(group.label..': circuit '..group.circuit,1,true))
+    end
+    return click('[ Program settings ]',47)()
+  end,function()
+    assert(frame[6]:find('Installed component casing tier',1,true))
+    assert(frame[10]:find('Component rubber',1,true))
+    assert(frame[44]:sub(1,29):find('Current preview',1,true))
+    return click('[ IV ]',7)()
+  end,click('LuV'),function()
+    assert(unser(files[api.paths.config]).programs.componentAssembly.casingTier=='LuV')
+    return click('[ SBR ]',11)()
+  end,function()
+    assert(table.concat(frame,'\n'):find('Silicone',1,true))
+    return click('Silicone')()
+  end,function()
+    assert(unser(files[api.paths.config]).programs.componentAssembly.rubber=='silicone')
+    return click('[ Next ]',44)()
+  end,function()
+    assert(frame[5]:sub(34):find('COMPONENT',1,true))
+    for _,group in ipairs(require('assline_component_data').components) do
+      assert(table.concat(frame,'\n'):find('Component Assembly Line '..group.label,1,true))
+    end
+    snapshot('component_assembly_destinations')
+    return 'key_up','kbd',0,0
+  end,replace('Motor (circuit 1)','Motor destination changed'),function()
+    assert(unser(files[api.paths.config]).programs.componentAssembly.motor=='Motor destination changed')
+    assert(not frame[44]:sub(1,29):find('Current preview',1,true),'Settings edit retained a stale preview')
+    banks.motor.name='Motor destination changed'
+    return nav('Programs')()
+  end,click('[ Preview selected ]',47),function()
+    assert(frame[2]:find('Preview - Component Assembly Line',1,true))
+    return click('[ Details ]',4)()
+  end,function()
+    assert(table.concat(frame,'\n'):find('Installed casings: LuV',1,true))
     return 'interrupted'
   end)
   api.runUI()
