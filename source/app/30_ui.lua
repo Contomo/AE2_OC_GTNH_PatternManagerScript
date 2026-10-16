@@ -340,7 +340,7 @@ local function runUI()
           or 'Choose a program to build a preview.',
         'muted'
       )
-    elseif p.kind == 'donorCleanup' or p.kind == 'transition' then
+    elseif p.kind == 'donorCleanup' or p.kind == 'transition' or p.kind == 'patternMover' then
       for _, row in ipairs(Preview.rows(state.section, p)) do
         add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
@@ -866,7 +866,19 @@ local function runUI()
       scrollRows(34, layout.body, 74, layout.bodyBottom - layout.body + 1)
       text(113, layout.body, 'Summary', 45, 'blue')
       if p then
-        if p.kind == 'transition' then
+        if p.kind == 'patternMover' then
+          text(
+            113,
+            layout.body + 2,
+            p.sourceBanks .. ' source / ' .. p.targetBanks .. ' target interfaces',
+            45,
+            'muted'
+          )
+          text(113, layout.body + 3, #p.groups .. ' destination groups', 45)
+          text(113, layout.body + 4, #p.moves .. ' patterns to move intact', 45, 'green')
+          text(113, layout.body + 6, p.free .. ' free target slots', 45)
+          text(113, layout.body + 8, 'No disposable donors needed', 45, 'muted')
+        elseif p.kind == 'transition' then
           text(
             113,
             layout.body + 2,

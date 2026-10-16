@@ -115,7 +115,9 @@ local function mutate(label)
   if fail and fail.label==label then fail=nil;error('injected '..label) end
 end
 local proxies={}
-proxies.terminal={address='terminal',getInterfacesByName=function(name)
+proxies.terminal={address='terminal',getInterfaces=function()
+  return iterator(interfaces)
+end,getInterfacesByName=function(name)
   queriedNames[name]=(queriedNames[name] or 0)+1
   local r={};for _,i in ipairs(interfaces) do if i.name==name then r[#r+1]=i end end;return iterator(r)
 end,getInterfacesByLocation=function(loc,side)
@@ -3096,6 +3098,208 @@ test('transition chooser, settings and unified preview show capacity verificatio
   end,function()
     assert(frame[6]:find('Old interface name',1,true) and frame[10]:find('New interface name',1,true))
     assert(frame[7]:find('Old implosion',1,true) and frame[11]:find('Electric implosion',1,true))
+    return 'interrupted'
+  end)
+  api.runUI()
+end)
+
+test('pattern mover wildcard is literal, anchored, case-sensitive and substitutes captured text',function()
+  local wildcard=require('assline_wildcard')
+  local match=wildcard.compile('Large [Assembler].100% #* (Old)','Mass [Assembler].100% #*')
+  assert(match('Large [Assembler].100% #12 (Old)')=='Mass [Assembler].100% #12')
+  assert(match('Large [Assembler].100% #A + B (Old)')=='Mass [Assembler].100% #A + B')
+  assert(match('Large [Assembler].100% # (Old)')=='Mass [Assembler].100% #')
+  assert(not match('xLarge [Assembler].100% #12 (Old)'))
+  assert(not match('Large [Assembler].100% #12 (Old)x'))
+  assert(not match('large [Assembler].100% #12 (Old)'))
+  assert(not match('Large XAssemblerXx100% #12 (Old)'))
+  assert(wildcard.compile('*','Target *')('100% [x]')=='Target 100% [x]')
+  assert(wildcard.compile('Exact','Target')('Exact')=='Target')
+  assert(not wildcard.compile('Exact','Target')('Exact suffix'))
+  assert(wildcard.compile('Source *','One Target')('Source 12')=='One Target')
+  for _,names in ipairs({{'A**','B*'},{'A*','B**'},{'Exact','Target *'},{'','Target'},{'Source',''}}) do
+    local reason=(names[1]=='' or names[2]=='') and 'empty' or '*'
+    mustFail(function() wildcard.compile(names[1],names[2]) end,reason)
+  end
+  mustFail(function() wildcard.compile('*','*')('') end,'empty')
+end)
+
+local function moverFixture()
+  cfg.programs.patternMover.source='Large Assembler #*'
+  cfg.programs.patternMover.destination='Mass Assembler #*'
+  target.name='Large Assembler #1'
+  dest1.name='Mass Assembler #1'
+  target.patterns={[7]=pattern({item('Input',2048)},{item('Output',4096)},true)}
+  return target,dest1
+end
+
+test('pattern mover pairs names, includes all banks and preserves every pattern byte without editing',function()
+  local old,new=moverFixture()
+  local old2=iface('Large Assembler #2',52,{[4]=newPattern({item('New count',1024)})})
+  local old1b=iface('Large Assembler #1',-10,{[9]=pattern({item('Ultimate',256)})})
+  old1b.patterns[9].name='appliedenergistics2:item.ItemEncodedUltimatePattern'
+  local root=unser(old1b.patterns[9].tag);root.__value.crafting=nil
+  root.__value.substitute=typed('byte',1);root.__value.InvalidPattern=typed('byte',1)
+  old1b.patterns[9].tag=ser(root)
+  local new1b=iface('Mass Assembler #1',40)
+  local new2=iface('Mass Assembler #2',53)
+  local irrelevant=iface('Large AssemblerX #1',54,{[0]=cp(old.patterns[7])})
+  for slot=0,35 do new.patterns[slot]=pattern({item('Existing',1,765)}) end
+  new.patterns[5]=nil
+  local expected={ser(old1b.patterns[9]),ser(old.patterns[7]),ser(old2.patterns[4])}
+  local before=ser(new.patterns[0]);local donors=ser(buffer.patterns)
+  for slot=0,8 do editor.patterns[slot]=pattern({item('Occupied editor')}) end
+  local editorBefore=ser(editor.patterns)
+  local preview=api.runner.preview(cfg,'patternMover')
+  local p=preview.plan
+  assert(#p.errors==0 and mutations==0 and #p.moves==3)
+  assert(p.sourceBanks==3 and p.targetBanks==3 and #p.groups==2)
+  assert(p.groups[1].sourceBanks==2 and p.groups[1].targetBanks==2)
+  assert(p.groups[1].patterns==2 and p.groups[1].free==37)
+  assert(p.moves[1].from.location.x==-10 and p.moves[1].to.slot==5)
+  assert(p.moves[2].to.location.x==40 and p.moves[2].to.slot==0)
+  assert(p.moves[3].destinationName=='Mass Assembler #2' and p.moves[3].to.location.x==53)
+  assert(p.capacities[1].patterns==37 and p.capacities[1].interfaces==2)
+  assert(p.capacities[1].availableInterfaces==2 and p.capacities[1].incoming==2)
+  assert(preview.report:find('Mass Assembler #2',1,true) and preview.report:find('2 source / 2 target interfaces',1,true))
+  assert(callCounts.getInterfaces==1 and callCounts.getInterfacesByLocation==6)
+  assert(not callCounts.setInterfacePatternInput and not callCounts.getInterfacePattern)
+  api.runner.execute(cfg,preview)
+  assert(next(old.patterns)==nil and next(old1b.patterns)==nil and next(old2.patterns)==nil)
+  assert(ser(new.patterns[5])==expected[1] and ser(new1b.patterns[0])==expected[2] and ser(new2.patterns[0])==expected[3])
+  assert(ser(new.patterns[0])==before and ser(buffer.patterns)==donors and ser(editor.patterns)==editorBefore)
+  assert(irrelevant.patterns[0] and not api.runner.hasSaved())
+  assert(not callCounts.setInterfacePatternInput and not callCounts.setInterfacePatternOutput)
+  assert(not api.runner.hasChanges(api.runner.preview(cfg,'patternMover')))
+end)
+
+test('pattern mover fixed target pools free slots once across multiple source names',function()
+  local old,new=moverFixture()
+  cfg.programs.patternMover.destination='Mass Assembler'
+  new.name='Mass Assembler'
+  iface('Large Assembler #2',52,{[2]=pattern({item('Second')})})
+  local preview=api.runner.preview(cfg,'patternMover')
+  assert(#preview.plan.groups==1 and preview.plan.sourceBanks==2 and preview.plan.targetBanks==1)
+  assert(preview.plan.moves[1].to.slot==0 and preview.plan.moves[2].to.slot==1)
+  api.runner.execute(cfg,preview)
+  assert(new.patterns[0] and new.patterns[1] and next(old.patterns)==nil)
+end)
+
+test('pattern mover preserves fluid drops and native fluid patterns without parsing or rewriting them',function()
+  local old,new=moverFixture()
+  local fluid={name='molten.grisium',amount=144,size=144,label='Molten Grisium'}
+  local drop={name='ae2fc:fluid_drop',damage=0,size=144,label='Molten Grisium Drop',
+    hasTag=true,tag=ser(compound({Fluid=typed('string','molten.grisium')}))}
+  old.patterns[7]=pattern({drop})
+  old.patterns[8]=pattern({fluid});old.patterns[8].name='ae2fc:encodedPattern'
+  local expected={ser(old.patterns[7]),ser(old.patterns[8])}
+  local preview=api.runner.preview(cfg,'patternMover')
+  assert(callCounts.decodeNBT==1,'Mover must not decode ingredient NBT')
+  api.runner.execute(cfg,preview)
+  assert(ser(new.patterns[0])==expected[1] and ser(new.patterns[1])==expected[2])
+  assert(not callCounts.setInterfacePatternInput and not callCounts.setInterfacePatternOutput)
+end)
+
+test('pattern mover checks each destination independently and blocks all moves on missing capacity',function()
+  local old,new=moverFixture()
+  iface('Large Assembler #2',52,{[2]=pattern({item()})})
+  local new2=iface('Mass Assembler #2',53)
+  for slot=0,35 do new.patterns[slot]=pattern({item()}) end
+  local preview=api.runner.preview(cfg,'patternMover')
+  assert(preview.plan.free==36 and #preview.plan.errors==1)
+  assert(preview.plan.errors[1]:find('Mass Assembler #1',1,true))
+  assert(not preview.plan.moves[1].to and preview.plan.moves[2].to)
+  mustFail(function() api.runner.execute(cfg,preview) end,'Resolve mover blockers')
+  assert(mutations==0 and old.patterns[7] and next(new2.patterns)==nil)
+  new.name='Missing target'
+  preview=api.runner.preview(cfg,'patternMover')
+  assert(preview.plan.errors[1]:find('No target interfaces named "Mass Assembler #1"',1,true))
+  cfg.programs.patternMover.source='Missing #*'
+  assert(api.runner.preview(cfg,'patternMover').plan.errors[1]:find('No source interfaces',1,true))
+end)
+
+test('pattern mover rejects overlap and shared editor or donor banks without mutations',function()
+  moverFixture()
+  for _,destination in ipairs({'Large Assembler #*',cfg.shared.editor,cfg.shared.donors}) do
+    cfg.programs.patternMover.destination=destination
+    mustFail(function() api.runner.preview(cfg,'patternMover') end,
+      destination=='Large Assembler #*' and 'overlap' or 'must differ')
+    assert(mutations==0)
+  end
+  cfg.programs.patternMover.source=cfg.shared.donors
+  cfg.programs.patternMover.destination='Mass Assembler #1'
+  mustFail(function() api.runner.preview(cfg,'patternMover') end,'must differ')
+end)
+
+test('pattern mover rejects stale topology, slots and names before moving anything',function()
+  for _,change in ipairs({'source','target','added source','added target','renamed'}) do
+    reset();local old,new=moverFixture()
+    local preview=api.runner.preview(cfg,'patternMover')
+    if change=='source' then old.patterns[7]=pattern({item('Changed')})
+    elseif change=='target' then new.patterns[1]=pattern({item()})
+    elseif change=='added source' then iface('Large Assembler #2',51,{[0]=pattern({item()})})
+    elseif change=='added target' then iface('Mass Assembler #1',51)
+    else old.name='Large Assembler #9' end
+    mustFail(function() api.runner.execute(cfg,preview) end,'changed since preview')
+    assert(mutations==0 and not files[api.paths.pending])
+  end
+end)
+
+test('pattern mover resumes interrupted sends once and replans only remaining patterns',function()
+  for _,stage in ipairs({'send-before','send-after'}) do
+    reset();local old,new=moverFixture();old.patterns[8]=cp(old.patterns[7])
+    local preview=api.runner.preview(cfg,'patternMover');fail={label=stage}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    assert(files[api.paths.pending])
+    local remaining=api.runner.continue(cfg)
+    assert(remaining.id=='patternMover' and #remaining.plan.moves==1)
+    assert(new.patterns[0] and not old.patterns[7] and old.patterns[8])
+    api.runner.execute(cfg,remaining)
+    assert(new.patterns[1] and next(old.patterns)==nil and not api.runner.hasSaved())
+  end
+end)
+
+test('pattern mover Stop completes its current move and Continue retains the rest',function()
+  local old,new=moverFixture();old.patterns[8]=cp(old.patterns[7])
+  local preview=api.runner.preview(cfg,'patternMover')
+  mustFail(function()
+    api.runner.execute(cfg,preview,nil,function() return {stop=(callCounts.send or 0)>0} end)
+  end,'Work stopped')
+  assert(new.patterns[0] and old.patterns[8] and not files[api.paths.pending])
+  local remaining=api.runner.continue(cfg);assert(#remaining.plan.moves==1)
+  api.runner.execute(cfg,remaining)
+  assert(next(old.patterns)==nil and new.patterns[1] and not api.runner.hasSaved())
+end)
+
+test('pattern mover reports failed delivery and refuses recovery into a renamed group',function()
+  local old,new=moverFixture();new.visibleSlots=1;new.patterns[0]=pattern({item('Existing')})
+  local preview=api.runner.preview(cfg,'patternMover')
+  mustFail(function() api.runner.execute(cfg,preview) end,'Check capacity cards')
+  assert(files[api.paths.pending] and not old.patterns[7] and new.patterns[1])
+  new.visibleSlots=nil;new.name='Renamed target'
+  mustFail(function() api.runner.continue(cfg) end,'target interface renamed')
+  new.name='Mass Assembler #1'
+  local remaining=api.runner.continue(cfg)
+  assert(not api.runner.hasChanges(remaining) and not api.runner.hasSaved())
+end)
+
+test('pattern mover chooser, settings and shared preview show mappings and capacity verification',function()
+  moverFixture();files[api.paths.config]=ser(cfg)
+  queue(click('[ Pattern mover ]'),click('[ Preview selected ]',47),function()
+    assert(frame[2]:find('Preview - Pattern mover',1,true))
+    assert(frame[34]:find('Verify 36 slots',1,true))
+    assert(frame[4]:find('Capacity',1,true) and frame[4]:find('Details',1,true))
+    local found=false;for y=7,42 do if frame[y]:find('DESTINATION: Mass Assembler #1',1,true) then found=true end end
+    assert(found and frame[9]:find('1 source / 1 target interfaces',1,true))
+    snapshot('pattern_mover_preview')
+    return click('[ Capacity ]',4)()
+  end,function()
+    assert(frame[12]:find('1 target interfaces present; 36 free slots.',1,true))
+    snapshot('pattern_mover_capacity')
+    return click('[ Program settings ]',47)()
+  end,function()
+    assert(frame[6]:find('Source name matcher',1,true) and frame[10]:find('Target name template',1,true))
+    assert(frame[7]:find('Large Assembler #*',1,true) and frame[11]:find('Mass Assembler #*',1,true))
     return 'interrupted'
   end)
   api.runUI()

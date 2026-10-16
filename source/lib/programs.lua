@@ -323,6 +323,26 @@ for _, component in ipairs(ComponentData.components) do
   componentProgram.stockedForms[#componentProgram.stockedForms + 1] = { key, component.label }
 end
 M.list[#M.list + 1] = componentProgram
+M.list[#M.list + 1] = {
+  id = 'patternMover',
+  name = 'Pattern mover',
+  description = 'Move intact patterns between interface groups using one * wildcard.',
+  fields = {
+    field(
+      'source',
+      'Source name matcher',
+      'Exact name or one * wildcard; all other characters are literal.',
+      ''
+    ),
+    field(
+      'destination',
+      'Target name template',
+      'A target * copies the matched source text. Without *, all sources share this target.',
+      ''
+    ),
+  },
+  previewTabs = { { 'changes', 'Patterns' }, { 'capacity', 'Capacity' }, { 'details', 'Details' } },
+}
 -- Each output has one editable destination and one switch. Configuration,
 -- validation, routing and rendering all consume this same field schema.
 local function destinationFields(program, definitions, help)

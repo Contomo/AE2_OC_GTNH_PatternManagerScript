@@ -8,7 +8,8 @@ over for each pattern. Stack quantities and recipe outputs are preserved.
 One application runs several programs through **Run program**: assembly-line
 renaming, wire insulation, wiremill patterns for 1x wire and fine wire,
 bending-machine patterns for plates, foil, sheet metal and springs, and Fluid
-Shaper patterns for verified molten-fluid solid parts.
+Shaper patterns for verified molten-fluid solid parts. Pattern mover transfers
+existing patterns between named interface groups.
 Navigation is on the left; Scan, Execute, Pause/Resume, Stop and Quit are at the bottom.
 Settings has shared interfaces/hardware and a separate section for each program.
 [Program architecture and recipe matrix](PATTERN_MAKER.md).
@@ -47,6 +48,20 @@ stay within one destination. Wheel, Page Up/Down and the draggable scrollbar
 continue to work. The application banner has been removed; energy and free
 memory appear at the bottom, leaving five more rows for list content (three
 when both jump rows are reserved).
+
+**Pattern mover** has a source matcher and target template. One `*` matches any
+text and inserts it into the target's `*`: `Large Assembler #*` to
+`Mass Assembler #*` moves `#1` to `#1`, `#2` to `#2`, and so on. All other
+characters are literal; names match in full and are case-sensitive. Exact names
+also work. A fixed target without `*` collects all matched source groups there.
+Every interface sharing a name participates, ordered by location and slot.
+The preview shows each mapping, source/target interface counts and every planned
+move. Existing target patterns stay in place. Capacity is checked independently
+for every target group, using free slots under the same 36-slot assumption.
+Missing targets, insufficient capacity and overlapping source/target groups
+block execution. Crafting, processing, ultimate and fluid patterns move unchanged,
+without donors or an empty editor slot. Pause, Stop and Continue use the shared
+move journal; execution rechecks the preview before transferring anything.
 
 Wiremill selects one input route per output: both default to **Ingot**. Fine wire
 can instead use Rod or 1x wire. Only recipes present in the scrape are generated.

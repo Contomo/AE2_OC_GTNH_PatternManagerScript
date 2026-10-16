@@ -145,6 +145,13 @@ function M.capacityRows(plan)
   for _, group in ipairs(plan.capacities or {}) do
     add(group.name, 'blue')
     add(group.interfaces .. ' interfaces (' .. group.patterns .. ' patterns)')
+    if group.availableInterfaces then
+      add(
+        group.availableInterfaces .. ' target interfaces present; ' .. group.free .. ' free slots.',
+        'muted'
+      )
+      add(group.occupied .. ' existing + ' .. group.incoming .. ' incoming patterns.')
+    end
   end
   spacer(rows, add)
   add('Every matching interface is included, ordered by location.', 'muted')
@@ -399,7 +406,71 @@ function M.transitionRows(plan, section)
   return rows
 end
 
+function M.moverRows(plan, section)
+  if section == 'capacity' then
+    return M.capacityRows(plan)
+  end
+  local rows, add = U.rows()
+  add('PATTERN MOVER', 'blue')
+  add('SOURCE: ' .. plan.source, 'muted')
+  add('TARGET: ' .. plan.destination, 'muted')
+  if section == 'details' then
+    add('One * matches any text, including spaces or an empty suffix.')
+    add('Names match in full and are case-sensitive. All other characters are literal.')
+    add('The target * inserts the text captured by the source *.')
+    add('Large Assembler #* -> Mass Assembler #* maps #1 to #1, #2 to #2, etc.', 'muted')
+    add('A target without * combines all matched source groups into that exact name.')
+    add('All interfaces sharing each name participate, ordered by location and slot.')
+    add('Existing target patterns stay in place; incoming patterns fill free slots.')
+    add('Each target group needs enough space for its own incoming patterns.', 'yellow')
+    add('Crafting, processing and fluid patterns move intact: no recipe or NBT edits.')
+    add('No disposable donors or empty editor slot are needed.')
+    add('Pause / Resume / Stop and Continue use the shared operation journal.', 'muted')
+  else
+    for _, group in ipairs(plan.groups) do
+      spacer(rows, add)
+      destinationRow(add, group.name)
+      add('  FROM: ' .. table.concat(group.sourceNames, ', '), 'muted')
+      add(
+        '  ' .. group.sourceBanks .. ' source / ' .. group.targetBanks .. ' target interfaces',
+        'muted'
+      )
+      add(
+        '  ' .. group.patterns .. ' patterns to move; ' .. group.free .. ' free target slots.',
+        'green'
+      )
+      local bank
+      for index = group.first, group.last do
+        local entry = plan.moves[index]
+        if bank ~= U.where(entry.from) then
+          spacer(rows, add)
+          bank = U.where(entry.from)
+          add('  +-- ' .. entry.sourceName .. ' / ' .. U.locationText(entry.from), interfaceTone)
+        else
+          add('  |', interfaceTone)
+        end
+        treeRow(rows, add, '  |  ', 'MOVE slot ' .. entry.from.slot .. '  ' .. entry.label, 'green')
+        treeRow(
+          rows,
+          add,
+          '  |    ',
+          entry.to and ('To ' .. U.locationText(entry.to) .. ' slot ' .. entry.to.slot)
+            or 'Needs a free target slot',
+          'muted'
+        )
+      end
+    end
+  end
+  for _, err in ipairs(plan.errors) do
+    add('BLOCKED: ' .. err, 'red')
+  end
+  return rows
+end
+
 function M.rows(section, plan, manifest)
+  if plan.kind == 'patternMover' then
+    return M.moverRows(plan, section)
+  end
   if plan.kind == 'transition' then
     return M.transitionRows(plan, section)
   end
@@ -426,7 +497,7 @@ function M.report(plan, manifest)
     end
     lines[#lines + 1] = ''
   end
-  if plan.kind == 'transition' then
+  if plan.kind == 'transition' or plan.kind == 'patternMover' then
     for _, section in ipairs({ 'changes', 'capacity', 'details' }) do
       append(M.rows(section, plan))
     end

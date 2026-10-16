@@ -13,9 +13,12 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/app/20_apply.lua` | Shared donor supply, pattern editing, durable operation journal and recovery; assembly-line execution |
 | `source/app/25_maker.lua` | Recipe scan and execution adapter using the common OC services |
 | `source/app/26_donors.lua` | Donor cleanup preview and parking, using shared discovery, editing and recovery |
+| `source/app/27_transition.lua` | Implosion transition cleanup using the shared editor and journal |
+| `source/app/28_mover.lua` | Wildcard interface-group discovery, capacity planning and intact transfers using the shared move journal |
 | `source/app/30_ui.lua` | Common UI, buttons, scrolling, configuration and preview pages |
 | `source/app/90_main.lua` | Application entry point |
 | `source/lib/util.lua` | Shared value/collection helpers, identities, endpoints and text-row construction |
+| `source/lib/wildcard.lua` | Literal name matching and substitution with one `*` wildcard |
 | `source/lib/config.lua`, `source/lib/programs.lua` | Unified settings and program definitions |
 | `source/lib/batch.lua`, `source/data/tiers.json` | One shared batch policy and one versioned voltage-tier definition table |
 | `source/lib/modes.lua` | Expands selected semantic recipe rules using the material matrix |

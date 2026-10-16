@@ -474,8 +474,14 @@ function C.maker.preview(c, id, progress, control)
 end
 
 function C.maker.finishMove(hw, op)
-  local source = current(hw, op.source).patterns[op.source.slot]
-  local destination = current(hw, op.destination).patterns[op.destination.slot]
+  local sourceBank, destinationBank = current(hw, op.source), current(hw, op.destination)
+  U.check(not op.sourceName or sourceBank.name == op.sourceName, 'Move source interface renamed')
+  U.check(
+    not op.destinationName or destinationBank.name == op.destinationName,
+    'Move target interface renamed'
+  )
+  local source = sourceBank.patterns[op.source.slot]
+  local destination = destinationBank.patterns[op.destination.slot]
   local function matches(p)
     return op.fingerprint and patternFingerprint(hw, p) == op.fingerprint
       or op.original and patternEq(hw.data, p, op.original)
@@ -483,10 +489,10 @@ function C.maker.finishMove(hw, op)
   if not U.exists(source) and matches(destination) then
     return
   end
-  U.check(matches(source), 'Sorting source changed; recovery stopped')
-  U.check(not U.exists(destination), 'Sorting destination is occupied')
+  U.check(matches(source), 'Pattern move source changed; recovery stopped')
+  U.check(not U.exists(destination), 'Pattern move destination is occupied')
   transfer(hw, op.source, op.destination)
-  verifyDelivery(hw, op.source, op.destination, matches, 'Sorted pattern read-back failed')
+  verifyDelivery(hw, op.source, op.destination, matches, 'Moved pattern read-back failed')
 end
 
 function C.maker.finishSort(hw, op, progress)
@@ -650,6 +656,9 @@ function C.runner.hasChanges(preview)
   if plan.kind == 'transition' then
     return #plan.transfers > 0
   end
+  if plan.kind == 'patternMover' then
+    return #plan.moves > 0
+  end
   return preview.id == 'assline' and #plan.changes > 0
     or preview.id ~= 'assline' and (#plan.moves + #plan.creates + #plan.resizes) > 0
 end
@@ -665,6 +674,8 @@ function C.runner.preview(c, id, progress, control)
     preview.plan, preview.report = C.donors.preview(c, progress, control)
   elseif id == 'implosionTransition' then
     preview.plan, preview.report = C.transition.preview(c, progress, control)
+  elseif id == 'patternMover' then
+    preview.plan, preview.report = C.mover.preview(c, progress, control)
   else
     preview.plan, preview.report, preview.manifest = C.maker.preview(c, id, progress, control)
   end
@@ -681,6 +692,8 @@ function C.runner.execute(c, preview, progress, control)
     C.donors.apply(c, preview.plan, progress, control)
   elseif preview.id == 'implosionTransition' then
     C.transition.apply(c, preview.plan, progress, control)
+  elseif preview.id == 'patternMover' then
+    C.mover.apply(c, preview.plan, progress, control)
   else
     C.maker.apply(c, preview.id, preview.plan, preview.manifest, progress, control)
   end
