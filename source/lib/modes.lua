@@ -5,6 +5,7 @@ local Components = require('assline_components')
 local Planner = require('assline_planner')
 local Batch = require('assline_batch')
 local Singularities = require('assline_singularities')
+local Plasma = require('assline_plasma')
 local M = {}
 local aliases = {
   rod = 'stick',
@@ -238,6 +239,9 @@ local function ruleRecipe(
   return recipe
 end
 function M.compile(data, mode, options, checkpoint)
+  if mode == 'plasma' then
+    return Plasma.compile(data, options, checkpoint)
+  end
   if mode == 'components' then
     return Components.compile(data, options, checkpoint)
   end

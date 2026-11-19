@@ -372,8 +372,8 @@ function M.describe(detail)
     .. detail.multiplier
     .. 'x'
     .. (detail.divisor and detail.divisor > 1 and (' (' .. detail.unscaledMultiplier .. 'x / ' .. detail.divisor .. ')') or '')
-    .. '  |  Material '
-    .. material
+    .. '  |  '
+    .. (detail.context or ('Material ' .. material))
     .. '  |  '
     .. M.voltageText(detail)
 end

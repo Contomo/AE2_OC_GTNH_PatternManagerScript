@@ -2,6 +2,7 @@
 local Batch = require('assline_batch')
 local ComponentData = require('assline_component_data')
 local LiquidSettings = require('assline_liquid_settings')
+local Plasma = require('assline_plasma')
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -424,6 +425,57 @@ M.list[#M.list + 1] = {
 for _, entry in ipairs(liquidChoices) do
   M.list[#M.list].outputs[entry[1]] = entry[1]
 end
+local plasmaTiers = {}
+for tier, label in ipairs(Plasma.tierLabels) do
+  plasmaTiers[#plasmaTiers + 1] =
+    { tostring(tier - 1), 'Tier ' .. (tier - 1) .. ' (' .. label .. ')' }
+end
+local plasmaTier = choice(
+  'plasmaTier',
+  'Maximum plasma tier',
+  plasmaTiers,
+  '0',
+  'Maximum unlocked plasma upgrade. This is separate from voltage and material tiers.'
+)
+plasmaTier.kind = 'select'
+local plasmaMultiplier = multiplier()
+plasmaMultiplier.help =
+  'Fixed multiplier for every requested input and output; global tier curves do not apply.'
+M.list[#M.list + 1] = {
+  id = 'plasma',
+  name = 'Plasma Fabricator',
+  mode = 'plasma',
+  batchPolicy = 'fixed',
+  description = 'Fabricate plasmas within unlocked tiers; optionally exclude regular-fusion products.',
+  formChoices = { { 'plasma', 'Plasma' } },
+  outputs = { plasma = 'plasma' },
+  costForms = {},
+  fields = {
+    plasmaTier,
+    field(
+      'multistep',
+      'Allow multistep recipes',
+      'Enable only with the multistep plasma upgrade unlocked.',
+      'off',
+      'toggle'
+    ),
+    field(
+      'includeFusion',
+      'Include regular-fusion products',
+      'Off excludes any plasma output also produced by the regular Fusion Reactor recipe map.',
+      'off',
+      'toggle'
+    ),
+    choice(
+      'plasmaFeed',
+      'Preferred feed',
+      { { 'fluid', 'Fluid' }, { 'dust', 'Dust' } },
+      'fluid',
+      'Choose one route per plasma. Uses the other feed only when the preferred type has no recipe.'
+    ),
+    plasmaMultiplier,
+  },
+}
 -- Each output has one editable destination and one switch. Configuration,
 -- validation, routing and rendering all consume this same field schema.
 local function destinationFields(program, definitions, help)
@@ -490,6 +542,7 @@ local definitions = {
   },
   componentAssembly = {},
   meltingCore = liquidDefinitions,
+  plasma = { { 'plasma', 'Plasma', 'Heliothermal Plasma Fabricator' } },
 }
 for _, entry in ipairs(cableForms) do
   definitions.insulator[#definitions.insulator + 1] = { entry[1], entry[2], nil, 'destination' }

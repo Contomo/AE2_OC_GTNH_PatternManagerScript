@@ -25,6 +25,7 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/lib/modes.lua` | Expands selected semantic recipe rules using the material matrix |
 | `source/lib/planner.lua` | Pure destination capacity, reuse, sorting and creation planning |
 | `source/lib/supply.lua` | Reusable AND/OR recipe dependency graph and independent-supply checks |
+| `source/lib/plasma.lua`, `source/data/plasma.json` | Plasma upgrade/feed/fusion selection and compact source-verified product catalog |
 | `source/lib/melting.lua` | Melting Core route/priority selection, semantic extractor matching and shared cast filtering |
 | `source/lib/preview.lua` | One maker preview renderer used by the UI and exported report |
 | `source/launcher.lua`, `source/install.lua`, `source/interface_probe_src.lua` | Launcher/updater entry, installer, and interface probe sources |
@@ -132,6 +133,21 @@ pattern quantities; mandatory reaction fluids do. Heat/voltage priority classifi
 lives in `melting.lua`, while the normal togglable destination schema supplies each
 circuit's High/Medium/Low names. The shared planner's opt-in cross-destination matching
 moves existing recipes between those groups before creating any missing patterns.
+
+`source/tools/build_plasma.py` streams fabrication and regular-fusion recipes.
+It recovers the missing multistep metadata from pinned `Godforge.java` arrays and
+checks the exported tier. Source material declarations resolve GTpp names; the
+shared registry importer follows Draconic Evolution's registration chain rather
+than inventing item-case mappings. Desktop recipe witnesses stay under `.research/`.
+`source/data/plasma.json` stores each output once with available dust/fluid paths
+and a fusion-overlap flag. The normal build embeds this small catalog in the app;
+there is no extra download or independent pattern executor.
+
+The program declares its fixed batch policy in the settings schema. Its pure
+compiler ignores shared material/voltage budgets by design and applies the chosen
+plasma upgrades. Manifest detail rows are shared by the UI and exported report.
+The build rejects helper imports that were not inlined, and the application smoke
+test runs without `tests/lib` on its module path so mocks cannot hide missing files.
 
 ## Recipe proportions and configured batches
 

@@ -152,6 +152,18 @@ function M.planRows(plan, manifest)
         'muted'
       )
     end
+    if recipe.plasmaTier then
+      treeRow(
+        rows,
+        add,
+        '  |      ',
+        'Multistep: '
+          .. (recipe.multistep and 'Yes' or 'No')
+          .. ' / Regular fusion: '
+          .. (recipe.fusion and 'Yes' or 'No'),
+        'muted'
+      )
+    end
   end
   return rows
 end
@@ -620,6 +632,9 @@ function M.report(plan, manifest)
     return table.concat(lines, '\n') .. '\n'
   end
   append(M.capacityRows(plan))
+  if manifest.details then
+    append(manifest.details)
+  end
   append(M.planRows(plan, manifest))
   if plan.retirements then
     append(M.retirementRows(plan))

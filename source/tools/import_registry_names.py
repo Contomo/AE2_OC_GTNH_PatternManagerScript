@@ -72,9 +72,29 @@ def recover(archive, registry, catalog, enderio_item, enderio_objects, item_regi
 
     for reference_archive in reference_archives:
         with zipfile.ZipFile(reference_archive) as z:
+            sources = {}
             for path in z.namelist():
                 if path.endswith('.java'):
-                    references(z.read(path).decode('utf-8'), path)
+                    sources[path] = z.read(path).decode('utf-8')
+                    references(sources[path], path)
+            # Draconic Evolution derives registry names from each item's
+            # Strings constant. Follow that registration chain for any item,
+            # rather than adding per-material spelling exceptions.
+            registration = next((p for p in sources if p.endswith('/draconicevolution/common/ModItems.java')), None)
+            if registration:
+                def source(suffix):
+                    return sources[next(p for p in sources if p.endswith(suffix))]
+                assert 'GameRegistry.registerItem(item, name.substring(name.indexOf(":") + 1))' in sources[registration]
+                assert 'References.MODID.toLowerCase() + ":"' in source('/items/ItemDE.java')
+                domain = re.search(r'String MODID = "([^"]+)"', source('/common/lib/References.java'))[1]
+                strings = dict(re.findall(r'String (\w+) = "([^"]+)"', source('/common/lib/Strings.java')))
+                classes = set(re.findall(r'= new (\w+)\(\);', sources[registration]))
+                for path, text in sources.items():
+                    if Path(path).stem in classes and 'ModItems.register(this)' in text:
+                        field = re.search(r'setUnlocalizedName\(Strings\.(\w+)\)', text)
+                        if field and field[1] in strings:
+                            add(domain + ':' + strings[field[1]],
+                                'DraconicEvolution ModItems + ItemDE + Strings + ' + Path(path).name)
 
     # EnderIO registers the enum's unlocalisedName, which is exactly name().
     item_text = Path(enderio_item).read_text()

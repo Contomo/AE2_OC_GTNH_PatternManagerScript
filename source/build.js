@@ -27,12 +27,14 @@ const singularityData = '-- Source: source/data/singularities.json\nreturn '+lua
 const componentData = '-- Source: source/data/components.json\nreturn '+lua(JSON.parse(read('source/data/components.json')))+'\n';
 const liquidData = '-- Source: source/data/melting_core.json\nreturn '+lua(JSON.parse(read('source/data/melting_core.json')))+'\n';
 const liquidSettings = '-- Source: source/data/melting_settings.json\nreturn '+lua(JSON.parse(read('source/data/melting_settings.json')))+'\n';
+const plasmaData = '-- Source: source/data/plasma.json\nreturn '+lua(JSON.parse(read('source/data/plasma.json')))+'\n';
 const inline = source => source.replaceAll("require('assline_util')",'U')
   .replaceAll("require('assline_tier_definitions')",'TierDefinitions')
   .replaceAll("require('assline_material_units')",'MaterialUnits')
   .replaceAll("require('assline_batch')",'Batch')
   .replaceAll("require('assline_singularities')",'Singularities')
   .replaceAll("require('assline_components')",'Components')
+  .replaceAll("require('assline_plasma')",'Plasma')
   .replaceAll("require('assline_component_data')",'ComponentData')
   .replaceAll("require('assline_liquid_settings')",'LiquidSettings')
   .replaceAll("require('assline_supply')",'Supply')
@@ -45,7 +47,8 @@ const body = pure('U','source/lib/util.lua')+'local TierDefinitions=(function()\
   'local SingularityData=(function()\n'+singularityData+'end)()\n'+
   'local ComponentData=(function()\n'+componentData+'end)()\n'+
   'local LiquidSettings=(function()\n'+liquidSettings+'end)()\n'+
-  pure('Batch','source/lib/batch.lua')+pure('Programs','source/lib/programs.lua')+pure('Config','source/lib/config.lua')+
+  'local PlasmaData=(function()\n'+plasmaData+'end)()\n'+
+  pure('Batch','source/lib/batch.lua')+pure('Plasma','source/lib/plasma.lua')+pure('Programs','source/lib/programs.lua')+pure('Config','source/lib/config.lua')+
   inline(['source/app/00_core.lua','source/app/10_plan.lua','source/app/20_apply.lua'].map(section).join('\n'))+'\n'+
   pure('Planner','source/lib/planner.lua')+pure('Singularities','source/lib/singularities.lua')+pure('Components','source/lib/components.lua')+pure('Modes','source/lib/modes.lua')+
   pure('Preview','source/lib/preview.lua')+pure('Settings','source/lib/settings.lua')+pure('Wildcard','source/lib/wildcard.lua')+
@@ -87,6 +90,8 @@ emit('tests/lib/assline_material_units.lua',materialUnits,true);
 emit('tests/lib/assline_singularity_data.lua',singularityData,true);
 emit('tests/lib/assline_component_data.lua',componentData,true);
 emit('tests/lib/assline_liquid_settings.lua',liquidSettings,true);
+emit('tests/lib/assline_plasma_data.lua',plasmaData,true);
+emit('tests/lib/assline_plasma.lua',read('source/lib/plasma.lua'),true);
 emit('tests/lib/assline_supply.lua',read('source/lib/supply.lua'),true);
 emit('tests/lib/assline_melting.lua',read('source/lib/melting.lua'),true);
 for (const [name,file] of [['util','source/lib/util.lua'],['batch','source/lib/batch.lua'],['programs','source/lib/programs.lua'],['config','source/lib/config.lua'],['planner','source/lib/planner.lua'],['singularities','source/lib/singularities.lua'],['components','source/lib/components.lua'],['modes','source/lib/modes.lua'],['preview','source/lib/preview.lua'],['settings','source/lib/settings.lua'],['wildcard','source/lib/wildcard.lua']]) {

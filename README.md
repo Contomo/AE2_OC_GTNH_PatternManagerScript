@@ -11,6 +11,7 @@ bending-machine patterns for plates, foil, sheet metal and springs, and Fluid
 Shaper patterns for verified molten-fluid solid parts. Pattern mover transfers
 existing patterns between named interface groups. Melting Core coordinates
 molten production and extraction retirement; Fluid Shaper owns ingot casting.
+Plasma Fabricator creates one fabrication path per plasma output.
 Navigation is on the left; Scan, Execute, Pause/Resume, Stop and Quit are at the bottom.
 Settings has shared interfaces/hardware and a separate section for each program.
 Program selection and program-specific Settings stay synchronized in both directions;
@@ -126,6 +127,32 @@ are preserved. Capacity is checked before retirement starts, unsafe metadata blo
 automatic retirement with a location and reason, and changes to upstream production
 invalidate the preview. Pause, Stop and Continue share the normal operation journal;
 a donor shortage waits for refills.
+
+**Plasma Fabricator** patterns the **Heliothermal Plasma Fabricator**. Configure its
+togglable destination, prefilled as `Heliothermal Plasma Fabricator (Plasma)`.
+Every matching interface participates through the usual capacity, reuse, sorting,
+donor-refill and Pause/Stop/Continue flow.
+
+Its **Maximum plasma tier** selector follows the machine's upgrade groups:
+0 (T1-T3), 1 (T4-T5), or 2 (Exotic). **Allow multistep recipes** is a separate
+unlock checkbox. **Include regular-fusion products** defaults off: exact output
+fluid IDs are compared against the full exported Fusion Reactor recipe map,
+independently of plasma tier or multistep classification. This is recipe availability,
+not a check of which fusion patterns your base currently has installed.
+
+**Preferred feed** selects Fluid or Dust, default Fluid. The other path is used
+only when the preferred type has no recipe; alternate feeds are not installed as
+duplicate patterns. **Pattern multiplier** is always available and scales both
+input and output quantities. As configured for this program, plasma upgrades and
+this fixed multiplier replace global material/voltage/curve limits. Forge controls
+operating voltage; displayed recipe EU/t is informational.
+
+The catalog contains 220 scraped routes grouped into 120 plasma products. Thirty
+products also have regular fusion recipes. Default settings (tier 0, multistep off,
+fusion products excluded) produce 68 patterns; all tiers and multistep enabled
+produce 90 without fusion products, or 120 with them included. The export omits the
+multistep flag, so it is recovered from pinned GT recipe declarations and checked
+against the exported tier. Item identities and quantities come from the scrape.
 
 Wiremill, the insulator and the bending machine each have a **Pattern multiplier** setting, default
 `1`. Enter a positive whole number: `256` makes a 1-ingot → 2-wire recipe request

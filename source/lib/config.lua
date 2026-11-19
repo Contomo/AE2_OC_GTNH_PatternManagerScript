@@ -97,7 +97,12 @@ end
 function M.visibleFields(c, section)
   local result, values = {}, M.values(c, section)
   for _, f in ipairs(M.section(section).fields) do
-    local visible = not f.hidden and (f.key ~= 'multiplier' or c.batch.mode == 'fixed')
+    local visible = not f.hidden
+      and (
+        f.key ~= 'multiplier'
+        or c.batch.mode == 'fixed'
+        or M.section(section).batchPolicy == 'fixed'
+      )
     if f.costDivisor then
       visible = visible and c.batch.costScaling == 'on'
     end

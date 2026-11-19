@@ -380,6 +380,10 @@ local function programRouting(c, id)
       unstable = values.unstable,
       casingTier = values.casingTier,
       rubber = values.rubber,
+      plasmaTier = tonumber(values.plasmaTier),
+      multistep = values.multistep == 'on',
+      includeFusion = values.includeFusion == 'on',
+      plasmaFeed = values.plasmaFeed,
     },
     program
 end
@@ -390,7 +394,8 @@ function C.maker.preview(c, id, progress, control)
   if id == 'fluidShaper' and options.forms.ingot then
     return C.liquids.preview(c, progress, control, id)
   end
-  local catalogs = { singularities = SingularityData, components = ComponentData }
+  local catalogs =
+    { singularities = SingularityData, components = ComponentData, plasma = PlasmaData }
   local data = catalogs[program.mode] or require('assline_data')
   local manifest = Modes.compile(data, program.mode, options, gate)
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)

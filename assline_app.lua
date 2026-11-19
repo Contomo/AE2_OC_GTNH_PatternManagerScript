@@ -272,6 +272,10 @@ local LiquidSettings=(function()
 -- Source: source/data/melting_settings.json
 return {["circuits"]={0,1,2,11,12,16,17,22},["gases"]={{["name"]="oxygen",["label"]="Oxygen"},{["name"]="oganesson",["label"]="Oganesson"},{["name"]="xenon",["label"]="Xenon"},{["name"]="krypton",["label"]="Krypton"},{["name"]="neon",["label"]="Neon"},{["name"]="radon",["label"]="Radon"},{["name"]="argon",["label"]="Argon"},{["name"]="helium",["label"]="Helium"},{["name"]="nitrogen",["label"]="Nitrogen"},{["name"]="hydrogen",["label"]="Hydrogen"}}}
 end)()
+local PlasmaData=(function()
+-- Source: source/data/plasma.json
+return {["version"]=1,["eut"]=2013265912,["names"]={"plasma.sodium","gregtech:gt.metaitem.01","plasma.zirconium","molten.zirconium","plasma.yttrium","plasma.caesium","molten.caesium","plasma.sulfur","plasma.neodymium","plasma.desh","molten.desh","plasma.infinity","plasma.plutonium","molten.plutonium","plasma.cerium","plasma.neptunium","miscutils:itemDustNeptunium","plasma.lead","plasma.flerovium_gt5u","molten.flerovium_gt5u","plasma.ichorium","molten.ichorium","plasma.antimony","molten.antimony","plasma.sixphasedcopper","plasma.magnesium","molten.magnesium","plasma.erbium","plasma.runite","miscutils:itemDustRunite","plasma.zinc","plasma.ytterbium","molten.ytterbium","plasma.palladium","molten.palladium","plasma.terbium","plasma.fluorine","fluorine","plasma.lutetium","molten.lutetium","plasma.advancednitinol","molten.advancednitinol","plasma.silicon","plasma.samarium","plasma.potassium","molten.potassium","plasma.copper","molten.copper","plasma.bedrockium","molten.bedrockium","plasma.thorium","molten.thorium","plasma.uranium235","plasma.bismuth","molten.infinity","plasma.gadolinium","plasma.tritanium","plasma.plutonium241","molten.plutonium241","plasma.force","molten.force","plasma.vanadium","plasma.aluminium","plasma.tungsten","plasma.fermium","miscutils:itemDustFermium","molten.vanadium","plasma.ardite","plasma.osmium","plasma.xenon","xenon","plasma.californium","bartworks:gt.bwMetaGenerateddust","plasma.bromine","molten.bromine","plasma.rhodium","plasma.rhenium","miscutils:itemDustRhenium","plasma.cosmicneutronium","molten.cosmicneutronium","molten.terbium","plasma.praseodymium","plasma.iodine","molten.iodine","plasma.gold","plasma.radon","radon","molten.fermium","plasma.curium","miscutils:itemDustCurium","plasma.niobium","molten.niobium","plasma.promethium","plasma.thulium","plasma.nitrogen","nitrogen","plasma.tin","molten.tin","molten.neodymium","molten.cerium","plasma.astraltitanium","molten.astraltitanium","plasma.redstone","molten.redstone","plasma.manganese","molten.manganese","molten.neptunium","plasma.hypogen","miscutils:itemDustHypogen","molten.aluminium","plasma.chrome","molten.chrome","plasma.hydrogen","hydrogen","plasma.chlorine","chlorine","plasma.chromaticglass","miscutils:itemDustChromaticGlass","molten.runite","molten.chromaticglass","plasma.molybdenum","plasma.silver","molten.silver","molten.praseodymium","molten.californium","plasma.titanium","plasma.thallium","molten.thallium","plasma.hafnium","plasma.draconiumawakened","molten.draconiumawakened","plasma.naquadria","plasma.europium","molten.europium","plasma.arsenic","plasma.rhugnor","molten.rhugnor","miscutils:itemDustRhugnor","plasma.krypton","krypton","molten.sixphasedcopper","molten.molybdenum","plasma.holmium","molten.holmium","plasma.oriharukon","plasma.dysprosium","plasma.celestialtungsten","miscutils:itemDustCelestialTungsten","plasma.beryllium","molten.beryllium","plasma.naquadah","plasma.neutronium","molten.neutronium","molten.samarium","molten.yttrium","plasma.iron","molten.iron","plasma.phosphorus","plasma.ruthenium","plasma.uranium","plasma.germanium","miscutils:itemDustGermanium","plasma.dragonblood","molten.dragonblood","plasma.draconium","DraconicEvolution:draconiumDust","plasma.calcium","molten.calcium","molten.naquadria","plasma.lanthanum","molten.hypogen","plasma.boron","plasma.cobalt","molten.cobalt","plasma.iridium","molten.uranium235","plasma.platinum","plasma.americium","plasma.mercury","mercury","plasma.tritium","tritium","plasma.strontium","molten.boron","molten.naquadah","plasma.rubidium","molten.rubidium","molten.iridium","molten.celestialtungsten","plasma.lithium","molten.lithium","plasma.barium","plasma.thorium232","molten.americium","plasma.nickel","molten.strontium","molten.silicon","molten.dysprosium","molten.platinum","molten.draconium","molten.arsenic","plasma.helium","helium","plasma.tellurium","molten.tellurium","miscutils:itemDustDragonblood","molten.zinc","molten.tritanium","molten.tungsten","plasma.gallium","molten.rhodium","plasma.tantalum","molten.tantalum","molten.ruthenium","molten.lanthanum","plasma.deuterium","deuterium","molten.promethium","molten.germanium","molten.ardite","molten.oriharukon","molten.erbium","minecraft:redstone","plasma.meteoriciron","miscutils:itemDustIodine","plasma.oxygen","oxygen","molten.barium","plasma.indium","molten.thulium","molten.meteoriciron","molten.uranium","miscutils:itemDustThallium","plasma.argon","argon","molten.gadolinium","molten.rhenium","molten.osmium","molten.titanium","molten.indium","molten.gold","plasma.carbon","plasma.cadmium","molten.nickel","molten.thorium232","molten.curium","miscutils:itemDustAdvancedNitinol","miscutils:itemDustAstralTitanium","plasma.neon","neon","molten.bismuth","molten.lead","molten.hafnium","molten.gallium"},["items"]={{["type"]="fluid",["name"]=1,["label"]="Sodium Plasma"},{["type"]="item",["name"]=2,["label"]="Sodium Dust",["damage"]=2017},{["type"]="fluid",["name"]=3,["label"]="Zirconium Plasma"},{["type"]="fluid",["name"]=4,["label"]="Molten Zirconium"},{["type"]="fluid",["name"]=5,["label"]="Yttrium Plasma"},{["type"]="item",["name"]=2,["label"]="Yttrium Dust",["damage"]=2045},{["type"]="fluid",["name"]=6,["label"]="Caesium Plasma"},{["type"]="fluid",["name"]=7,["label"]="Molten Caesium"},{["type"]="fluid",["name"]=8,["label"]="Sulfur Plasma"},{["type"]="item",["name"]=2,["label"]="Sulfur Dust",["damage"]=2022},{["type"]="fluid",["name"]=9,["label"]="Neodymium Plasma"},{["type"]="item",["name"]=2,["label"]="Neodymium Dust",["damage"]=2067},{["type"]="fluid",["name"]=10,["label"]="Desh Plasma"},{["type"]="fluid",["name"]=11,["label"]="Molten Desh"},{["type"]="fluid",["name"]=12,["label"]="Infinity Plasma"},{["type"]="item",["name"]=2,["label"]="Infinity Dust",["damage"]=2397},{["type"]="fluid",["name"]=13,["label"]="Plutonium 239 Plasma"},{["type"]="fluid",["name"]=14,["label"]="Molten Plutonium 239"},{["type"]="fluid",["name"]=15,["label"]="Cerium Plasma"},{["type"]="item",["name"]=2,["label"]="Cerium Dust",["damage"]=2065},{["type"]="fluid",["name"]=16,["label"]="Neptunium Plasma"},{["type"]="item",["name"]=17,["label"]="Neptunium Dust",["damage"]=0},{["type"]="fluid",["name"]=18,["label"]="Lead Plasma"},{["type"]="item",["name"]=2,["label"]="Lead Dust",["damage"]=2089},{["type"]="fluid",["name"]=19,["label"]="Flerovium Plasma"},{["type"]="fluid",["name"]=20,["label"]="Molten Flerovium"},{["type"]="fluid",["name"]=21,["label"]="Ichorium Plasma"},{["type"]="fluid",["name"]=22,["label"]="Molten Ichorium"},{["type"]="fluid",["name"]=23,["label"]="Antimony Plasma"},{["type"]="fluid",["name"]=24,["label"]="Molten Antimony"},{["type"]="fluid",["name"]=25,["label"]="Six-Phased Copper Plasma"},{["type"]="item",["name"]=2,["label"]="Six-Phased Copper Dust",["damage"]=2147},{["type"]="fluid",["name"]=26,["label"]="Magnesium Plasma"},{["type"]="fluid",["name"]=27,["label"]="Molten Magnesium"},{["type"]="fluid",["name"]=28,["label"]="Erbium Plasma"},{["type"]="item",["name"]=2,["label"]="Erbium Dust",["damage"]=2075},{["type"]="fluid",["name"]=29,["label"]="Runite Plasma"},{["type"]="item",["name"]=30,["label"]="Runite Dust",["damage"]=0},{["type"]="fluid",["name"]=31,["label"]="Zinc Plasma"},{["type"]="item",["name"]=2,["label"]="Zinc Dust",["damage"]=2036},{["type"]="fluid",["name"]=32,["label"]="Ytterbium Plasma"},{["type"]="fluid",["name"]=33,["label"]="Molten Ytterbium"},{["type"]="fluid",["name"]=34,["label"]="Palladium Plasma"},{["type"]="fluid",["name"]=35,["label"]="Molten Palladium"},{["type"]="fluid",["name"]=36,["label"]="Terbium Plasma"},{["type"]="item",["name"]=2,["label"]="Terbium Dust",["damage"]=2072},{["type"]="fluid",["name"]=37,["label"]="Fluorine Plasma"},{["type"]="fluid",["name"]=38,["label"]="Fluorine"},{["type"]="fluid",["name"]=39,["label"]="Lutetium Plasma"},{["type"]="fluid",["name"]=40,["label"]="Molten Lutetium"},{["type"]="fluid",["name"]=41,["label"]="Advanced Nitinol Plasma"},{["type"]="fluid",["name"]=42,["label"]="Molten Advanced Nitinol"},{["type"]="fluid",["name"]=43,["label"]="Raw Silicon Plasma"},{["type"]="item",["name"]=2,["label"]="Raw Silicon Dust",["damage"]=2020},{["type"]="fluid",["name"]=44,["label"]="Samarium Plasma"},{["type"]="item",["name"]=2,["label"]="Samarium Dust",["damage"]=2069},{["type"]="fluid",["name"]=45,["label"]="Potassium Plasma"},{["type"]="fluid",["name"]=46,["label"]="Molten Potassium"},{["type"]="item",["name"]=2,["label"]="Potassium Dust",["damage"]=2025},{["type"]="fluid",["name"]=47,["label"]="Copper Plasma"},{["type"]="fluid",["name"]=48,["label"]="Molten Copper"},{["type"]="fluid",["name"]=49,["label"]="Bedrockium Plasma"},{["type"]="fluid",["name"]=50,["label"]="Molten Bedrockium"},{["type"]="fluid",["name"]=51,["label"]="Thorium Plasma"},{["type"]="fluid",["name"]=52,["label"]="Molten Thorium"},{["type"]="fluid",["name"]=53,["label"]="Uranium 235 Plasma"},{["type"]="item",["name"]=2,["label"]="Uranium 235 Dust",["damage"]=2097},{["type"]="fluid",["name"]=54,["label"]="Bismuth Plasma"},{["type"]="item",["name"]=2,["label"]="Bismuth Dust",["damage"]=2090},{["type"]="item",["name"]=2,["label"]="Antimony Dust",["damage"]=2058},{["type"]="fluid",["name"]=55,["label"]="Molten Infinity"},{["type"]="fluid",["name"]=56,["label"]="Gadolinium Plasma"},{["type"]="item",["name"]=2,["label"]="Gadolinium Dust",["damage"]=2071},{["type"]="fluid",["name"]=57,["label"]="Tritanium Plasma"},{["type"]="item",["name"]=2,["label"]="Tritanium Dust",["damage"]=2329},{["type"]="fluid",["name"]=58,["label"]="Plutonium 241 Plasma"},{["type"]="fluid",["name"]=59,["label"]="Molten Plutonium 241"},{["type"]="fluid",["name"]=60,["label"]="Force Plasma"},{["type"]="fluid",["name"]=61,["label"]="Molten Force"},{["type"]="fluid",["name"]=62,["label"]="Vanadium Plasma"},{["type"]="item",["name"]=2,["label"]="Vanadium Dust",["damage"]=2029},{["type"]="fluid",["name"]=63,["label"]="Aluminium Plasma"},{["type"]="item",["name"]=2,["label"]="Aluminium Dust",["damage"]=2019},{["type"]="fluid",["name"]=64,["label"]="Tungsten Plasma"},{["type"]="item",["name"]=2,["label"]="Tungsten Dust",["damage"]=2081},{["type"]="fluid",["name"]=65,["label"]="Fermium Plasma"},{["type"]="item",["name"]=66,["label"]="Fermium Dust",["damage"]=0},{["type"]="fluid",["name"]=67,["label"]="Molten Vanadium"},{["type"]="fluid",["name"]=68,["label"]="Ardite Plasma"},{["type"]="item",["name"]=2,["label"]="Ardite Dust",["damage"]=2382},{["type"]="fluid",["name"]=69,["label"]="Osmium Plasma"},{["type"]="item",["name"]=2,["label"]="Osmium Dust",["damage"]=2083},{["type"]="fluid",["name"]=70,["label"]="Xenon Plasma"},{["type"]="fluid",["name"]=71,["label"]="Xenon"},{["type"]="fluid",["name"]=72,["label"]="Californium Plasma"},{["type"]="item",["name"]=73,["label"]="Californium Dust",["damage"]=39},{["type"]="fluid",["name"]=74,["label"]="Bromine Plasma"},{["type"]="fluid",["name"]=75,["label"]="Bromine"},{["type"]="fluid",["name"]=76,["label"]="Rhodium Plasma"},{["type"]="item",["name"]=73,["label"]="Rhodium Dust",["damage"]=78},{["type"]="fluid",["name"]=77,["label"]="Rhenium Plasma"},{["type"]="item",["name"]=78,["label"]="Rhenium Dust",["damage"]=0},{["type"]="fluid",["name"]=79,["label"]="Cosmic Neutronium Plasma"},{["type"]="fluid",["name"]=80,["label"]="Molten Cosmic Neutronium"},{["type"]="fluid",["name"]=81,["label"]="Molten Terbium"},{["type"]="fluid",["name"]=82,["label"]="Praseodymium Plasma"},{["type"]="item",["name"]=2,["label"]="Praseodymium Dust",["damage"]=2066},{["type"]="fluid",["name"]=83,["label"]="Iodine Plasma"},{["type"]="fluid",["name"]=84,["label"]="Molten Iodine"},{["type"]="item",["name"]=2,["label"]="Magnesium Dust",["damage"]=2018},{["type"]="fluid",["name"]=85,["label"]="Gold Plasma"},{["type"]="item",["name"]=2,["label"]="Gold Dust",["damage"]=2086},{["type"]="fluid",["name"]=86,["label"]="Radon Plasma"},{["type"]="fluid",["name"]=87,["label"]="Radon"},{["type"]="fluid",["name"]=88,["label"]="Fermium"},{["type"]="fluid",["name"]=89,["label"]="Curium Plasma"},{["type"]="item",["name"]=90,["label"]="Curium Dust",["damage"]=0},{["type"]="fluid",["name"]=91,["label"]="Niobium Plasma"},{["type"]="fluid",["name"]=92,["label"]="Molten Niobium"},{["type"]="fluid",["name"]=93,["label"]="Promethium Plasma"},{["type"]="item",["name"]=2,["label"]="Promethium Dust",["damage"]=2068},{["type"]="fluid",["name"]=94,["label"]="Thulium Plasma"},{["type"]="item",["name"]=2,["label"]="Thulium Dust",["damage"]=2076},{["type"]="fluid",["name"]=95,["label"]="Nitrogen Plasma"},{["type"]="fluid",["name"]=96,["label"]="Nitrogen"},{["type"]="fluid",["name"]=97,["label"]="Tin Plasma"},{["type"]="fluid",["name"]=98,["label"]="Molten Tin"},{["type"]="fluid",["name"]=99,["label"]="Molten Neodymium"},{["type"]="fluid",["name"]=100,["label"]="Molten Cerium"},{["type"]="fluid",["name"]=101,["label"]="Astral Titanium Plasma"},{["type"]="fluid",["name"]=102,["label"]="Molten Astral Titanium"},{["type"]="fluid",["name"]=103,["label"]="Redstone Plasma"},{["type"]="fluid",["name"]=104,["label"]="Molten Redstone"},{["type"]="fluid",["name"]=105,["label"]="Manganese Plasma"},{["type"]="fluid",["name"]=106,["label"]="Molten Manganese"},{["type"]="fluid",["name"]=107,["label"]="Molten Neptunium"},{["type"]="fluid",["name"]=108,["label"]="Hypogen Plasma"},{["type"]="item",["name"]=109,["label"]="Hypogen Dust",["damage"]=0},{["type"]="fluid",["name"]=110,["label"]="Molten Aluminium"},{["type"]="fluid",["name"]=111,["label"]="Chrome Plasma"},{["type"]="fluid",["name"]=112,["label"]="Molten Chrome"},{["type"]="fluid",["name"]=113,["label"]="Hydrogen Plasma"},{["type"]="fluid",["name"]=114,["label"]="Hydrogen"},{["type"]="fluid",["name"]=115,["label"]="Chlorine Plasma"},{["type"]="fluid",["name"]=116,["label"]="Chlorine"},{["type"]="fluid",["name"]=117,["label"]="Chromatic Glass Plasma"},{["type"]="item",["name"]=118,["label"]="Chromatic Glass Dust",["damage"]=0},{["type"]="fluid",["name"]=119,["label"]="Molten Runite"},{["type"]="item",["name"]=2,["label"]="Ichorium Dust",["damage"]=2978},{["type"]="fluid",["name"]=120,["label"]="Molten Chromatic Glass"},{["type"]="fluid",["name"]=121,["label"]="Molybdenum Plasma"},{["type"]="item",["name"]=2,["label"]="Molybdenum Dust",["damage"]=2048},{["type"]="fluid",["name"]=122,["label"]="Silver Plasma"},{["type"]="fluid",["name"]=123,["label"]="Molten Silver"},{["type"]="item",["name"]=2,["label"]="Tin Dust",["damage"]=2057},{["type"]="fluid",["name"]=124,["label"]="Molten Praseodymium"},{["type"]="item",["name"]=2,["label"]="Plutonium 241 Dust",["damage"]=2101},{["type"]="fluid",["name"]=125,["label"]="Molten Californium"},{["type"]="fluid",["name"]=126,["label"]="Titanium Plasma"},{["type"]="item",["name"]=2,["label"]="Titanium Dust",["damage"]=2028},{["type"]="fluid",["name"]=127,["label"]="Thallium Plasma"},{["type"]="fluid",["name"]=128,["label"]="Molten Thallium"},{["type"]="item",["name"]=2,["label"]="Cosmic Neutronium Dust",["damage"]=2982},{["type"]="fluid",["name"]=129,["label"]="Hafnium Plasma"},{["type"]="item",["name"]=73,["label"]="Hafnium Dust",["damage"]=11000},{["type"]="item",["name"]=2,["label"]="Manganese Dust",["damage"]=2031},{["type"]="item",["name"]=2,["label"]="Flerovium Dust",["damage"]=2984},{["type"]="fluid",["name"]=130,["label"]="Awakened Draconium Plasma"},{["type"]="fluid",["name"]=131,["label"]="Molten Awakened Draconium"},{["type"]="fluid",["name"]=132,["label"]="Naquadria Plasma"},{["type"]="item",["name"]=2,["label"]="Naquadria Dust",["damage"]=2327},{["type"]="fluid",["name"]=133,["label"]="Europium Plasma"},{["type"]="fluid",["name"]=134,["label"]="Molten Europium"},{["type"]="fluid",["name"]=135,["label"]="Arsenic Plasma"},{["type"]="item",["name"]=2,["label"]="Arsenic Dust",["damage"]=2039},{["type"]="fluid",["name"]=136,["label"]="Rhugnor Plasma"},{["type"]="fluid",["name"]=137,["label"]="Molten Rhugnor"},{["type"]="item",["name"]=138,["label"]="Rhugnor Dust",["damage"]=0},{["type"]="fluid",["name"]=139,["label"]="Krypton Plasma"},{["type"]="fluid",["name"]=140,["label"]="Krypton"},{["type"]="item",["name"]=2,["label"]="Europium Dust",["damage"]=2070},{["type"]="fluid",["name"]=141,["label"]="Molten Six-Phased Copper"},{["type"]="fluid",["name"]=142,["label"]="Molten Molybdenum"},{["type"]="fluid",["name"]=143,["label"]="Holmium Plasma"},{["type"]="fluid",["name"]=144,["label"]="Molten Holmium"},{["type"]="fluid",["name"]=145,["label"]="Oriharukon Plasma"},{["type"]="item",["name"]=2,["label"]="Oriharukon Dust",["damage"]=2393},{["type"]="fluid",["name"]=146,["label"]="Dysprosium Plasma"},{["type"]="item",["name"]=2,["label"]="Dysprosium Dust",["damage"]=2073},{["type"]="fluid",["name"]=147,["label"]="Celestial Tungsten Plasma"},{["type"]="item",["name"]=148,["label"]="Celestial Tungsten Dust",["damage"]=0},{["type"]="item",["name"]=2,["label"]="Bedrockium Dust",["damage"]=2395},{["type"]="fluid",["name"]=149,["label"]="Beryllium Plasma"},{["type"]="fluid",["name"]=150,["label"]="Molten Beryllium"},{["type"]="fluid",["name"]=151,["label"]="Naquadah Plasma"},{["type"]="item",["name"]=2,["label"]="Naquadah Dust",["damage"]=2324},{["type"]="fluid",["name"]=152,["label"]="Neutronium Plasma"},{["type"]="fluid",["name"]=153,["label"]="Molten Neutronium"},{["type"]="fluid",["name"]=154,["label"]="Molten Samarium"},{["type"]="fluid",["name"]=155,["label"]="Molten Yttrium"},{["type"]="fluid",["name"]=156,["label"]="Iron Plasma"},{["type"]="fluid",["name"]=157,["label"]="Molten Iron"},{["type"]="fluid",["name"]=158,["label"]="Phosphorus Plasma"},{["type"]="item",["name"]=2,["label"]="Phosphorus Dust",["damage"]=2021},{["type"]="item",["name"]=2,["label"]="Caesium Dust",["damage"]=2062},{["type"]="fluid",["name"]=159,["label"]="Ruthenium Plasma"},{["type"]="item",["name"]=73,["label"]="Ruthenium Dust",["damage"]=64},{["type"]="fluid",["name"]=160,["label"]="Uranium 238 Plasma"},{["type"]="item",["name"]=2,["label"]="Uranium 238 Dust",["damage"]=2098},{["type"]="fluid",["name"]=161,["label"]="Germanium Plasma"},{["type"]="item",["name"]=162,["label"]="Germanium Dust",["damage"]=0},{["type"]="fluid",["name"]=163,["label"]="Dragonblood Plasma"},{["type"]="fluid",["name"]=164,["label"]="Molten Dragonblood"},{["type"]="fluid",["name"]=165,["label"]="Draconium Plasma"},{["type"]="item",["name"]=166,["label"]="Draconium Dust",["damage"]=0},{["type"]="fluid",["name"]=167,["label"]="Calcium Plasma"},{["type"]="fluid",["name"]=168,["label"]="Molten Calcium"},{["type"]="item",["name"]=2,["label"]="Silver Dust",["damage"]=2054},{["type"]="fluid",["name"]=169,["label"]="Molten Naquadria"},{["type"]="item",["name"]=2,["label"]="Force Dust",["damage"]=2521},{["type"]="fluid",["name"]=170,["label"]="Lanthanum Plasma"},{["type"]="item",["name"]=2,["label"]="Lanthanum Dust",["damage"]=2064},{["type"]="fluid",["name"]=171,["label"]="Molten Hypogen"},{["type"]="item",["name"]=2,["label"]="Lutetium Dust",["damage"]=2078},{["type"]="fluid",["name"]=172,["label"]="Boron Plasma"},{["type"]="item",["name"]=2,["label"]="Boron Dust",["damage"]=2009},{["type"]="fluid",["name"]=173,["label"]="Cobalt Plasma"},{["type"]="fluid",["name"]=174,["label"]="Molten Cobalt"},{["type"]="fluid",["name"]=175,["label"]="Iridium Plasma"},{["type"]="item",["name"]=2,["label"]="Iridium Dust",["damage"]=2084},{["type"]="fluid",["name"]=176,["label"]="Molten Uranium 235"},{["type"]="fluid",["name"]=177,["label"]="Platinum Plasma"},{["type"]="item",["name"]=2,["label"]="Platinum Dust",["damage"]=2085},{["type"]="fluid",["name"]=178,["label"]="Americium Plasma"},{["type"]="item",["name"]=2,["label"]="Americium Dust",["damage"]=2103},{["type"]="item",["name"]=2,["label"]="Awakened Draconium Dust",["damage"]=2976},{["type"]="item",["name"]=2,["label"]="Beryllium Dust",["damage"]=2008},{["type"]="item",["name"]=2,["label"]="Thorium Dust",["damage"]=2096},{["type"]="item",["name"]=2,["label"]="Chrome Dust",["damage"]=2030},{["type"]="fluid",["name"]=179,["label"]="Mercury Plasma"},{["type"]="fluid",["name"]=180,["label"]="Mercury"},{["type"]="item",["name"]=2,["label"]="Iron Dust",["damage"]=2032},{["type"]="fluid",["name"]=181,["label"]="Tritium Plasma"},{["type"]="fluid",["name"]=182,["label"]="Tritium"},{["type"]="fluid",["name"]=183,["label"]="Strontium Plasma"},{["type"]="item",["name"]=2,["label"]="Strontium Dust",["damage"]=2044},{["type"]="fluid",["name"]=184,["label"]="Molten Boron"},{["type"]="item",["name"]=2,["label"]="Cobalt Dust",["damage"]=2033},{["type"]="fluid",["name"]=185,["label"]="Molten Naquadah"},{["type"]="fluid",["name"]=186,["label"]="Rubidium Plasma"},{["type"]="fluid",["name"]=187,["label"]="Molten Rubidium"},{["type"]="item",["name"]=2,["label"]="Desh Dust",["damage"]=2884},{["type"]="fluid",["name"]=188,["label"]="Molten Iridium"},{["type"]="fluid",["name"]=189,["label"]="Molten Celestial Tungsten"},{["type"]="fluid",["name"]=190,["label"]="Lithium Plasma"},{["type"]="fluid",["name"]=191,["label"]="Molten Lithium"},{["type"]="fluid",["name"]=192,["label"]="Barium Plasma"},{["type"]="item",["name"]=2,["label"]="Barium Dust",["damage"]=2063},{["type"]="fluid",["name"]=193,["label"]="Thorium 232 Plasma"},{["type"]="item",["name"]=73,["label"]="Thorium 232 Dust",["damage"]=30},{["type"]="fluid",["name"]=194,["label"]="Molten Americium"},{["type"]="fluid",["name"]=195,["label"]="Nickel Plasma"},{["type"]="item",["name"]=2,["label"]="Nickel Dust",["damage"]=2034},{["type"]="fluid",["name"]=196,["label"]="Molten Strontium"},{["type"]="fluid",["name"]=197,["label"]="Molten Raw Silicon"},{["type"]="fluid",["name"]=198,["label"]="Molten Dysprosium"},{["type"]="item",["name"]=2,["label"]="Neutronium Dust",["damage"]=2129},{["type"]="fluid",["name"]=199,["label"]="Molten Platinum"},{["type"]="fluid",["name"]=200,["label"]="Molten Draconium"},{["type"]="fluid",["name"]=201,["label"]="Molten Arsenic"},{["type"]="item",["name"]=2,["label"]="Palladium Dust",["damage"]=2052},{["type"]="fluid",["name"]=202,["label"]="Helium Plasma"},{["type"]="fluid",["name"]=203,["label"]="Helium"},{["type"]="fluid",["name"]=204,["label"]="Tellurium Plasma"},{["type"]="fluid",["name"]=205,["label"]="Molten Tellurium"},{["type"]="item",["name"]=206,["label"]="Dragonblood Dust",["damage"]=0},{["type"]="fluid",["name"]=207,["label"]="Molten Zinc"},{["type"]="item",["name"]=2,["label"]="Copper Dust",["damage"]=2035},{["type"]="fluid",["name"]=208,["label"]="Molten Tritanium"},{["type"]="fluid",["name"]=209,["label"]="Molten Tungsten"},{["type"]="item",["name"]=2,["label"]="Tellurium Dust",["damage"]=2059},{["type"]="fluid",["name"]=210,["label"]="Gallium Plasma"},{["type"]="item",["name"]=2,["label"]="Gallium Dust",["damage"]=2037},{["type"]="fluid",["name"]=211,["label"]="Molten Rhodium"},{["type"]="fluid",["name"]=212,["label"]="Tantalum Plasma"},{["type"]="fluid",["name"]=213,["label"]="Molten Tantalum"},{["type"]="fluid",["name"]=214,["label"]="Molten Ruthenium"},{["type"]="fluid",["name"]=215,["label"]="Molten Lanthanum"},{["type"]="item",["name"]=2,["label"]="Holmium Dust",["damage"]=2074},{["type"]="fluid",["name"]=216,["label"]="Deuterium Plasma"},{["type"]="fluid",["name"]=217,["label"]="Deuterium"},{["type"]="item",["name"]=2,["label"]="Niobium Dust",["damage"]=2047},{["type"]="fluid",["name"]=218,["label"]="Molten Promethium"},{["type"]="item",["name"]=2,["label"]="Plutonium 239 Dust",["damage"]=2100},{["type"]="item",["name"]=2,["label"]="Lithium Dust",["damage"]=2006},{["type"]="fluid",["name"]=219,["label"]="Molten Germanium"},{["type"]="fluid",["name"]=220,["label"]="Molten Ardite"},{["type"]="fluid",["name"]=221,["label"]="Molten Oriharukon"},{["type"]="fluid",["name"]=222,["label"]="Molten Erbium"},{["type"]="item",["name"]=223,["label"]="Redstone Dust",["damage"]=0},{["type"]="fluid",["name"]=224,["label"]="Meteoric Iron Plasma"},{["type"]="item",["name"]=2,["label"]="Meteoric Iron Dust",["damage"]=2340},{["type"]="item",["name"]=225,["label"]="Iodine Dust",["damage"]=0},{["type"]="fluid",["name"]=226,["label"]="Oxygen Plasma"},{["type"]="fluid",["name"]=227,["label"]="Oxygen"},{["type"]="fluid",["name"]=228,["label"]="Molten Barium"},{["type"]="item",["name"]=2,["label"]="Ytterbium Dust",["damage"]=2077},{["type"]="fluid",["name"]=229,["label"]="Indium Plasma"},{["type"]="item",["name"]=2,["label"]="Indium Dust",["damage"]=2056},{["type"]="fluid",["name"]=230,["label"]="Molten Thulium"},{["type"]="fluid",["name"]=231,["label"]="Molten Meteoric Iron"},{["type"]="fluid",["name"]=232,["label"]="Molten Uranium 238"},{["type"]="item",["name"]=233,["label"]="Thallium Dust",["damage"]=0},{["type"]="fluid",["name"]=234,["label"]="Argon Plasma"},{["type"]="fluid",["name"]=235,["label"]="Argon"},{["type"]="fluid",["name"]=236,["label"]="Molten Gadolinium"},{["type"]="fluid",["name"]=237,["label"]="Molten Rhenium"},{["type"]="fluid",["name"]=238,["label"]="Molten Osmium"},{["type"]="fluid",["name"]=239,["label"]="Molten Titanium"},{["type"]="fluid",["name"]=240,["label"]="Molten Indium"},{["type"]="fluid",["name"]=241,["label"]="Molten Gold"},{["type"]="fluid",["name"]=242,["label"]="Carbon Plasma"},{["type"]="item",["name"]=2,["label"]="Carbon Dust",["damage"]=2010},{["type"]="fluid",["name"]=243,["label"]="Cadmium Plasma"},{["type"]="item",["name"]=2,["label"]="Cadmium Dust",["damage"]=2055},{["type"]="fluid",["name"]=244,["label"]="Molten Nickel"},{["type"]="fluid",["name"]=245,["label"]="Molten Thorium 232"},{["type"]="item",["name"]=2,["label"]="Rubidium Dust",["damage"]=2043},{["type"]="fluid",["name"]=246,["label"]="Molten Curium"},{["type"]="item",["name"]=247,["label"]="Advanced Nitinol Dust",["damage"]=0},{["type"]="item",["name"]=248,["label"]="Astral Titanium Dust",["damage"]=0},{["type"]="fluid",["name"]=249,["label"]="Neon Plasma"},{["type"]="fluid",["name"]=250,["label"]="Neon"},{["type"]="item",["name"]=2,["label"]="Tantalum Dust",["damage"]=2080},{["type"]="item",["name"]=73,["label"]="Zirconium Dust",["damage"]=3},{["type"]="fluid",["name"]=251,["label"]="Molten Bismuth"},{["type"]="fluid",["name"]=252,["label"]="Molten Lead"},{["type"]="fluid",["name"]=253,["label"]="Molten Hafnium"},{["type"]="item",["name"]=2,["label"]="Calcium Dust",["damage"]=2026},{["type"]="fluid",["name"]=254,["label"]="Molten Gallium"}},["materials"]={{["label"]="Advanced Nitinol",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={51,144},["paths"]={["fluid"]={52,144},["dust"]={330,1}}},{["label"]="Aluminium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={82,144},["paths"]={["dust"]={83,1},["fluid"]={139,144}}},{["label"]="Americium",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={234,144},["paths"]={["dust"]={235,1},["fluid"]={261,144}}},{["label"]="Antimony",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={29,144},["paths"]={["fluid"]={30,144},["dust"]={70,1}}},{["label"]="Ardite",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={89,144},["paths"]={["dust"]={90,1},["fluid"]={297,144}}},{["label"]="Argon",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={314,500},["paths"]={["fluid"]={315,500}}},{["label"]="Arsenic",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={174,144},["paths"]={["dust"]={175,1},["fluid"]={270,144}}},{["label"]="Astral Titanium",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={130,144},["paths"]={["fluid"]={131,144},["dust"]={331,1}}},{["label"]="Awakened Draconium",["tier"]=2,["multistep"]=false,["fusion"]=false,["output"]={168,144},["paths"]={["fluid"]={169,144},["dust"]={236,1}}},{["label"]="Barium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={257,144},["paths"]={["dust"]={258,1},["fluid"]={306,144}}},{["label"]="Bedrockium",["tier"]=2,["multistep"]=false,["fusion"]=false,["output"]={62,144},["paths"]={["fluid"]={63,144},["dust"]={192,1}}},{["label"]="Beryllium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={193,144},["paths"]={["fluid"]={194,144},["dust"]={237,1}}},{["label"]="Bismuth",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={68,144},["paths"]={["dust"]={69,1},["fluid"]={336,144}}},{["label"]="Boron",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={225,144},["paths"]={["dust"]={226,1},["fluid"]={247,144}}},{["label"]="Bromine",["tier"]=1,["multistep"]=false,["fusion"]=true,["output"]={97,500},["paths"]={["fluid"]={98,500}}},{["label"]="Cadmium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={324,144},["paths"]={["dust"]={325,1}}},{["label"]="Caesium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={7,144},["paths"]={["fluid"]={8,144},["dust"]={205,1}}},{["label"]="Calcium",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={216,144},["paths"]={["fluid"]={217,144},["dust"]={339,1}}},{["label"]="Californium",["tier"]=0,["multistep"]=true,["fusion"]=false,["output"]={95,144},["paths"]={["dust"]={96,1},["fluid"]={158,144}}},{["label"]="Carbon",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={322,144},["paths"]={["dust"]={323,1}}},{["label"]="Celestial Tungsten",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={190,144},["paths"]={["dust"]={191,1},["fluid"]={254,144}}},{["label"]="Cerium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={19,144},["paths"]={["dust"]={20,1},["fluid"]={129,144}}},{["label"]="Chlorine",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={144,500},["paths"]={["fluid"]={145,500}}},{["label"]="Chromatic Glass",["tier"]=2,["multistep"]=false,["fusion"]=false,["output"]={146,144},["paths"]={["dust"]={147,1},["fluid"]={150,144}}},{["label"]="Chrome",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={140,144},["paths"]={["fluid"]={141,144},["dust"]={239,1}}},{["label"]="Cobalt",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={227,144},["paths"]={["fluid"]={228,144},["dust"]={248,1}}},{["label"]="Copper",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={60,144},["paths"]={["fluid"]={61,144},["dust"]={278,1}}},{["label"]="Cosmic Neutronium",["tier"]=1,["multistep"]=false,["fusion"]=false,["output"]={103,144},["paths"]={["fluid"]={104,144},["dust"]={163,1}}},{["label"]="Curium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={116,144},["paths"]={["dust"]={117,1},["fluid"]={329,144}}},{["label"]="Desh",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={13,144},["paths"]={["fluid"]={14,144},["dust"]={252,1}}},{["label"]="Deuterium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={290,500},["paths"]={["fluid"]={291,500}}},{["label"]="Draconium",["tier"]=2,["multistep"]=false,["fusion"]=false,["output"]={214,144},["paths"]={["dust"]={215,1},["fluid"]={269,144}}},{["label"]="Dragonblood",["tier"]=2,["multistep"]=false,["fusion"]=false,["output"]={212,144},["paths"]={["fluid"]={213,144},["dust"]={276,1}}},{["label"]="Dysprosium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={188,144},["paths"]={["dust"]={189,1},["fluid"]={266,144}}},{["label"]="Erbium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={35,144},["paths"]={["dust"]={36,1},["fluid"]={299,144}}},{["label"]="Europium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={172,144},["paths"]={["fluid"]={173,144},["dust"]={181,1}}},{["label"]="Fermium",["tier"]=1,["multistep"]=true,["fusion"]=true,["output"]={86,144},["paths"]={["dust"]={87,1},["fluid"]={115,144}}},{["label"]="Flerovium",["tier"]=2,["multistep"]=true,["fusion"]=false,["output"]={25,144},["paths"]={["fluid"]={26,144},["dust"]={167,1}}},{["label"]="Fluorine",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={47,500},["paths"]={["fluid"]={48,500}}},{["label"]="Force",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={78,144},["paths"]={["fluid"]={79,144},["dust"]={220,1}}},{["label"]="Gadolinium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={72,144},["paths"]={["dust"]={73,1},["fluid"]={316,144}}},{["label"]="Gallium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={282,144},["paths"]={["dust"]={283,1},["fluid"]={340,144}}},{["label"]="Germanium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={210,144},["paths"]={["dust"]={211,1},["fluid"]={296,144}}},{["label"]="Gold",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={111,144},["paths"]={["dust"]={112,1},["fluid"]={321,144}}},{["label"]="Hafnium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={164,144},["paths"]={["dust"]={165,1},["fluid"]={338,144}}},{["label"]="Helium",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={272,500},["paths"]={["fluid"]={273,500}}},{["label"]="Holmium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={184,144},["paths"]={["fluid"]={185,144},["dust"]={289,1}}},{["label"]="Hydrogen",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={142,500},["paths"]={["fluid"]={143,500}}},{["label"]="Hypogen",["tier"]=2,["multistep"]=true,["fusion"]=false,["output"]={137,144},["paths"]={["dust"]={138,1},["fluid"]={223,144}}},{["label"]="Ichorium",["tier"]=2,["multistep"]=false,["fusion"]=false,["output"]={27,144},["paths"]={["fluid"]={28,144},["dust"]={149,1}}},{["label"]="Indium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={308,144},["paths"]={["dust"]={309,1},["fluid"]={320,144}}},{["label"]="Infinity",["tier"]=2,["multistep"]=false,["fusion"]=false,["output"]={15,144},["paths"]={["dust"]={16,1},["fluid"]={71,144}}},{["label"]="Iodine",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={108,144},["paths"]={["fluid"]={109,144},["dust"]={303,1}}},{["label"]="Iridium",["tier"]=0,["multistep"]=true,["fusion"]=false,["output"]={229,144},["paths"]={["dust"]={230,1},["fluid"]={253,144}}},{["label"]="Iron",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={201,144},["paths"]={["fluid"]={202,144},["dust"]={242,1}}},{["label"]="Krypton",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={179,500},["paths"]={["fluid"]={180,500}}},{["label"]="Lanthanum",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={221,144},["paths"]={["dust"]={222,1},["fluid"]={288,144}}},{["label"]="Lead",["tier"]=1,["multistep"]=false,["fusion"]=true,["output"]={23,144},["paths"]={["dust"]={24,1},["fluid"]={337,144}}},{["label"]="Lithium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={255,144},["paths"]={["fluid"]={256,144},["dust"]={295,1}}},{["label"]="Lutetium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={49,144},["paths"]={["fluid"]={50,144},["dust"]={224,1}}},{["label"]="Magnesium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={33,144},["paths"]={["fluid"]={34,144},["dust"]={110,1}}},{["label"]="Manganese",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={134,144},["paths"]={["fluid"]={135,144},["dust"]={166,1}}},{["label"]="Mercury",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={240,500},["paths"]={["fluid"]={241,500}}},{["label"]="Meteoric Iron",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={301,144},["paths"]={["dust"]={302,1},["fluid"]={311,144}}},{["label"]="Molybdenum",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={151,144},["paths"]={["dust"]={152,1},["fluid"]={183,144}}},{["label"]="Naquadah",["tier"]=0,["multistep"]=true,["fusion"]=false,["output"]={195,144},["paths"]={["dust"]={196,1},["fluid"]={249,144}}},{["label"]="Naquadria",["tier"]=1,["multistep"]=false,["fusion"]=false,["output"]={170,144},["paths"]={["dust"]={171,1},["fluid"]={219,144}}},{["label"]="Neodymium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={11,144},["paths"]={["dust"]={12,1},["fluid"]={128,144}}},{["label"]="Neon",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={332,500},["paths"]={["fluid"]={333,500}}},{["label"]="Neptunium",["tier"]=1,["multistep"]=true,["fusion"]=true,["output"]={21,144},["paths"]={["dust"]={22,1},["fluid"]={136,144}}},{["label"]="Neutronium",["tier"]=2,["multistep"]=true,["fusion"]=false,["output"]={197,144},["paths"]={["fluid"]={198,144},["dust"]={267,1}}},{["label"]="Nickel",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={262,144},["paths"]={["dust"]={263,1},["fluid"]={326,144}}},{["label"]="Niobium",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={118,144},["paths"]={["fluid"]={119,144},["dust"]={292,1}}},{["label"]="Nitrogen",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={124,500},["paths"]={["fluid"]={125,500}}},{["label"]="Oriharukon",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={186,144},["paths"]={["dust"]={187,1},["fluid"]={298,144}}},{["label"]="Osmium",["tier"]=0,["multistep"]=true,["fusion"]=false,["output"]={91,144},["paths"]={["dust"]={92,1},["fluid"]={318,144}}},{["label"]="Oxygen",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={304,500},["paths"]={["fluid"]={305,500}}},{["label"]="Palladium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={43,144},["paths"]={["fluid"]={44,144},["dust"]={271,1}}},{["label"]="Phosphorus",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={203,144},["paths"]={["dust"]={204,1}}},{["label"]="Platinum",["tier"]=0,["multistep"]=true,["fusion"]=false,["output"]={232,144},["paths"]={["dust"]={233,1},["fluid"]={268,144}}},{["label"]="Plutonium 239",["tier"]=0,["multistep"]=true,["fusion"]=false,["output"]={17,144},["paths"]={["fluid"]={18,144},["dust"]={294,1}}},{["label"]="Plutonium 241",["tier"]=1,["multistep"]=false,["fusion"]=true,["output"]={76,144},["paths"]={["fluid"]={77,144},["dust"]={157,1}}},{["label"]="Potassium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={57,144},["paths"]={["fluid"]={58,144},["dust"]={59,1}}},{["label"]="Praseodymium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={106,144},["paths"]={["dust"]={107,1},["fluid"]={156,144}}},{["label"]="Promethium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={120,144},["paths"]={["dust"]={121,1},["fluid"]={293,144}}},{["label"]="Radon",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={113,500},["paths"]={["fluid"]={114,500}}},{["label"]="Raw Silicon",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={53,144},["paths"]={["dust"]={54,1},["fluid"]={265,144}}},{["label"]="Redstone",["tier"]=1,["multistep"]=false,["fusion"]=false,["output"]={132,144},["paths"]={["fluid"]={133,144},["dust"]={300,1}}},{["label"]="Rhenium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={101,144},["paths"]={["dust"]={102,1},["fluid"]={317,144}}},{["label"]="Rhodium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={99,144},["paths"]={["dust"]={100,1},["fluid"]={284,144}}},{["label"]="Rhugnor",["tier"]=2,["multistep"]=false,["fusion"]=false,["output"]={176,144},["paths"]={["fluid"]={177,144},["dust"]={178,1}}},{["label"]="Rubidium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={250,144},["paths"]={["fluid"]={251,144},["dust"]={328,1}}},{["label"]="Runite",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={37,144},["paths"]={["dust"]={38,1},["fluid"]={148,144}}},{["label"]="Ruthenium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={206,144},["paths"]={["dust"]={207,1},["fluid"]={287,144}}},{["label"]="Samarium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={55,144},["paths"]={["dust"]={56,1},["fluid"]={199,144}}},{["label"]="Silver",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={153,144},["paths"]={["fluid"]={154,144},["dust"]={218,1}}},{["label"]="Six-Phased Copper",["tier"]=2,["multistep"]=true,["fusion"]=false,["output"]={31,144},["paths"]={["dust"]={32,1},["fluid"]={182,144}}},{["label"]="Sodium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={1,144},["paths"]={["dust"]={2,1}}},{["label"]="Strontium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={245,144},["paths"]={["dust"]={246,1},["fluid"]={264,144}}},{["label"]="Sulfur",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={9,144},["paths"]={["dust"]={10,1}}},{["label"]="Tantalum",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={285,144},["paths"]={["fluid"]={286,144},["dust"]={334,1}}},{["label"]="Tellurium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={274,144},["paths"]={["fluid"]={275,144},["dust"]={281,1}}},{["label"]="Terbium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={45,144},["paths"]={["dust"]={46,1},["fluid"]={105,144}}},{["label"]="Thallium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={161,144},["paths"]={["fluid"]={162,144},["dust"]={313,1}}},{["label"]="Thorium",["tier"]=1,["multistep"]=false,["fusion"]=true,["output"]={64,144},["paths"]={["fluid"]={65,144},["dust"]={238,1}}},{["label"]="Thorium 232",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={259,144},["paths"]={["dust"]={260,1},["fluid"]={327,144}}},{["label"]="Thulium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={122,144},["paths"]={["dust"]={123,1},["fluid"]={310,144}}},{["label"]="Tin",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={126,144},["paths"]={["fluid"]={127,144},["dust"]={155,1}}},{["label"]="Titanium",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={159,144},["paths"]={["dust"]={160,1},["fluid"]={319,144}}},{["label"]="Tritanium",["tier"]=2,["multistep"]=true,["fusion"]=false,["output"]={74,144},["paths"]={["dust"]={75,1},["fluid"]={279,144}}},{["label"]="Tritium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={243,500},["paths"]={["fluid"]={244,500}}},{["label"]="Tungsten",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={84,144},["paths"]={["dust"]={85,1},["fluid"]={280,144}}},{["label"]="Uranium 235",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={66,144},["paths"]={["dust"]={67,1},["fluid"]={231,144}}},{["label"]="Uranium 238",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={208,144},["paths"]={["dust"]={209,1},["fluid"]={312,144}}},{["label"]="Vanadium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={80,144},["paths"]={["dust"]={81,1},["fluid"]={88,144}}},{["label"]="Xenon",["tier"]=0,["multistep"]=true,["fusion"]=true,["output"]={93,500},["paths"]={["fluid"]={94,500}}},{["label"]="Ytterbium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={41,144},["paths"]={["fluid"]={42,144},["dust"]={307,1}}},{["label"]="Yttrium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={5,144},["paths"]={["dust"]={6,1},["fluid"]={200,144}}},{["label"]="Zinc",["tier"]=0,["multistep"]=false,["fusion"]=true,["output"]={39,144},["paths"]={["dust"]={40,1},["fluid"]={277,144}}},{["label"]="Zirconium",["tier"]=0,["multistep"]=false,["fusion"]=false,["output"]={3,144},["paths"]={["fluid"]={4,144},["dust"]={335,1}}}},["source"]={["recipeVersion"]="2.9.0-beta-2",["targetVersion"]="2.9.0-beta-3",["datasetId"]="local-2.9.0-beta-2",["recipeSource"]="https://github.com/GTNewHorizons/GT5-Unofficial/blob/5.09.54.133/src/main/java/tectech/loader/recipe/Godforge.java",["godforgeSha256"]="0af8c326ae6033fb61a07324d016512954de8b307cde5107691ea5b57e12efd1",["machineSha256"]="a6edfb8d97a97da61203c3cd8ba299ab0dd8dde553c1d212e98e3193b1641d6a",["fusionComparison"]="Exact fluid outputs in the exported Fusion Reactor recipe map."}}
+end)()
 local Batch=(function()
 -- Source: source/lib/batch.lua
 -- Shared batch policy. Tier definitions are built from source/data/tiers.json.
@@ -648,8 +652,8 @@ function M.describe(detail)
     .. detail.multiplier
     .. 'x'
     .. (detail.divisor and detail.divisor > 1 and (' (' .. detail.unscaledMultiplier .. 'x / ' .. detail.divisor .. ')') or '')
-    .. '  |  Material '
-    .. material
+    .. '  |  '
+    .. (detail.context or ('Material ' .. material))
     .. '  |  '
     .. M.voltageText(detail)
 end
@@ -671,12 +675,122 @@ end
 return M
 
 end)()
+local Plasma=(function()
+-- Source: source/lib/plasma.lua
+-- One fabrication path per plasma output. Upgrade metadata and fusion overlap
+-- are compiled on the desktop; normal maker services handle all OC operations.
+local U = U
+local Batch = Batch
+local M = {}
+M.tierLabels = { 'T1-T3', 'T4-T5', 'Exotic' }
+
+function M.compile(data, options, checkpoint)
+  U.check(data.version == 1 and data.materials, 'Unsupported plasma catalog')
+  options = options or {}
+  local limit, path = options.plasmaTier or 0, options.plasmaFeed or 'fluid'
+  U.check(limit == 0 or limit == 1 or limit == 2, 'Invalid maximum plasma tier')
+  U.check(path == 'dust' or path == 'fluid', 'Invalid plasma feed preference')
+  local manifest = {
+    version = 1,
+    source = U.clone(data.source),
+    policy = {
+      mode = 'plasma',
+      plasmaTier = limit,
+      multistep = options.multistep == true,
+      includeFusion = options.includeFusion == true,
+      plasmaFeed = path,
+      multiplier = options.multiplier or 1,
+    },
+    recipes = {},
+    skipped = {},
+    unresolved = {},
+    unusedExcluded = 0,
+    unclassifiedRecipes = 0,
+    tierExcluded = 0,
+    details = {
+      { 'PLASMA FABRICATOR', 'blue' },
+      { 'Maximum plasma tier: ' .. limit .. ' (' .. M.tierLabels[limit + 1] .. ')' },
+      { 'Multistep recipes: ' .. (options.multistep and 'enabled' or 'disabled') },
+      { 'Regular-fusion products: ' .. (options.includeFusion and 'included' or 'excluded') },
+      { 'Preferred feed: ' .. path .. '; use the other only when this path has no recipe.' },
+      {
+        'Plasma upgrades control eligibility. The fixed multiplier is independent of global tier budgets.',
+        'muted',
+      },
+      { 'Forge controls operating voltage. Displayed recipe EU/t is informational.', 'muted' },
+      { '' },
+    },
+  }
+  if options.forms and not options.forms.plasma then
+    return manifest
+  end
+  local function ingredient(pair)
+    local item = U.clone(U.check(data.items[pair[1]], 'Unknown plasma ingredient'))
+    item.name = U.check(data.names[item.name], 'Unknown plasma registry')
+    item.size = pair[2]
+    return item
+  end
+  for _, row in ipairs(data.materials) do
+    if checkpoint then
+      checkpoint()
+    end
+    local reason = row.tier > limit and ('Requires plasma tier ' .. row.tier)
+      or row.multistep and not options.multistep and 'Requires multistep plasma unlock'
+      or row.fusion and not options.includeFusion and 'Also produced by regular Fusion Reactor'
+    local preferred = row.paths[path] and path or (path == 'fluid' and 'dust' or 'fluid')
+    local input, output =
+      ingredient(U.check(row.paths[preferred], 'No verified plasma feed')), ingredient(row.output)
+    -- Forge upgrade eligibility is independent of global material/voltage
+    -- budgets. Use a fixed batch and keep source voltage informational.
+    local count, batch = Batch.resolve(nil, nil, data.eut, options.multiplier or 1)
+    batch.context = 'Plasma tier ' .. row.tier .. ' (' .. M.tierLabels[row.tier + 1] .. ')'
+    reason = reason or batch.excluded
+    if reason then
+      manifest.tierExcluded = manifest.tierExcluded + 1
+      manifest.skipped[#manifest.skipped + 1] = {
+        material = row.label,
+        form = 'plasma',
+        label = output.label,
+        name = output.name,
+        reason = reason,
+      }
+    else
+      for _, stack in ipairs({ input, output }) do
+        stack.size = stack.size * count
+        U.check(
+          U.integer(stack.size) and stack.size > 0,
+          'Plasma quantity exceeds the supported limit'
+        )
+      end
+      manifest.recipes[#manifest.recipes + 1] = {
+        kind = 'processing',
+        material = row.label,
+        outputForm = 'plasma',
+        outputLabel = 'Plasma / from ' .. preferred,
+        label = row.label .. ' / Plasma / from ' .. preferred,
+        inputs = { input },
+        outputs = { output },
+        stock = {},
+        batch = batch,
+        plasmaTier = row.tier,
+        multistep = row.multistep,
+        fusion = row.fusion,
+      }
+    end
+  end
+  return manifest
+end
+
+return M
+
+end)()
 local Programs=(function()
 -- Source: source/lib/programs.lua
 -- Program definitions shared by configuration, navigation and execution.
 local Batch = Batch
 local ComponentData = ComponentData
 local LiquidSettings = LiquidSettings
+local Plasma = Plasma
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -1099,6 +1213,57 @@ M.list[#M.list + 1] = {
 for _, entry in ipairs(liquidChoices) do
   M.list[#M.list].outputs[entry[1]] = entry[1]
 end
+local plasmaTiers = {}
+for tier, label in ipairs(Plasma.tierLabels) do
+  plasmaTiers[#plasmaTiers + 1] =
+    { tostring(tier - 1), 'Tier ' .. (tier - 1) .. ' (' .. label .. ')' }
+end
+local plasmaTier = choice(
+  'plasmaTier',
+  'Maximum plasma tier',
+  plasmaTiers,
+  '0',
+  'Maximum unlocked plasma upgrade. This is separate from voltage and material tiers.'
+)
+plasmaTier.kind = 'select'
+local plasmaMultiplier = multiplier()
+plasmaMultiplier.help =
+  'Fixed multiplier for every requested input and output; global tier curves do not apply.'
+M.list[#M.list + 1] = {
+  id = 'plasma',
+  name = 'Plasma Fabricator',
+  mode = 'plasma',
+  batchPolicy = 'fixed',
+  description = 'Fabricate plasmas within unlocked tiers; optionally exclude regular-fusion products.',
+  formChoices = { { 'plasma', 'Plasma' } },
+  outputs = { plasma = 'plasma' },
+  costForms = {},
+  fields = {
+    plasmaTier,
+    field(
+      'multistep',
+      'Allow multistep recipes',
+      'Enable only with the multistep plasma upgrade unlocked.',
+      'off',
+      'toggle'
+    ),
+    field(
+      'includeFusion',
+      'Include regular-fusion products',
+      'Off excludes any plasma output also produced by the regular Fusion Reactor recipe map.',
+      'off',
+      'toggle'
+    ),
+    choice(
+      'plasmaFeed',
+      'Preferred feed',
+      { { 'fluid', 'Fluid' }, { 'dust', 'Dust' } },
+      'fluid',
+      'Choose one route per plasma. Uses the other feed only when the preferred type has no recipe.'
+    ),
+    plasmaMultiplier,
+  },
+}
 -- Each output has one editable destination and one switch. Configuration,
 -- validation, routing and rendering all consume this same field schema.
 local function destinationFields(program, definitions, help)
@@ -1165,6 +1330,7 @@ local definitions = {
   },
   componentAssembly = {},
   meltingCore = liquidDefinitions,
+  plasma = { { 'plasma', 'Plasma', 'Heliothermal Plasma Fabricator' } },
 }
 for _, entry in ipairs(cableForms) do
   definitions.insulator[#definitions.insulator + 1] = { entry[1], entry[2], nil, 'destination' }
@@ -1327,7 +1493,12 @@ end
 function M.visibleFields(c, section)
   local result, values = {}, M.values(c, section)
   for _, f in ipairs(M.section(section).fields) do
-    local visible = not f.hidden and (f.key ~= 'multiplier' or c.batch.mode == 'fixed')
+    local visible = not f.hidden
+      and (
+        f.key ~= 'multiplier'
+        or c.batch.mode == 'fixed'
+        or M.section(section).batchPolicy == 'fixed'
+      )
     if f.costDivisor then
       visible = visible and c.batch.costScaling == 'on'
     end
@@ -3647,6 +3818,7 @@ local Components = Components
 local Planner = Planner
 local Batch = Batch
 local Singularities = Singularities
+local Plasma = Plasma
 local M = {}
 local aliases = {
   rod = 'stick',
@@ -3880,6 +4052,9 @@ local function ruleRecipe(
   return recipe
 end
 function M.compile(data, mode, options, checkpoint)
+  if mode == 'plasma' then
+    return Plasma.compile(data, options, checkpoint)
+  end
   if mode == 'components' then
     return Components.compile(data, options, checkpoint)
   end
@@ -4182,6 +4357,18 @@ function M.planRows(plan, manifest)
           .. recipe.heat
           .. ' K'
           .. (recipe.priority and (' / Priority: ' .. recipe.priority) or ''),
+        'muted'
+      )
+    end
+    if recipe.plasmaTier then
+      treeRow(
+        rows,
+        add,
+        '  |      ',
+        'Multistep: '
+          .. (recipe.multistep and 'Yes' or 'No')
+          .. ' / Regular fusion: '
+          .. (recipe.fusion and 'Yes' or 'No'),
         'muted'
       )
     end
@@ -4653,6 +4840,9 @@ function M.report(plan, manifest)
     return table.concat(lines, '\n') .. '\n'
   end
   append(M.capacityRows(plan))
+  if manifest.details then
+    append(manifest.details)
+  end
   append(M.planRows(plan, manifest))
   if plan.retirements then
     append(M.retirementRows(plan))
@@ -5805,6 +5995,10 @@ local function programRouting(c, id)
       unstable = values.unstable,
       casingTier = values.casingTier,
       rubber = values.rubber,
+      plasmaTier = tonumber(values.plasmaTier),
+      multistep = values.multistep == 'on',
+      includeFusion = values.includeFusion == 'on',
+      plasmaFeed = values.plasmaFeed,
     },
     program
 end
@@ -5815,7 +6009,8 @@ function C.maker.preview(c, id, progress, control)
   if id == 'fluidShaper' and options.forms.ingot then
     return C.liquids.preview(c, progress, control, id)
   end
-  local catalogs = { singularities = SingularityData, components = ComponentData }
+  local catalogs =
+    { singularities = SingularityData, components = ComponentData, plasma = PlasmaData }
   local data = catalogs[program.mode] or require('assline_data')
   local manifest = Modes.compile(data, program.mode, options, gate)
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)
@@ -7375,6 +7570,9 @@ local function runUI()
         add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
     elseif state.section == 'details' and preview.manifest then
+      for _, row in ipairs(preview.manifest.details or {}) do
+        add(row[1], row[2])
+      end
       if preview.id == 'singularities' then
         add('ETERNAL SINGULARITY CHAIN', 'blue')
         add(

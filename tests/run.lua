@@ -3616,6 +3616,66 @@ test('liquid migration UI exposes circuit fields, gas selector and a readable re
   end)
 end)
 
+local function plasmaFixture()
+  local banks={}
+  for n=1,4 do banks[n]=iface(cfg.programs.plasma.plasma,300+n) end
+  for n=0,3 do
+    local bank=n==0 and buffer or iface(cfg.shared.donors,310+n)
+    bank.patterns={}
+    for slot=0,35 do bank.patterns[slot]=pattern({item('Disposable',1,777)}) end
+  end
+  return banks
+end
+
+test('plasma program uses shared capacity sorting and fluid encoding then reuses its exact patterns',function()
+  local banks=plasmaFixture()
+  cfg.batch.mode='tiered';cfg.batch.currentTier='ULV'
+  cfg.programs.plasma.multiplier='4'
+  local p=api.runner.preview(cfg,'plasma')
+  assert(#p.manifest.recipes==68 and #p.plan.creates==68 and #p.plan.errors==0)
+  assert(p.plan.capacities[1].interfaces==2 and mutations==0)
+  assert(p.report:find('Plasma tier 0',1,true) and p.report:find('Regular-fusion products: excluded',1,true))
+  api.runner.execute(cfg,p)
+  assert(banks[1].patterns[0] and banks[2].patterns[31] and not api.runner.hasSaved())
+  local again=api.runner.preview(cfg,'plasma')
+  assert(again.plan.reused==68 and #again.plan.creates==0 and not api.runner.hasChanges(again))
+  cfg.programs.plasma.multiplier='2'
+  again=api.runner.preview(cfg,'plasma')
+  assert(again.plan.resizeCount==68 and #again.plan.creates==0)
+end)
+
+test('plasma program settings remain independent of global tiers and selecting all upgrades creates one pattern per output',function()
+  plasmaFixture()
+  cfg.programs.plasma.plasmaTier='2';cfg.programs.plasma.multistep='on';cfg.programs.plasma.includeFusion='on'
+  local p=api.runner.preview(cfg,'plasma')
+  assert(#p.manifest.recipes==120 and #p.plan.creates==120 and #p.plan.errors==0)
+  cfg.programs.plasma.plasmaFeed='dust'
+  local other=api.runner.preview(cfg,'plasma')
+  assert(#other.manifest.recipes==120)
+  for _,r in ipairs(other.manifest.recipes) do assert(r.outputForm=='plasma') end
+end)
+
+test('plasma chooser settings and preview use the common UI without covering bottom actions',function()
+  plasmaFixture();cfg.batch.mode='tiered';files[api.paths.config]=ser(cfg)
+  queue(function()
+    local _,_,_,y=click('[ Plasma Fabricator ]')();assert(y<44)
+    return click('[ Plasma Fabricator ]')()
+  end,click('[ Program settings ]',47),function()
+    assert(frame[2]:find('SETTINGS / Plasma Fabricator',1,true))
+    assert(pcall(field('Pattern multiplier')),'Fixed multiplier hidden by global tier policy')
+    snapshot('plasma_settings');return field('Allow multistep recipes')()
+  end,function()
+    assert(unser(files[api.paths.config]).programs.plasma.multistep=='on')
+    return click('[ Run program ]',47)()
+  end,click('[ Preview selected ]',47),function()
+    assert(frame[2]:find('Preview - Plasma Fabricator',1,true));snapshot('plasma_preview')
+    return click('[ Details ]',4)()
+  end,function()
+    assert(table.concat(frame,'\n'):find('PLASMA FABRICATOR',1,true));return 'interrupted'
+  end)
+  api.runUI()
+end)
+
 local function componentFixture(casing)
   cfg.programs.componentAssembly.casingTier=casing or 'UXV'
   local catalog=require('assline_component_data')
@@ -3757,7 +3817,8 @@ end)
 
 if artifact=='assline_app.lua' then
   package.loaded.assline_data={};files[api.paths.config]=ser(cfg);events={{'interrupted'}}
-  local before=package.path;assert(loadfile(artifact))();assert(package.path==before)
+  local before=package.path;package.path='./?.lua'
+  assert(loadfile(artifact))();assert(package.path=='./?.lua');package.path=before
   assert(package.loaded.assline_data==nil,'Application library must unload on exit')
 end
 print('SUCCESS: '..tests..' tests ('..artifact..')')

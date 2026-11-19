@@ -360,6 +360,9 @@ local function runUI()
         add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
     elseif state.section == 'details' and preview.manifest then
+      for _, row in ipairs(preview.manifest.details or {}) do
+        add(row[1], row[2])
+      end
       if preview.id == 'singularities' then
         add('ETERNAL SINGULARITY CHAIN', 'blue')
         add(

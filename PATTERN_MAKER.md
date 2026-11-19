@@ -36,6 +36,11 @@ the shared dependency graph, so a dust obtainable only through the fluid's own
 ingot cast cannot become a replacement production route. See [setup and supply
 assumptions](README.md) before executing.
 
+Plasma Fabricator uses the same maker with one selected dust/fluid feed per
+plasma. It has its own plasma-tier cap, multistep unlock, regular-fusion inclusion
+checkbox and fixed multiplier. Its source-derived catalog stores one product row
+with alternate paths; no per-output execution code or second application is added.
+
 **Run program** opens the chooser. Select a program and build its preview.
 Review reuse, preserved patterns, sorting, new recipes, donor requirements and
 capacity. Destination interfaces are assumed to have 36 slots; the report states
