@@ -1,8 +1,8 @@
 ASSLINE-RELEASE 1
-2a5d27f6858aab32 1507656
+a6fb8c0b5ffeef8c 1512029
 assline.lua 1059 eb7166da
 assline_app.lua 354152 c37dc542
 assline_data.lua 749232 e106409d
 assline_liquid_data.lua 389860 6aed557f
 interface_probe.lua 3460 0d168cb1
-install.lua 9893 4bdda75c
+install.lua 14266 af01685e

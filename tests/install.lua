@@ -6,7 +6,7 @@ local fixture=require('assline_install_fixtures')
 local installerSource, launcherSource = fixture.installer, fixture.launcher
 local actualManifest = fixture.manifest
 local files, dirs, responses, requested, closed, renameFailure, freeBytes, interrupted
-local handles, flushFailure, closeFailure
+local handles, flushFailure, closeFailure, memoryBytes
 local root, url = '/home/assline', 'https://updates.invalid/dist'
 local function parent(path) return path:match('^(.*)/[^/]+$') end
 local function mkdir(path)
@@ -35,7 +35,9 @@ local fs={
     mkdir(path);return true
   end,
   list=list,
-  get=function() return {spaceTotal=function() return freeBytes end,spaceUsed=function() return 0 end} end,
+  get=function() return {spaceTotal=function() return freeBytes end,spaceUsed=function()
+    local total=0;for _,value in pairs(files) do total=total+#value end;return total
+  end} end,
   remove=function(path)
     if dirs[path] then if list(path)() then return nil,'directory not empty' end;dirs[path]=nil
     elseif files[path]~=nil then files[path]=nil else return nil,'not found' end
@@ -83,6 +85,10 @@ io.open=function(path,mode)
     flush=function(self)
       local chunk=pending;pending=''
       if flushFailure==path then flushFailure=nil;return nil,'disk write failed' end
+      if writing then
+        local used=0;for _,value in pairs(files) do used=used+#value end
+        if used+#chunk>freeBytes then return nil,'not enough disk space' end
+      end
       if writing then files[path]=files[path]..chunk end
       return self
     end,
@@ -102,6 +108,7 @@ end
 package.preload.filesystem=function() return fs end
 package.preload.shell=function() return {resolve=function(p) return p end,parse=function(...) return {...},{} end} end
 package.preload.process=function() return {info=function() return {path=root..'.lua'} end} end
+package.preload.computer=function() return {freeMemory=function() return memoryBytes end} end
 package.preload.internet=function() return {request=function(address)
   requested[#requested+1]=address
   local source=responses[address]
@@ -121,6 +128,7 @@ local function reset()
   files,dirs,responses,requested,closed={},{},{},{},0
   renameFailure,interrupted,freeBytes=nil,false,4*1024*1024
   handles,flushFailure,closeFailure={},nil,nil
+  memoryBytes=16*1024*1024
   mkdir('/home')
   for _,name in ipairs({'assline.cfg','assline.pending','assline.last','assline-perf.log'}) do files['/home/'..name]='preserve '..name end
 end
@@ -251,6 +259,115 @@ test('insufficient free disk space leaves the existing version active',function(
   oldRelease();release('bbbbbbbbbbbbbbbb');freeBytes=1
   failure(function() M.install(root) end,'Not enough disk space')
   assert(M.active(root)=='aaaaaaaaaaaaaaaa' and not dirs[root..'/stage-bbbbbbbbbbbbbbbb'])
+end)
+
+local function actualRelease(id)
+  local manifest=M.manifest(actualManifest)
+  local text=actualManifest
+  if id then text=text:gsub(manifest.id,id,1) end
+  responses[url..'/release.manifest']={body=text}
+  for _,entry in ipairs(manifest.files) do responses[url..'/'..entry.path]={body=fixture.files[entry.path]} end
+  return M.manifest(text)
+end
+
+local function tightDisk()
+  local first=actualRelease();M.install(root,url)
+  -- OpenOS and unrelated files share the only 4 MB drive. One release fits;
+  -- two do not. flush() enforces the actual byte budget in these tests.
+  files['/home/unrelated-files']=string.rep('u',2000000)
+  local next=actualRelease('bbbbbbbbbbbbbbbb')
+  return first,next
+end
+
+test('a stale rollback release and abandoned stage are pruned before the space check',function()
+  oldRelease();release('bbbbbbbbbbbbbbbb');M.install(root)
+  local previous=root..'/releases/aaaaaaaaaaaaaaaa'
+  files[previous..'/old_generated.lua']=string.rep('x',2500000)
+  mkdir(root..'/stage-dddddddddddddddd');files[root..'/stage-dddddddddddddddd/assline_app.lua']='partial'
+  release('cccccccccccccccc', 'return true\n--'..string.rep('x',1200000))
+  memoryBytes=1 -- Success proves that obsolete files freed enough disk for normal staging.
+  assert(M.install(root) and M.active(root)=='cccccccccccccccc')
+  assert(not dirs[previous] and not dirs[root..'/stage-dddddddddddddddd'])
+  assert(dirs[root..'/releases/bbbbbbbbbbbbbbbb'])
+end)
+
+test('the real six-file release updates on one 4 MB drive through verified RAM staging',function()
+  local first,next=tightDisk()
+  assert(M.install(root) and M.active(root)==next.id)
+  assert(not dirs[root..'/releases/'..first.id])
+  for _,entry in ipairs(next.files) do
+    assert(files[root..'/releases/'..next.id..'/'..entry.path]==fixture.files[entry.path])
+  end
+  assert(files['/home/unrelated-files']==string.rep('u',2000000))
+  for _,name in ipairs({'assline.cfg','assline.pending','assline.last','assline-perf.log'}) do
+    assert(files['/home/'..name]=='preserve '..name)
+  end
+  assert(closed==#requested)
+end)
+
+test('RAM staging leaves current code intact on HTTP, checksum and Lua syntax failures',function()
+  for _,kind in ipairs({'http','checksum','syntax'}) do
+    reset();local first,next=tightDisk()
+    local old=files[root..'/releases/'..first.id..'/assline_app.lua']
+    local response=responses[url..'/assline_app.lua']
+    local reason
+    if kind=='http' then response.code=500;reason='HTTP 500'
+    elseif kind=='checksum' then response.body='x'..response.body:sub(2);reason='Incomplete or changed download'
+    else
+      local source='this is invalid Lua'
+      response.body=source
+      local text=responses[url..'/release.manifest'].body
+      local oldBytes,oldSum=text:match('assline_app%.lua (%d+) ([a-f0-9]+)')
+      local newTotal=next.bytes-tonumber(oldBytes)+#source
+      text=text:gsub(next.id..' '..next.bytes,next.id..' '..newTotal,1)
+      text=text:gsub('assline_app%.lua '..oldBytes..' '..oldSum,'assline_app.lua '..#source..' '..checksum(source),1)
+      responses[url..'/release.manifest'].body=text;reason='Invalid Lua'
+    end
+    failure(function() M.install(root) end,reason)
+    assert(M.active(root)==first.id and files[root..'/releases/'..first.id..'/assline_app.lua']==old)
+    assert(not dirs[root..'/releases/'..next.id] and closed==#requested)
+    for _,h in ipairs(handles) do assert(h.closed) end
+  end
+end)
+
+test('a RAM update restores previous code after an ordinary disk write failure',function()
+  local first,next=tightDisk()
+  flushFailure=root..'/releases/'..next.id..'/assline_app.lua'
+  failure(function() M.install(root) end,'previous release restored')
+  assert(M.active(root)==first.id and not dirs[root..'/releases/'..next.id])
+  for _,entry in ipairs(first.files) do
+    assert(files[root..'/releases/'..first.id..'/'..entry.path]==fixture.files[entry.path])
+  end
+  assert(M.install(root) and M.active(root)==next.id)
+end)
+
+test('a RAM update restores the launcher and pointer if activation fails',function()
+  local first,next=tightDisk()
+  local boot=files[root..'.lua'];renameFailure=root..'/active'
+  failure(function() M.install(root) end,'previous release restored')
+  assert(M.active(root)==first.id and files[root..'.lua']==boot)
+  assert(not dirs[root..'/releases/'..next.id] and files[root..'/source.url']==url..'\n')
+end)
+
+test('rerunning the bootstrap repairs a power-cut replacement with no usable active release',function()
+  local first,next=tightDisk()
+  local old=root..'/releases/'..first.id
+  for _,entry in ipairs(first.files) do assert(fs.remove(old..'/'..entry.path)) end
+  assert(fs.remove(old..'/release.manifest'));assert(fs.remove(old))
+  local partial=root..'/releases/'..next.id
+  mkdir(partial);files[partial..'/assline_app.lua']='return true -- interrupted copy'
+  assert(M.active(root)==nil)
+  assert(M.install(root,url) and M.active(root)==next.id)
+  assert(files['/home/assline.cfg']=='preserve assline.cfg' and files['/home/assline.pending']=='preserve assline.pending')
+end)
+
+test('insufficient RAM or a release too large for the drive never removes active code',function()
+  local first=tightDisk();memoryBytes=1
+  failure(function() M.install(root) end,'Not enough free RAM')
+  assert(M.active(root)==first.id)
+  memoryBytes=16*1024*1024;files['/home/unrelated-files']=string.rep('u',3000000)
+  failure(function() M.install(root) end,'new release itself')
+  assert(M.active(root)==first.id and files['/home/assline.cfg']=='preserve assline.cfg')
 end)
 test('manifest paths cannot escape the release directory and duplicates are rejected',function()
   local text=release('aaaaaaaaaaaaaaaa')

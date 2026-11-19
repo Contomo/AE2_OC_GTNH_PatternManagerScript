@@ -184,6 +184,103 @@ local function cleanup(directory)
   return fs.remove(directory)
 end
 
+local function available(disk)
+  return disk and disk.spaceTotal and disk.spaceUsed and disk.spaceTotal()-disk.spaceUsed()
+end
+
+local function prune(root, active)
+  -- A previous rollback copy must not force THREE releases onto a small disk.
+  -- Only installer-owned, hexadecimal release/stage directories participate.
+  for name in fs.list(root..'/releases') do
+    local id=name:gsub('/$','')
+    if releaseId(id) and id~=active then cleanup(root..'/releases/'..id) end
+  end
+  for name in fs.list(root) do
+    name=name:gsub('/$','')
+    local id=name:match('^stage%-([a-f0-9]+)$')
+    if releaseId(id) then cleanup(root..'/'..name) end
+  end
+end
+
+local function activate(root, destination, manifest, url)
+  local launcher = check(read(destination..'/assline.lua'),'Missing launcher')
+  if read(root..'.lua')~=launcher then replace(root..'.lua',launcher) end
+  if read(root..'/source.url')~=url..'\n' then replace(root..'/source.url',url..'\n') end
+  replace(root..'/active',manifest.id..'\n')
+end
+
+local function memoryInstall(root, url, manifest, manifestText, active, destination, disk)
+  local previous = active and root..'/releases/'..active
+  local oldManifestText = previous and read(previous..'/release.manifest')
+  local oldManifest = oldManifestText and M.manifest(oldManifestText)
+  check(not active or oldManifest,
+    'Current release has no readable manifest; cannot prepare a RAM rollback copy')
+  local free = available(disk)
+  local reclaim = 0
+  for _,entry in ipairs(oldManifest and oldManifest.files or {}) do
+    local size = fingerprint(previous..'/'..entry.path)
+    reclaim=reclaim+(size or 0)
+  end
+  reclaim=reclaim+#(oldManifestText or '')
+  check(not free or free+reclaim>=manifest.bytes+65536,
+    'Not enough disk space for the new release itself, even after replacing current code')
+  local computer = require('computer')
+  local memoryNeeded = manifest.bytes*3+reclaim*2+524288
+  check(computer.freeMemory()>=memoryNeeded,
+    'Not enough free RAM for a memory-staged update; quit other programs and retry')
+  print('Using RAM staging: downloading and verifying before replacing installed code.')
+  print('A power cut during replacement requires rerunning this installer. Settings and journals stay on disk.')
+  local payload, backup = {}, {}
+  for n,entry in ipairs(manifest.files) do
+    print(string.format('Downloading %d/%d to RAM: %s',n,#manifest.files,entry.path))
+    local size, digest, source = download(url..'/'..entry.path,nil,entry.bytes)
+    check(size==entry.bytes and digest==entry.checksum,'Incomplete or changed download: '..entry.path)
+    local parsed, why = load(source,'@'..entry.path)
+    check(parsed,'Invalid Lua in '..entry.path..': '..tostring(why))
+    payload[entry.path]=source
+  end
+  if oldManifest then
+    for _,entry in ipairs(oldManifest.files) do
+      backup[entry.path]=read(previous..'/'..entry.path)
+    end
+    backup['release.manifest']=oldManifestText
+  end
+  local state = {}
+  for _,path in ipairs({root..'.lua',root..'.lua.bak',root..'/active',root..'/active.bak',
+    root..'/source.url',root..'/source.url.bak'}) do
+    state[#state+1]={path=path,content=read(path)}
+  end
+  -- Only code inside the versioned release is replaced. No configuration,
+  -- pattern journal, history or other files in /home are selected for removal.
+  local ok, reason = pcall(function()
+    if previous then cleanup(previous) end
+    directory(destination)
+    for _,entry in ipairs(manifest.files) do write(destination..'/'..entry.path,payload[entry.path]) end
+    write(destination..'/release.manifest',manifestText)
+    check(verified(destination,manifest),'Written release failed checksum verification')
+    activate(root,destination,manifest,url)
+  end)
+  if not ok then
+    local restored, why = pcall(function()
+      cleanup(destination)
+      if previous then
+        directory(previous)
+        for name,source in pairs(backup) do write(previous..'/'..name,source) end
+        for name,source in pairs(backup) do
+          check(read(previous..'/'..name)==source,'Rollback verification failed: '..name)
+        end
+      end
+      for _,entry in ipairs(state) do
+        if entry.content then write(entry.path,entry.content)
+        elseif fs.exists(entry.path) then check(fs.remove(entry.path),'Cannot remove '..entry.path) end
+      end
+    end)
+    check(restored,'RAM update failed: '..tostring(reason)..'; rollback also failed: '..tostring(why)
+      ..'. Rerun the wget installer; settings and journals were not removed.')
+    error('RAM update failed; previous release restored: '..tostring(reason),0)
+  end
+end
+
 function M.install(root, url, checkOnly)
   root = shell.resolve(root or '/home/assline'):gsub('/+$','')
   check(root~='' and root~='/' and not root:find('[%c]'), 'Invalid installation directory')
@@ -204,14 +301,17 @@ function M.install(root, url, checkOnly)
     return true
   end
   directory(root..'/releases')
+  prune(root,active)
   local disk = fs.get(root)
-  if disk and disk.spaceTotal and disk.spaceUsed then
-    check(disk.spaceTotal()-disk.spaceUsed()>=manifest.bytes+65536,
-      'Not enough disk space to download a complete release before replacing the current one')
-  end
   local stage = root..'/stage-'..manifest.id
   cleanup(stage)
   check(not fs.exists(stage), 'Download directory contains unexpected files: '..stage)
+  local free = available(disk)
+  if free and free<manifest.bytes+65536 then
+    memoryInstall(root,url,manifest,manifestText,active,destination,disk)
+    print('Installed '..manifest.id..'. Run '..root..'.lua')
+    return true
+  end
   directory(stage)
   local ok, reason = pcall(function()
     for n,entry in ipairs(manifest.files) do
@@ -232,10 +332,7 @@ function M.install(root, url, checkOnly)
       if not promoted then move(damaged,destination); error(why,0) end
       cleanup(damaged)
     else move(stage,destination) end
-    local launcher = check(read(destination..'/assline.lua'),'Missing launcher')
-    if read(root..'.lua')~=launcher then replace(root..'.lua',launcher) end
-    if read(root..'/source.url')~=url..'\n' then replace(root..'/source.url',url..'\n') end
-    replace(root..'/active',manifest.id..'\n')
+    activate(root,destination,manifest,url)
   end)
   if not ok then cleanup(stage); error('Install/update failed: '..tostring(reason),0) end
   -- Keep the immediately previous version for interrupted activation recovery.

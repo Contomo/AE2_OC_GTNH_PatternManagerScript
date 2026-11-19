@@ -369,10 +369,21 @@ If the repository or branch changes, set the new channel with
 `/home/assline.lua --update NEW_BASE_URL`. The installer also accepts a custom
 installation directory as its second argument; its launcher is `<directory>.lua`.
 
-The installer downloads a complete release into a staging directory, checks each
-file's byte count, Adler-32 checksum and Lua syntax, then switches the active
-release. Failed downloads leave the installed release active. It retains one
-previous release and recovers the previous pointer after interrupted activation.
+The installer removes obsolete rollback releases and abandoned download stages
+before checking free space. With enough room, it downloads a complete release to
+disk, checks each file's byte count, Adler-32 checksum and Lua syntax, then activates
+it. This path keeps current code on disk throughout the update and retains it as
+the previous release afterward.
+
+On a nearly full drive, it automatically stages the verified release in RAM and
+backs up current code there before replacing the disk copy. Ordinary write or
+activation failures restore that backup. A power cut during replacement loses
+the RAM copies, so rerun the wget installer to repair the installation. Settings,
+pattern journals and history stay on disk throughout. The installer checks both
+available RAM and whether the new release itself will fit before removing code.
+The user's 16 MB memory setup supports this path for the current release on a
+single 4 MB drive. Existing older updaters need the fresh wget bootstrap once to
+gain this behavior.
 Code lives under `/home/assline/releases/<release-id>/`; the launcher remains
 `/home/assline.lua`. Settings, history and recovery files keep their existing
 `/home/assline.*` paths. Updating does not operate on AE interfaces.
