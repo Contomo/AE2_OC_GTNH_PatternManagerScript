@@ -79,13 +79,6 @@ M.fields = {
     help = 'At least 10 percentage points above the pause level; at most 95%.',
     default = '75',
   },
-  {
-    key = 'networkAddress',
-    placeholder = 'auto',
-    label = 'ME network component address',
-    help = 'Ingot checks: blank uses the block editor or sole ME controller; otherwise enter a controller/block interface address prefix.',
-    default = '',
-  },
 }
 M.defaults = { version = 2, shared = {}, batch = {}, programs = {} }
 for _, f in ipairs(M.fields) do
@@ -318,8 +311,30 @@ function M.migrate(old)
   if prior and not prior.polymer and prior.pvc then
     c.programs.insulator.polymer = prior.pvc == 'off' and 'none' or 'pvcSmall'
   end
-  if not (old.programs and old.programs.meltingCore) then
-    c.programs.meltingCore.ingot = c.programs.fluidShaper.ingot
+  local melting = old.programs and old.programs.meltingCore
+  if melting and melting.forms then
+    local forms, casting = {}, false
+    for key in melting.forms:gmatch('[^,]+') do
+      if key == 'ingot' then
+        casting = true
+      else
+        forms[#forms + 1] = key
+      end
+      if key:match('^c%d+$') and not melting.highHeat then
+        forms[#forms + 1], forms[#forms + 2] = key .. '_medium', key .. '_low'
+      end
+    end
+    c.programs.meltingCore.forms = table.concat(forms, ',')
+    if casting then
+      local shaper = c.programs.fluidShaper
+      if melting.ingot and melting.ingot ~= '' then
+        shaper.ingot = melting.ingot
+      end
+      local choices = Programs.byId.fluidShaper.formChoices
+      if not M.selected(shaper.forms, choices).ingot then
+        shaper.forms = M.toggleSelected(shaper.forms, choices, 'ingot')
+      end
+    end
   end
   return M.validate(M.normalize(c))
 end

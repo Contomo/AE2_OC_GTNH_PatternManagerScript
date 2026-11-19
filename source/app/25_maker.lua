@@ -86,92 +86,6 @@ local function compactPattern(hw, p)
   end
   return value, recipe
 end
--- NetworkControl is exposed by a block ME interface or an ME controller,
--- not by multipart interfaces. These queries are read-only; never submit a
--- crafting job just to inspect whether an output already has a recipe.
-local function ingotNetwork(c)
-  local prefix = c.shared.networkAddress
-  if prefix == '' then
-    local editor = selectDevice('me_interface', c.shared.editorAddress)
-    if editor.getCraftable or editor.getCraftables then
-      return editor
-    end
-  end
-  local matches = {}
-  for _, kind in ipairs(prefix == '' and { 'me_controller' } or { 'me_controller', 'me_interface' }) do
-    for address, tp in component.list(kind, true) do
-      if tp == kind and address:sub(1, #prefix) == prefix then
-        local proxy = component.proxy(address)
-        if proxy.getCraftable or proxy.getCraftables then
-          matches[#matches + 1] = proxy
-        end
-      end
-    end
-  end
-  U.check(
-    #matches == 1,
-    'Ingot checks need one ME network component; set its address in Shared interfaces'
-  )
-  return matches[1]
-end
-local function filterCraftableIngots(c, hw, snapshot, manifest, destination)
-  if not manifest.policy or manifest.policy.mode ~= 'solidifier' then
-    return
-  end
-  manifest.requestedRecipes = manifest.requestedRecipes or manifest.recipes
-  local owned = {}
-  for _, bank in ipairs(snapshot.interfaces) do
-    if bank.role == 'destination' then
-      for _, p in pairs(bank.patterns) do
-        owned[bank.name .. ':' .. tostring(p.recipeKey)] = true
-      end
-    end
-  end
-  local skipped, recipes, checks, network = {}, {}, {}, nil
-  for _, entry in ipairs(manifest.skipped) do
-    if not entry.network then
-      skipped[#skipped + 1] = entry
-    end
-  end
-  for _, recipe in ipairs(manifest.requestedRecipes) do
-    local omit = false
-    if recipe.outputForm == 'ingot' then
-      network = network or ingotNetwork(c)
-      local output = recipe.outputs[1]
-      local filter = { name = output.name, damage = output.damage }
-      local craftable
-      if network.getCraftable then
-        craftable = invoke(network, 'getCraftable', filter, 'item') ~= nil
-      else
-        local found = invoke(network, 'getCraftables', filter)
-        U.check(type(found) == 'table', 'ME crafting query failed')
-        craftable = next(found) ~= nil
-      end
-      local key = recipeKey(hw.data, recipe)
-      -- ME advertises outputs, not competing recipe inputs. An installed,
-      -- matching cast must not make itself disappear on the next scan.
-      omit = craftable and not owned[destination(recipe) .. ':' .. key]
-      checks[output.name .. ':' .. output.damage] = craftable
-      if omit then
-        skipped[#skipped + 1] = {
-          material = recipe.material,
-          form = recipe.outputForm,
-          label = recipe.label,
-          name = output.name,
-          damage = output.damage,
-          network = true,
-          reason = 'Ingot already craftable in the ME network; no new cast added.',
-        }
-      end
-    end
-    if not omit then
-      recipes[#recipes + 1] = recipe
-    end
-  end
-  manifest.recipes, manifest.skipped = recipes, skipped
-  manifest.policy.ingotNetwork = network and network.address or nil
-  manifest.policy.ingotCraftables = checks
-end
 local function explainExisting(plan, snapshot, request, manifest)
   local function itemKey(item)
     return item and item.name and (item.name .. ':' .. tostring(item.damage or 0))
@@ -323,7 +237,10 @@ local function scanManifest(c, manifest, routing, progress, control, started)
       and type(manifest.source.targetVersion) == 'string',
     'Manifest must identify recipe and target versions'
   )
-  for _, recipe in ipairs(manifest.requestedRecipes or manifest.recipes) do
+  for _, name in ipairs(routing.reuseDestinations or {}) do
+    group(name, 'destination')
+  end
+  for _, recipe in ipairs(manifest.recipes) do
     group(destination(recipe), 'destination')
   end
   for _, item in ipairs(manifest.skipped or {}) do
@@ -387,9 +304,9 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     end
   end
   selectRecipeChoices(hw, manifest, snapshot, destination)
-  filterCraftableIngots(c, hw, snapshot, manifest, destination)
   local request = {
     recipes = {},
+    crossDestinations = routing.reuseDestinations ~= nil,
     source = U.clone(manifest.source),
     policy = U.clone(manifest.policy or {}),
     unresolved = U.clone(manifest.unresolved),
@@ -470,6 +387,9 @@ function C.maker.preview(c, id, progress, control)
   validate(c)
   startWork(c, progress, control)
   local routing, options, program = programRouting(c, id)
+  if id == 'fluidShaper' and options.forms.ingot then
+    return C.liquids.preview(c, progress, control, id)
+  end
   local catalogs = { singularities = SingularityData, components = ComponentData }
   local data = catalogs[program.mode] or require('assline_data')
   local manifest = Modes.compile(data, program.mode, options, gate)
@@ -565,6 +485,9 @@ function C.maker.finishSort(hw, op, progress)
 end
 
 function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
+  if id == 'fluidShaper' and plan.supplyCounts and not customRouting then
+    return C.liquids.apply(c, plan, manifest, progress, control, id)
+  end
   U.check(
     not fs.exists(paths.pending),
     'Continue or stop the saved operation before executing another preview'

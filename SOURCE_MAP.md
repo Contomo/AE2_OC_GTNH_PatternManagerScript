@@ -15,7 +15,7 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/app/26_donors.lua` | Donor cleanup preview and parking, using shared discovery, editing and recovery |
 | `source/app/27_transition.lua` | Implosion transition cleanup using the shared editor and journal |
 | `source/app/28_mover.lua` | Wildcard interface-group discovery, capacity planning and intact transfers using the shared move journal |
-| `source/app/29_liquids.lua` | Installed supply scan and coordinated Melting Core / extractor / ingot-cast migration |
+| `source/app/29_liquids.lua` | Shared installed-supply scan and retirement coordinator for Melting Core and Fluid Shaper |
 | `source/app/30_ui.lua` | Common UI, buttons, scrolling, configuration and preview pages |
 | `source/app/90_main.lua` | Application entry point |
 | `source/lib/util.lua` | Shared value/collection helpers, identities, endpoints and text-row construction |
@@ -25,7 +25,7 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/lib/modes.lua` | Expands selected semantic recipe rules using the material matrix |
 | `source/lib/planner.lua` | Pure destination capacity, reuse, sorting and creation planning |
 | `source/lib/supply.lua` | Reusable AND/OR recipe dependency graph and independent-supply checks |
-| `source/lib/melting.lua` | Melting Core route selection, semantic extractor matching and loop-checked casting manifest |
+| `source/lib/melting.lua` | Melting Core route/priority selection, semantic extractor matching and shared cast filtering |
 | `source/lib/preview.lua` | One maker preview renderer used by the UI and exported report |
 | `source/launcher.lua`, `source/install.lua`, `source/interface_probe_src.lua` | Launcher/updater entry, installer, and interface probe sources |
 | `source/tools/` | Desktop scrape import and matrix compilation |
@@ -104,8 +104,10 @@ direct ingot and native liquid production. Its recipe witnesses and rejected-rou
 counts live in `data/material-sources.json`; they are desktop evidence, not OC data.
 `compile_matrix.py` embeds only shared `native_ingot`/`native_molten` flag sets in
 `origins`, indexed by a material's `o`. Keeping these separate avoids duplicating
-large process sets for each source classification. `modes.lua` excludes ingots without
-a native liquid source; plates and other shapes retain their existing rules.
+large process sets for each source classification. These flags are historical evidence;
+`modes.lua` emits registered cast candidates, and the installed-supply graph decides
+whether ingot casts are safe. No duplicate native-flag or ME craftable-output guard
+runs alongside it.
 The compiler and source index share mold-route recognition in `material_forms.py`.
 
 `source/tools/build_melting_core.py` derives supported Helioflux recipes from the
@@ -122,7 +124,14 @@ and coordinates retirement before calling the normal maker. It uses the same
 pattern decoder, `Count`/`Cnt` handling, fluid-drop normalization, parking recipe,
 donor pool and operation journal. The broad historical native-liquid flag is
 provenance, not the decision to suppress a Melting Core route: installed producers
-must pass the independent-supply check.
+must pass the independent-supply check. `supply.lua:plan` checks proposed recipes
+together and propagates exclusions. Melting Core includes virtual casts in that
+proof but emits only molten production; Fluid Shaper owns all installed casts.
+Gas choice and requesting gas are independent. Optional stocked gas does not enter
+pattern quantities; mandatory reaction fluids do. Heat/voltage priority classification
+lives in `melting.lua`, while the normal togglable destination schema supplies each
+circuit's High/Medium/Low names. The shared planner's opt-in cross-destination matching
+moves existing recipes between those groups before creating any missing patterns.
 
 ## Recipe proportions and configured batches
 

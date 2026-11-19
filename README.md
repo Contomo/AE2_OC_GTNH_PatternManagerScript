@@ -10,9 +10,12 @@ renaming, wire insulation, wiremill patterns for 1x wire and fine wire,
 bending-machine patterns for plates, foil, sheet metal and springs, and Fluid
 Shaper patterns for verified molten-fluid solid parts. Pattern mover transfers
 existing patterns between named interface groups. Melting Core coordinates
-molten production, extraction retirement and ingot casting.
+molten production and extraction retirement; Fluid Shaper owns ingot casting.
 Navigation is on the left; Scan, Execute, Pause/Resume, Stop and Quit are at the bottom.
 Settings has shared interfaces/hardware and a separate section for each program.
+Program selection and program-specific Settings stay synchronized in both directions;
+Run program selects the program whose settings you were editing. Shared settings
+retain the previous program selection.
 [Program architecture and recipe matrix](PATTERN_MAKER.md).
 [Source files, generated outputs and shared services](SOURCE_MAP.md).
 
@@ -66,44 +69,63 @@ move journal; execution rechecks the preview before transferring anything.
 
 Wiremill selects one input route per output: both default to **Ingot**. Fine wire
 can instead use Rod or 1x wire. Only recipes present in the scrape are generated.
-**Melting Core** installs verified EBF-derived **Helioflux Melting Core** recipes
-and the corresponding ingot casts in one coordinated run. Configure its separate
-destination rows for **No Circuit**, circuits **1, 2, 11, 12, 16, 17 and 22**, and
-**Ingot**. Each row is independently enabled; circuits stay stocked in their own
-input buffers, and the ingot mold stays stocked in the Fluid Shaper. Existing
-installations inherit their Fluid Shaper ingot interface name on first update.
-The optional-gas selector defaults to **Without Optional Gas**. Selecting a gas
-prefers that variant where available and otherwise uses the dry route. Required
-reaction fluids remain requested. One feed route is selected per molten product,
-preferring its dust route; the preview shows batches, voltage and required heat.
+**Melting Core** installs verified EBF-derived **Helioflux Melting Core** recipes.
+**Fluid Shaper** installs ingot casts. Run Melting Core first, then enable Ingot
+under Fluid Shaper and preview that program. Previous Melting Core ingot settings
+migrate there, retaining the configured casting destination.
 
-This program compares terminal-visible encoded recipes across the network. It
-preserves an installed liquid producer when it can supply the fluid independently
-of the proposed ingot cast, including ABS and DTPF production. A dust supplied
-only by `fluid -> ingot -> dust` cannot seed a new melting route. New melting
-recipes and ingot casts are checked together, including cross-material cycles.
-Ingredients with
-no encoded producer are treated as external supplies; the check does not prove
-inventory levels, passive production or machine readiness. Interfaces hidden
-from the terminal cannot contribute production evidence. All relevant production
-interfaces must therefore be visible during planning and execution.
+Each circuit has independently enabled **High / Medium / Low** interface names,
+such as `Helioflux Melting Core (Circuit 1, High)`. Keep its circuit stocked in the
+corresponding input buffer; No Circuit buffers must contain no programmed circuit.
+Circuits 1, 11 and No Circuit cover normal dust processing. Additional scraped
+circuits remain available for other routes. The ingot mold stays stocked in the
+Fluid Shaper.
 
-The **Retirements** tab lists exact locations of matching solid-to-fluid recipes
-that the new supply routes replace. Before installing casts, execution replaces
-those old recipes with the existing tagged donor placeholder. It reuses the
-retired patterns first, then the shared donor buffers; unused retired patterns
-remain safe placeholders. Obsolete owned Melting Core variants can be replaced
-the same way when the gas choice changes. Unrelated patterns remain in place.
-Capacity for every destination is checked before retirement starts. Unsafe
-metadata blocks automatic retirement with its location and reason. Changes to
-production patterns invalidate the preview; Pause, Stop and Continue share the
-normal operation journal. A donor shortage waits for refills as usual.
+**Priority Groups** settings classify the selected recipe by its actual heat and
+voltage. Defaults: High requires heat below 9,000 K and voltage at most UV;
+Medium requires heat below 10,000 K and voltage at most UEV; everything else is
+Low. High is checked first. Both thresholds are configurable for each group.
+The preview shows heat and assigned priority. Existing matching patterns can move
+between enabled priority destinations without donors or ingredient rewrites.
+These are separate interface groups for the user's machine/buffer priority setup;
+pattern order alone does not establish execution priority.
 
-The ingot casts in this coordinated program use the installed/planned supply
-check instead of the ordinary Fluid Shaper's historical native-liquid and
-already-craftable-ingot exclusions. This allows casts for materials newly supplied
-by the Melting Core. Magnetic and attuned variants remain excluded. The separate
-Fluid Shaper program retains its existing policy.
+**Optional process gas** defaults to **Without Optional Gas**, selecting the
+no-optional-gas route (normally circuit 1). Selecting a gas selects its matching
+assisted route (normally circuit 11). If the material has optional-gas variants
+but lacks the selected one, it is excluded instead of silently falling back to
+circuit 1. Materials with no optional-gas variants keep their sole route.
+**Request process gas** controls only the encoded gas ingredient: switch it off
+to stock gas externally while retaining the assisted route and circuit.
+Required reaction fluids remain requested. One feed route is selected per molten
+product, preferring its dust route; batches, voltage and heat appear in the preview.
+
+Both programs use one dependency solver and compare terminal-visible encoded
+recipes across the network. Installed independent liquid producers, including ABS
+and DTPF routes, are preserved. Dust supplied only by `fluid -> ingot -> dust`
+cannot seed a new melting route. Melting Core checks proposed molten production
+together with virtual future casts, including cross-material cycles, but installs
+only molten recipes. Fluid Shaper checks its cast candidates against installed
+supply, including completed Melting Core recipes. Ingot casts require an independent
+installed liquid producer; other shapes can still use extracted fluid.
+Magnetic and attuned variants remain excluded.
+
+Ingredients with no encoded producer are treated as external supplies; this does
+not prove inventory levels, passive production or machine readiness. Connect all
+relevant production interfaces to the terminal during planning and execution.
+No separate fluid-extractor interface setting is needed: every terminal-visible
+interface is inspected, and extraction is recognized from its input/output
+identities and proportions, including scaled patterns.
+
+The **Retirements** tab lists exact locations of solid-to-fluid extraction or
+obsolete owned melting routes that conflict with the new supply. Before installing
+patterns, execution replaces those recipes with the shared tagged donor placeholder.
+Retired patterns outside active destination groups are reused first, then ordinary
+donor buffers; unused retired patterns remain safe placeholders. Unrelated patterns
+are preserved. Capacity is checked before retirement starts, unsafe metadata blocks
+automatic retirement with a location and reason, and changes to upstream production
+invalidate the preview. Pause, Stop and Continue share the normal operation journal;
+a donor shortage waits for refills.
 
 Wiremill, the insulator and the bending machine each have a **Pattern multiplier** setting, default
 `1`. Enter a positive whole number: `256` makes a 1-ingot → 2-wire recipe request
@@ -157,15 +179,6 @@ matching patterns are resized through the shared editor without using donors.
 The preview shows the pre-scaling budget and divisor, such as
 `Batch 3x (29x / 9)` for 27 ingots → 3 dense plates.
 
-Fluid Shaper ingots require a native liquid-producing route in the full scrape.
-Alloy synthesis counts; fluid extraction, remelting finished parts and unpacking
-containers do not. Plasma cooling counts only with an independent liquid source.
-Materials with both solid and native liquid routes remain eligible. This is recipe
-evidence, not a check of which production routes your base has installed. Plates
-and other shapes can still use extracted fluid. Existing ingot patterns excluded
-by this check appear in Existing and must be removed manually to stop an already
-installed extract/solidify loop.
-
 **Clean donor buffer** is in Programs. Preview lists all
 occupied slots across interfaces matching the shared buffer name. Execute replaces
 editable processing/ultimate/fluid recipes with `1 tagged paper -> 1 identical
@@ -184,25 +197,6 @@ It replaces disposable recipes and does not provide undo.
 The preview uses labels such as `30,720 EU/t (LuV)` with tier-colored text
 blended at 50%, and explains exclusions in Excluded and Existing. Existing patterns
 excluded by settings are kept. Selecting no recipes gives a non-executable preview.
-
-New Fluid Shaper ingot casts are skipped if the connected ME network already
-advertises the ingot as craftable. The block editor interface supplies this
-read-only query; a multipart editor uses the sole connected `me_controller`
-instead. The check is repeated before execution, and changed availability
-invalidates the preview. With multiple network components, select one using
-**ME network component address** under Shared interfaces.
-
-A dust-to-ingot recipe does not prove independent solid production: its dust may
-only be obtainable by grinding an ingot cast from fluid. The scrape's direct-solid
-flag is not used to exclude casts or disable existing patterns. Both solid and
-native-liquid routes may be valid for the same material, such as Potin; catalog
-availability alone cannot choose the production route installed in your base.
-
-OC's ME crafting query exposes outputs, not each competing recipe's inputs. A
-matching cast already in its configured destination therefore does not exclude
-itself merely because ME advertises that output. The current ME guard prevents
-new duplicate ingot casts; it cannot determine whether an installed cast also
-has a competing solid-production recipe. Existing patterns remain intact.
 
 Material tiers come from the pinned beta-3 questbook's item/ingredient lists,
 side-chapter prerequisites and pinned GT ore placement rules. Dusts, ores,

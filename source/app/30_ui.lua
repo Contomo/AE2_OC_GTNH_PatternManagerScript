@@ -209,6 +209,9 @@ local function runUI()
       state.settings = section
       state.settingsPage = 1
     end
+    if page == 'settings' and Programs.byId[state.settings] then
+      state.selected = state.settings
+    end
     if page == 'history' then
       action('history')
     end
@@ -849,6 +852,7 @@ local function runUI()
       )
       local x = 34
       local tabs = current and Programs.byId[current].previewTabs
+        or p and p.supplyCounts and Programs.liquidTabs
         or preview and preview.id == 'assline' and {
           { 'changes', 'Input changes' },
           { 'recipes', 'Rename recipes' },

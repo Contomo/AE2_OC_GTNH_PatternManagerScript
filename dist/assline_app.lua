@@ -677,6 +677,7 @@ local Programs=(function()
 local Batch = Batch
 local ComponentData = ComponentData
 local LiquidSettings = LiquidSettings
+local Melting = require('assline_melting')
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -1022,11 +1023,13 @@ M.list[#M.list + 1] = {
 local liquidChoices, liquidDefinitions = {}, {}
 for _, circuit in ipairs(LiquidSettings.circuits) do
   local key, label = 'c' .. circuit, circuit == 0 and 'No Circuit' or 'Circuit ' .. circuit
-  liquidChoices[#liquidChoices + 1] = { key, label }
-  liquidDefinitions[#liquidDefinitions + 1] = { key, label, 'Helioflux Melting Core' }
+  for _, group in ipairs(Melting.priorities) do
+    local form = key .. (group[1] ~= 'high' and '_' .. group[1] or '')
+    local name = label .. ', ' .. group[2]
+    liquidChoices[#liquidChoices + 1] = { form, name }
+    liquidDefinitions[#liquidDefinitions + 1] = { form, name, 'Helioflux Melting Core' }
+  end
 end
-liquidChoices[#liquidChoices + 1] = { 'ingot', 'Ingot' }
-liquidDefinitions[#liquidDefinitions + 1] = { 'ingot', 'Ingot', 'Fluid Shaper' }
 local gasChoices = { { 'none', 'Without Optional Gas' } }
 for _, gas in ipairs(LiquidSettings.gases) do
   gasChoices[#gasChoices + 1] = { gas.name, gas.label }
@@ -1036,27 +1039,63 @@ local gasField = choice(
   'Optional process gas',
   gasChoices,
   'none',
-  'Prefer this gas where a matching variant exists; otherwise use the dry route. Required reaction fluids stay in the pattern.'
+  'Select the process-gas variant, or Without Optional Gas. A missing selected variant is excluded, never replaced by a no-gas variant.'
 )
 gasField.kind = 'select'
+local requestGas = field(
+  'requestGas',
+  'Request process gas',
+  'Off keeps the selected gas-assisted recipe and circuit; supply its process gas externally. Required reaction fluids stay requested.',
+  'on',
+  'toggle'
+)
+requestGas.when = { gas = {} }
+for _, gas in ipairs(LiquidSettings.gases) do
+  requestGas.when.gas[#requestGas.when.gas + 1] = gas.name
+end
+local priorityFields, tierChoices = {}, {}
+for _, tier in ipairs(Batch.tiers) do
+  tierChoices[#tierChoices + 1] = { tier, tier }
+end
+for _, group in ipairs({ { 'high', 'High', '9000', 'UV' }, { 'medium', 'Medium', '10000', 'UEV' } }) do
+  local heat = field(
+    group[1] .. 'Heat',
+    group[2] .. ' priority: heat below (K)',
+    group[1] == 'high'
+        and 'Both heat and voltage limits must match. High is tested first; everything else goes to Low.'
+      or '',
+    group[3],
+    'positiveInteger'
+  )
+  local voltage = choice(
+    group[1] .. 'Voltage',
+    group[2] .. ' priority: maximum voltage',
+    tierChoices,
+    group[4],
+    ''
+  )
+  heat.group, voltage.group, voltage.kind = 'Priority Groups', 'Priority Groups', 'select'
+  priorityFields[#priorityFields + 1], priorityFields[#priorityFields + 2] = heat, voltage
+end
+M.liquidTabs = {
+  { 'changes', 'Patterns' },
+  { 'retirements', 'Retirements' },
+  { 'existing', 'Existing' },
+  { 'skipped', 'Excluded' },
+  { 'capacity', 'Capacity' },
+  { 'details', 'Details' },
+}
 M.list[#M.list + 1] = {
   id = 'meltingCore',
   name = 'Melting Core',
   mode = 'meltingCore',
   distinctDestinations = true,
-  description = 'Retire remelting loops; install molten production and independent ingot casts.',
+  description = 'Install molten production and retire matching extraction loops; casts belong to Fluid Shaper.',
   formChoices = liquidChoices,
   outputs = {},
   costForms = {},
-  fields = { gasField, multiplier() },
-  previewTabs = {
-    { 'changes', 'Patterns' },
-    { 'retirements', 'Retirements' },
-    { 'existing', 'Existing' },
-    { 'skipped', 'Excluded' },
-    { 'capacity', 'Capacity' },
-    { 'details', 'Details' },
-  },
+  fields = { gasField, requestGas, multiplier(), table.unpack(priorityFields) },
+  previewTabs = M.liquidTabs,
 }
 for _, entry in ipairs(liquidChoices) do
   M.list[#M.list].outputs[entry[1]] = entry[1]
@@ -1154,7 +1193,7 @@ for _, program in ipairs(M.list) do
     local help = program.id == 'fluidShaper'
         and 'Destinations for patterns; keep the matching mold stocked in each machine.'
       or program.id == 'componentAssembly' and 'Separate component banks; circuits stay stocked (IV+). LV-EV recipes need no circuit.'
-      or program.id == 'meltingCore' and 'Separate stocked circuits by input buffer. Keep the ingot mold stocked in the Fluid Shaper.'
+      or program.id == 'meltingCore' and 'Separate stocked circuits by input buffer. Configure ingot casts in Fluid Shaper.'
       or 'Destinations for patterns. Every interface with the same exact name is included.'
     destinationFields(program, definitions[program.id], help)
   end
@@ -1270,13 +1309,6 @@ M.fields = {
     label = 'Resume work at energy %',
     help = 'At least 10 percentage points above the pause level; at most 95%.',
     default = '75',
-  },
-  {
-    key = 'networkAddress',
-    placeholder = 'auto',
-    label = 'ME network component address',
-    help = 'Ingot checks: blank uses the block editor or sole ME controller; otherwise enter a controller/block interface address prefix.',
-    default = '',
   },
 }
 M.defaults = { version = 2, shared = {}, batch = {}, programs = {} }
@@ -1510,8 +1542,30 @@ function M.migrate(old)
   if prior and not prior.polymer and prior.pvc then
     c.programs.insulator.polymer = prior.pvc == 'off' and 'none' or 'pvcSmall'
   end
-  if not (old.programs and old.programs.meltingCore) then
-    c.programs.meltingCore.ingot = c.programs.fluidShaper.ingot
+  local melting = old.programs and old.programs.meltingCore
+  if melting and melting.forms then
+    local forms, casting = {}, false
+    for key in melting.forms:gmatch('[^,]+') do
+      if key == 'ingot' then
+        casting = true
+      else
+        forms[#forms + 1] = key
+      end
+      if key:match('^c%d+$') and not melting.highHeat then
+        forms[#forms + 1], forms[#forms + 2] = key .. '_medium', key .. '_low'
+      end
+    end
+    c.programs.meltingCore.forms = table.concat(forms, ',')
+    if casting then
+      local shaper = c.programs.fluidShaper
+      if melting.ingot and melting.ingot ~= '' then
+        shaper.ingot = melting.ingot
+      end
+      local choices = Programs.byId.fluidShaper.formChoices
+      if not M.selected(shaper.forms, choices).ingot then
+        shaper.forms = M.toggleSelected(shaper.forms, choices, 'ingot')
+      end
+    end
   end
   return M.validate(M.normalize(c))
 end
@@ -3158,6 +3212,17 @@ function M.plan(request, snapshot, checkpoint)
           end
         end
       end
+      if not match and request.crossDestinations then
+        for _, t in ipairs(tokens) do
+          if not t.selected and t.pattern.recipeKey == r.key and t.pattern.kind == r.kind then
+            match = match or t
+            if t.pattern.scale == r.scale then
+              match = t
+              break
+            end
+          end
+        end
+      end
       local dest = g.slots[n]
       local entry = {
         key = r.key,
@@ -3189,6 +3254,10 @@ function M.plan(request, snapshot, checkpoint)
         p.required[r.kind] = p.required[r.kind] + 1
       end
     end
+  end
+  -- Match every requested recipe before preserving leftovers: an opt-in move
+  -- between destination groups may select a token from an earlier group.
+  for _, g in ipairs(groupOrder) do
     local n = #g.wanted
     for _, t in ipairs(g.tokens) do
       if not t.selected then
@@ -3214,8 +3283,10 @@ function M.plan(request, snapshot, checkpoint)
   for _, g in pairs(groups) do
     if #g.wanted == 0 then
       for _, t in ipairs(g.tokens) do
-        p.preserved[#p.preserved + 1] =
-          { from = t.current, to = t.current, fingerprint = t.pattern.fingerprint }
+        if not t.selected then
+          p.preserved[#p.preserved + 1] =
+            { from = t.current, to = t.current, fingerprint = t.pattern.fingerprint }
+        end
       end
     end
   end
@@ -3711,12 +3782,6 @@ function M.eligible(data, material, rule)
         return false, 'Fluid Shaper excludes ' .. modifier .. ' material variants.'
       end
     end
-    if data.source.materialSourcePolicy and rule.outputs[1].f == 'ingot' then
-      local sources = (data.origins or {})[material.o] or {}
-      if not sources.native_molten then
-        return false, 'No verified native liquid source for ingots.'
-      end
-    end
   end
   if
     data.usage
@@ -3853,6 +3918,7 @@ function M.compile(data, mode, options, checkpoint)
       multiplier = multiplier,
       batch = U.clone(options.batch),
       formDivisors = U.clone(options.formDivisors),
+      ingotSupply = options.ingotSupply,
     },
     recipes = {},
     unusedExcluded = 0,
@@ -4109,7 +4175,16 @@ function M.planRows(plan, manifest)
       end
     end
     if recipe.heat and recipe.heat > 0 then
-      treeRow(rows, add, '  |      ', 'Required heat: ' .. recipe.heat .. ' K', 'muted')
+      treeRow(
+        rows,
+        add,
+        '  |      ',
+        'Required heat: '
+          .. recipe.heat
+          .. ' K'
+          .. (recipe.priority and (' / Priority: ' .. recipe.priority) or ''),
+        'muted'
+      )
     end
   end
   return rows
@@ -4473,10 +4548,14 @@ end
 
 function M.liquidDetails(plan, manifest)
   local rows, add = U.rows()
-  add('MELTING CORE MIGRATION', 'blue')
+  local melting = manifest.policy.mode == 'meltingCore'
+  add(melting and 'MELTING CORE MIGRATION' or 'FLUID SHAPER SUPPLY CHECK', 'blue')
   add('1. Retire matched extraction and obsolete remelting recipes.')
   add('2. Reuse those patterns, then ordinary buffer donors, for the planned recipes.')
-  add('3. Install independent molten production and ingot casting patterns.')
+  add(
+    melting and '3. Install molten production. Configure casts separately in Fluid Shaper.'
+      or '3. Install casts backed by independent liquid production already in the network.'
+  )
   spacer(rows, add)
   add('DEPENDENCY CHECK', 'blue')
   add(
@@ -4502,13 +4581,24 @@ function M.liquidDetails(plan, manifest)
   )
   spacer(rows, add)
   add('MACHINE SETUP', 'blue')
-  add('Each enabled circuit destination needs its circuit stocked in its own input buffer.')
-  add('The No Circuit destination must not contain a programmed circuit.')
-  add('The ingot mold stays stocked in the Fluid Shaper; required reaction fluids are requested.')
-  add('Selected optional gas: ' .. manifest.policy.gas)
-  add(
-    'The module still needs sufficient heat and power; recipe EU/t and shared tier limits are shown in Patterns.'
-  )
+  if melting then
+    add('Each enabled circuit destination needs its circuit stocked in its own input buffer.')
+    add('The No Circuit destination must not contain a programmed circuit.')
+    add('Selected optional gas: ' .. manifest.policy.gas)
+    add(
+      manifest.policy.requestGas and 'Process gas is requested in patterns.'
+        or 'Process gas is supplied externally; the selected gas-assisted recipe and circuit are retained.'
+    )
+    add('Required reaction fluids are always requested.')
+    add(
+      'The module needs sufficient heat and power; recipe EU/t and shared tier limits are shown in Patterns.'
+    )
+  else
+    add('Keep the matching mold stocked in each Fluid Shaper destination.')
+    add(
+      'Ingot casts require independent installed liquid supply, including Melting Core, ABS or DTPF recipes.'
+    )
+  end
   add(
     'Pause / Stop / Continue use the shared transaction journal. Retirement is completed before casting begins.',
     'muted'
@@ -4860,6 +4950,47 @@ function M.new(checkpoint)
     return #missing == 0, missing
   end
 
+  -- Validate all proposed recipes together, including future casts. Removing
+  -- an unavailable producer must also invalidate any plan that depended on it.
+  function graph:plan(entries, omitted)
+    local excluded, original = U.clone(omitted or {}), #self.recipes
+    for _, entry in ipairs(entries) do
+      self:add(entry.recipe, entry.origin)
+    end
+    local changed = true
+    while changed do
+      changed = false
+      local unsafe = {}
+      for _, entry in ipairs(entries) do
+        if
+          not excluded[entry.origin]
+          and entry.requireProducer
+          and not self:hasProducer(entry.requireProducer, excluded)
+        then
+          unsafe[entry.origin] = true
+        end
+      end
+      for origin in pairs(unsafe) do
+        excluded[origin], changed = true, true
+      end
+      unsafe = {}
+      for _, entry in ipairs(entries) do
+        if not excluded[entry.origin] then
+          local forbidden = U.clone(excluded)
+          forbidden[entry.origin] = true
+          if not self:independent(entry.recipe.inputs, entry.recipe.outputs, forbidden) then
+            unsafe[entry.origin] = true
+          end
+        end
+      end
+      for origin in pairs(unsafe) do
+        excluded[origin], changed = true, true
+      end
+    end
+    self:restore(original)
+    return excluded
+  end
+
   return graph
 end
 
@@ -4875,6 +5006,41 @@ local Batch = Batch
 local Planner = Planner
 local Supply = Supply
 local M = {}
+M.priorities = { { 'high', 'High' }, { 'medium', 'Medium' }, { 'low', 'Low' } }
+
+function M.priority(route, policy)
+  if not policy then
+    return nil
+  end
+  local tier = Batch.voltageTier(route.eut)
+  local function atMost(limit)
+    for _, name in ipairs(Batch.tiers) do
+      if name == tier then
+        return true
+      end
+      if name == limit then
+        return false
+      end
+    end
+    return false
+  end
+  for _, group in ipairs({ 'high', 'medium' }) do
+    if
+      route.heat
+      and route.heat < policy[group .. 'Heat']
+      and atMost(policy[group .. 'Voltage'])
+    then
+      return group
+    end
+  end
+  return 'low'
+end
+
+function M.routeForm(route, policy)
+  local priority = M.priority(route, policy)
+  return 'c' .. route.circuit .. (priority and priority ~= 'high' and '_' .. priority or ''),
+    priority
+end
 
 function M.ingredient(data, index, amount)
   local item = U.clone(U.check(data.items[index], 'Unknown melting ingredient'))
@@ -4971,6 +5137,14 @@ function M.coreKeys(data)
         outputs = ingredients(data, data.products[route.output]),
       })
       keys[key] = { fluid = M.ingredient(data, material.fluid).name, native = material.native }
+      if route.gas ~= 0 then
+        local stocked = Planner.recipeKey({
+          kind = 'processing',
+          inputs = ingredients(data, data.feeds[route.feed]),
+          outputs = ingredients(data, data.products[route.output]),
+        })
+        keys[stocked] = keys[key]
+      end
     end
   end
   return keys
@@ -4983,6 +5157,8 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     policy = {
       mode = 'meltingCore',
       gas = options.gas,
+      requestGas = options.requestGas ~= false,
+      priority = U.clone(options.priority),
       batch = U.clone(options.batch),
       multiplier = options.multiplier,
     },
@@ -4998,6 +5174,9 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     excluded[origin] = true
   end
   local function skip(material, stack, form, reason)
+    if form == 'ingot' and options.emitCasting == false then
+      return
+    end
     manifest.skipped[#manifest.skipped + 1] = {
       material = material.name,
       label = stack.label,
@@ -5070,9 +5249,10 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       end
     end
     local selected, reason
-    local routes = {}
+    local routes, hasGasRoute = {}, false
     for _, route in ipairs(material.routes) do
-      local form = 'c' .. route.circuit
+      hasGasRoute = hasGasRoute or route.gas ~= 0
+      local form = M.routeForm(route, options.priority)
       if options.forms[form] then
         routes[#routes + 1] = route
       end
@@ -5093,9 +5273,9 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     if not native and not variant then
       for _, route in ipairs(routes) do
         local gas = route.gas ~= 0 and M.ingredient(data, route.gas).name or 'none'
-        if gas == options.gas or gas == 'none' then
+        if gas == options.gas or gas == 'none' and not hasGasRoute then
           local inputs = ingredients(data, data.feeds[route.feed])
-          if route.gas ~= 0 then
+          if route.gas ~= 0 and options.requestGas ~= false then
             inputs[#inputs + 1] = M.ingredient(data, route.gas, route.gasAmount)
           end
           local outputs = ingredients(data, data.products[route.output])
@@ -5112,9 +5292,13 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
                   },
                 }
               or {}
-            selected, reason =
-              scaled(material, route, inputs, outputs, 'c' .. route.circuit, 'Molten', stock)
+            if route.gas ~= 0 and options.requestGas == false then
+              stock[#stock + 1] = M.ingredient(data, route.gas, route.gasAmount)
+            end
+            local form, priority = M.routeForm(route, options.priority)
+            selected, reason = scaled(material, route, inputs, outputs, form, 'Molten', stock)
             if selected then
+              selected.priority = priority
               break
             end
           else
@@ -5122,7 +5306,8 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
           end
         end
       end
-      reason = reason or 'No enabled, verified Melting Core feed route.'
+      reason = reason
+        or 'No enabled route for the selected gas/circuit; no no-gas fallback is installed.'
     else
       reason = variant and ('Fluid Shaper excludes ' .. variant .. ' material variants.')
         or 'Preserve installed independent liquid production.'
@@ -5131,7 +5316,7 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       candidates[#candidates + 1] =
         { recipe = selected, material = material, fluid = fluid, ingot = ingot }
     elseif #routes > 0 then
-      skip(material, fluid, 'c' .. routes[1].circuit, reason)
+      skip(material, fluid, M.routeForm(routes[1], options.priority), reason)
     end
     if variant then
       if options.forms.ingot then
@@ -5143,10 +5328,10 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
   end
   -- Production and casting must be checked as one proposed graph. Otherwise an
   -- ingot provided by another new cast can be mistaken for an external input.
-  local originalCount = #graph.recipes
+  local proposed = {}
   for n, entry in ipairs(candidates) do
     entry.origin = 'new-melting-' .. n
-    graph:add(entry.recipe, 'new-melting-' .. n)
+    proposed[#proposed + 1] = entry
   end
   local casting = {}
   if options.forms.ingot then
@@ -5163,41 +5348,15 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       )
       if recipe then
         entry.recipe, entry.origin = recipe, 'new-cast-' .. n
-        graph:add(recipe, entry.origin)
+        entry.requireProducer = fluid
+        proposed[#proposed + 1] = entry
         casting[#casting + 1] = entry
       else
         skip(material, ingot, 'ingot', reason)
       end
     end
   end
-  local changed = true
-  while changed do
-    changed = false
-    local unsafe = {}
-    for _, entry in ipairs(casting) do
-      if not excluded[entry.origin] and not graph:hasProducer(entry.fluid, excluded) then
-        unsafe[entry.origin] = true
-      end
-    end
-    for origin in pairs(unsafe) do
-      excluded[origin], changed = true, true
-    end
-    unsafe = {}
-    for _, list in ipairs({ candidates, casting }) do
-      for _, entry in ipairs(list) do
-        if not excluded[entry.origin] then
-          local forbidden = U.clone(excluded)
-          forbidden[entry.origin] = true
-          if not graph:independent(entry.recipe.inputs, entry.recipe.outputs, forbidden) then
-            unsafe[entry.origin] = true
-          end
-        end
-      end
-    end
-    for origin in pairs(unsafe) do
-      excluded[origin], changed = true, true
-    end
-  end
+  excluded = graph:plan(proposed, excluded)
   local supplied = {}
   for _, list in ipairs({ candidates, casting }) do
     for _, entry in ipairs(list) do
@@ -5209,7 +5368,9 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
           'No independent supply in the complete melting/casting plan; would create a loop or lacks a liquid producer.'
         )
       else
-        manifest.recipes[#manifest.recipes + 1] = entry.recipe
+        if entry.recipe.outputForm ~= 'ingot' or options.emitCasting ~= false then
+          manifest.recipes[#manifest.recipes + 1] = entry.recipe
+        end
         for _, output in ipairs(entry.recipe.outputs) do
           if output.type == 'fluid' then
             supplied[output.name] = true
@@ -5222,7 +5383,41 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     end
   end
   manifest.suppliedFluids = supplied
-  graph:restore(originalCount)
+  return manifest
+end
+
+-- Fluid Shaper owns casts. Its normal rule compiler supplies the recipes and
+-- batches; the shared graph replaces the historical native-liquid/ME guards.
+function M.filterCasts(base, graph, omitted)
+  local manifest, proposed = U.clone(base), {}
+  manifest.recipes, manifest.suppliedFluids = {}, {}
+  for n, recipe in ipairs(base.recipes) do
+    proposed[#proposed + 1] = {
+      recipe = recipe,
+      origin = 'new-shaper-' .. n,
+      requireProducer = recipe.outputForm == 'ingot' and recipe.inputs[1] or nil,
+    }
+  end
+  local excluded = graph:plan(proposed, omitted)
+  for _, entry in ipairs(proposed) do
+    local recipe = entry.recipe
+    if excluded[entry.origin] then
+      local out = recipe.outputs[1]
+      manifest.skipped[#manifest.skipped + 1] = {
+        material = recipe.material,
+        form = recipe.outputForm,
+        label = recipe.label,
+        name = out.name,
+        damage = out.damage,
+        reason = 'No independent installed liquid supply for this cast; would create a loop or lacks a producer.',
+      }
+    else
+      manifest.recipes[#manifest.recipes + 1] = U.clone(recipe)
+      if recipe.outputForm == 'ingot' then
+        manifest.suppliedFluids[recipe.inputs[1].name] = true
+      end
+    end
+  end
   return manifest
 end
 
@@ -5317,92 +5512,6 @@ local function compactPattern(hw, p)
     end
   end
   return value, recipe
-end
--- NetworkControl is exposed by a block ME interface or an ME controller,
--- not by multipart interfaces. These queries are read-only; never submit a
--- crafting job just to inspect whether an output already has a recipe.
-local function ingotNetwork(c)
-  local prefix = c.shared.networkAddress
-  if prefix == '' then
-    local editor = selectDevice('me_interface', c.shared.editorAddress)
-    if editor.getCraftable or editor.getCraftables then
-      return editor
-    end
-  end
-  local matches = {}
-  for _, kind in ipairs(prefix == '' and { 'me_controller' } or { 'me_controller', 'me_interface' }) do
-    for address, tp in component.list(kind, true) do
-      if tp == kind and address:sub(1, #prefix) == prefix then
-        local proxy = component.proxy(address)
-        if proxy.getCraftable or proxy.getCraftables then
-          matches[#matches + 1] = proxy
-        end
-      end
-    end
-  end
-  U.check(
-    #matches == 1,
-    'Ingot checks need one ME network component; set its address in Shared interfaces'
-  )
-  return matches[1]
-end
-local function filterCraftableIngots(c, hw, snapshot, manifest, destination)
-  if not manifest.policy or manifest.policy.mode ~= 'solidifier' then
-    return
-  end
-  manifest.requestedRecipes = manifest.requestedRecipes or manifest.recipes
-  local owned = {}
-  for _, bank in ipairs(snapshot.interfaces) do
-    if bank.role == 'destination' then
-      for _, p in pairs(bank.patterns) do
-        owned[bank.name .. ':' .. tostring(p.recipeKey)] = true
-      end
-    end
-  end
-  local skipped, recipes, checks, network = {}, {}, {}, nil
-  for _, entry in ipairs(manifest.skipped) do
-    if not entry.network then
-      skipped[#skipped + 1] = entry
-    end
-  end
-  for _, recipe in ipairs(manifest.requestedRecipes) do
-    local omit = false
-    if recipe.outputForm == 'ingot' then
-      network = network or ingotNetwork(c)
-      local output = recipe.outputs[1]
-      local filter = { name = output.name, damage = output.damage }
-      local craftable
-      if network.getCraftable then
-        craftable = invoke(network, 'getCraftable', filter, 'item') ~= nil
-      else
-        local found = invoke(network, 'getCraftables', filter)
-        U.check(type(found) == 'table', 'ME crafting query failed')
-        craftable = next(found) ~= nil
-      end
-      local key = recipeKey(hw.data, recipe)
-      -- ME advertises outputs, not competing recipe inputs. An installed,
-      -- matching cast must not make itself disappear on the next scan.
-      omit = craftable and not owned[destination(recipe) .. ':' .. key]
-      checks[output.name .. ':' .. output.damage] = craftable
-      if omit then
-        skipped[#skipped + 1] = {
-          material = recipe.material,
-          form = recipe.outputForm,
-          label = recipe.label,
-          name = output.name,
-          damage = output.damage,
-          network = true,
-          reason = 'Ingot already craftable in the ME network; no new cast added.',
-        }
-      end
-    end
-    if not omit then
-      recipes[#recipes + 1] = recipe
-    end
-  end
-  manifest.recipes, manifest.skipped = recipes, skipped
-  manifest.policy.ingotNetwork = network and network.address or nil
-  manifest.policy.ingotCraftables = checks
 end
 local function explainExisting(plan, snapshot, request, manifest)
   local function itemKey(item)
@@ -5555,7 +5664,10 @@ local function scanManifest(c, manifest, routing, progress, control, started)
       and type(manifest.source.targetVersion) == 'string',
     'Manifest must identify recipe and target versions'
   )
-  for _, recipe in ipairs(manifest.requestedRecipes or manifest.recipes) do
+  for _, name in ipairs(routing.reuseDestinations or {}) do
+    group(name, 'destination')
+  end
+  for _, recipe in ipairs(manifest.recipes) do
     group(destination(recipe), 'destination')
   end
   for _, item in ipairs(manifest.skipped or {}) do
@@ -5619,9 +5731,9 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     end
   end
   selectRecipeChoices(hw, manifest, snapshot, destination)
-  filterCraftableIngots(c, hw, snapshot, manifest, destination)
   local request = {
     recipes = {},
+    crossDestinations = routing.reuseDestinations ~= nil,
     source = U.clone(manifest.source),
     policy = U.clone(manifest.policy or {}),
     unresolved = U.clone(manifest.unresolved),
@@ -5702,6 +5814,9 @@ function C.maker.preview(c, id, progress, control)
   validate(c)
   startWork(c, progress, control)
   local routing, options, program = programRouting(c, id)
+  if id == 'fluidShaper' and options.forms.ingot then
+    return C.liquids.preview(c, progress, control, id)
+  end
   local catalogs = { singularities = SingularityData, components = ComponentData }
   local data = catalogs[program.mode] or require('assline_data')
   local manifest = Modes.compile(data, program.mode, options, gate)
@@ -5797,6 +5912,9 @@ function C.maker.finishSort(hw, op, progress)
 end
 
 function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
+  if id == 'fluidShaper' and plan.supplyCounts and not customRouting then
+    return C.liquids.apply(c, plan, manifest, progress, control, id)
+  end
   U.check(
     not fs.exists(paths.pending),
     'Continue or stop the saved operation before executing another preview'
@@ -6569,7 +6687,7 @@ local function liquidInterfaces(hw)
   return refs
 end
 
-local function liquidScan(c, data, hw, routing, options, progress)
+local function liquidScan(c, data, hw, routing, options, progress, id)
   if indexedData ~= data then
     extractorMatch, coreKeys = Melting.extractorMatcher(data), Melting.coreKeys(data)
     indexedData = data
@@ -6580,7 +6698,7 @@ local function liquidScan(c, data, hw, routing, options, progress)
   local markerKey = recipeKey(hw.data, marker)
   local coreBanks = {}
   for form, name in pairs(routing.destinations) do
-    if options.forms[form] then
+    if id == 'meltingCore' and options.forms[form] then
       if form ~= 'ingot' then
         coreBanks[name] = true
       end
@@ -6688,14 +6806,28 @@ local function liquidScan(c, data, hw, routing, options, progress)
   return graph, retirement, placeholders, owned, baseline, counts, parkedOrigins
 end
 
-function C.liquids.preview(c, progress, control)
-  Config.requireProgram(c, 'meltingCore')
+function C.liquids.preview(c, progress, control, id)
+  id = id or 'meltingCore'
+  Config.requireProgram(c, id)
   local hw = connect(c, progress, control)
   local data = require('assline_liquid_data')
-  local routing, options = C.maker.routing(c, 'meltingCore')
-  options.gas = c.programs.meltingCore.gas
+  local routing, options = C.maker.routing(c, id)
+  local base
+  if id == 'meltingCore' then
+    options.gas = c.programs.meltingCore.gas
+    options.requestGas = c.programs.meltingCore.requestGas ~= 'off'
+    options.priority = {}
+    for _, group in ipairs({ 'high', 'medium' }) do
+      options.priority[group .. 'Heat'] = tonumber(c.programs.meltingCore[group .. 'Heat'])
+      options.priority[group .. 'Voltage'] = c.programs.meltingCore[group .. 'Voltage']
+    end
+    options.forms.ingot, options.emitCasting = true, false
+  else
+    options.ingotSupply = 'installed'
+    base = Modes.compile(require('assline_data'), 'solidifier', options, gate)
+  end
   local graph, candidates, placeholders, owned, baseline, counts, parkedOrigins =
-    liquidScan(c, data, hw, routing, options, progress)
+    liquidScan(c, data, hw, routing, options, progress, id)
   local excluded = {}
   for _, entry in ipairs(candidates) do
     excluded[entry.origin] = true
@@ -6704,10 +6836,11 @@ function C.liquids.preview(c, progress, control)
   -- Restore extractors for liquids this run will not replace. Repeating only
   -- removes exclusions, so a chain cannot oscillate between migration plans.
   while true do
-    manifest = Melting.compile(data, options, graph, excluded, owned, gate)
+    manifest = base and Melting.filterCasts(base, graph, excluded)
+      or Melting.compile(data, options, graph, excluded, owned, gate)
     local wanted = {}
     for _, recipe in ipairs(manifest.recipes) do
-      wanted[Planner.recipeKey(recipe)] = true
+      wanted[Planner.recipeKey(recipe)] = routing.destinations[recipe.outputForm]
     end
     local changed = false
     for _, entry in ipairs(candidates) do
@@ -6734,6 +6867,27 @@ function C.liquids.preview(c, progress, control)
     end
   end
   local destinations = {}
+  if id == 'meltingCore' then
+    local wanted = {}
+    for _, recipe in ipairs(manifest.recipes) do
+      wanted[Planner.recipeKey(recipe)] = true
+    end
+    -- Include old priority banks only when they contain a matching route that
+    -- will move. Obsolete gas routes can still be reclaimed as ordinary donors.
+    routing.reuseDestinations = {}
+    for _, entry in ipairs(candidates) do
+      if
+        entry.coreKey
+        and wanted[entry.coreKey]
+        and not excluded[entry.origin]
+        and not destinations[entry.name]
+      then
+        destinations[entry.name] = true
+        routing.reuseDestinations[#routing.reuseDestinations + 1] = entry.name
+      end
+    end
+    table.sort(routing.reuseDestinations)
+  end
   for _, rows in ipairs({ manifest.recipes, manifest.skipped }) do
     for _, row in ipairs(rows) do
       destinations[routing.destinations[row.outputForm or row.form]] = true
@@ -6806,21 +6960,19 @@ local function unchangedSupply(before, after, retirements)
   return withoutRetired(before) == withoutRetired(after)
 end
 
-function C.liquids.apply(c, plan, manifest, progress, control)
+function C.liquids.apply(c, plan, manifest, progress, control, id)
+  id = id or 'meltingCore'
   U.check(#plan.errors == 0, 'Resolve liquid migration blockers first')
-  local fresh, _, proposed, freshRouting, hw, proof = C.liquids.preview(c, progress, control)
+  local fresh, _, proposed, freshRouting, hw, proof = C.liquids.preview(c, progress, control, id)
   U.check(
     #fresh.errors == 0
       and fresh.networkBaseline == plan.networkBaseline
       and U.eq(proposed.recipes, manifest.recipes),
     'Production patterns changed since preview. Scan again.'
   )
-  writeFile(
-    paths.backup,
-    { config = U.clone(c), program = 'meltingCore', retired = #fresh.retirements }
-  )
+  writeFile(paths.backup, { config = U.clone(c), program = id, retired = #fresh.retirements })
   if #fresh.retirements == 0 then
-    return C.maker.apply(c, 'meltingCore', fresh, proposed, progress, control, freshRouting)
+    return C.maker.apply(c, id, fresh, proposed, progress, control, freshRouting)
   end
   local marker = C.donors.markerRecipe(hw)
   local workspace = U.check(fresh.retirementWorkspace, 'No retirement workspace').slot
@@ -6851,14 +7003,15 @@ function C.liquids.apply(c, plan, manifest, progress, control)
       progress('Retired extraction pattern ' .. n .. ' / ' .. #fresh.retirements)
     end
   end
-  local ready, _, readyManifest, routing, _, readyProof = C.liquids.preview(c, progress, control)
+  local ready, _, readyManifest, routing, _, readyProof =
+    C.liquids.preview(c, progress, control, id)
   U.check(
     #ready.errors == 0
       and U.eq(readyManifest.recipes, proposed.recipes)
       and unchangedSupply(proof, readyProof, fresh.retirements),
     'Supply changed during retirement. Continue to review a fresh preview.'
   )
-  C.maker.apply(c, 'meltingCore', ready, readyManifest, progress, control, routing)
+  C.maker.apply(c, id, ready, readyManifest, progress, control, routing)
 end
 
 -- Source: source/app/30_ui.lua
@@ -7072,6 +7225,9 @@ local function runUI()
     if section then
       state.settings = section
       state.settingsPage = 1
+    end
+    if page == 'settings' and Programs.byId[state.settings] then
+      state.selected = state.settings
     end
     if page == 'history' then
       action('history')
@@ -7713,6 +7869,7 @@ local function runUI()
       )
       local x = 34
       local tabs = current and Programs.byId[current].previewTabs
+        or p and p.supplyCounts and Programs.liquidTabs
         or preview and preview.id == 'assline' and {
           { 'changes', 'Input changes' },
           { 'recipes', 'Rename recipes' },

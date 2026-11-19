@@ -141,7 +141,16 @@ function M.planRows(plan, manifest)
       end
     end
     if recipe.heat and recipe.heat > 0 then
-      treeRow(rows, add, '  |      ', 'Required heat: ' .. recipe.heat .. ' K', 'muted')
+      treeRow(
+        rows,
+        add,
+        '  |      ',
+        'Required heat: '
+          .. recipe.heat
+          .. ' K'
+          .. (recipe.priority and (' / Priority: ' .. recipe.priority) or ''),
+        'muted'
+      )
     end
   end
   return rows
@@ -505,10 +514,14 @@ end
 
 function M.liquidDetails(plan, manifest)
   local rows, add = U.rows()
-  add('MELTING CORE MIGRATION', 'blue')
+  local melting = manifest.policy.mode == 'meltingCore'
+  add(melting and 'MELTING CORE MIGRATION' or 'FLUID SHAPER SUPPLY CHECK', 'blue')
   add('1. Retire matched extraction and obsolete remelting recipes.')
   add('2. Reuse those patterns, then ordinary buffer donors, for the planned recipes.')
-  add('3. Install independent molten production and ingot casting patterns.')
+  add(
+    melting and '3. Install molten production. Configure casts separately in Fluid Shaper.'
+      or '3. Install casts backed by independent liquid production already in the network.'
+  )
   spacer(rows, add)
   add('DEPENDENCY CHECK', 'blue')
   add(
@@ -534,13 +547,24 @@ function M.liquidDetails(plan, manifest)
   )
   spacer(rows, add)
   add('MACHINE SETUP', 'blue')
-  add('Each enabled circuit destination needs its circuit stocked in its own input buffer.')
-  add('The No Circuit destination must not contain a programmed circuit.')
-  add('The ingot mold stays stocked in the Fluid Shaper; required reaction fluids are requested.')
-  add('Selected optional gas: ' .. manifest.policy.gas)
-  add(
-    'The module still needs sufficient heat and power; recipe EU/t and shared tier limits are shown in Patterns.'
-  )
+  if melting then
+    add('Each enabled circuit destination needs its circuit stocked in its own input buffer.')
+    add('The No Circuit destination must not contain a programmed circuit.')
+    add('Selected optional gas: ' .. manifest.policy.gas)
+    add(
+      manifest.policy.requestGas and 'Process gas is requested in patterns.'
+        or 'Process gas is supplied externally; the selected gas-assisted recipe and circuit are retained.'
+    )
+    add('Required reaction fluids are always requested.')
+    add(
+      'The module needs sufficient heat and power; recipe EU/t and shared tier limits are shown in Patterns.'
+    )
+  else
+    add('Keep the matching mold stocked in each Fluid Shaper destination.')
+    add(
+      'Ingot casts require independent installed liquid supply, including Melting Core, ABS or DTPF recipes.'
+    )
+  end
   add(
     'Pause / Stop / Continue use the shared transaction journal. Retirement is completed before casting begins.',
     'muted'

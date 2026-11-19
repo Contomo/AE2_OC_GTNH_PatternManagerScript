@@ -5,6 +5,41 @@ local Batch = require('assline_batch')
 local Planner = require('assline_planner')
 local Supply = require('assline_supply')
 local M = {}
+M.priorities = { { 'high', 'High' }, { 'medium', 'Medium' }, { 'low', 'Low' } }
+
+function M.priority(route, policy)
+  if not policy then
+    return nil
+  end
+  local tier = Batch.voltageTier(route.eut)
+  local function atMost(limit)
+    for _, name in ipairs(Batch.tiers) do
+      if name == tier then
+        return true
+      end
+      if name == limit then
+        return false
+      end
+    end
+    return false
+  end
+  for _, group in ipairs({ 'high', 'medium' }) do
+    if
+      route.heat
+      and route.heat < policy[group .. 'Heat']
+      and atMost(policy[group .. 'Voltage'])
+    then
+      return group
+    end
+  end
+  return 'low'
+end
+
+function M.routeForm(route, policy)
+  local priority = M.priority(route, policy)
+  return 'c' .. route.circuit .. (priority and priority ~= 'high' and '_' .. priority or ''),
+    priority
+end
 
 function M.ingredient(data, index, amount)
   local item = U.clone(U.check(data.items[index], 'Unknown melting ingredient'))
@@ -101,6 +136,14 @@ function M.coreKeys(data)
         outputs = ingredients(data, data.products[route.output]),
       })
       keys[key] = { fluid = M.ingredient(data, material.fluid).name, native = material.native }
+      if route.gas ~= 0 then
+        local stocked = Planner.recipeKey({
+          kind = 'processing',
+          inputs = ingredients(data, data.feeds[route.feed]),
+          outputs = ingredients(data, data.products[route.output]),
+        })
+        keys[stocked] = keys[key]
+      end
     end
   end
   return keys
@@ -113,6 +156,8 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     policy = {
       mode = 'meltingCore',
       gas = options.gas,
+      requestGas = options.requestGas ~= false,
+      priority = U.clone(options.priority),
       batch = U.clone(options.batch),
       multiplier = options.multiplier,
     },
@@ -128,6 +173,9 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     excluded[origin] = true
   end
   local function skip(material, stack, form, reason)
+    if form == 'ingot' and options.emitCasting == false then
+      return
+    end
     manifest.skipped[#manifest.skipped + 1] = {
       material = material.name,
       label = stack.label,
@@ -200,9 +248,10 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       end
     end
     local selected, reason
-    local routes = {}
+    local routes, hasGasRoute = {}, false
     for _, route in ipairs(material.routes) do
-      local form = 'c' .. route.circuit
+      hasGasRoute = hasGasRoute or route.gas ~= 0
+      local form = M.routeForm(route, options.priority)
       if options.forms[form] then
         routes[#routes + 1] = route
       end
@@ -223,9 +272,9 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     if not native and not variant then
       for _, route in ipairs(routes) do
         local gas = route.gas ~= 0 and M.ingredient(data, route.gas).name or 'none'
-        if gas == options.gas or gas == 'none' then
+        if gas == options.gas or gas == 'none' and not hasGasRoute then
           local inputs = ingredients(data, data.feeds[route.feed])
-          if route.gas ~= 0 then
+          if route.gas ~= 0 and options.requestGas ~= false then
             inputs[#inputs + 1] = M.ingredient(data, route.gas, route.gasAmount)
           end
           local outputs = ingredients(data, data.products[route.output])
@@ -242,9 +291,13 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
                   },
                 }
               or {}
-            selected, reason =
-              scaled(material, route, inputs, outputs, 'c' .. route.circuit, 'Molten', stock)
+            if route.gas ~= 0 and options.requestGas == false then
+              stock[#stock + 1] = M.ingredient(data, route.gas, route.gasAmount)
+            end
+            local form, priority = M.routeForm(route, options.priority)
+            selected, reason = scaled(material, route, inputs, outputs, form, 'Molten', stock)
             if selected then
+              selected.priority = priority
               break
             end
           else
@@ -252,7 +305,8 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
           end
         end
       end
-      reason = reason or 'No enabled, verified Melting Core feed route.'
+      reason = reason
+        or 'No enabled route for the selected gas/circuit; no no-gas fallback is installed.'
     else
       reason = variant and ('Fluid Shaper excludes ' .. variant .. ' material variants.')
         or 'Preserve installed independent liquid production.'
@@ -261,7 +315,7 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       candidates[#candidates + 1] =
         { recipe = selected, material = material, fluid = fluid, ingot = ingot }
     elseif #routes > 0 then
-      skip(material, fluid, 'c' .. routes[1].circuit, reason)
+      skip(material, fluid, M.routeForm(routes[1], options.priority), reason)
     end
     if variant then
       if options.forms.ingot then
@@ -273,10 +327,10 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
   end
   -- Production and casting must be checked as one proposed graph. Otherwise an
   -- ingot provided by another new cast can be mistaken for an external input.
-  local originalCount = #graph.recipes
+  local proposed = {}
   for n, entry in ipairs(candidates) do
     entry.origin = 'new-melting-' .. n
-    graph:add(entry.recipe, 'new-melting-' .. n)
+    proposed[#proposed + 1] = entry
   end
   local casting = {}
   if options.forms.ingot then
@@ -293,41 +347,15 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       )
       if recipe then
         entry.recipe, entry.origin = recipe, 'new-cast-' .. n
-        graph:add(recipe, entry.origin)
+        entry.requireProducer = fluid
+        proposed[#proposed + 1] = entry
         casting[#casting + 1] = entry
       else
         skip(material, ingot, 'ingot', reason)
       end
     end
   end
-  local changed = true
-  while changed do
-    changed = false
-    local unsafe = {}
-    for _, entry in ipairs(casting) do
-      if not excluded[entry.origin] and not graph:hasProducer(entry.fluid, excluded) then
-        unsafe[entry.origin] = true
-      end
-    end
-    for origin in pairs(unsafe) do
-      excluded[origin], changed = true, true
-    end
-    unsafe = {}
-    for _, list in ipairs({ candidates, casting }) do
-      for _, entry in ipairs(list) do
-        if not excluded[entry.origin] then
-          local forbidden = U.clone(excluded)
-          forbidden[entry.origin] = true
-          if not graph:independent(entry.recipe.inputs, entry.recipe.outputs, forbidden) then
-            unsafe[entry.origin] = true
-          end
-        end
-      end
-    end
-    for origin in pairs(unsafe) do
-      excluded[origin], changed = true, true
-    end
-  end
+  excluded = graph:plan(proposed, excluded)
   local supplied = {}
   for _, list in ipairs({ candidates, casting }) do
     for _, entry in ipairs(list) do
@@ -339,7 +367,9 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
           'No independent supply in the complete melting/casting plan; would create a loop or lacks a liquid producer.'
         )
       else
-        manifest.recipes[#manifest.recipes + 1] = entry.recipe
+        if entry.recipe.outputForm ~= 'ingot' or options.emitCasting ~= false then
+          manifest.recipes[#manifest.recipes + 1] = entry.recipe
+        end
         for _, output in ipairs(entry.recipe.outputs) do
           if output.type == 'fluid' then
             supplied[output.name] = true
@@ -352,7 +382,41 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     end
   end
   manifest.suppliedFluids = supplied
-  graph:restore(originalCount)
+  return manifest
+end
+
+-- Fluid Shaper owns casts. Its normal rule compiler supplies the recipes and
+-- batches; the shared graph replaces the historical native-liquid/ME guards.
+function M.filterCasts(base, graph, omitted)
+  local manifest, proposed = U.clone(base), {}
+  manifest.recipes, manifest.suppliedFluids = {}, {}
+  for n, recipe in ipairs(base.recipes) do
+    proposed[#proposed + 1] = {
+      recipe = recipe,
+      origin = 'new-shaper-' .. n,
+      requireProducer = recipe.outputForm == 'ingot' and recipe.inputs[1] or nil,
+    }
+  end
+  local excluded = graph:plan(proposed, omitted)
+  for _, entry in ipairs(proposed) do
+    local recipe = entry.recipe
+    if excluded[entry.origin] then
+      local out = recipe.outputs[1]
+      manifest.skipped[#manifest.skipped + 1] = {
+        material = recipe.material,
+        form = recipe.outputForm,
+        label = recipe.label,
+        name = out.name,
+        damage = out.damage,
+        reason = 'No independent installed liquid supply for this cast; would create a loop or lacks a producer.',
+      }
+    else
+      manifest.recipes[#manifest.recipes + 1] = U.clone(recipe)
+      if recipe.outputForm == 'ingot' then
+        manifest.suppliedFluids[recipe.inputs[1].name] = true
+      end
+    end
+  end
   return manifest
 end
 

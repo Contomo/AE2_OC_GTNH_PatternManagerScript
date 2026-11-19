@@ -247,6 +247,17 @@ function M.plan(request, snapshot, checkpoint)
           end
         end
       end
+      if not match and request.crossDestinations then
+        for _, t in ipairs(tokens) do
+          if not t.selected and t.pattern.recipeKey == r.key and t.pattern.kind == r.kind then
+            match = match or t
+            if t.pattern.scale == r.scale then
+              match = t
+              break
+            end
+          end
+        end
+      end
       local dest = g.slots[n]
       local entry = {
         key = r.key,
@@ -278,6 +289,10 @@ function M.plan(request, snapshot, checkpoint)
         p.required[r.kind] = p.required[r.kind] + 1
       end
     end
+  end
+  -- Match every requested recipe before preserving leftovers: an opt-in move
+  -- between destination groups may select a token from an earlier group.
+  for _, g in ipairs(groupOrder) do
     local n = #g.wanted
     for _, t in ipairs(g.tokens) do
       if not t.selected then
@@ -303,8 +318,10 @@ function M.plan(request, snapshot, checkpoint)
   for _, g in pairs(groups) do
     if #g.wanted == 0 then
       for _, t in ipairs(g.tokens) do
-        p.preserved[#p.preserved + 1] =
-          { from = t.current, to = t.current, fingerprint = t.pattern.fingerprint }
+        if not t.selected then
+          p.preserved[#p.preserved + 1] =
+            { from = t.current, to = t.current, fingerprint = t.pattern.fingerprint }
+        end
       end
     end
   end

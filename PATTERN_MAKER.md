@@ -9,7 +9,7 @@ There is no second application or recipe-profile format.
 Install using the [wget bootstrap](README.md#install-and-update-with-wget).
 The launcher supports `--update` and `--check-update`. The readable application
 and data occupy about 1.5 MB, within the 4 MB cap. The Melting Core catalog is
-loaded only when that program runs.
+loaded only for Melting Core or the Fluid Shaper ingot supply check.
 
 Settings has shared hardware/interfaces and a separate section per program.
 Wire insulator has its destination, five-way polymer selector and independent PPS switch; wiremill has separate
@@ -26,8 +26,9 @@ reusable mold stays stocked in the machine.
 All buffers matching the shared donor name are counted from their actual
 patterns, independently of their capacity. Only the shared editor is local.
 
-Melting Core adds a coordinated supply migration with per-circuit destinations,
-an optional-gas selector and an ingot-cast destination. Its **Retirements** page
+Melting Core adds a coordinated supply migration with per-circuit, per-priority
+destinations, a gas selector and a separate request-gas toggle. Fluid Shaper owns
+ingot casting and uses the same installed-supply graph when Ingot is enabled. Its **Retirements** page
 lists old extraction/obsolete melting recipes that must stop advertising fluid
 before the new casts are installed. Parking and donor reuse use the same editor
 and journal as other programs. Installed native fluid producers are compared in

@@ -126,6 +126,47 @@ function M.new(checkpoint)
     return #missing == 0, missing
   end
 
+  -- Validate all proposed recipes together, including future casts. Removing
+  -- an unavailable producer must also invalidate any plan that depended on it.
+  function graph:plan(entries, omitted)
+    local excluded, original = U.clone(omitted or {}), #self.recipes
+    for _, entry in ipairs(entries) do
+      self:add(entry.recipe, entry.origin)
+    end
+    local changed = true
+    while changed do
+      changed = false
+      local unsafe = {}
+      for _, entry in ipairs(entries) do
+        if
+          not excluded[entry.origin]
+          and entry.requireProducer
+          and not self:hasProducer(entry.requireProducer, excluded)
+        then
+          unsafe[entry.origin] = true
+        end
+      end
+      for origin in pairs(unsafe) do
+        excluded[origin], changed = true, true
+      end
+      unsafe = {}
+      for _, entry in ipairs(entries) do
+        if not excluded[entry.origin] then
+          local forbidden = U.clone(excluded)
+          forbidden[entry.origin] = true
+          if not self:independent(entry.recipe.inputs, entry.recipe.outputs, forbidden) then
+            unsafe[entry.origin] = true
+          end
+        end
+      end
+      for origin in pairs(unsafe) do
+        excluded[origin], changed = true, true
+      end
+    end
+    self:restore(original)
+    return excluded
+  end
+
   return graph
 end
 

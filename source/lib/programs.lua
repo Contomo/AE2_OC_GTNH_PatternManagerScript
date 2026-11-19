@@ -2,6 +2,7 @@
 local Batch = require('assline_batch')
 local ComponentData = require('assline_component_data')
 local LiquidSettings = require('assline_liquid_settings')
+local Melting = require('assline_melting')
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -347,11 +348,13 @@ M.list[#M.list + 1] = {
 local liquidChoices, liquidDefinitions = {}, {}
 for _, circuit in ipairs(LiquidSettings.circuits) do
   local key, label = 'c' .. circuit, circuit == 0 and 'No Circuit' or 'Circuit ' .. circuit
-  liquidChoices[#liquidChoices + 1] = { key, label }
-  liquidDefinitions[#liquidDefinitions + 1] = { key, label, 'Helioflux Melting Core' }
+  for _, group in ipairs(Melting.priorities) do
+    local form = key .. (group[1] ~= 'high' and '_' .. group[1] or '')
+    local name = label .. ', ' .. group[2]
+    liquidChoices[#liquidChoices + 1] = { form, name }
+    liquidDefinitions[#liquidDefinitions + 1] = { form, name, 'Helioflux Melting Core' }
+  end
 end
-liquidChoices[#liquidChoices + 1] = { 'ingot', 'Ingot' }
-liquidDefinitions[#liquidDefinitions + 1] = { 'ingot', 'Ingot', 'Fluid Shaper' }
 local gasChoices = { { 'none', 'Without Optional Gas' } }
 for _, gas in ipairs(LiquidSettings.gases) do
   gasChoices[#gasChoices + 1] = { gas.name, gas.label }
@@ -361,27 +364,63 @@ local gasField = choice(
   'Optional process gas',
   gasChoices,
   'none',
-  'Prefer this gas where a matching variant exists; otherwise use the dry route. Required reaction fluids stay in the pattern.'
+  'Select the process-gas variant, or Without Optional Gas. A missing selected variant is excluded, never replaced by a no-gas variant.'
 )
 gasField.kind = 'select'
+local requestGas = field(
+  'requestGas',
+  'Request process gas',
+  'Off keeps the selected gas-assisted recipe and circuit; supply its process gas externally. Required reaction fluids stay requested.',
+  'on',
+  'toggle'
+)
+requestGas.when = { gas = {} }
+for _, gas in ipairs(LiquidSettings.gases) do
+  requestGas.when.gas[#requestGas.when.gas + 1] = gas.name
+end
+local priorityFields, tierChoices = {}, {}
+for _, tier in ipairs(Batch.tiers) do
+  tierChoices[#tierChoices + 1] = { tier, tier }
+end
+for _, group in ipairs({ { 'high', 'High', '9000', 'UV' }, { 'medium', 'Medium', '10000', 'UEV' } }) do
+  local heat = field(
+    group[1] .. 'Heat',
+    group[2] .. ' priority: heat below (K)',
+    group[1] == 'high'
+        and 'Both heat and voltage limits must match. High is tested first; everything else goes to Low.'
+      or '',
+    group[3],
+    'positiveInteger'
+  )
+  local voltage = choice(
+    group[1] .. 'Voltage',
+    group[2] .. ' priority: maximum voltage',
+    tierChoices,
+    group[4],
+    ''
+  )
+  heat.group, voltage.group, voltage.kind = 'Priority Groups', 'Priority Groups', 'select'
+  priorityFields[#priorityFields + 1], priorityFields[#priorityFields + 2] = heat, voltage
+end
+M.liquidTabs = {
+  { 'changes', 'Patterns' },
+  { 'retirements', 'Retirements' },
+  { 'existing', 'Existing' },
+  { 'skipped', 'Excluded' },
+  { 'capacity', 'Capacity' },
+  { 'details', 'Details' },
+}
 M.list[#M.list + 1] = {
   id = 'meltingCore',
   name = 'Melting Core',
   mode = 'meltingCore',
   distinctDestinations = true,
-  description = 'Retire remelting loops; install molten production and independent ingot casts.',
+  description = 'Install molten production and retire matching extraction loops; casts belong to Fluid Shaper.',
   formChoices = liquidChoices,
   outputs = {},
   costForms = {},
-  fields = { gasField, multiplier() },
-  previewTabs = {
-    { 'changes', 'Patterns' },
-    { 'retirements', 'Retirements' },
-    { 'existing', 'Existing' },
-    { 'skipped', 'Excluded' },
-    { 'capacity', 'Capacity' },
-    { 'details', 'Details' },
-  },
+  fields = { gasField, requestGas, multiplier(), table.unpack(priorityFields) },
+  previewTabs = M.liquidTabs,
 }
 for _, entry in ipairs(liquidChoices) do
   M.list[#M.list].outputs[entry[1]] = entry[1]
@@ -479,7 +518,7 @@ for _, program in ipairs(M.list) do
     local help = program.id == 'fluidShaper'
         and 'Destinations for patterns; keep the matching mold stocked in each machine.'
       or program.id == 'componentAssembly' and 'Separate component banks; circuits stay stocked (IV+). LV-EV recipes need no circuit.'
-      or program.id == 'meltingCore' and 'Separate stocked circuits by input buffer. Keep the ingot mold stocked in the Fluid Shaper.'
+      or program.id == 'meltingCore' and 'Separate stocked circuits by input buffer. Configure ingot casts in Fluid Shaper.'
       or 'Destinations for patterns. Every interface with the same exact name is included.'
     destinationFields(program, definitions[program.id], help)
   end

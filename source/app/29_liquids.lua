@@ -21,7 +21,7 @@ local function liquidInterfaces(hw)
   return refs
 end
 
-local function liquidScan(c, data, hw, routing, options, progress)
+local function liquidScan(c, data, hw, routing, options, progress, id)
   if indexedData ~= data then
     extractorMatch, coreKeys = Melting.extractorMatcher(data), Melting.coreKeys(data)
     indexedData = data
@@ -32,7 +32,7 @@ local function liquidScan(c, data, hw, routing, options, progress)
   local markerKey = recipeKey(hw.data, marker)
   local coreBanks = {}
   for form, name in pairs(routing.destinations) do
-    if options.forms[form] then
+    if id == 'meltingCore' and options.forms[form] then
       if form ~= 'ingot' then
         coreBanks[name] = true
       end
@@ -140,14 +140,28 @@ local function liquidScan(c, data, hw, routing, options, progress)
   return graph, retirement, placeholders, owned, baseline, counts, parkedOrigins
 end
 
-function C.liquids.preview(c, progress, control)
-  Config.requireProgram(c, 'meltingCore')
+function C.liquids.preview(c, progress, control, id)
+  id = id or 'meltingCore'
+  Config.requireProgram(c, id)
   local hw = connect(c, progress, control)
   local data = require('assline_liquid_data')
-  local routing, options = C.maker.routing(c, 'meltingCore')
-  options.gas = c.programs.meltingCore.gas
+  local routing, options = C.maker.routing(c, id)
+  local base
+  if id == 'meltingCore' then
+    options.gas = c.programs.meltingCore.gas
+    options.requestGas = c.programs.meltingCore.requestGas ~= 'off'
+    options.priority = {}
+    for _, group in ipairs({ 'high', 'medium' }) do
+      options.priority[group .. 'Heat'] = tonumber(c.programs.meltingCore[group .. 'Heat'])
+      options.priority[group .. 'Voltage'] = c.programs.meltingCore[group .. 'Voltage']
+    end
+    options.forms.ingot, options.emitCasting = true, false
+  else
+    options.ingotSupply = 'installed'
+    base = Modes.compile(require('assline_data'), 'solidifier', options, gate)
+  end
   local graph, candidates, placeholders, owned, baseline, counts, parkedOrigins =
-    liquidScan(c, data, hw, routing, options, progress)
+    liquidScan(c, data, hw, routing, options, progress, id)
   local excluded = {}
   for _, entry in ipairs(candidates) do
     excluded[entry.origin] = true
@@ -156,10 +170,11 @@ function C.liquids.preview(c, progress, control)
   -- Restore extractors for liquids this run will not replace. Repeating only
   -- removes exclusions, so a chain cannot oscillate between migration plans.
   while true do
-    manifest = Melting.compile(data, options, graph, excluded, owned, gate)
+    manifest = base and Melting.filterCasts(base, graph, excluded)
+      or Melting.compile(data, options, graph, excluded, owned, gate)
     local wanted = {}
     for _, recipe in ipairs(manifest.recipes) do
-      wanted[Planner.recipeKey(recipe)] = true
+      wanted[Planner.recipeKey(recipe)] = routing.destinations[recipe.outputForm]
     end
     local changed = false
     for _, entry in ipairs(candidates) do
@@ -186,6 +201,27 @@ function C.liquids.preview(c, progress, control)
     end
   end
   local destinations = {}
+  if id == 'meltingCore' then
+    local wanted = {}
+    for _, recipe in ipairs(manifest.recipes) do
+      wanted[Planner.recipeKey(recipe)] = true
+    end
+    -- Include old priority banks only when they contain a matching route that
+    -- will move. Obsolete gas routes can still be reclaimed as ordinary donors.
+    routing.reuseDestinations = {}
+    for _, entry in ipairs(candidates) do
+      if
+        entry.coreKey
+        and wanted[entry.coreKey]
+        and not excluded[entry.origin]
+        and not destinations[entry.name]
+      then
+        destinations[entry.name] = true
+        routing.reuseDestinations[#routing.reuseDestinations + 1] = entry.name
+      end
+    end
+    table.sort(routing.reuseDestinations)
+  end
   for _, rows in ipairs({ manifest.recipes, manifest.skipped }) do
     for _, row in ipairs(rows) do
       destinations[routing.destinations[row.outputForm or row.form]] = true
@@ -258,21 +294,19 @@ local function unchangedSupply(before, after, retirements)
   return withoutRetired(before) == withoutRetired(after)
 end
 
-function C.liquids.apply(c, plan, manifest, progress, control)
+function C.liquids.apply(c, plan, manifest, progress, control, id)
+  id = id or 'meltingCore'
   U.check(#plan.errors == 0, 'Resolve liquid migration blockers first')
-  local fresh, _, proposed, freshRouting, hw, proof = C.liquids.preview(c, progress, control)
+  local fresh, _, proposed, freshRouting, hw, proof = C.liquids.preview(c, progress, control, id)
   U.check(
     #fresh.errors == 0
       and fresh.networkBaseline == plan.networkBaseline
       and U.eq(proposed.recipes, manifest.recipes),
     'Production patterns changed since preview. Scan again.'
   )
-  writeFile(
-    paths.backup,
-    { config = U.clone(c), program = 'meltingCore', retired = #fresh.retirements }
-  )
+  writeFile(paths.backup, { config = U.clone(c), program = id, retired = #fresh.retirements })
   if #fresh.retirements == 0 then
-    return C.maker.apply(c, 'meltingCore', fresh, proposed, progress, control, freshRouting)
+    return C.maker.apply(c, id, fresh, proposed, progress, control, freshRouting)
   end
   local marker = C.donors.markerRecipe(hw)
   local workspace = U.check(fresh.retirementWorkspace, 'No retirement workspace').slot
@@ -303,12 +337,13 @@ function C.liquids.apply(c, plan, manifest, progress, control)
       progress('Retired extraction pattern ' .. n .. ' / ' .. #fresh.retirements)
     end
   end
-  local ready, _, readyManifest, routing, _, readyProof = C.liquids.preview(c, progress, control)
+  local ready, _, readyManifest, routing, _, readyProof =
+    C.liquids.preview(c, progress, control, id)
   U.check(
     #ready.errors == 0
       and U.eq(readyManifest.recipes, proposed.recipes)
       and unchangedSupply(proof, readyProof, fresh.retirements),
     'Supply changed during retirement. Continue to review a fresh preview.'
   )
-  C.maker.apply(c, 'meltingCore', ready, readyManifest, progress, control, routing)
+  C.maker.apply(c, id, ready, readyManifest, progress, control, routing)
 end

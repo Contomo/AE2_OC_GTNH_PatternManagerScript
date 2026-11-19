@@ -726,6 +726,21 @@ test('program selection is explicit and all operation controls are on the bottom
   api.runUI()
 end)
 
+test('program and settings navigation select the same program in both directions',function()
+  files[api.paths.config]=ser(cfg)
+  queue(click('[ Wiremill ]'),click('[ Program settings ]',47),function()
+    assert(frame[2]:find('SETTINGS / Wiremill',1,true));return nav('Bending machine')()
+  end,click('[ Run program ]',47),function()
+    assert(table.concat(frame,'\n'):find('[ * Bending machine ]',1,true))
+    return click('[ Program settings ]',47)()
+  end,function()
+    assert(frame[2]:find('SETTINGS / Bending machine',1,true));return nav('Shared interfaces')()
+  end,click('[ Run program ]',47),function()
+    assert(table.concat(frame,'\n'):find('[ * Bending machine ]',1,true));return quit()
+  end)
+  api.runUI();assert(mutations==0)
+end)
+
 test('shared names survive navigation, quit and a fresh UI invocation',function()
   files[api.paths.config]=ser(cfg)
   queue(nav('Settings'),replace('Pattern editor interface','My editor'),replace('New pattern buffer name','My banks'),
@@ -841,7 +856,9 @@ local function withIngotShaper(f)
     cfg.programs.fluidShaper.forms='ingot'
     cfg.programs.fluidShaper.ingot=cfg.programs.assline.target
     target.patterns={}
-    f(data)
+    local supply=iface('Installed molten production',71,{[0]=pattern({item('Independent feed',1,777)},
+      {{name='molten.test1',size=144,label='Molten Test',amount=144}})})
+    f(data,supply)
   end)
 end
 local function ingotCast(n,batch)
@@ -849,59 +866,41 @@ local function ingotCast(n,batch)
     {{name='gregtech:gt.metaitem.01',damage=11000+n,size=batch,label='Ingot'}})
 end
 
-test('ingot preview skips ME craftable outputs without changing existing solid recipes',function()
+test('ingot preview uses installed liquid supply instead of historical source flags or ME craftable outputs',function()
   withIngotShaper(function()
     networkCraftables['gregtech:gt.metaitem.01:11001']=true
     target.patterns[0]=pattern({item('Dust',1,2001)},{item('Ingot',1,11001)})
     local p=api.runner.preview(cfg,'fluidShaper')
-    assert(mutations==0 and #p.plan.creates==0)
-    assert(#p.manifest.recipes==0 and #p.manifest.skipped==2)
-    assert(p.plan.existing[1].status=='KEEP')
-    assert(p.manifest.skipped[2].reason:find('already craftable',1,true))
-    assert(not api.runner.hasChanges(p))
-    networkCraftables={}
-    p=api.runner.preview(cfg,'fluidShaper')
-    assert(#p.plan.creates==1 and #p.plan.preserved==1)
+    assert(mutations==0 and #p.plan.creates==1 and #p.manifest.skipped==1)
+    assert(p.plan.existing[1].status=='KEEP' and p.plan.supplyCounts)
+    assert(p.manifest.skipped[1].reason:find('installed liquid supply',1,true))
+    assert(p.manifest.policy.ingotSupply=='installed')
   end)
 end)
 
-test('multipart editor uses the ME controller and honors its configured address',function()
-  local old=proxies.direct.getCraftables
-  proxies.direct.getCraftables=nil;networkController=true
+test('Fluid Shaper ingot checks require only terminal access, not an ME controller',function()
+  local oldA,oldB=proxies.direct.getCraftables,proxies.direct.getCraftable
+  proxies.direct.getCraftables,proxies.direct.getCraftable=nil,nil
   local ok,why=pcall(function()
     withIngotShaper(function()
-      networkCraftables['gregtech:gt.metaitem.01:11001']=true
-      methodsAsTables=true
+      networkController=false;methodsAsTables=true
       local p=api.runner.preview(cfg,'fluidShaper')
-      assert(p.manifest.policy.ingotNetwork=='controller' and #p.plan.creates==0)
-      cfg.shared.networkAddress='contr'
-      p=api.runner.preview(cfg,'fluidShaper')
-      assert(p.manifest.policy.ingotNetwork=='controller')
-      networkController=false
-      mustFail(function() api.runner.preview(cfg,'fluidShaper') end,'Ingot checks need one')
-      assert(mutations==0)
+      assert(#p.plan.creates==1 and p.manifest.policy.ingotNetwork==nil)
     end)
   end)
-  proxies.direct.getCraftables=old;assert(ok,why)
+  proxies.direct.getCraftables,proxies.direct.getCraftable=oldA,oldB;assert(ok,why)
 end)
 
-test('direct single-output ME query is used when available',function()
-  local old=proxies.direct.getCraftable
-  proxies.direct.getCraftable=function(filter,tp)
-    assert(tp=='item' and filter.name=='gregtech:gt.metaitem.01' and filter.damage==11001)
-    return networkCraftables[filter.name..':'..filter.damage] and {} or nil
-  end
-  local ok,why=pcall(function()
-    withIngotShaper(function()
-      local p=api.runner.preview(cfg,'fluidShaper');assert(#p.plan.creates==1)
-      networkCraftables['gregtech:gt.metaitem.01:11001']=true
-      p=api.runner.preview(cfg,'fluidShaper');assert(#p.plan.creates==0)
-    end)
+test('a cast cannot count itself as proof that its molten input is obtainable',function()
+  withIngotShaper(function(_,supply)
+    supply.patterns={};target.patterns[0]=ingotCast(1,256)
+    local p=api.runner.preview(cfg,'fluidShaper')
+    assert(#p.plan.creates==0 and p.plan.reused==0 and #p.manifest.recipes==0)
+    assert(p.plan.existing[1].status=='KEEP' and not api.runner.hasChanges(p))
   end)
-  proxies.direct.getCraftable=old;assert(ok,why)
 end)
 
-test('ME lookup does not exclude a cast because its own pattern advertises the output',function()
+test('independent installed liquid supply allows resizing an existing cast',function()
   withIngotShaper(function()
     target.patterns[0]=ingotCast(1,256)
     networkCraftables['gregtech:gt.metaitem.01:11001']=true
@@ -912,47 +911,33 @@ test('ME lookup does not exclude a cast because its own pattern advertises the o
   end)
 end)
 
-test('ME recipe changes invalidate both added and skipped ingot previews before any writes',function()
+test('installed liquid producer changes invalidate ingot previews before writes',function()
+  withIngotShaper(function(_,supply)
+    local p=api.runner.preview(cfg,'fluidShaper')
+    supply.patterns={}
+    mustFail(function() api.runner.execute(cfg,p) end,'changed since preview')
+    assert(mutations==0)
+  end)
+end)
+
+test('missing liquid supply excludes ingots even when the historical scrape flags them native',function()
+  withIngotShaper(function(_,supply)
+    supply.patterns={}
+    local p=api.runner.preview(cfg,'fluidShaper')
+    assert(#p.manifest.recipes==0 and #p.manifest.skipped==2 and mutations==0)
+  end)
+end)
+
+test('obsolete solid-ingot preference settings are ignored by installed supply checks',function()
   withIngotShaper(function()
-    local p=api.runner.preview(cfg,'fluidShaper')
-    networkCraftables['gregtech:gt.metaitem.01:11001']=true
-    mustFail(function() api.runner.execute(cfg,p) end,'scan again')
-    assert(mutations==0)
-    p=api.runner.preview(cfg,'fluidShaper');networkCraftables={}
-    mustFail(function() api.runner.execute(cfg,p) end,'scan again')
-    assert(mutations==0)
-  end)
-end)
-
-test('dust-to-ingot evidence never disables an existing native-liquid cast',function()
-  withIngotShaper(function(data)
-    data.materials={data.materials[2]}
-    data.origins[2].native_molten=true
-    target.patterns[0]=ingotCast(2,1)
-    target.patterns[0].name='appliedenergistics2:item.ItemEncodedUltimatePattern'
-    networkCraftables['gregtech:gt.metaitem.01:11002']=true
-    local original=ser(target.patterns[0])
-    local p=api.runner.preview(cfg,'fluidShaper')
-    assert(mutations==0 and p.plan.reused==1 and #p.plan.creates==0)
-    assert(p.plan.existing[1].status=='REUSE' and not api.runner.hasChanges(p))
-    api.runner.execute(cfg,p)
-    assert(mutations==0 and ser(target.patterns[0])==original)
-    assert(not p.report:find('PARK',1,true))
-  end)
-end)
-
-test('both native source routes remain available and obsolete preference settings are ignored',function()
-  withIngotShaper(function(data)
-    data.materials={data.materials[2]}
-    data.origins[2].native_molten=true
     local old=cp(cfg);old.programs.fluidShaper.preferSolidIngots='on'
     cfg=api.config.migrate(old)
     assert(cfg.programs.fluidShaper.preferSolidIngots==nil)
     local p=api.runner.preview(cfg,'fluidShaper')
-    assert(#p.plan.creates==1 and #p.manifest.skipped==0 and mutations==0)
-    networkCraftables['gregtech:gt.metaitem.01:11002']=true
+    assert(#p.plan.creates==1 and #p.manifest.skipped==1 and mutations==0)
+    networkCraftables['gregtech:gt.metaitem.01:11001']=true
     p=api.runner.preview(cfg,'fluidShaper')
-    assert(#p.plan.creates==0 and #p.manifest.skipped==1 and mutations==0)
+    assert(#p.plan.creates==1 and mutations==0)
   end)
 end)
 
@@ -3307,6 +3292,14 @@ end)
 
 local function withLiquidMaterials(keys, run)
   local saved=package.loaded.assline_liquid_data
+  local savedMatrix=package.loaded.assline_data
+  local originalMatrix=require('assline_data');local matrix={}
+  for k,v in pairs(originalMatrix) do matrix[k]=v end
+  matrix.materials={}
+  for _,m in ipairs(originalMatrix.materials) do
+    if keys[m.name:lower():gsub('[^a-z0-9]','')] then matrix.materials[#matrix.materials+1]=cp(m) end
+  end
+  package.loaded.assline_data=matrix
   local original=require('assline_liquid_data');local data={}
   for k,v in pairs(original) do data[k]=v end
   data.materials={}
@@ -3314,6 +3307,7 @@ local function withLiquidMaterials(keys, run)
   package.loaded.assline_liquid_data=data
   local ok,why=pcall(run,data)
   package.loaded.assline_liquid_data=saved
+  package.loaded.assline_data=savedMatrix
   assert(ok,why)
 end
 local function liquidStack(data,index,amount)
@@ -3326,13 +3320,14 @@ local function liquidPattern(inputs,outputs)
   local p=pattern(inputs,outputs);p.name='ae2fc:encodedPattern';return p
 end
 local function liquidFixture(data)
-  cfg.programs.meltingCore.forms='c1,ingot'
+  cfg.programs.meltingCore.forms='c1'
+  cfg.programs.fluidShaper.forms='ingot'
   local m=data.materials[1]
   local fluid=liquidStack(data,m.fluid,147456)
   local ingot=liquidStack(data,m.ingot,1024)
   local extractor=iface('Old Fluid Extractor',80,{[4]=liquidPattern({ingot},{fluid})})
   local core=iface(cfg.programs.meltingCore.c1,81)
-  local casts=iface(cfg.programs.meltingCore.ingot,82)
+  local casts=iface(cfg.programs.fluidShaper.ingot,82)
   return extractor,core,casts
 end
 
@@ -3342,15 +3337,17 @@ test('liquid migration retires scaled extractors, reuses their patterns first an
     local before=ser(buffer.patterns[1])
     local preview=api.runner.preview(cfg,'meltingCore')
     assert(mutations==0 and #preview.plan.errors==0 and #preview.plan.retirements==1)
-    assert(preview.plan.retirements[1].from.slot==4 and #preview.manifest.recipes==2)
-    assert(preview.plan.available.processing==3 and preview.plan.required.processing==2)
+    assert(preview.plan.retirements[1].from.slot==4 and #preview.manifest.recipes==1)
+    assert(preview.plan.available.processing==3 and preview.plan.required.processing==1)
     assert(preview.report:find('Old Fluid Extractor',1,true))
     api.runner.execute(cfg,preview)
-    assert(not old.patterns[4] and core.patterns[0] and casts.patterns[0])
+    assert(not old.patterns[4] and core.patterns[0] and not casts.patterns[0])
+    api.runner.execute(cfg,api.runner.preview(cfg,'fluidShaper'))
+    assert(casts.patterns[0])
     assert(core.patterns[0].name=='ae2fc:encodedPattern' and ser(buffer.patterns[1])==before)
     assert(not buffer.patterns[0] and next(editor.patterns)==nil and not api.runner.hasSaved())
     local nextPlan=api.runner.preview(cfg,'meltingCore')
-    assert(nextPlan.plan.reused==2 and #nextPlan.plan.retirements==0 and not api.runner.hasChanges(nextPlan))
+    assert(nextPlan.plan.reused==1 and #nextPlan.plan.retirements==0 and not api.runner.hasChanges(nextPlan))
   end)
 end)
 
@@ -3360,6 +3357,7 @@ test('liquid migration parks surplus retired patterns without advertising their 
     old.patterns[5],old.patterns[6]=cp(old.patterns[4]),cp(old.patterns[4])
     local donors=ser(buffer.patterns)
     api.runner.execute(cfg,api.runner.preview(cfg,'meltingCore'))
+    api.runner.execute(cfg,api.runner.preview(cfg,'fluidShaper'))
     assert(not old.patterns[4] and not old.patterns[5] and old.patterns[6])
     assert(old.patterns[6].outputs[1].name=='minecraft:paper')
     assert(core.patterns[0] and casts.patterns[0] and ser(buffer.patterns)==donors)
@@ -3368,9 +3366,10 @@ end)
 
 test('liquid migration leaves ABS and DTPF production intact and excludes their dust remelting routes',function()
   withLiquidMaterials({quantum=true,hypogen=true},function(data)
-    cfg.programs.meltingCore.forms='c0,ingot'
+    cfg.programs.meltingCore.forms='c0,c0_medium,c0_low'
+    cfg.programs.fluidShaper.forms='ingot'
     local core=iface(cfg.programs.meltingCore.c0,81)
-    local casts=iface(cfg.programs.meltingCore.ingot,82)
+    local casts=iface(cfg.programs.fluidShaper.ingot,82)
     local producer=iface('Existing ABS and DTPF',83)
     local macerator=iface('Macerator',84)
     for n,m in ipairs(data.materials) do
@@ -3383,10 +3382,12 @@ test('liquid migration leaves ABS and DTPF production intact and excludes their 
     end
     local unchanged=ser(producer.patterns)
     local preview=api.runner.preview(cfg,'meltingCore')
+    assert(#preview.plan.errors==0 and #preview.manifest.recipes==0)
+    assert(preview.report:find('Preserve installed independent liquid production.',1,true))
+    preview=api.runner.preview(cfg,'fluidShaper')
     assert(#preview.plan.errors==0 and #preview.manifest.recipes==2 and preview.plan.reused==2)
     for _,r in ipairs(preview.manifest.recipes) do assert(r.outputForm=='ingot') end
     assert(next(core.patterns)==nil and ser(producer.patterns)==unchanged and mutations==0)
-    assert(preview.report:find('Preserve installed independent liquid production.',1,true))
   end)
 end)
 
@@ -3439,12 +3440,13 @@ end)
 
 test('liquid migration cannot use an AE-invalid producer as proof of independent liquid supply',function()
   withLiquidMaterials({quantum=true},function(data)
-    cfg.programs.meltingCore.forms='c0,ingot'
+    cfg.programs.meltingCore.forms='c0,c0_medium,c0_low'
+    cfg.programs.fluidShaper.forms='ingot'
     local m=data.materials[1]
     local fluid=liquidStack(data,m.fluid,144);local ingot=liquidStack(data,m.ingot,1)
     local dust=liquidStack(data,data.feeds[m.routes[1].feed][1][1],1)
     iface(cfg.programs.meltingCore.c0,81)
-    iface(cfg.programs.meltingCore.ingot,82,{[0]=liquidPattern({fluid},{ingot})})
+    iface(cfg.programs.fluidShaper.ingot,82,{[0]=liquidPattern({fluid},{ingot})})
     local invalid=liquidPattern({item('Raw',1,777)},{fluid})
     local root=unser(invalid.tag);root.__value.InvalidPattern=typed('byte',1);invalid.tag=ser(root)
     iface('Invalid liquid source',83,{[0]=invalid})
@@ -3483,7 +3485,9 @@ test('liquid migration can stop after retirement and Continue reuses the parked 
     local remaining=api.runner.continue(cfg)
     assert(remaining.id=='meltingCore' and #remaining.plan.retirements==0 and remaining.plan.available.processing==3)
     api.runner.execute(cfg,remaining)
-    assert(core.patterns[0] and casts.patterns[0] and not old.patterns[4] and not api.runner.hasSaved())
+    assert(core.patterns[0] and not casts.patterns[0] and not old.patterns[4] and not api.runner.hasSaved())
+    api.runner.execute(cfg,api.runner.preview(cfg,'fluidShaper'))
+    assert(casts.patterns[0])
   end)
 end)
 
@@ -3496,7 +3500,9 @@ test('liquid migration recovers interrupted retirement setters and rescans the r
     local remaining=api.runner.continue(cfg)
     assert(#remaining.plan.retirements==0 and next(editor.patterns)==nil)
     api.runner.execute(cfg,remaining)
-    assert(core.patterns[0] and casts.patterns[0] and not old.patterns[4] and not api.runner.hasSaved())
+    assert(core.patterns[0] and not casts.patterns[0] and not old.patterns[4] and not api.runner.hasSaved())
+    api.runner.execute(cfg,api.runner.preview(cfg,'fluidShaper'))
+    assert(casts.patterns[0])
   end)
 end)
 
@@ -3504,14 +3510,83 @@ test('liquid migration gas selection replaces an obsolete owned route without du
   withLiquidMaterials({tungsten=true},function(data)
     local old,core,casts=liquidFixture(data)
     api.runner.execute(cfg,api.runner.preview(cfg,'meltingCore'))
-    cfg.programs.meltingCore.forms='c1,c11,ingot';cfg.programs.meltingCore.gas='nitrogen'
+    api.runner.execute(cfg,api.runner.preview(cfg,'fluidShaper'))
+    cfg.programs.meltingCore.forms='c1,c11';cfg.programs.meltingCore.gas='nitrogen'
     local gasBank=iface(cfg.programs.meltingCore.c11,85)
     local preview=api.runner.preview(cfg,'meltingCore')
     assert(#preview.plan.retirements==1 and preview.plan.retirements[1].name==core.name)
     api.runner.execute(cfg,preview)
     assert(not core.patterns[0] and gasBank.patterns[0] and casts.patterns[0])
     local nextPlan=api.runner.preview(cfg,'meltingCore')
-    assert(nextPlan.plan.reused==2 and #nextPlan.plan.retirements==0)
+    assert(nextPlan.plan.reused==1 and #nextPlan.plan.retirements==0)
+  end)
+end)
+
+test('liquid migration separates gas-assisted routing from the gas request',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local _,_,casts=liquidFixture(data)
+    cfg.programs.meltingCore.forms='c11';cfg.programs.meltingCore.gas='nitrogen'
+    cfg.programs.meltingCore.requestGas='off'
+    local gasBank=iface(cfg.programs.meltingCore.c11,85)
+    local preview=api.runner.preview(cfg,'meltingCore')
+    assert(#preview.plan.errors==0 and #preview.manifest.recipes==1)
+    local r=preview.manifest.recipes[1]
+    assert(r.outputForm=='c11' and #r.inputs==1 and #r.stock==2)
+    api.runner.execute(cfg,preview)
+    assert(gasBank.patterns[0] and not casts.patterns[0])
+    local nextPlan=api.runner.preview(cfg,'meltingCore')
+    assert(nextPlan.plan.reused==1 and #nextPlan.plan.retirements==0)
+  end)
+end)
+
+test('liquid migration moves existing routes between priority banks without donors or ingredient writes',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local old,core=liquidFixture(data)
+    api.runner.execute(cfg,api.runner.preview(cfg,'meltingCore'))
+    cfg.programs.meltingCore.forms='c1,c1_medium,c1_low'
+    cfg.programs.meltingCore.highHeat='2000'
+    local medium=iface(cfg.programs.meltingCore.c1_medium,85)
+    local preview=api.runner.preview(cfg,'meltingCore')
+    assert(#preview.manifest.recipes==1 and preview.manifest.recipes[1].priority=='medium')
+    assert(preview.manifest.recipes[1].outputForm=='c1_medium' and #preview.plan.retirements==0
+      and preview.plan.reused==1 and #preview.plan.creates==0)
+    local writes=callCounts.setInterfacePatternInput or 0
+    api.runner.execute(cfg,preview)
+    assert(medium.patterns[0] and not core.patterns[0])
+    assert((callCounts.setInterfacePatternInput or 0)==writes)
+    local nextPlan=api.runner.preview(cfg,'meltingCore')
+    assert(nextPlan.plan.reused==1 and #nextPlan.plan.retirements==0)
+  end)
+end)
+
+test('liquid settings migrate former casts to Fluid Shaper and preserve circuit destination names',function()
+  local old=cp(cfg)
+  old.programs.meltingCore.forms='c1,ingot';old.programs.meltingCore.ingot='Existing Casts'
+  old.programs.meltingCore.c1='Existing Core';old.programs.meltingCore.highHeat=nil
+  local migrated=api.config.migrate(old)
+  assert(migrated.programs.fluidShaper.ingot=='Existing Casts')
+  assert(api.config.enabledOutputs(migrated,'fluidShaper').ingot)
+  assert(migrated.programs.meltingCore.ingot==nil and migrated.programs.meltingCore.c1=='Existing Core')
+  local enabled=api.config.enabledOutputs(migrated,'meltingCore')
+  assert(enabled.c1 and enabled.c1_medium and enabled.c1_low and not enabled.c11)
+  assert(ser(api.config.migrate(migrated))==ser(migrated))
+end)
+
+test('Fluid Shaper ingot preview exposes the shared retirement tabs and its own setup details',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    liquidFixture(data)
+    api.runner.execute(cfg,api.runner.preview(cfg,'meltingCore'))
+    files[api.paths.config]=ser(cfg)
+    queue(click('[ Fluid Shaper ]'),click('[ Preview selected ]',47),function()
+      assert(frame[2]:find('Preview - Fluid Shaper',1,true))
+      assert(frame[4]:find('Retirements',1,true));return click('[ Details ]',4)()
+    end,function()
+      assert(table.concat(frame,'\n'):find('FLUID SHAPER SUPPLY CHECK',1,true))
+      return click('[ Program settings ]',47)()
+    end,function()
+      assert(frame[2]:find('SETTINGS / Fluid Shaper',1,true));return 'interrupted'
+    end)
+    api.runUI()
   end)
 end)
 
@@ -3527,8 +3602,14 @@ test('liquid migration UI exposes circuit fields, gas selector and a readable re
       assert(found);snapshot('melting_core_retirements')
       return click('[ Program settings ]',47)()
     end,function()
-      local found=false;for y=6,42 do if frame[y]:find('Helioflux Melting Core (Circuit 1)',1,true) then found=true end end
+      local found=false;for y=6,42 do if frame[y]:find('Helioflux Melting Core (Circuit 1, High)',1,true) then found=true end end
       assert(found);snapshot('melting_core_settings')
+      return field('Optional process gas')()
+    end,click('Nitrogen'),settingsPageWith('Request process gas'),field('Request process gas'),function()
+      assert(unser(files[api.paths.config]).programs.meltingCore.requestGas=='off')
+      return settingsPageWith('High priority: heat below (K)')()
+    end,function()
+      assert(frame[2]:find('SETTINGS / Melting Core',1,true));snapshot('melting_core_priorities')
       return 'interrupted'
     end)
     api.runUI()

@@ -85,6 +85,65 @@ test('one dry route and one casting recipe share batches while circuits stay sto
   assert(result.recipes[1].inputs[2].name == 'nitrogen' and result.recipes[1].stock[1].damage == 11)
 end)
 
+test('process gas can stay stocked without changing the gas-assisted circuit or reaction fluids', function()
+  local data,opts=catalog(),options()
+  data.names[5]='reaction.fluid';data.items[5]={name=5,type='fluid',label='Reaction Fluid'}
+  data.feeds[1][2]={5,10}
+  opts.gas,opts.requestGas,opts.multiplier='nitrogen',false,256
+  local r=Melting.compile(data,opts,Supply.new()).recipes[1]
+  assert(r.outputForm=='c11' and #r.inputs==2)
+  assert(r.inputs[2].name=='reaction.fluid' and r.inputs[2].size==2560)
+  assert(r.stock[1].damage==11 and r.stock[2].name=='nitrogen' and r.stock[2].size==100)
+  local keys=Melting.coreKeys(data)
+  assert(keys[require('assline_planner').recipeKey(r)])
+end)
+
+test('a missing selected gas variant never silently falls back to circuit one', function()
+  local opts=options();opts.gas='xenon'
+  local result=Melting.compile(catalog(),opts,Supply.new())
+  assert(#result.recipes==0 and result.skipped[1].reason:find('no-gas fallback',1,true))
+  local data=catalog();data.materials[1].routes={data.materials[1].routes[1]}
+  result=Melting.compile(data,opts,Supply.new())
+  assert(#result.recipes==2 and result.recipes[1].outputForm=='c1')
+end)
+
+test('Melting Core can check future casts without emitting Fluid Shaper recipes', function()
+  local opts=options();opts.emitCasting=false
+  local graph=Supply.new()
+  local result=Melting.compile(catalog(),opts,graph)
+  assert(#result.recipes==1 and result.recipes[1].outputForm=='c1' and #graph.recipes==0)
+  graph:add(recipe({ingot},{dust}),'macerator')
+  result=Melting.compile(catalog(),opts,graph)
+  assert(#result.recipes==0 and #result.skipped==1 and #graph.recipes==1)
+end)
+
+test('Fluid Shaper candidates use the same joint dependency proof and retire only ingot extraction', function()
+  local cast=recipe({U.clone(fluid)},{U.clone(ingot)})
+  cast.outputForm,cast.material,cast.label='ingot','Test','Ingot'
+  local base={recipes={cast},skipped={}}
+  local graph=Supply.new()
+  local result=Melting.filterCasts(base,graph)
+  assert(#result.recipes==0 and #result.skipped==1)
+  graph:add(recipe({raw},{fluid}),'native')
+  result=Melting.filterCasts(base,graph)
+  assert(#result.recipes==1 and result.suppliedFluids[fluid.name] and #graph.recipes==1)
+  cast.outputForm='plate'
+  result=Melting.filterCasts(base,graph)
+  assert(#result.recipes==1 and not next(result.suppliedFluids))
+end)
+
+test('priority classification uses configurable heat and voltage, including boundary cases', function()
+  local policy={highHeat=9000,highVoltage='UV',mediumHeat=10000,mediumVoltage='UEV'}
+  assert(Melting.priority({heat=3000,eut=1920},policy)=='high')
+  assert(Melting.priority({heat=9000,eut=122880},policy)=='medium')
+  assert(Melting.priority({heat=10800,eut=491520},policy)=='low')
+  assert(Melting.priority({heat=11701,eut=31457280},policy)=='low')
+  assert(Melting.priority({heat=1000,eut=31457280},policy)=='low')
+  assert(Melting.priority({heat=10000,eut=24},policy)=='low')
+  policy.highHeat=12000;policy.highVoltage='UIV'
+  assert(Melting.priority({heat=11701,eut=31457280},policy)=='high')
+end)
+
 test('native-fluid materials preserve their producer and never generate a remelting route', function()
   local data, graph = catalog(), Supply.new()
   data.materials[1].native, data.materials[1].nativeMachine = true, 'Alloy Blast Smelter'

@@ -71,6 +71,19 @@ test('same-name interfaces sort by numeric location and spill from slot zero',fu
   local reversed=cp(s);reversed.interfaces={s.interfaces[4],s.interfaces[3],s.interfaces[2],s.interfaces[1]}
   assert(P.revalidate(r,reversed,p).baseline==p.baseline)
 end)
+test('opt-in cross-destination matching moves patterns out of both populated and empty-request groups',function()
+  local s=fixture({[0]=pat('B'),[1]=pat('foreign')},3)
+  s.interfaces[#s.interfaces+1]=inv('Other',40,'destination',2,{[0]=pat('A')})
+  local r={crossDestinations=true,recipes={recipe('A'),recipe('B',nil,'Other')}}
+  local p=P.plan(r,s)
+  assert(p.reused==2 and #p.creates==0 and #p.preserved==1);simulate(p,s)
+  r.recipes={recipe('A')}
+  p=P.plan(r,s)
+  assert(p.reused==1 and #p.creates==0 and #p.preserved==2);simulate(p,s)
+  r.crossDestinations=nil
+  p=P.plan(r,s);assert(p.reused==0 and #p.creates==1)
+end)
+
 test('twenty remote donor banks count processing and crafting separately',function()
   local s=fixture({},36);s.interfaces[2].patterns={}
   for x=40,59 do s.interfaces[#s.interfaces+1]=inv('OC Buffer',x,'donor',2,{[0]=pat('d'..x,'processing',true),[1]=pat('c'..x,'crafting',true)}) end
