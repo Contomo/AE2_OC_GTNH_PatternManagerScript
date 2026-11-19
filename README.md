@@ -9,7 +9,8 @@ One application runs several programs through **Run program**: assembly-line
 renaming, wire insulation, wiremill patterns for 1x wire and fine wire,
 bending-machine patterns for plates, foil, sheet metal and springs, and Fluid
 Shaper patterns for verified molten-fluid solid parts. Pattern mover transfers
-existing patterns between named interface groups.
+existing patterns between named interface groups. Melting Core coordinates
+molten production, extraction retirement and ingot casting.
 Navigation is on the left; Scan, Execute, Pause/Resume, Stop and Quit are at the bottom.
 Settings has shared interfaces/hardware and a separate section for each program.
 [Program architecture and recipe matrix](PATTERN_MAKER.md).
@@ -19,7 +20,7 @@ Settings has shared interfaces/hardware and a separate section for each program.
 
 1. Install OpenOS, a tier 3 GPU/screen, keyboard and a tier 1+ Data Card. An
    Internet Card is needed for installation/updates. Large recipe previews use
-   the user's 16 MB Magical Memory setup. The deployed files occupy about 0.6 MB.
+   the user's 16 MB Magical Memory setup. The deployed files occupy about 1.5 MB.
 2. Connect an **ME Interface Terminal** to OC. All editor, donor and destination
    interfaces must be visible through this terminal on the same AE grid.
 3. Name an adapter-connected interface **`OC Pattern Editor`**. It is the shared
@@ -65,6 +66,45 @@ move journal; execution rechecks the preview before transferring anything.
 
 Wiremill selects one input route per output: both default to **Ingot**. Fine wire
 can instead use Rod or 1x wire. Only recipes present in the scrape are generated.
+**Melting Core** installs verified EBF-derived **Helioflux Melting Core** recipes
+and the corresponding ingot casts in one coordinated run. Configure its separate
+destination rows for **No Circuit**, circuits **1, 2, 11, 12, 16, 17 and 22**, and
+**Ingot**. Each row is independently enabled; circuits stay stocked in their own
+input buffers, and the ingot mold stays stocked in the Fluid Shaper. Existing
+installations inherit their Fluid Shaper ingot interface name on first update.
+The optional-gas selector defaults to **Without Optional Gas**. Selecting a gas
+prefers that variant where available and otherwise uses the dry route. Required
+reaction fluids remain requested. One feed route is selected per molten product,
+preferring its dust route; the preview shows batches, voltage and required heat.
+
+This program compares terminal-visible encoded recipes across the network. It
+preserves an installed liquid producer when it can supply the fluid independently
+of the proposed ingot cast, including ABS and DTPF production. A dust supplied
+only by `fluid -> ingot -> dust` cannot seed a new melting route. New melting
+recipes and ingot casts are checked together, including cross-material cycles.
+Ingredients with
+no encoded producer are treated as external supplies; the check does not prove
+inventory levels, passive production or machine readiness. Interfaces hidden
+from the terminal cannot contribute production evidence. All relevant production
+interfaces must therefore be visible during planning and execution.
+
+The **Retirements** tab lists exact locations of matching solid-to-fluid recipes
+that the new supply routes replace. Before installing casts, execution replaces
+those old recipes with the existing tagged donor placeholder. It reuses the
+retired patterns first, then the shared donor buffers; unused retired patterns
+remain safe placeholders. Obsolete owned Melting Core variants can be replaced
+the same way when the gas choice changes. Unrelated patterns remain in place.
+Capacity for every destination is checked before retirement starts. Unsafe
+metadata blocks automatic retirement with its location and reason. Changes to
+production patterns invalidate the preview; Pause, Stop and Continue share the
+normal operation journal. A donor shortage waits for refills as usual.
+
+The ingot casts in this coordinated program use the installed/planned supply
+check instead of the ordinary Fluid Shaper's historical native-liquid and
+already-craftable-ingot exclusions. This allows casts for materials newly supplied
+by the Melting Core. Magnetic and attuned variants remain excluded. The separate
+Fluid Shaper program retains its existing policy.
+
 Wiremill, the insulator and the bending machine each have a **Pattern multiplier** setting, default
 `1`. Enter a positive whole number: `256` makes a 1-ingot → 2-wire recipe request
 256 ingots and produce 512 wires. The multiplier applies to every encoded input

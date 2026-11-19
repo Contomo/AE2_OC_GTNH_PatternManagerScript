@@ -318,6 +318,9 @@ function M.migrate(old)
   if prior and not prior.polymer and prior.pvc then
     c.programs.insulator.polymer = prior.pvc == 'off' and 'none' or 'pvcSmall'
   end
+  if not (old.programs and old.programs.meltingCore) then
+    c.programs.meltingCore.ingot = c.programs.fluidShaper.ingot
+  end
   return M.validate(M.normalize(c))
 end
 function M.capacityReport(groups)
@@ -378,7 +381,10 @@ function M.requireProgram(c, id)
       local name = c.programs[id][f.key]
       U.check(name ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
       if p.distinctDestinations then
-        U.check(not assigned[name], 'Each component needs a distinct destination name: ' .. name)
+        U.check(
+          not assigned[name],
+          'Each enabled output needs a distinct destination name: ' .. name
+        )
         assigned[name] = true
       end
     end

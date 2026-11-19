@@ -36,6 +36,13 @@ function M.planRows(plan, manifest)
     ),
     'green'
   )
+  if plan.retirements then
+    add(
+      #plan.retirements .. ' old liquid recipes will be retired before installing patterns.',
+      'yellow'
+    )
+    add('Retired patterns are reused first; see Retirements for their locations.', 'muted')
+  end
   if manifest.source.batchPolicy then
     add(manifest.source.batchPolicy, 'muted')
     if (manifest.tierExcluded or 0) > 0 then
@@ -132,6 +139,9 @@ function M.planRows(plan, manifest)
           tier = recipe.batch.recipeTier,
         }
       end
+    end
+    if recipe.heat and recipe.heat > 0 then
+      treeRow(rows, add, '  |      ', 'Required heat: ' .. recipe.heat .. ' K', 'muted')
     end
   end
   return rows
@@ -467,7 +477,84 @@ function M.moverRows(plan, section)
   return rows
 end
 
+function M.retirementRows(plan)
+  local rows, add = U.rows()
+  add('LIQUID RECIPES TO RETIRE', 'blue')
+  add('Old recipes become tagged donor placeholders before new casts are installed.', 'muted')
+  local bank
+  for _, entry in ipairs(plan.retirements or {}) do
+    local location = U.where(entry.from)
+    if bank ~= location then
+      spacer(rows, add)
+      bank = location
+      add('  +-- ' .. entry.name .. ' / ' .. U.locationText(entry.from), interfaceTone)
+    else
+      add('  |', interfaceTone)
+    end
+    treeRow(rows, add, '  |  ', 'RETIRE slot ' .. entry.from.slot .. '  ' .. entry.label, 'yellow')
+    treeRow(rows, add, '  |    ', entry.action, 'muted')
+    if entry.reason then
+      treeRow(rows, add, '  |    ', 'BLOCKED: ' .. entry.reason, 'red')
+    end
+  end
+  if #(plan.retirements or {}) == 0 then
+    add('No old liquid recipes need retirement.', 'green')
+  end
+  return rows
+end
+
+function M.liquidDetails(plan, manifest)
+  local rows, add = U.rows()
+  add('MELTING CORE MIGRATION', 'blue')
+  add('1. Retire matched extraction and obsolete remelting recipes.')
+  add('2. Reuse those patterns, then ordinary buffer donors, for the planned recipes.')
+  add('3. Install independent molten production and ingot casting patterns.')
+  spacer(rows, add)
+  add('DEPENDENCY CHECK', 'blue')
+  add(
+    plan.supplyCounts.banks
+      .. ' interfaces / '
+      .. plan.supplyCounts.patterns
+      .. ' installed patterns compared.'
+  )
+  add('Native fluid production from ABS, DTPF and other source recipes is preserved.')
+  add('A dust feed must have a path that does not require its own molten product or cast ingot.')
+  add(
+    'Unpatterned inputs are external supplies; this checks dependencies, not stock or machine readiness.',
+    'muted'
+  )
+  add(
+    'Only terminal-visible interfaces can be compared. Connect every relevant production interface.',
+    'yellow'
+  )
+  add(
+    plan.supplyCounts.unreadable
+      .. ' patterns could not be decoded; their visible outputs do not prove supply.',
+    'muted'
+  )
+  spacer(rows, add)
+  add('MACHINE SETUP', 'blue')
+  add('Each enabled circuit destination needs its circuit stocked in its own input buffer.')
+  add('The No Circuit destination must not contain a programmed circuit.')
+  add('The ingot mold stays stocked in the Fluid Shaper; required reaction fluids are requested.')
+  add('Selected optional gas: ' .. manifest.policy.gas)
+  add(
+    'The module still needs sufficient heat and power; recipe EU/t and shared tier limits are shown in Patterns.'
+  )
+  add(
+    'Pause / Stop / Continue use the shared transaction journal. Retirement is completed before casting begins.',
+    'muted'
+  )
+  return rows
+end
+
 function M.rows(section, plan, manifest)
+  if section == 'retirements' then
+    return M.retirementRows(plan)
+  end
+  if section == 'details' and plan.supplyCounts then
+    return M.liquidDetails(plan, manifest)
+  end
   if plan.kind == 'patternMover' then
     return M.moverRows(plan, section)
   end
@@ -510,6 +597,10 @@ function M.report(plan, manifest)
   end
   append(M.capacityRows(plan))
   append(M.planRows(plan, manifest))
+  if plan.retirements then
+    append(M.retirementRows(plan))
+    append(M.liquidDetails(plan, manifest))
+  end
   for _, warning in ipairs(plan.warnings) do
     lines[#lines + 1] = 'NOTE: ' .. warning
   end

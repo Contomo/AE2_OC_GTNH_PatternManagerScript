@@ -1,6 +1,7 @@
 -- Program definitions shared by configuration, navigation and execution.
 local Batch = require('assline_batch')
 local ComponentData = require('assline_component_data')
+local LiquidSettings = require('assline_liquid_settings')
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -343,6 +344,48 @@ M.list[#M.list + 1] = {
   },
   previewTabs = { { 'changes', 'Patterns' }, { 'capacity', 'Capacity' }, { 'details', 'Details' } },
 }
+local liquidChoices, liquidDefinitions = {}, {}
+for _, circuit in ipairs(LiquidSettings.circuits) do
+  local key, label = 'c' .. circuit, circuit == 0 and 'No Circuit' or 'Circuit ' .. circuit
+  liquidChoices[#liquidChoices + 1] = { key, label }
+  liquidDefinitions[#liquidDefinitions + 1] = { key, label, 'Helioflux Melting Core' }
+end
+liquidChoices[#liquidChoices + 1] = { 'ingot', 'Ingot' }
+liquidDefinitions[#liquidDefinitions + 1] = { 'ingot', 'Ingot', 'Fluid Shaper' }
+local gasChoices = { { 'none', 'Without Optional Gas' } }
+for _, gas in ipairs(LiquidSettings.gases) do
+  gasChoices[#gasChoices + 1] = { gas.name, gas.label }
+end
+local gasField = choice(
+  'gas',
+  'Optional process gas',
+  gasChoices,
+  'none',
+  'Prefer this gas where a matching variant exists; otherwise use the dry route. Required reaction fluids stay in the pattern.'
+)
+gasField.kind = 'select'
+M.list[#M.list + 1] = {
+  id = 'meltingCore',
+  name = 'Melting Core',
+  mode = 'meltingCore',
+  distinctDestinations = true,
+  description = 'Retire remelting loops; install molten production and independent ingot casts.',
+  formChoices = liquidChoices,
+  outputs = {},
+  costForms = {},
+  fields = { gasField, multiplier() },
+  previewTabs = {
+    { 'changes', 'Patterns' },
+    { 'retirements', 'Retirements' },
+    { 'existing', 'Existing' },
+    { 'skipped', 'Excluded' },
+    { 'capacity', 'Capacity' },
+    { 'details', 'Details' },
+  },
+}
+for _, entry in ipairs(liquidChoices) do
+  M.list[#M.list].outputs[entry[1]] = entry[1]
+end
 -- Each output has one editable destination and one switch. Configuration,
 -- validation, routing and rendering all consume this same field schema.
 local function destinationFields(program, definitions, help)
@@ -408,6 +451,7 @@ local definitions = {
     { 'block', 'Blocks', 'Compressor' },
   },
   componentAssembly = {},
+  meltingCore = liquidDefinitions,
 }
 for _, entry in ipairs(cableForms) do
   definitions.insulator[#definitions.insulator + 1] = { entry[1], entry[2], nil, 'destination' }
@@ -435,6 +479,7 @@ for _, program in ipairs(M.list) do
     local help = program.id == 'fluidShaper'
         and 'Destinations for patterns; keep the matching mold stocked in each machine.'
       or program.id == 'componentAssembly' and 'Separate component banks; circuits stay stocked (IV+). LV-EV recipes need no circuit.'
+      or program.id == 'meltingCore' and 'Separate stocked circuits by input buffer. Keep the ingot mold stocked in the Fluid Shaper.'
       or 'Destinations for patterns. Every interface with the same exact name is included.'
     destinationFields(program, definitions[program.id], help)
   end

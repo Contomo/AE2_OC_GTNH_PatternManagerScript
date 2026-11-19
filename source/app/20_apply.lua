@@ -249,8 +249,9 @@ end
 -- Donor supply is live, unlike the destination plan. Keep only slot references
 -- between operations, and check each physical pattern immediately before use.
 -- Both programs use this pool; waiting never creates a recovery intent.
-local function donorPool(hw, name, protected, progress)
+local function donorPool(hw, name, protected, progress, additional)
   local banks, bankIndex, slots, slotIndex = nil, 1, {}, 1
+  local extraIndex = 1
   local function refreshBanks()
     banks = lookup(hw, name, true)
     bankIndex = 1
@@ -259,6 +260,22 @@ local function donorPool(hw, name, protected, progress)
   return function()
     while true do
       gate()
+      local extra = additional and additional[extraIndex]
+      if extra then
+        extraIndex = extraIndex + 1
+        U.check(
+          not protected[where(extra.from)],
+          'Reclaimed donor overlaps a destination or editor'
+        )
+        local bank = current(hw, extra.from)
+        local pattern = bank.patterns[extra.from.slot]
+        U.check(
+          bank.name == extra.name and patternFingerprint(hw, pattern) == extra.fingerprint,
+          'Reclaimed donor changed; scan again'
+        )
+        U.check(safeDonor(hw.data, pattern), 'Reclaimed pattern is no longer editable')
+        return extra.from, compact(pattern)
+      end
       local source = slots[slotIndex]
       if source then
         slotIndex = slotIndex + 1

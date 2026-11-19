@@ -344,7 +344,15 @@ local function runUI()
       for _, row in ipairs(Preview.rows(state.section, p)) do
         add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
-    elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
+    elseif
+      preview.manifest
+      and (
+        state.section == 'existing'
+        or state.section == 'skipped'
+        or state.section == 'retirements'
+        or state.section == 'details' and p.supplyCounts
+      )
+    then
       for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
         add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
@@ -938,6 +946,15 @@ local function runUI()
             p.required.processing < p.available.processing and 'green' or 'red'
           )
           text(113, layout.body + 8, #p.moves .. ' sorting moves first', 45)
+          if p.retirements then
+            text(
+              113,
+              layout.body + 9,
+              #p.retirements .. ' old liquid recipes to retire',
+              45,
+              'yellow'
+            )
+          end
         end
         local y = layout.body + 10
         text(

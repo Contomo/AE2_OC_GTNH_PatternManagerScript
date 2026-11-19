@@ -10,7 +10,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from material_forms import descriptor, registry_forms, resolve, solidifier_route
+from material_forms import descriptor, registry_forms, resolve, solidifier_route, primary_solidifier_fluids
 TIER_NAMES = json.loads((Path(__file__).parents[1] / 'data' / 'tiers.json').read_text())['names']
 
 
@@ -111,11 +111,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
     # material. Prefer the canonical output, then the canonical input. The
     # remaining selected item becomes a resolver override when needed.
     bender_variants = {}
-    solidifier_fluids = defaultdict(Counter)
     for recipe in catalog['recipes']:
-        solidifier = solidifier_route(recipe, reverse)
-        if solidifier:
-            solidifier_fluids[solidifier[0]][solidifier[2]] += 1
         route = bender_route(recipe)
         if route:
             key = route[:3] + route[5:]
@@ -124,12 +120,7 @@ def compile_matrix(catalog, registry, compatible_targets=(), compatibility_basis
             score = (route[4] == canonical_output, route[3] == canonical_input)
             candidate = (score, route[3], route[4])
             bender_variants[key] = max(candidate, bender_variants.get(key, candidate))
-    primary_fluid = {}
-    for key, frequencies in solidifier_fluids.items():
-        ranked = frequencies.most_common()
-        if len(ranked) > 1 and ranked[0][1] == ranked[1][1]:
-            raise ValueError('Ambiguous molten fluid for ' + rows[key]['name'])
-        primary_fluid[key] = ranked[0][0]
+    primary_fluid = primary_solidifier_fluids(catalog['recipes'], reverse, rows)
     excluded = 0
     excluded_outputs = {}
     for recipe in sorted(catalog['recipes'], key=lambda r: r['id']):

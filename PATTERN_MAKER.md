@@ -8,7 +8,8 @@ There is no second application or recipe-profile format.
 
 Install using the [wget bootstrap](README.md#install-and-update-with-wget).
 The launcher supports `--update` and `--check-update`. The readable application
-and matrix occupy under 1 MB, within the 4 MB cap.
+and data occupy about 1.5 MB, within the 4 MB cap. The Melting Core catalog is
+loaded only when that program runs.
 
 Settings has shared hardware/interfaces and a separate section per program.
 Wire insulator has its destination, five-way polymer selector and independent PPS switch; wiremill has separate
@@ -24,6 +25,15 @@ share one mold switch and destination. Patterns request molten fluid; the
 reusable mold stays stocked in the machine.
 All buffers matching the shared donor name are counted from their actual
 patterns, independently of their capacity. Only the shared editor is local.
+
+Melting Core adds a coordinated supply migration with per-circuit destinations,
+an optional-gas selector and an ingot-cast destination. Its **Retirements** page
+lists old extraction/obsolete melting recipes that must stop advertising fluid
+before the new casts are installed. Parking and donor reuse use the same editor
+and journal as other programs. Installed native fluid producers are compared in
+the shared dependency graph, so a dust obtainable only through the fluid's own
+ingot cast cannot become a replacement production route. See [setup and supply
+assumptions](README.md) before executing.
 
 **Run program** opens the chooser. Select a program and build its preview.
 Review reuse, preserved patterns, sorting, new recipes, donor requirements and

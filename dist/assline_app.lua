@@ -268,6 +268,10 @@ local ComponentData=(function()
 -- Source: source/data/components.json
 return {["components"]={{["key"]="motor",["label"]="Motor",["circuit"]=1},{["key"]="piston",["label"]="Piston",["circuit"]=2},{["key"]="pump",["label"]="Pump",["circuit"]=3},{["key"]="robotArm",["label"]="Robot Arm",["circuit"]=4},{["key"]="conveyor",["label"]="Conveyor",["circuit"]=5},{["key"]="emitter",["label"]="Emitter",["circuit"]=6},{["key"]="sensor",["label"]="Sensor",["circuit"]=7},{["key"]="fieldGenerator",["label"]="Field Generator",["circuit"]=8}},["casings"]={"LV","MV","HV","EV","IV","LuV","ZPM","UV","UHV","UEV","UIV","UMV","UXV"},["names"]={"gregtech:gt.blockmachines","gregtech:gt.integrated_circuit","molten.mutatedlivingsolder","dimensionallyshiftedsuperfluid","protohalkonitebase","molten.infinity","molten.transcendentmetal","molten.tengampurified","molten.celestialtungsten","gregtech:gt.metaitem.01","molten.creon","molten.mellion","molten.hypogen","molten.spacetime","GoodGenerator:circuitWrap","gregtech:gt.metaitem.03","molten.magnetohydrodynamicallyconstrainedstarmatter","molten.eternity","molten.universium","molten.magmatter","molten.superconductorumvbase","molten.silicone","molten.draconiumawakened","molten.styrenebutadienerubber","molten.radoxpoly","molten.kevlar","molten.quantium","gregtech:gt.blockframes","molten.arceusalloy2b","molten.lafiumcompound","molten.cinobitea243","molten.pikyonium64b","molten.quantum","molten.astraltitanium","molten.titansteel","lubricant","molten.cosmicneutronium","molten.indalloy140","molten.neutronium","molten.naquadria","molten.samarium","gregtech:gt.metaitem.02","molten.ruridit","molten.hsss","molten.europium","molten.naquadahalloy","molten.americium","molten.rubber","molten.niobiumtitanium","molten.enderium","molten.naquadah","molten.vanadiumgallium","molten.bedrockium","molten.draconium","molten.redsteel","molten.titanium","minecraft:nether_star","molten.hssg","molten.tritanium","molten.brass","minecraft:ender_pearl","molten.electrum","minecraft:ender_eye","molten.chrome","molten.platinum","molten.iridium","molten.gallium","molten.trinium","molten.osmiridium","molten.electrumflux","molten.infinitycatalyst","bartworks:gt.bwMetaGeneratedplateDense"},["items"]={{["type"]="item",["name"]=1,["label"]="16x Nether Star Cable",["damage"]=11361},{["type"]="item",["name"]=2,["label"]="Programmed Circuit",["damage"]=1},{["type"]="fluid",["name"]=3,["label"]="Mutated Living Solder"},{["type"]="fluid",["name"]=4,["label"]="Dimensionally Shifted Superfluid"},{["type"]="fluid",["name"]=5,["label"]="Molten Proto-Halkonite Steel Base"},{["type"]="fluid",["name"]=6,["label"]="Molten Infinity"},{["type"]="fluid",["name"]=7,["label"]="Molten Transcendent Metal"},{["type"]="fluid",["name"]=8,["label"]="Molten Purified Tengam"},{["type"]="fluid",["name"]=9,["label"]="Molten Celestial Tungsten"},{["type"]="item",["name"]=10,["label"]="Electric Motor (UIV)",["damage"]=32017},{["type"]="fluid",["name"]=11,["label"]="Molten Creon"},{["type"]="fluid",["name"]=12,["label"]="Molten Mellion"},{["type"]="item",["name"]=1,["label"]="16x Quantium Cable",["damage"]=11381},{["type"]="fluid",["name"]=13,["label"]="Molten Hypogen"},{["type"]="fluid",["name"]=14,["label"]="Molten SpaceTime"},{["type"]="item",["name"]=10,["label"]="Electric Motor (UMV)",["damage"]=32018},{["type"]="item",["name"]=10,["label"]="Energised Tesseract",["damage"]=32417},{["type"]="item",["name"]=15,["label"]="Wrap of UHV Circuits",["damage"]=9},{["type"]="item",["name"]=1,["label"]="16x SpaceTime Wire",["damage"]=2611},{["type"]="item",["name"]=16,["label"]="Gold Nanites",["damage"]=4086},{["type"]="fluid",["name"]=17,["label"]="Molten Magnetohydrodynamically Constrained Star Matter"},{["type"]="fluid",["name"]=18,["label"]="Molten Eternity"},{["type"]="fluid",["name"]=19,["label"]="Molten Universium"},{["type"]="fluid",["name"]=20,["label"]="Molten Magmatter"},{["type"]="fluid",["name"]=21,["label"]="Molten Superconductor Base UMV"},{["type"]="item",["name"]=10,["label"]="Electric Motor (UXV)",["damage"]=32019},{["type"]="item",["name"]=10,["label"]="Dense Transcendent Metal Plate",["damage"]=22581},{["type"]="item",["name"]=2,["label"]="Programmed Circuit",["damage"]=2},{["type"]="item",["name"]=10,["label"]="Electric Piston (UIV)",["damage"]=32021},{["type"]="item",["name"]=10,["label"]="Dense SpaceTime Plate",["damage"]=22588},{["type"]="item",["name"]=10,["label"]="Electric Piston (UMV)",["damage"]=32022},{["type"]="item",["name"]=10,["label"]="Electric Piston (UXV)",["damage"]=32023},{["type"]="item",["name"]=2,["label"]="Programmed Circuit",["damage"]=3},{["type"]="fluid",["name"]=22,["label"]="Molten Silicone Rubber",["polymer"]="silicone"},{["type"]="fluid",["name"]=23,["label"]="Molten Awakened Draconium"},{["type"]="item",["name"]=10,["label"]="Electric Pump (UIV)",["damage"]=32025},{["type"]="fluid",["name"]=24,["label"]="Molten Styrene-Butadiene Rubber (SBR)",["polymer"]="sbr"},{["type"]="item",["name"]=10,["label"]="Electric Pump (UMV)",["damage"]=32026},{["type"]="fluid",["name"]=25,["label"]="Molten Radox Polymer"},{["type"]="fluid",["name"]=26,["label"]="Molten Kevlar"},{["type"]="item",["name"]=10,["label"]="Electric Pump (UXV)",["damage"]=32027},{["type"]="item",["name"]=2,["label"]="Programmed Circuit",["damage"]=5},{["type"]="item",["name"]=10,["label"]="Conveyor Module (UIV)",["damage"]=32029},{["type"]="item",["name"]=10,["label"]="Conveyor Module (UMV)",["damage"]=32030},{["type"]="item",["name"]=10,["label"]="Conveyor Module (UXV)",["damage"]=32031},{["type"]="item",["name"]=15,["label"]="Wrap of UIV Circuits",["damage"]=11},{["type"]="item",["name"]=15,["label"]="Wrap of UEV Circuits",["damage"]=10},{["type"]="item",["name"]=2,["label"]="Programmed Circuit",["damage"]=4},{["type"]="item",["name"]=10,["label"]="Robot Arm (UIV)",["damage"]=32033},{["type"]="item",["name"]=15,["label"]="Wrap of UMV Circuits",["damage"]=12},{["type"]="fluid",["name"]=27,["label"]="Molten Quantium"},{["type"]="item",["name"]=10,["label"]="Robot Arm (UMV)",["damage"]=32034},{["type"]="item",["name"]=15,["label"]="Wrap of UXV Circuits",["damage"]=13},{["type"]="item",["name"]=10,["label"]="Robot Arm (UXV)",["damage"]=32035},{["type"]="item",["name"]=28,["label"]="Transcendent Metal Frame Box",["damage"]=581},{["type"]="item",["name"]=16,["label"]="Nuclear Star",["damage"]=32230},{["type"]="item",["name"]=2,["label"]="Programmed Circuit",["damage"]=6},{["type"]="fluid",["name"]=29,["label"]="Molten Arceus Alloy 2B"},{["type"]="fluid",["name"]=30,["label"]="Molten Lafium Compound"},{["type"]="fluid",["name"]=31,["label"]="Molten Cinobite A243"},{["type"]="fluid",["name"]=32,["label"]="Molten Pikyonium 64B"},{["type"]="item",["name"]=10,["label"]="Emitter (UIV)",["damage"]=32037},{["type"]="item",["name"]=28,["label"]="SpaceTime Frame Box",["damage"]=588},{["type"]="fluid",["name"]=33,["label"]="Molten Quantum"},{["type"]="fluid",["name"]=34,["label"]="Molten Astral Titanium"},{["type"]="fluid",["name"]=35,["label"]="Molten Titansteel"},{["type"]="item",["name"]=10,["label"]="Emitter (UMV)",["damage"]=32038},{["type"]="item",["name"]=28,["label"]="Magnetohydrodynamically Constrained Star Matter Frame Box",["damage"]=583},{["type"]="item",["name"]=10,["label"]="Emitter (UXV)",["damage"]=32039},{["type"]="item",["name"]=2,["label"]="Programmed Circuit",["damage"]=7},{["type"]="item",["name"]=10,["label"]="Sensor (UIV)",["damage"]=32041},{["type"]="item",["name"]=10,["label"]="Sensor (UMV)",["damage"]=32042},{["type"]="item",["name"]=10,["label"]="Sensor (UXV)",["damage"]=32043},{["type"]="item",["name"]=2,["label"]="Programmed Circuit",["damage"]=8},{["type"]="item",["name"]=10,["label"]="Field Generator (UIV)",["damage"]=32045},{["type"]="item",["name"]=10,["label"]="Field Generator (UMV)",["damage"]=32046},{["type"]="item",["name"]=15,["label"]="Wrap of MAX Circuits",["damage"]=14},{["type"]="item",["name"]=10,["label"]="Field Generator (UXV)",["damage"]=32047},{["type"]="item",["name"]=1,["label"]="16x Draconium Cable",["damage"]=11341},{["type"]="fluid",["name"]=36,["label"]="Lubricant"},{["type"]="fluid",["name"]=37,["label"]="Molten Cosmic Neutronium"},{["type"]="item",["name"]=10,["label"]="Electric Motor (UEV)",["damage"]=32595},{["type"]="item",["name"]=1,["label"]="16x Bedrockium Cable",["damage"]=11321},{["type"]="fluid",["name"]=38,["label"]="Molten Indalloy 140"},{["type"]="fluid",["name"]=39,["label"]="Molten Neutronium"},{["type"]="fluid",["name"]=40,["label"]="Molten Naquadria"},{["type"]="fluid",["name"]=41,["label"]="Molten Samarium"},{["type"]="item",["name"]=10,["label"]="Electric Motor (UHV)",["damage"]=32596},{["type"]="item",["name"]=42,["label"]="Long Magnetic Iron Rod",["damage"]=22354},{["type"]="item",["name"]=42,["label"]="Long Iron Rod",["damage"]=22032},{["type"]="item",["name"]=1,["label"]="16x Copper Wire",["damage"]=1365},{["type"]="item",["name"]=1,["label"]="16x Tin Cable",["damage"]=1251},{["type"]="item",["name"]=10,["label"]="Electric Motor (LV)",["damage"]=32600},{["type"]="item",["name"]=42,["label"]="Long Magnetic Steel Rod",["damage"]=22355},{["type"]="item",["name"]=42,["label"]="Long Steel Rod",["damage"]=22305},{["type"]="item",["name"]=1,["label"]="16x Annealed Copper Wire",["damage"]=1385},{["type"]="item",["name"]=42,["label"]="Long Aluminium Rod",["damage"]=22019},{["type"]="item",["name"]=1,["label"]="16x Cupronickel Wire",["damage"]=1345},{["type"]="item",["name"]=1,["label"]="16x Copper Cable",["damage"]=1371},{["type"]="item",["name"]=10,["label"]="Electric Motor (MV)",["damage"]=32601},{["type"]="item",["name"]=1,["label"]="16x Annealed Copper Cable",["damage"]=1391},{["type"]="item",["name"]=42,["label"]="Long Stainless Steel Rod",["damage"]=22306},{["type"]="item",["name"]=1,["label"]="16x Electrum Wire",["damage"]=1445},{["type"]="item",["name"]=1,["label"]="16x Silver Cable",["damage"]=1471},{["type"]="item",["name"]=10,["label"]="Electric Motor (HV)",["damage"]=32602},{["type"]="item",["name"]=42,["label"]="Long Magnetic Neodymium Rod",["damage"]=22356},{["type"]="item",["name"]=42,["label"]="Long Titanium Rod",["damage"]=22028},{["type"]="item",["name"]=1,["label"]="16x Black Steel Wire",["damage"]=1545},{["type"]="item",["name"]=1,["label"]="16x Aluminium Cable",["damage"]=1591},{["type"]="item",["name"]=10,["label"]="Electric Motor (EV)",["damage"]=32603},{["type"]="item",["name"]=42,["label"]="Long Tungstensteel Rod",["damage"]=22316},{["type"]="item",["name"]=1,["label"]="16x Graphene Wire",["damage"]=1605},{["type"]="item",["name"]=1,["label"]="16x Tungsten Cable",["damage"]=1691},{["type"]="item",["name"]=10,["label"]="Electric Motor (IV)",["damage"]=32604},{["type"]="item",["name"]=42,["label"]="Long Magnetic Samarium Rod",["damage"]=22399},{["type"]="item",["name"]=1,["label"]="16x Yttrium Barium Cuprate Cable",["damage"]=1771},{["type"]="fluid",["name"]=43,["label"]="Molten Ruridit"},{["type"]="fluid",["name"]=44,["label"]="Molten HSS-S"},{["type"]="item",["name"]=10,["label"]="Electric Motor (LuV)",["damage"]=32606},{["type"]="item",["name"]=1,["label"]="16x Vanadium-Gallium Cable",["damage"]=1751},{["type"]="fluid",["name"]=45,["label"]="Molten Europium"},{["type"]="fluid",["name"]=46,["label"]="Molten Naquadah Alloy"},{["type"]="item",["name"]=10,["label"]="Electric Motor (ZPM)",["damage"]=32607},{["type"]="item",["name"]=1,["label"]="16x Naquadah Alloy Cable",["damage"]=1811},{["type"]="fluid",["name"]=47,["label"]="Molten Americium"},{["type"]="item",["name"]=10,["label"]="Electric Motor (UV)",["damage"]=32608},{["type"]="item",["name"]=42,["label"]="Tin Rotor",["damage"]=21057},{["type"]="item",["name"]=10,["label"]="Tin Screw",["damage"]=27057},{["type"]="item",["name"]=1,["label"]="Bronze Fluid Pipe",["damage"]=5122},{["type"]="fluid",["name"]=48,["label"]="Molten Rubber",["polymer"]="rubber"},{["type"]="item",["name"]=10,["label"]="Electric Pump (LV)",["damage"]=32610},{["type"]="item",["name"]=42,["label"]="Bronze Rotor",["damage"]=21300},{["type"]="item",["name"]=10,["label"]="Bronze Screw",["damage"]=27300},{["type"]="item",["name"]=1,["label"]="Steel Fluid Pipe",["damage"]=5132},{["type"]="item",["name"]=10,["label"]="Electric Pump (MV)",["damage"]=32611},{["type"]="item",["name"]=42,["label"]="Steel Rotor",["damage"]=21305},{["type"]="item",["name"]=10,["label"]="Steel Screw",["damage"]=27305},{["type"]="item",["name"]=1,["label"]="16x Gold Cable",["damage"]=1431},{["type"]="item",["name"]=1,["label"]="Stainless Steel Fluid Pipe",["damage"]=5142},{["type"]="item",["name"]=10,["label"]="Electric Pump (HV)",["damage"]=32612},{["type"]="item",["name"]=42,["label"]="Stainless Steel Rotor",["damage"]=21306},{["type"]="item",["name"]=10,["label"]="Stainless Steel Screw",["damage"]=27306},{["type"]="item",["name"]=1,["label"]="Titanium Fluid Pipe",["damage"]=5152},{["type"]="item",["name"]=10,["label"]="Electric Pump (EV)",["damage"]=32613},{["type"]="item",["name"]=42,["label"]="Tungstensteel Rotor",["damage"]=21316},{["type"]="item",["name"]=10,["label"]="Tungstensteel Screw",["damage"]=27316},{["type"]="item",["name"]=1,["label"]="Tungstensteel Fluid Pipe",["damage"]=5162},{["type"]="item",["name"]=10,["label"]="Electric Pump (IV)",["damage"]=32614},{["type"]="item",["name"]=10,["label"]="Dense HSS-S Plate",["damage"]=22374},{["type"]="fluid",["name"]=49,["label"]="Molten Niobium-Titanium"},{["type"]="item",["name"]=10,["label"]="Electric Pump (LuV)",["damage"]=32615},{["type"]="item",["name"]=10,["label"]="Dense Naquadah Alloy Plate",["damage"]=22325},{["type"]="fluid",["name"]=50,["label"]="Molten Enderium"},{["type"]="item",["name"]=10,["label"]="Electric Pump (ZPM)",["damage"]=32616},{["type"]="item",["name"]=10,["label"]="Dense Neutronium Plate",["damage"]=22129},{["type"]="fluid",["name"]=51,["label"]="Molten Naquadah"},{["type"]="item",["name"]=10,["label"]="Electric Pump (UV)",["damage"]=32617},{["type"]="item",["name"]=10,["label"]="Dense Cosmic Neutronium Plate",["damage"]=22982},{["type"]="item",["name"]=10,["label"]="Electric Pump (UHV)",["damage"]=32618},{["type"]="item",["name"]=1,["label"]="Large Nether Star Fluid Pipe",["damage"]=5223},{["type"]="item",["name"]=10,["label"]="Dense Infinity Plate",["damage"]=22397},{["type"]="item",["name"]=10,["label"]="Electric Pump (UEV)",["damage"]=32619},{["type"]="item",["name"]=10,["label"]="Dense Rubber Sheet",["polymer"]="rubber",["damage"]=22880},{["type"]="item",["name"]=10,["label"]="Conveyor Module (LV)",["damage"]=32630},{["type"]="item",["name"]=10,["label"]="Dense Silicone Rubber Sheet",["polymer"]="silicone",["damage"]=22471},{["type"]="item",["name"]=10,["label"]="Dense Styrene-Butadiene Rubber (SBR) Sheet",["polymer"]="sbr",["damage"]=22635},{["type"]="item",["name"]=10,["label"]="Conveyor Module (MV)",["damage"]=32631},{["type"]="item",["name"]=10,["label"]="Conveyor Module (HV)",["damage"]=32632},{["type"]="item",["name"]=10,["label"]="Conveyor Module (EV)",["damage"]=32633},{["type"]="item",["name"]=10,["label"]="Conveyor Module (IV)",["damage"]=32634},{["type"]="item",["name"]=10,["label"]="Conveyor Module (LuV)",["damage"]=32635},{["type"]="item",["name"]=10,["label"]="Conveyor Module (ZPM)",["damage"]=32636},{["type"]="item",["name"]=10,["label"]="Conveyor Module (UV)",["damage"]=32637},{["type"]="item",["name"]=10,["label"]="Conveyor Module (UHV)",["damage"]=32638},{["type"]="item",["name"]=10,["label"]="Conveyor Module (UEV)",["damage"]=32639},{["type"]="item",["name"]=10,["label"]="Dense Steel Plate",["damage"]=22305},{["type"]="item",["name"]=42,["label"]="Steel Gear",["damage"]=31305},{["type"]="item",["name"]=10,["label"]="Electric Piston (LV)",["damage"]=32640},{["type"]="item",["name"]=10,["label"]="Dense Aluminium Plate",["damage"]=22019},{["type"]="item",["name"]=42,["label"]="Aluminium Gear",["damage"]=31019},{["type"]="item",["name"]=10,["label"]="Electric Piston (MV)",["damage"]=32641},{["type"]="item",["name"]=10,["label"]="Dense Stainless Steel Plate",["damage"]=22306},{["type"]="item",["name"]=42,["label"]="Stainless Steel Gear",["damage"]=31306},{["type"]="item",["name"]=10,["label"]="Electric Piston (HV)",["damage"]=32642},{["type"]="item",["name"]=10,["label"]="Dense Titanium Plate",["damage"]=22028},{["type"]="item",["name"]=42,["label"]="Titanium Gear",["damage"]=31028},{["type"]="item",["name"]=10,["label"]="Electric Piston (EV)",["damage"]=32643},{["type"]="item",["name"]=10,["label"]="Dense Tungstensteel Plate",["damage"]=22316},{["type"]="item",["name"]=42,["label"]="Tungstensteel Gear",["damage"]=31316},{["type"]="item",["name"]=10,["label"]="Electric Piston (IV)",["damage"]=32644},{["type"]="item",["name"]=10,["label"]="Electric Piston (LuV)",["damage"]=32645},{["type"]="item",["name"]=10,["label"]="Electric Piston (ZPM)",["damage"]=32646},{["type"]="item",["name"]=10,["label"]="Electric Piston (UV)",["damage"]=32647},{["type"]="item",["name"]=10,["label"]="Electric Piston (UHV)",["damage"]=32648},{["type"]="item",["name"]=10,["label"]="Electric Piston (UEV)",["damage"]=32649},{["type"]="item",["name"]=15,["label"]="Wrap of LV Circuits",["damage"]=1},{["type"]="item",["name"]=10,["label"]="Robot Arm (LV)",["damage"]=32650},{["type"]="item",["name"]=15,["label"]="Wrap of MV Circuits",["damage"]=2},{["type"]="item",["name"]=10,["label"]="Robot Arm (MV)",["damage"]=32651},{["type"]="item",["name"]=15,["label"]="Wrap of HV Circuits",["damage"]=3},{["type"]="item",["name"]=10,["label"]="Robot Arm (HV)",["damage"]=32652},{["type"]="item",["name"]=15,["label"]="Wrap of EV Circuits",["damage"]=4},{["type"]="item",["name"]=10,["label"]="Robot Arm (EV)",["damage"]=32653},{["type"]="item",["name"]=15,["label"]="Wrap of IV Circuits",["damage"]=5},{["type"]="item",["name"]=10,["label"]="Robot Arm (IV)",["damage"]=32654},{["type"]="item",["name"]=15,["label"]="Wrap of LuV Circuits",["damage"]=6},{["type"]="item",["name"]=10,["label"]="Robot Arm (LuV)",["damage"]=32655},{["type"]="item",["name"]=15,["label"]="Wrap of ZPM Circuits",["damage"]=7},{["type"]="fluid",["name"]=52,["label"]="Molten Vanadium-Gallium"},{["type"]="item",["name"]=10,["label"]="Robot Arm (ZPM)",["damage"]=32656},{["type"]="item",["name"]=15,["label"]="Wrap of UV Circuits",["damage"]=8},{["type"]="item",["name"]=10,["label"]="Robot Arm (UV)",["damage"]=32657},{["type"]="fluid",["name"]=53,["label"]="Molten Bedrockium"},{["type"]="item",["name"]=10,["label"]="Robot Arm (UHV)",["damage"]=32658},{["type"]="fluid",["name"]=54,["label"]="Molten Draconium"},{["type"]="item",["name"]=10,["label"]="Robot Arm (UEV)",["damage"]=32659},{["type"]="item",["name"]=10,["label"]="Enderpearl Plate",["damage"]=17532},{["type"]="fluid",["name"]=55,["label"]="Molten Red Steel"},{["type"]="item",["name"]=10,["label"]="Field Generator (LV)",["damage"]=32670},{["type"]="item",["name"]=10,["label"]="Endereye Plate",["damage"]=17533},{["type"]="fluid",["name"]=56,["label"]="Molten Titanium"},{["type"]="item",["name"]=10,["label"]="Field Generator (MV)",["damage"]=32671},{["type"]="item",["name"]=10,["label"]="Quantum Eye",["damage"]=32724},{["type"]="item",["name"]=10,["label"]="Field Generator (HV)",["damage"]=32672},{["type"]="item",["name"]=57,["label"]="Nether Star",["damage"]=0},{["type"]="fluid",["name"]=58,["label"]="Molten HSS-G"},{["type"]="item",["name"]=10,["label"]="Field Generator (EV)",["damage"]=32673},{["type"]="item",["name"]=10,["label"]="Quantum Star",["damage"]=32725},{["type"]="item",["name"]=10,["label"]="Field Generator (IV)",["damage"]=32674},{["type"]="item",["name"]=28,["label"]="HSS-S Frame Box",["damage"]=374},{["type"]="item",["name"]=10,["label"]="Emitter (LuV)",["damage"]=32685},{["type"]="item",["name"]=10,["label"]="Field Generator (LuV)",["damage"]=32675},{["type"]="item",["name"]=28,["label"]="Naquadah Alloy Frame Box",["damage"]=325},{["type"]="item",["name"]=10,["label"]="Emitter (ZPM)",["damage"]=32686},{["type"]="item",["name"]=10,["label"]="Field Generator (ZPM)",["damage"]=32676},{["type"]="item",["name"]=28,["label"]="Neutronium Frame Box",["damage"]=129},{["type"]="item",["name"]=10,["label"]="Gravi Star",["damage"]=32726},{["type"]="item",["name"]=10,["label"]="Emitter (UV)",["damage"]=32687},{["type"]="item",["name"]=10,["label"]="Field Generator (UV)",["damage"]=32677},{["type"]="item",["name"]=28,["label"]="Cosmic Neutronium Frame Box",["damage"]=982},{["type"]="item",["name"]=10,["label"]="Emitter (UHV)",["damage"]=32688},{["type"]="item",["name"]=10,["label"]="Field Generator (UHV)",["damage"]=32678},{["type"]="item",["name"]=28,["label"]="Infinity Frame Box",["damage"]=397},{["type"]="item",["name"]=10,["label"]="Emitter (UEV)",["damage"]=32689},{["type"]="fluid",["name"]=59,["label"]="Molten Tritanium"},{["type"]="item",["name"]=10,["label"]="Field Generator (UEV)",["damage"]=32679},{["type"]="item",["name"]=10,["label"]="Certus Quartz",["damage"]=8516},{["type"]="fluid",["name"]=60,["label"]="Molten Brass"},{["type"]="item",["name"]=10,["label"]="Emitter (LV)",["damage"]=32680},{["type"]="item",["name"]=61,["label"]="Ender Pearl",["damage"]=0},{["type"]="fluid",["name"]=62,["label"]="Molten Electrum"},{["type"]="item",["name"]=10,["label"]="Emitter (MV)",["damage"]=32681},{["type"]="item",["name"]=63,["label"]="Eye of Ender",["damage"]=0},{["type"]="fluid",["name"]=64,["label"]="Molten Chrome"},{["type"]="item",["name"]=10,["label"]="Emitter (HV)",["damage"]=32682},{["type"]="fluid",["name"]=65,["label"]="Molten Platinum"},{["type"]="item",["name"]=10,["label"]="Emitter (EV)",["damage"]=32683},{["type"]="fluid",["name"]=66,["label"]="Molten Iridium"},{["type"]="item",["name"]=10,["label"]="Emitter (IV)",["damage"]=32684},{["type"]="fluid",["name"]=67,["label"]="Molten Gallium"},{["type"]="fluid",["name"]=68,["label"]="Molten Trinium"},{["type"]="fluid",["name"]=69,["label"]="Molten Osmiridium"},{["type"]="fluid",["name"]=70,["label"]="Molten Fluxed Electrum"},{["type"]="fluid",["name"]=71,["label"]="Molten Infinity Catalyst"},{["type"]="item",["name"]=42,["label"]="Long Brass Rod",["damage"]=22301},{["type"]="item",["name"]=10,["label"]="Sensor (LV)",["damage"]=32690},{["type"]="item",["name"]=42,["label"]="Flawless Emerald",["damage"]=29501},{["type"]="item",["name"]=42,["label"]="Long Electrum Rod",["damage"]=22303},{["type"]="item",["name"]=10,["label"]="Sensor (MV)",["damage"]=32691},{["type"]="item",["name"]=42,["label"]="Long Chrome Rod",["damage"]=22030},{["type"]="item",["name"]=10,["label"]="Sensor (HV)",["damage"]=32692},{["type"]="item",["name"]=42,["label"]="Long Platinum Rod",["damage"]=22085},{["type"]="item",["name"]=10,["label"]="Sensor (EV)",["damage"]=32693},{["type"]="item",["name"]=42,["label"]="Long Iridium Rod",["damage"]=22084},{["type"]="item",["name"]=10,["label"]="Sensor (IV)",["damage"]=32694},{["type"]="item",["name"]=72,["label"]="Dense Ruridit Plate",["damage"]=90},{["type"]="item",["name"]=10,["label"]="Sensor (LuV)",["damage"]=32695},{["type"]="item",["name"]=10,["label"]="Dense Osmiridium Plate",["damage"]=22317},{["type"]="item",["name"]=10,["label"]="Sensor (ZPM)",["damage"]=32696},{["type"]="item",["name"]=10,["label"]="Sensor (UV)",["damage"]=32697},{["type"]="item",["name"]=10,["label"]="Sensor (UHV)",["damage"]=32698},{["type"]="item",["name"]=10,["label"]="Sensor (UEV)",["damage"]=32699}},["recipes"]={{["component"]=1,["tier"]="LV",["casing"]=1,["output"]=93,["yield"]=64,["eut"]=7,["inputs"]={{94,24},{95,48},{96,12},{92,6}},["stock"]={},["variants"]={{["remove"]={96},["set"]={{91,12}}},{["remove"]={94,95},["set"]={{89,24},{90,48}}},{["remove"]={94,95,96},["set"]={{89,24},{90,48},{91,12}}}}},{["component"]=1,["tier"]="MV",["casing"]=2,["output"]=100,["yield"]=64,["eut"]=30,["inputs"]={{94,24},{97,48},{98,24},{101,6}},["stock"]={},["variants"]={{["remove"]={101},["set"]={{99,6}}}}},{["component"]=1,["tier"]="HV",["casing"]=3,["output"]=105,["yield"]=64,["eut"]=120,["inputs"]={{94,24},{102,48},{103,48},{104,12}},["stock"]={},["variants"]={}},{["component"]=1,["tier"]="EV",["casing"]=4,["output"]=110,["yield"]=64,["eut"]=480,["inputs"]={{106,24},{107,48},{108,48},{109,12}},["stock"]={},["variants"]={}},{["component"]=1,["tier"]="IV",["casing"]=5,["output"]=114,["yield"]=64,["eut"]=1920,["inputs"]={{106,24},{111,48},{112,48},{113,12}},["stock"]={{2,1}},["variants"]={}},{["component"]=1,["tier"]="LuV",["casing"]=6,["output"]=119,["yield"]=64,["eut"]=7680,["inputs"]={{115,24},{116,6},{84,6912},{80,12000},{117,110592},{118,13824}},["stock"]={{2,1}},["variants"]={}},{["component"]=1,["tier"]="ZPM",["casing"]=7,["output"]=123,["yield"]=64,["eut"]=30720,["inputs"]={{115,48},{120,24},{84,13824},{80,36000},{121,165888},{122,46848}},["stock"]={{2,1}},["variants"]={}},{["component"]=1,["tier"]="UV",["casing"]=8,["output"]=126,["yield"]=64,["eut"]=122880,["inputs"]={{124,24},{84,62208},{80,96000},{125,331776},{86,62208},{85,46848},{87,13824}},["stock"]={{2,1}},["variants"]={}},{["component"]=1,["tier"]="UHV",["casing"]=9,["output"]=88,["yield"]=64,["eut"]=491520,["inputs"]={{83,24},{84,124416},{80,192000},{85,442368},{86,124416},{81,93696},{87,27648}},["stock"]={{2,1}},["variants"]={}},{["component"]=1,["tier"]="UEV",["casing"]=10,["output"]=82,["yield"]=64,["eut"]=1966080,["inputs"]={{79,24},{3,124416},{80,192000},{81,442368},{6,148992},{51,124416},{8,55296}},["stock"]={{2,1}},["variants"]={}},{["component"]=1,["tier"]="UIV",["casing"]=11,["output"]=10,["yield"]=64,["eut"]=7864320,["inputs"]={{1,24},{3,124416},{4,302592},{5,442368},{6,442368},{7,148992},{8,110592},{9,27648}},["stock"]={{2,1}},["variants"]={{["remove"]={6},["set"]={{5,221184},{11,221184},{12,221184}}}}},{["component"]=1,["tier"]="UMV",["casing"]=12,["output"]=16,["yield"]=64,["eut"]=31457280,["inputs"]={{13,24},{3,124416},{4,192000},{14,470016},{8,221184},{15,148992},{9,27648}},["stock"]={{2,1}},["variants"]={}},{["component"]=1,["tier"]="UXV",["casing"]=13,["output"]=26,["yield"]=64,["eut"]=125829120,["inputs"]={{17,48},{18,114},{19,48},{20,12},{4,384000},{21,287232},{22,259584},{23,138240},{24,110592},{25,110592},{15,27648}},["stock"]={{2,1}},["variants"]={}},{["component"]=2,["tier"]="LV",["casing"]=1,["output"]=178,["yield"]=64,["eut"]=7,["inputs"]={{93,48},{176,16},{95,48},{92,6},{177,12}},["stock"]={},["variants"]={}},{["component"]=2,["tier"]="MV",["casing"]=2,["output"]=181,["yield"]=64,["eut"]=30,["inputs"]={{100,48},{179,16},{97,48},{99,6},{180,12}},["stock"]={},["variants"]={}},{["component"]=2,["tier"]="HV",["casing"]=3,["output"]=184,["yield"]=64,["eut"]=120,["inputs"]={{105,48},{182,16},{102,48},{138,6},{183,12}},["stock"]={},["variants"]={}},{["component"]=2,["tier"]="EV",["casing"]=4,["output"]=187,["yield"]=64,["eut"]=480,["inputs"]={{110,48},{185,16},{107,48},{109,6},{186,12}},["stock"]={},["variants"]={}},{["component"]=2,["tier"]="IV",["casing"]=5,["output"]=190,["yield"]=64,["eut"]=1920,["inputs"]={{114,48},{188,16},{111,48},{113,6},{189,12}},["stock"]={{28,1}},["variants"]={}},{["component"]=2,["tier"]="LuV",["casing"]=6,["output"]=191,["yield"]=64,["eut"]=7680,["inputs"]={{119,48},{149,32},{116,12},{84,6912},{80,12000},{118,86784}},["stock"]={{28,1}},["variants"]={}},{["component"]=2,["tier"]="ZPM",["casing"]=7,["output"]=192,["yield"]=64,["eut"]=30720,["inputs"]={{123,48},{152,32},{120,48},{84,13824},{80,36000},{122,86784}},["stock"]={{28,1}},["variants"]={}},{["component"]=2,["tier"]="UV",["casing"]=8,["output"]=193,["yield"]=64,["eut"]=122880,["inputs"]={{126,48},{155,32},{124,48},{84,62208},{80,96000},{85,86784},{86,62208}},["stock"]={{28,1}},["variants"]={}},{["component"]=2,["tier"]="UHV",["casing"]=9,["output"]=194,["yield"]=64,["eut"]=491520,["inputs"]={{88,48},{158,32},{83,48},{84,124416},{80,192000},{81,173568},{86,124416}},["stock"]={{28,1}},["variants"]={}},{["component"]=2,["tier"]="UEV",["casing"]=10,["output"]=195,["yield"]=64,["eut"]=1966080,["inputs"]={{82,48},{161,32},{79,48},{3,124416},{80,192000},{6,173568},{51,124416}},["stock"]={{28,1}},["variants"]={}},{["component"]=2,["tier"]="UIV",["casing"]=11,["output"]=29,["yield"]=64,["eut"]=7864320,["inputs"]={{10,48},{27,32},{1,48},{3,124416},{4,192000},{7,173568},{9,27648}},["stock"]={{28,1}},["variants"]={}},{["component"]=2,["tier"]="UMV",["casing"]=12,["output"]=31,["yield"]=64,["eut"]=31457280,["inputs"]={{16,48},{30,32},{13,48},{3,124416},{4,192000},{15,173568},{14,27648},{9,27648}},["stock"]={{28,1}},["variants"]={}},{["component"]=2,["tier"]="UXV",["casing"]=13,["output"]=32,["yield"]=64,["eut"]=125829120,["inputs"]={{26,48},{18,84},{20,12},{4,384000},{21,242688},{22,215040},{15,138240},{24,82944},{23,27648}},["stock"]={{28,1}},["variants"]={}},{["component"]=3,["tier"]="LV",["casing"]=1,["output"]=131,["yield"]=64,["eut"]=7,["inputs"]={{93,48},{127,48},{128,48},{92,3},{129,48},{37,3456}},["stock"]={},["variants"]={{["remove"]={37},["set"]={{130,3456}}},{["remove"]={37},["set"]={{34,3456}}}}},{["component"]=3,["tier"]="MV",["casing"]=2,["output"]=135,["yield"]=64,["eut"]=30,["inputs"]={{100,48},{132,48},{133,48},{99,3},{134,48},{130,3456}},["stock"]={},["variants"]={{["remove"]={130},["set"]={{37,3456}}},{["remove"]={130},["set"]={{34,3456}}}}},{["component"]=3,["tier"]="HV",["casing"]=3,["output"]=140,["yield"]=64,["eut"]=120,["inputs"]={{105,48},{136,48},{137,48},{138,3},{139,48},{130,3456}},["stock"]={},["variants"]={{["remove"]={130},["set"]={{37,3456}}},{["remove"]={130},["set"]={{34,3456}}}}},{["component"]=3,["tier"]="EV",["casing"]=4,["output"]=144,["yield"]=64,["eut"]=480,["inputs"]={{110,48},{141,48},{142,48},{109,3},{143,48},{37,3456}},["stock"]={},["variants"]={{["remove"]={37},["set"]={{34,3456}}},{["remove"]={37},["set"]={{130,3456}}}}},{["component"]=3,["tier"]="IV",["casing"]=5,["output"]=148,["yield"]=64,["eut"]=1920,["inputs"]={{114,48},{145,48},{146,48},{113,3},{147,48},{34,3456}},["stock"]={{33,1}},["variants"]={{["remove"]={34},["set"]={{37,3456}}}}},{["component"]=3,["tier"]="LuV",["casing"]=6,["output"]=151,["yield"]=64,["eut"]=7680,["inputs"]={{119,48},{149,10},{116,6},{84,6912},{80,12000},{118,64896},{150,13824},{34,6912}},["stock"]={{33,1}},["variants"]={{["remove"]={34},["set"]={{37,6912}}}}},{["component"]=3,["tier"]="ZPM",["casing"]=7,["output"]=154,["yield"]=64,["eut"]=30720,["inputs"]={{123,48},{152,10},{120,24},{84,13824},{80,36000},{122,64896},{153,41472},{37,13824}},["stock"]={{33,1}},["variants"]={{["remove"]={37},["set"]={{34,13824}}}}},{["component"]=3,["tier"]="UV",["casing"]=8,["output"]=157,["yield"]=64,["eut"]=122880,["inputs"]={{126,48},{155,10},{124,24},{84,62208},{80,96000},{156,82944},{85,64896},{86,62208},{34,27648}},["stock"]={{33,1}},["variants"]={{["remove"]={34},["set"]={{37,27648}}}}},{["component"]=3,["tier"]="UHV",["casing"]=9,["output"]=159,["yield"]=64,["eut"]=491520,["inputs"]={{88,48},{158,21},{83,24},{84,124416},{80,192000},{81,129792},{86,124416},{85,82944},{37,55296}},["stock"]={{33,1}},["variants"]={{["remove"]={37},["set"]={{34,55296}}}}},{["component"]=3,["tier"]="UEV",["casing"]=10,["output"]=162,["yield"]=64,["eut"]=1966080,["inputs"]={{82,48},{160,96},{161,21},{79,24},{3,124416},{80,192000},{6,129792},{51,124416},{37,110592}},["stock"]={{33,1}},["variants"]={{["remove"]={37},["set"]={{34,110592}}}}},{["component"]=3,["tier"]="UIV",["casing"]=11,["output"]=36,["yield"]=64,["eut"]=7864320,["inputs"]={{10,48},{27,21},{1,24},{3,124416},{4,192000},{7,129792},{34,110592},{35,82944},{9,27648}},["stock"]={{33,1}},["variants"]={{["remove"]={34},["set"]={{37,110592}}}}},{["component"]=3,["tier"]="UMV",["casing"]=12,["output"]=38,["yield"]=64,["eut"]=31457280,["inputs"]={{16,48},{30,21},{13,24},{3,124416},{4,192000},{15,129792},{34,110592},{6,82944},{14,27648},{9,27648}},["stock"]={{33,1}},["variants"]={{["remove"]={34},["set"]={{37,110592}}}}},{["component"]=3,["tier"]="UXV",["casing"]=13,["output"]=41,["yield"]=64,["eut"]=125829120,["inputs"]={{26,48},{18,42},{19,48},{20,12},{4,384000},{21,185088},{22,157440},{24,117504},{39,110592},{40,110592},{15,110592},{23,27648}},["stock"]={{33,1}},["variants"]={}},{["component"]=4,["tier"]="LV",["casing"]=1,["output"]=197,["yield"]=64,["eut"]=7,["inputs"]={{93,96},{178,48},{95,48},{196,3},{92,9}},["stock"]={},["variants"]={}},{["component"]=4,["tier"]="MV",["casing"]=2,["output"]=199,["yield"]=64,["eut"]=30,["inputs"]={{100,96},{181,48},{97,48},{198,3},{99,9}},["stock"]={},["variants"]={}},{["component"]=4,["tier"]="HV",["casing"]=3,["output"]=201,["yield"]=64,["eut"]=120,["inputs"]={{105,96},{184,48},{102,48},{200,3},{138,9}},["stock"]={},["variants"]={}},{["component"]=4,["tier"]="EV",["casing"]=4,["output"]=203,["yield"]=64,["eut"]=480,["inputs"]={{110,96},{187,48},{107,48},{202,3},{109,9}},["stock"]={},["variants"]={}},{["component"]=4,["tier"]="IV",["casing"]=5,["output"]=205,["yield"]=64,["eut"]=1920,["inputs"]={{114,96},{190,48},{111,48},{204,3},{113,9}},["stock"]={{48,1}},["variants"]={}},{["component"]=4,["tier"]="LuV",["casing"]=6,["output"]=207,["yield"]=64,["eut"]=7680,["inputs"]={{119,96},{191,48},{206,6},{204,12},{202,24},{116,18},{84,27648},{80,12000},{118,76032}},["stock"]={{48,1}},["variants"]={}},{["component"]=4,["tier"]="ZPM",["casing"]=7,["output"]=210,["yield"]=64,["eut"]=30720,["inputs"]={{123,96},{192,48},{208,6},{206,12},{204,24},{84,55296},{80,36000},{209,82944},{122,76032}},["stock"]={{48,1}},["variants"]={}},{["component"]=4,["tier"]="UV",["casing"]=8,["output"]=212,["yield"]=64,["eut"]=122880,["inputs"]={{126,96},{193,48},{211,6},{208,12},{206,24},{84,110592},{80,96000},{122,82944},{85,76032},{86,62208}},["stock"]={{48,1}},["variants"]={}},{["component"]=4,["tier"]="UHV",["casing"]=9,["output"]=214,["yield"]=64,["eut"]=491520,["inputs"]={{88,96},{194,48},{18,6},{211,12},{208,24},{84,124416},{80,192000},{81,152064},{86,124416},{213,82944}},["stock"]={{48,1}},["variants"]={}},{["component"]=4,["tier"]="UEV",["casing"]=10,["output"]=216,["yield"]=64,["eut"]=1966080,["inputs"]={{82,96},{195,48},{47,6},{18,12},{211,24},{3,124416},{80,192000},{6,152064},{51,124416},{215,82944}},["stock"]={{48,1}},["variants"]={}},{["component"]=4,["tier"]="UIV",["casing"]=11,["output"]=49,["yield"]=64,["eut"]=7864320,["inputs"]={{10,96},{29,48},{46,6},{47,12},{18,24},{1,72},{3,124416},{4,192000},{7,152064},{9,27648}},["stock"]={{48,1}},["variants"]={}},{["component"]=4,["tier"]="UMV",["casing"]=12,["output"]=52,["yield"]=64,["eut"]=31457280,["inputs"]={{16,96},{31,48},{50,6},{46,12},{47,24},{3,124416},{4,192000},{15,152064},{51,82944},{14,27648},{9,27648}},["stock"]={{48,1}},["variants"]={}},{["component"]=4,["tier"]="UXV",["casing"]=13,["output"]=54,["yield"]=64,["eut"]=125829120,["inputs"]={{26,96},{32,48},{53,6},{50,12},{46,24},{18,54},{20,24},{4,384000},{15,193536},{21,179712},{22,152064},{24,96768},{23,27648}},["stock"]={{48,1}},["variants"]={}},{["component"]=5,["tier"]="LV",["casing"]=1,["output"]=164,["yield"]=64,["eut"]=7,["inputs"]={{93,96},{166,32},{92,3}},["stock"]={},["variants"]={{["remove"]={166},["set"]={{163,32}}},{["remove"]={166},["set"]={{165,32}}}}},{["component"]=5,["tier"]="MV",["casing"]=2,["output"]=167,["yield"]=64,["eut"]=30,["inputs"]={{100,96},{163,32},{99,3}},["stock"]={},["variants"]={{["remove"]={163},["set"]={{165,32}}},{["remove"]={163},["set"]={{166,32}}}}},{["component"]=5,["tier"]="HV",["casing"]=3,["output"]=168,["yield"]=64,["eut"]=120,["inputs"]={{105,96},{163,32},{138,3}},["stock"]={},["variants"]={{["remove"]={163},["set"]={{165,32}}},{["remove"]={163},["set"]={{166,32}}}}},{["component"]=5,["tier"]="EV",["casing"]=4,["output"]=169,["yield"]=64,["eut"]=480,["inputs"]={{110,96},{165,32},{109,3}},["stock"]={},["variants"]={{["remove"]={165},["set"]={{163,32}}},{["remove"]={165},["set"]={{166,32}}}}},{["component"]=5,["tier"]="IV",["casing"]=5,["output"]=170,["yield"]=64,["eut"]=1920,["inputs"]={{114,96},{165,32},{113,3}},["stock"]={{42,1}},["variants"]={{["remove"]={165},["set"]={{166,32}}}}},{["component"]=5,["tier"]="LuV",["casing"]=6,["output"]=171,["yield"]=64,["eut"]=7680,["inputs"]={{119,96},{149,10},{116,6},{165,53},{84,6912},{80,12000},{118,31488}},["stock"]={{42,1}},["variants"]={{["remove"]={165},["set"]={{166,53}}}}},{["component"]=5,["tier"]="ZPM",["casing"]=7,["output"]=172,["yield"]=64,["eut"]=30720,["inputs"]={{123,96},{152,10},{120,24},{84,13824},{80,36000},{34,137376},{122,31488}},["stock"]={{42,1}},["variants"]={{["remove"]={34},["set"]={{37,137376}}}}},{["component"]=5,["tier"]="UV",["casing"]=8,["output"]=173,["yield"]=64,["eut"]=122880,["inputs"]={{126,96},{155,10},{124,24},{84,62208},{80,96000},{34,276048},{86,62208},{85,31488}},["stock"]={{42,1}},["variants"]={{["remove"]={34},["set"]={{37,276048}}}}},{["component"]=5,["tier"]="UHV",["casing"]=9,["output"]=174,["yield"]=64,["eut"]=491520,["inputs"]={{88,96},{158,10},{83,24},{84,124416},{80,192000},{37,276048},{86,124416},{81,62976}},["stock"]={{42,1}},["variants"]={{["remove"]={37},["set"]={{34,276048}}}}},{["component"]=5,["tier"]="UEV",["casing"]=10,["output"]=175,["yield"]=64,["eut"]=1966080,["inputs"]={{82,96},{161,10},{79,24},{3,124416},{80,192000},{34,552096},{51,124416},{6,62976}},["stock"]={{42,1}},["variants"]={{["remove"]={34},["set"]={{37,552096}}}}},{["component"]=5,["tier"]="UIV",["casing"]=11,["output"]=43,["yield"]=64,["eut"]=7864320,["inputs"]={{10,96},{27,10},{1,24},{3,124416},{4,192000},{34,552096},{7,62976},{9,27648}},["stock"]={{42,1}},["variants"]={{["remove"]={34},["set"]={{37,552096}}}}},{["component"]=5,["tier"]="UMV",["casing"]=12,["output"]=44,["yield"]=64,["eut"]=31457280,["inputs"]={{16,96},{30,10},{13,24},{3,124416},{4,192000},{37,552096},{15,62976},{14,27648},{9,27648}},["stock"]={{42,1}},["variants"]={{["remove"]={37},["set"]={{34,552096}}}}},{["component"]=5,["tier"]="UXV",["casing"]=13,["output"]=45,["yield"]=64,["eut"]=125829120,["inputs"]={{26,96},{18,36},{19,48},{20,12},{4,384000},{39,552096},{40,552096},{21,104448},{22,76800},{15,27648},{23,27648}},["stock"]={{42,1}},["variants"]={}},{["component"]=6,["tier"]="LV",["casing"]=1,["output"]=249,["yield"]=64,["eut"]=7,["inputs"]={{247,48},{196,6},{92,6},{248,13824}},["stock"]={},["variants"]={}},{["component"]=6,["tier"]="MV",["casing"]=2,["output"]=252,["yield"]=64,["eut"]=30,["inputs"]={{250,48},{198,6},{99,6},{251,13824}},["stock"]={},["variants"]={}},{["component"]=6,["tier"]="HV",["casing"]=3,["output"]=255,["yield"]=64,["eut"]=120,["inputs"]={{253,48},{200,6},{138,6},{254,13824}},["stock"]={},["variants"]={}},{["component"]=6,["tier"]="EV",["casing"]=4,["output"]=257,["yield"]=64,["eut"]=480,["inputs"]={{223,48},{202,6},{109,6},{256,13824}},["stock"]={},["variants"]={}},{["component"]=6,["tier"]="IV",["casing"]=5,["output"]=259,["yield"]=64,["eut"]=1920,["inputs"]={{228,48},{204,6},{113,6},{258,13824}},["stock"]={{57,1}},["variants"]={}},{["component"]=6,["tier"]="LuV",["casing"]=6,["output"]=231,["yield"]=64,["eut"]=7680,["inputs"]={{230,48},{119,48},{228,48},{206,12},{116,21},{84,27648},{260,331776},{117,27648}},["stock"]={{57,1}},["variants"]={}},{["component"]=6,["tier"]="ZPM",["casing"]=7,["output"]=234,["yield"]=64,["eut"]=30720,["inputs"]={{233,48},{123,48},{228,96},{208,12},{84,55296},{261,331776},{209,96768},{262,27648}},["stock"]={{57,1}},["variants"]={}},{["component"]=6,["tier"]="UV",["casing"]=8,["output"]=238,["yield"]=64,["eut"]=122880,["inputs"]={{236,48},{126,48},{237,192},{211,12},{84,110592},{86,393984},{122,96768},{85,27648}},["stock"]={{57,1}},["variants"]={}},{["component"]=6,["tier"]="UHV",["casing"]=9,["output"]=241,["yield"]=64,["eut"]=491520,["inputs"]={{240,48},{88,48},{237,384},{18,12},{84,124416},{263,442368},{86,124416},{213,96768},{81,27648}},["stock"]={{57,1}},["variants"]={}},{["component"]=6,["tier"]="UEV",["casing"]=10,["output"]=244,["yield"]=64,["eut"]=1966080,["inputs"]={{243,48},{82,48},{237,768},{47,12},{3,124416},{264,442368},{51,124416},{215,96768},{6,55296}},["stock"]={{57,1}},["variants"]={}},{["component"]=6,["tier"]="UIV",["casing"]=11,["output"]=62,["yield"]=64,["eut"]=7864320,["inputs"]={{55,48},{10,48},{56,96},{46,12},{1,84},{3,124416},{58,110592},{59,110592},{60,110592},{61,110592},{7,55296},{9,27648}},["stock"]={{57,1}},["variants"]={}},{["component"]=6,["tier"]="UMV",["casing"]=12,["output"]=67,["yield"]=64,["eut"]=31457280,["inputs"]={{63,48},{16,48},{56,192},{50,12},{3,124416},{9,138240},{64,110592},{65,110592},{66,110592},{51,96768},{15,55296},{14,27648}},["stock"]={{57,1}},["variants"]={}},{["component"]=6,["tier"]="UXV",["casing"]=13,["output"]=69,["yield"]=64,["eut"]=125829120,["inputs"]={{68,48},{26,48},{56,768},{53,12},{18,48},{20,24},{3,691200},{15,331776},{21,193536},{22,165888},{23,138240},{24,110592}},["stock"]={{57,1}},["variants"]={}},{["component"]=7,["tier"]="LV",["casing"]=1,["output"]=266,["yield"]=64,["eut"]=7,["inputs"]={{247,48},{176,21},{265,24},{196,3}},["stock"]={},["variants"]={}},{["component"]=7,["tier"]="MV",["casing"]=2,["output"]=269,["yield"]=64,["eut"]=30,["inputs"]={{267,48},{179,21},{268,24},{198,3}},["stock"]={},["variants"]={}},{["component"]=7,["tier"]="HV",["casing"]=3,["output"]=271,["yield"]=64,["eut"]=120,["inputs"]={{253,48},{182,21},{270,24},{200,3}},["stock"]={},["variants"]={}},{["component"]=7,["tier"]="EV",["casing"]=4,["output"]=273,["yield"]=64,["eut"]=480,["inputs"]={{223,48},{185,21},{272,24},{202,3}},["stock"]={},["variants"]={}},{["component"]=7,["tier"]="IV",["casing"]=5,["output"]=275,["yield"]=64,["eut"]=1920,["inputs"]={{228,48},{188,21},{274,24},{204,3}},["stock"]={{70,1}},["variants"]={}},{["component"]=7,["tier"]="LuV",["casing"]=6,["output"]=277,["yield"]=64,["eut"]=7680,["inputs"]={{230,48},{119,48},{276,42},{228,48},{206,12},{116,21},{84,27648},{260,331776}},["stock"]={{70,1}},["variants"]={}},{["component"]=7,["tier"]="ZPM",["casing"]=7,["output"]=279,["yield"]=64,["eut"]=30720,["inputs"]={{233,48},{123,48},{278,42},{228,96},{208,12},{84,55296},{261,331776},{209,96768}},["stock"]={{70,1}},["variants"]={}},{["component"]=7,["tier"]="UV",["casing"]=8,["output"]=280,["yield"]=64,["eut"]=122880,["inputs"]={{236,48},{126,48},{155,42},{237,192},{211,12},{84,110592},{86,393984},{122,96768}},["stock"]={{70,1}},["variants"]={}},{["component"]=7,["tier"]="UHV",["casing"]=9,["output"]=281,["yield"]=64,["eut"]=491520,["inputs"]={{240,48},{88,48},{158,42},{237,384},{18,12},{84,124416},{263,442368},{86,124416},{213,96768}},["stock"]={{70,1}},["variants"]={}},{["component"]=7,["tier"]="UEV",["casing"]=10,["output"]=282,["yield"]=64,["eut"]=1966080,["inputs"]={{243,48},{82,48},{161,42},{237,768},{47,12},{3,124416},{264,442368},{51,124416},{215,96768}},["stock"]={{70,1}},["variants"]={}},{["component"]=7,["tier"]="UIV",["casing"]=11,["output"]=71,["yield"]=64,["eut"]=7864320,["inputs"]={{55,48},{10,48},{27,42},{56,96},{46,12},{1,84},{3,124416},{58,110592},{59,110592},{60,110592},{61,110592},{9,27648}},["stock"]={{70,1}},["variants"]={}},{["component"]=7,["tier"]="UMV",["casing"]=12,["output"]=72,["yield"]=64,["eut"]=31457280,["inputs"]={{63,48},{16,48},{30,42},{56,192},{50,12},{3,124416},{9,138240},{64,110592},{65,110592},{66,110592},{51,96768},{14,27648}},["stock"]={{70,1}},["variants"]={}},{["component"]=7,["tier"]="UXV",["casing"]=13,["output"]=73,["yield"]=64,["eut"]=125829120,["inputs"]={{68,48},{26,48},{56,768},{53,12},{18,48},{20,24},{3,691200},{15,331776},{21,193536},{22,165888},{23,138240},{24,110592}},["stock"]={{70,1}},["variants"]={}},{["component"]=8,["tier"]="LV",["casing"]=1,["output"]=219,["yield"]=64,["eut"]=7,["inputs"]={{217,48},{200,12},{218,13824}},["stock"]={},["variants"]={}},{["component"]=8,["tier"]="MV",["casing"]=2,["output"]=222,["yield"]=64,["eut"]=30,["inputs"]={{220,48},{202,12},{221,13824}},["stock"]={},["variants"]={}},{["component"]=8,["tier"]="HV",["casing"]=3,["output"]=224,["yield"]=64,["eut"]=120,["inputs"]={{223,48},{204,12},{150,27648}},["stock"]={},["variants"]={}},{["component"]=8,["tier"]="EV",["casing"]=4,["output"]=227,["yield"]=64,["eut"]=480,["inputs"]={{225,48},{206,12},{226,27648}},["stock"]={},["variants"]={}},{["component"]=8,["tier"]="IV",["casing"]=5,["output"]=229,["yield"]=64,["eut"]=1920,["inputs"]={{228,48},{208,12},{118,27648}},["stock"]={{74,1}},["variants"]={}},{["component"]=8,["tier"]="LuV",["casing"]=6,["output"]=232,["yield"]=64,["eut"]=7680,["inputs"]={{230,48},{149,32},{228,96},{231,192},{208,12},{116,24},{84,27648},{117,221184}},["stock"]={{74,1}},["variants"]={}},{["component"]=8,["tier"]="ZPM",["casing"]=7,["output"]=235,["yield"]=64,["eut"]=30720,["inputs"]={{233,48},{152,32},{228,96},{234,192},{211,12},{84,55296},{121,221184},{209,110592}},["stock"]={{74,1}},["variants"]={}},{["component"]=8,["tier"]="UV",["casing"]=8,["output"]=239,["yield"]=64,["eut"]=122880,["inputs"]={{236,48},{155,32},{237,96},{238,192},{18,12},{84,110592},{125,331776},{122,110592},{86,62208}},["stock"]={{74,1}},["variants"]={}},{["component"]=8,["tier"]="UHV",["casing"]=9,["output"]=242,["yield"]=64,["eut"]=491520,["inputs"]={{240,48},{158,32},{237,192},{241,192},{47,12},{84,124416},{85,442368},{86,124416},{213,110592}},["stock"]={{74,1}},["variants"]={}},{["component"]=8,["tier"]="UEV",["casing"]=10,["output"]=246,["yield"]=64,["eut"]=1966080,["inputs"]={{243,48},{161,32},{237,384},{244,192},{46,12},{3,124416},{245,442368},{51,124416},{215,110592}},["stock"]={{74,1}},["variants"]={}},{["component"]=8,["tier"]="UIV",["casing"]=11,["output"]=75,["yield"]=64,["eut"]=7864320,["inputs"]={{55,48},{27,32},{56,48},{62,192},{50,12},{1,96},{3,124416},{4,110592},{5,221184},{11,221184},{12,221184},{9,27648}},["stock"]={{74,1}},["variants"]={{["remove"]={11,12},["set"]={{5,442368},{6,442368}}}}},{["component"]=8,["tier"]="UMV",["casing"]=12,["output"]=76,["yield"]=64,["eut"]=31457280,["inputs"]={{63,48},{30,32},{56,96},{67,192},{53,12},{3,124416},{14,470016},{51,110592},{9,27648}},["stock"]={{74,1}},["variants"]={}},{["component"]=8,["tier"]="UXV",["casing"]=13,["output"]=78,["yield"]=64,["eut"]=125829120,["inputs"]={{68,48},{56,3072},{69,192},{77,12},{18,66},{20,36},{3,691200},{15,248832},{21,179712},{22,152064},{23,138240},{24,110592},{25,110592}},["stock"]={{74,1}},["variants"]={}}},["version"]=1,["source"]={["recipeVersion"]="2.9.0-beta-2",["targetVersion"]="2.9.0-beta-3",["datasetId"]="local-2.9.0-beta-2",["routes"]=142,["recipeSource"]="https://github.com/GTNewHorizons/GT5-Unofficial/blob/5.09.54.133/src/main/java/goodgenerator/loader/ComponentAssemblyLineLoader.java",["batchPolicy"]="Native batches of 64 components; shared tier gates and casing limit apply."},["evidence"]={["loader"]="efb805c09383ded4f62bda937501337710df64667437737dd52ed4e5cfa5f26f",["machine"]="478c4355439be58254c7ffca9692aefefd96ec4b6cc0484c537337ccc997501c",["exports"]={["recipes.json.gz"]="2c09a018091ea934c1cf8f612f447796f17e31e4f9d9cb3b01b894746abe0fed",["gt-5.09.54.133.zip"]="a5993a25fbf464348182baac16539bcf08bdfa18d22ef0217dc84fc4c14ca03e",["registry-names.json"]="1ab9505d6e2e0c1c59300908801927e0da04edc506ba53b0e21f67e531657e9a",["ores.json.gz"]="07c9526c3e78b9e1a5104c76c89013997a3b7b687ecc2b356150a72441fc23c2"}}}
 end)()
+local LiquidSettings=(function()
+-- Source: source/data/melting_settings.json
+return {["circuits"]={0,1,2,11,12,16,17,22},["gases"]={{["name"]="oxygen",["label"]="Oxygen"},{["name"]="oganesson",["label"]="Oganesson"},{["name"]="xenon",["label"]="Xenon"},{["name"]="krypton",["label"]="Krypton"},{["name"]="neon",["label"]="Neon"},{["name"]="radon",["label"]="Radon"},{["name"]="argon",["label"]="Argon"},{["name"]="helium",["label"]="Helium"},{["name"]="nitrogen",["label"]="Nitrogen"},{["name"]="hydrogen",["label"]="Hydrogen"}}}
+end)()
 local Batch=(function()
 -- Source: source/lib/batch.lua
 -- Shared batch policy. Tier definitions are built from source/data/tiers.json.
@@ -672,6 +676,7 @@ local Programs=(function()
 -- Program definitions shared by configuration, navigation and execution.
 local Batch = Batch
 local ComponentData = ComponentData
+local LiquidSettings = LiquidSettings
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -1014,6 +1019,48 @@ M.list[#M.list + 1] = {
   },
   previewTabs = { { 'changes', 'Patterns' }, { 'capacity', 'Capacity' }, { 'details', 'Details' } },
 }
+local liquidChoices, liquidDefinitions = {}, {}
+for _, circuit in ipairs(LiquidSettings.circuits) do
+  local key, label = 'c' .. circuit, circuit == 0 and 'No Circuit' or 'Circuit ' .. circuit
+  liquidChoices[#liquidChoices + 1] = { key, label }
+  liquidDefinitions[#liquidDefinitions + 1] = { key, label, 'Helioflux Melting Core' }
+end
+liquidChoices[#liquidChoices + 1] = { 'ingot', 'Ingot' }
+liquidDefinitions[#liquidDefinitions + 1] = { 'ingot', 'Ingot', 'Fluid Shaper' }
+local gasChoices = { { 'none', 'Without Optional Gas' } }
+for _, gas in ipairs(LiquidSettings.gases) do
+  gasChoices[#gasChoices + 1] = { gas.name, gas.label }
+end
+local gasField = choice(
+  'gas',
+  'Optional process gas',
+  gasChoices,
+  'none',
+  'Prefer this gas where a matching variant exists; otherwise use the dry route. Required reaction fluids stay in the pattern.'
+)
+gasField.kind = 'select'
+M.list[#M.list + 1] = {
+  id = 'meltingCore',
+  name = 'Melting Core',
+  mode = 'meltingCore',
+  distinctDestinations = true,
+  description = 'Retire remelting loops; install molten production and independent ingot casts.',
+  formChoices = liquidChoices,
+  outputs = {},
+  costForms = {},
+  fields = { gasField, multiplier() },
+  previewTabs = {
+    { 'changes', 'Patterns' },
+    { 'retirements', 'Retirements' },
+    { 'existing', 'Existing' },
+    { 'skipped', 'Excluded' },
+    { 'capacity', 'Capacity' },
+    { 'details', 'Details' },
+  },
+}
+for _, entry in ipairs(liquidChoices) do
+  M.list[#M.list].outputs[entry[1]] = entry[1]
+end
 -- Each output has one editable destination and one switch. Configuration,
 -- validation, routing and rendering all consume this same field schema.
 local function destinationFields(program, definitions, help)
@@ -1079,6 +1126,7 @@ local definitions = {
     { 'block', 'Blocks', 'Compressor' },
   },
   componentAssembly = {},
+  meltingCore = liquidDefinitions,
 }
 for _, entry in ipairs(cableForms) do
   definitions.insulator[#definitions.insulator + 1] = { entry[1], entry[2], nil, 'destination' }
@@ -1106,6 +1154,7 @@ for _, program in ipairs(M.list) do
     local help = program.id == 'fluidShaper'
         and 'Destinations for patterns; keep the matching mold stocked in each machine.'
       or program.id == 'componentAssembly' and 'Separate component banks; circuits stay stocked (IV+). LV-EV recipes need no circuit.'
+      or program.id == 'meltingCore' and 'Separate stocked circuits by input buffer. Keep the ingot mold stocked in the Fluid Shaper.'
       or 'Destinations for patterns. Every interface with the same exact name is included.'
     destinationFields(program, definitions[program.id], help)
   end
@@ -1461,6 +1510,9 @@ function M.migrate(old)
   if prior and not prior.polymer and prior.pvc then
     c.programs.insulator.polymer = prior.pvc == 'off' and 'none' or 'pvcSmall'
   end
+  if not (old.programs and old.programs.meltingCore) then
+    c.programs.meltingCore.ingot = c.programs.fluidShaper.ingot
+  end
   return M.validate(M.normalize(c))
 end
 function M.capacityReport(groups)
@@ -1521,7 +1573,10 @@ function M.requireProgram(c, id)
       local name = c.programs[id][f.key]
       U.check(name ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
       if p.distinctDestinations then
-        U.check(not assigned[name], 'Each component needs a distinct destination name: ' .. name)
+        U.check(
+          not assigned[name],
+          'Each enabled output needs a distinct destination name: ' .. name
+        )
         assigned[name] = true
       end
     end
@@ -2668,8 +2723,9 @@ end
 -- Donor supply is live, unlike the destination plan. Keep only slot references
 -- between operations, and check each physical pattern immediately before use.
 -- Both programs use this pool; waiting never creates a recovery intent.
-local function donorPool(hw, name, protected, progress)
+local function donorPool(hw, name, protected, progress, additional)
   local banks, bankIndex, slots, slotIndex = nil, 1, {}, 1
+  local extraIndex = 1
   local function refreshBanks()
     banks = lookup(hw, name, true)
     bankIndex = 1
@@ -2678,6 +2734,22 @@ local function donorPool(hw, name, protected, progress)
   return function()
     while true do
       gate()
+      local extra = additional and additional[extraIndex]
+      if extra then
+        extraIndex = extraIndex + 1
+        U.check(
+          not protected[where(extra.from)],
+          'Reclaimed donor overlaps a destination or editor'
+        )
+        local bank = current(hw, extra.from)
+        local pattern = bank.patterns[extra.from.slot]
+        U.check(
+          bank.name == extra.name and patternFingerprint(hw, pattern) == extra.fingerprint,
+          'Reclaimed donor changed; scan again'
+        )
+        U.check(safeDonor(hw.data, pattern), 'Reclaimed pattern is no longer editable')
+        return extra.from, compact(pattern)
+      end
       local source = slots[slotIndex]
       if source then
         slotIndex = slotIndex + 1
@@ -3932,6 +4004,13 @@ function M.planRows(plan, manifest)
     ),
     'green'
   )
+  if plan.retirements then
+    add(
+      #plan.retirements .. ' old liquid recipes will be retired before installing patterns.',
+      'yellow'
+    )
+    add('Retired patterns are reused first; see Retirements for their locations.', 'muted')
+  end
   if manifest.source.batchPolicy then
     add(manifest.source.batchPolicy, 'muted')
     if (manifest.tierExcluded or 0) > 0 then
@@ -4028,6 +4107,9 @@ function M.planRows(plan, manifest)
           tier = recipe.batch.recipeTier,
         }
       end
+    end
+    if recipe.heat and recipe.heat > 0 then
+      treeRow(rows, add, '  |      ', 'Required heat: ' .. recipe.heat .. ' K', 'muted')
     end
   end
   return rows
@@ -4363,7 +4445,84 @@ function M.moverRows(plan, section)
   return rows
 end
 
+function M.retirementRows(plan)
+  local rows, add = U.rows()
+  add('LIQUID RECIPES TO RETIRE', 'blue')
+  add('Old recipes become tagged donor placeholders before new casts are installed.', 'muted')
+  local bank
+  for _, entry in ipairs(plan.retirements or {}) do
+    local location = U.where(entry.from)
+    if bank ~= location then
+      spacer(rows, add)
+      bank = location
+      add('  +-- ' .. entry.name .. ' / ' .. U.locationText(entry.from), interfaceTone)
+    else
+      add('  |', interfaceTone)
+    end
+    treeRow(rows, add, '  |  ', 'RETIRE slot ' .. entry.from.slot .. '  ' .. entry.label, 'yellow')
+    treeRow(rows, add, '  |    ', entry.action, 'muted')
+    if entry.reason then
+      treeRow(rows, add, '  |    ', 'BLOCKED: ' .. entry.reason, 'red')
+    end
+  end
+  if #(plan.retirements or {}) == 0 then
+    add('No old liquid recipes need retirement.', 'green')
+  end
+  return rows
+end
+
+function M.liquidDetails(plan, manifest)
+  local rows, add = U.rows()
+  add('MELTING CORE MIGRATION', 'blue')
+  add('1. Retire matched extraction and obsolete remelting recipes.')
+  add('2. Reuse those patterns, then ordinary buffer donors, for the planned recipes.')
+  add('3. Install independent molten production and ingot casting patterns.')
+  spacer(rows, add)
+  add('DEPENDENCY CHECK', 'blue')
+  add(
+    plan.supplyCounts.banks
+      .. ' interfaces / '
+      .. plan.supplyCounts.patterns
+      .. ' installed patterns compared.'
+  )
+  add('Native fluid production from ABS, DTPF and other source recipes is preserved.')
+  add('A dust feed must have a path that does not require its own molten product or cast ingot.')
+  add(
+    'Unpatterned inputs are external supplies; this checks dependencies, not stock or machine readiness.',
+    'muted'
+  )
+  add(
+    'Only terminal-visible interfaces can be compared. Connect every relevant production interface.',
+    'yellow'
+  )
+  add(
+    plan.supplyCounts.unreadable
+      .. ' patterns could not be decoded; their visible outputs do not prove supply.',
+    'muted'
+  )
+  spacer(rows, add)
+  add('MACHINE SETUP', 'blue')
+  add('Each enabled circuit destination needs its circuit stocked in its own input buffer.')
+  add('The No Circuit destination must not contain a programmed circuit.')
+  add('The ingot mold stays stocked in the Fluid Shaper; required reaction fluids are requested.')
+  add('Selected optional gas: ' .. manifest.policy.gas)
+  add(
+    'The module still needs sufficient heat and power; recipe EU/t and shared tier limits are shown in Patterns.'
+  )
+  add(
+    'Pause / Stop / Continue use the shared transaction journal. Retirement is completed before casting begins.',
+    'muted'
+  )
+  return rows
+end
+
 function M.rows(section, plan, manifest)
+  if section == 'retirements' then
+    return M.retirementRows(plan)
+  end
+  if section == 'details' and plan.supplyCounts then
+    return M.liquidDetails(plan, manifest)
+  end
   if plan.kind == 'patternMover' then
     return M.moverRows(plan, section)
   end
@@ -4406,6 +4565,10 @@ function M.report(plan, manifest)
   end
   append(M.capacityRows(plan))
   append(M.planRows(plan, manifest))
+  if plan.retirements then
+    append(M.retirementRows(plan))
+    append(M.liquidDetails(plan, manifest))
+  end
   for _, warning in ipairs(plan.warnings) do
     lines[#lines + 1] = 'NOTE: ' .. warning
   end
@@ -4567,6 +4730,505 @@ end
 return M
 
 end)()
+local Supply=(function()
+-- Source: source/lib/supply.lua
+-- An AND/OR dependency graph: every input of a recipe is needed, while any
+-- independent producer can supply an ingredient. Quantities do not affect cycles.
+local U = U
+local M = {}
+
+function M.identity(stack)
+  return U.canonical({ stack.type or 'item', stack.name, stack.damage or false, stack.tag or false })
+end
+
+function M.new(checkpoint)
+  local graph = { ids = {}, nodes = {}, recipes = {} }
+
+  function graph:node(stack)
+    local key = M.identity(stack)
+    local id = self.ids[key]
+    if not id then
+      id = #self.nodes + 1
+      self.ids[key] = id
+      self.nodes[id] = { label = stack.label or stack.name, producers = {} }
+    end
+    return id
+  end
+
+  function graph:add(recipe, origin)
+    local row = { origin = origin, inputs = {}, outputs = {} }
+    for _, which in ipairs({ 'inputs', 'outputs' }) do
+      local seen = {}
+      for _, stack in pairs(recipe[which]) do
+        local id = self:node(stack)
+        if not seen[id] then
+          row[which][#row[which] + 1] = id
+          seen[id] = true
+        end
+      end
+    end
+    local index = #self.recipes + 1
+    self.recipes[index] = row
+    for _, id in ipairs(row.outputs) do
+      self.nodes[id].producers[#self.nodes[id].producers + 1] = index
+    end
+    return index
+  end
+
+  function graph:hasProducer(stack, excluded)
+    local id = self.ids[M.identity(stack)]
+    for _, index in ipairs(id and self.nodes[id].producers or {}) do
+      if not (excluded or {})[self.recipes[index].origin] then
+        return true
+      end
+    end
+    return false
+  end
+
+  function graph:restore(count)
+    for index = #self.recipes, count + 1, -1 do
+      for _, id in ipairs(self.recipes[index].outputs) do
+        table.remove(self.nodes[id].producers)
+      end
+      self.recipes[index] = nil
+    end
+  end
+
+  function graph:independent(inputs, forbidden, excluded)
+    local blocked, pending, wanted, relevant, producers = {}, {}, {}, {}, {}
+    excluded = excluded or {}
+    for _, stack in pairs(forbidden or {}) do
+      blocked[self:node(stack)] = true
+    end
+    local roots = {}
+    for _, stack in pairs(inputs) do
+      local id = self:node(stack)
+      roots[#roots + 1] = id
+      pending[#pending + 1] = id
+    end
+    while #pending > 0 do
+      local id = table.remove(pending)
+      if not wanted[id] then
+        wanted[id], producers[id] = true, {}
+        if not blocked[id] then
+          for _, index in ipairs(self.nodes[id].producers) do
+            local row = self.recipes[index]
+            if not excluded[row.origin] then
+              producers[id][#producers[id] + 1] = index
+              if not relevant[index] then
+                relevant[index] = row
+                for _, input in ipairs(row.inputs) do
+                  pending[#pending + 1] = input
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    -- Least fixed point, rather than recursive memoization: an alternative
+    -- outside a strongly connected group must be able to ground the group.
+    local ready, changed = {}, true
+    for id in pairs(wanted) do
+      ready[id] = not blocked[id] and #producers[id] == 0
+    end
+    while changed do
+      changed = false
+      for _, row in pairs(relevant) do
+        if checkpoint then
+          checkpoint()
+        end
+        local usable = #row.inputs > 0
+        for _, id in ipairs(row.inputs) do
+          usable = usable and ready[id]
+        end
+        if usable then
+          for _, id in ipairs(row.outputs) do
+            if wanted[id] and not blocked[id] and not ready[id] then
+              ready[id], changed = true, true
+            end
+          end
+        end
+      end
+    end
+    local missing = {}
+    for _, id in ipairs(roots) do
+      if not ready[id] then
+        missing[#missing + 1] = self.nodes[id].label
+      end
+    end
+    return #missing == 0, missing
+  end
+
+  return graph
+end
+
+return M
+
+end)()
+local Melting=(function()
+-- Source: source/lib/melting.lua
+-- Recipe selection and loop checks are pure. OC supplies the installed graph;
+-- the normal maker owns layout, sorting, batch resizing and ingredient writes.
+local U = U
+local Batch = Batch
+local Planner = Planner
+local Supply = Supply
+local M = {}
+
+function M.ingredient(data, index, amount)
+  local item = U.clone(U.check(data.items[index], 'Unknown melting ingredient'))
+  item.name = U.check(data.names[item.name], 'Unknown melting registry')
+  item.size = amount or 1
+  return item
+end
+
+local function ingredients(data, pairs)
+  local result = {}
+  for _, pair in ipairs(pairs) do
+    result[#result + 1] = M.ingredient(data, pair[1], pair[2])
+  end
+  return result
+end
+
+function M.extractorMatcher(data)
+  local fluids = {}
+  for _, material in ipairs(data.materials) do
+    local fluid = M.ingredient(data, material.fluid).name
+    fluids[fluid] = fluids[fluid] or {}
+    fluids[fluid][#fluids[fluid] + 1] = material
+  end
+  local function single(stacks)
+    local result, key
+    for _, stack in pairs(stacks) do
+      local identity = Supply.identity(stack)
+      if key and key ~= identity then
+        return nil
+      end
+      if not U.integer(stack.size) or stack.size <= 0 then
+        return nil
+      end
+      if not result then
+        result, key = U.clone(stack), identity
+      else
+        result.size = result.size + stack.size
+      end
+    end
+    return result
+  end
+  return function(recipe)
+    if recipe.kind ~= 'processing' then
+      return nil
+    end
+    local input, output = single(recipe.inputs), single(recipe.outputs)
+    if
+      not input
+      or not output
+      or input.type ~= 'item'
+      or output.type ~= 'fluid'
+      or input.tag
+      or output.tag
+    then
+      return nil
+    end
+    for _, material in ipairs(fluids[output.name] or {}) do
+      local function match(rule)
+        local name, damage = rule.name, rule.damage
+        if rule.kind == 'meta' then
+          damage = rule.prefix + material.dsf
+        elseif rule.kind == 'suffix' then
+          name, damage = name .. material.exSuffix, 0
+        end
+        return name == input.name
+          and damage == input.damage
+          and input.size * rule.amount == output.size * rule.n
+      end
+      for _, index in ipairs(data.extraction.sets[material.ex]) do
+        if match(data.extraction.rules[index]) then
+          return output.name
+        end
+      end
+      for _, rule in ipairs(material.exExtra or {}) do
+        if match(rule) then
+          return output.name
+        end
+      end
+    end
+  end
+end
+
+function M.coreKeys(data)
+  local keys = {}
+  for _, material in ipairs(data.materials) do
+    for _, route in ipairs(material.routes) do
+      local inputs = ingredients(data, data.feeds[route.feed])
+      if route.gas ~= 0 then
+        inputs[#inputs + 1] = M.ingredient(data, route.gas, route.gasAmount)
+      end
+      local key = Planner.recipeKey({
+        kind = 'processing',
+        inputs = inputs,
+        outputs = ingredients(data, data.products[route.output]),
+      })
+      keys[key] = { fluid = M.ingredient(data, material.fluid).name, native = material.native }
+    end
+  end
+  return keys
+end
+
+function M.compile(data, options, graph, retired, owned, checkpoint)
+  local manifest = {
+    version = 1,
+    source = U.clone(data.source),
+    policy = {
+      mode = 'meltingCore',
+      gas = options.gas,
+      batch = U.clone(options.batch),
+      multiplier = options.multiplier,
+    },
+    recipes = {},
+    skipped = {},
+    unresolved = {},
+    unusedExcluded = 0,
+    unclassifiedRecipes = 0,
+    tierExcluded = 0,
+  }
+  local excluded = U.clone(retired or {})
+  for origin in pairs(owned or {}) do
+    excluded[origin] = true
+  end
+  local function skip(material, stack, form, reason)
+    manifest.skipped[#manifest.skipped + 1] = {
+      material = material.name,
+      label = stack.label,
+      form = form,
+      name = stack.name,
+      damage = stack.damage,
+      reason = reason,
+    }
+  end
+  local function scaled(material, route, inputs, outputs, form, label, stock)
+    local quantities = {}
+    for _, stacks in ipairs({ inputs, outputs }) do
+      for _, s in ipairs(stacks) do
+        quantities[#quantities + 1] = s
+      end
+    end
+    local count, batch = Batch.resolve(
+      options.batch,
+      material.tier,
+      route.eut,
+      options.multiplier or 1,
+      quantities,
+      material.tierSource,
+      { cost = route.cost }
+    )
+    if count == 0 then
+      manifest.tierExcluded = manifest.tierExcluded + 1
+      return nil, batch.excluded
+    end
+    if not material.tier then
+      manifest.unclassifiedRecipes = manifest.unclassifiedRecipes + 1
+    end
+    local recipe = {
+      kind = 'processing',
+      material = material.name,
+      outputForm = form,
+      outputLabel = label,
+      label = material.name .. ' / ' .. label,
+      inputs = inputs,
+      outputs = outputs,
+      stock = stock or {},
+      batch = batch,
+      heat = route.heat,
+    }
+    for _, stacks in ipairs({ recipe.inputs, recipe.outputs }) do
+      for _, s in ipairs(stacks) do
+        s.size = s.size * count
+        U.check(
+          U.integer(s.size) and s.size > 0,
+          'Melting pattern quantity exceeds the supported limit'
+        )
+      end
+    end
+    return recipe
+  end
+  local casts, candidates = {}, {}
+  for _, material in ipairs(data.materials) do
+    if checkpoint then
+      checkpoint()
+    end
+    local fluid = M.ingredient(data, material.fluid, 144)
+    local ingot = M.ingredient(data, material.ingot, 1)
+    local native = graph:hasProducer(fluid, excluded)
+      and graph:independent({ fluid }, { ingot }, excluded)
+    local variant
+    local token = material.key
+    for _, modifier in ipairs({ 'magnetic', 'attuned' }) do
+      if token:sub(1, #modifier) == modifier or token:sub(-#modifier) == modifier then
+        variant = modifier
+      end
+    end
+    local selected, reason
+    local routes = {}
+    for _, route in ipairs(material.routes) do
+      local form = 'c' .. route.circuit
+      if options.forms[form] then
+        routes[#routes + 1] = route
+      end
+    end
+    table.sort(routes, function(a, b)
+      local function rank(r)
+        local gas = r.gas ~= 0 and M.ingredient(data, r.gas).name or 'none'
+        return r.rank * 100 + (gas == options.gas and 0 or gas == 'none' and 10 or 20)
+      end
+      if rank(a) ~= rank(b) then
+        return rank(a) < rank(b)
+      end
+      if a.ticks ~= b.ticks then
+        return a.ticks < b.ticks
+      end
+      return a.feed < b.feed
+    end)
+    if not native and not variant then
+      for _, route in ipairs(routes) do
+        local gas = route.gas ~= 0 and M.ingredient(data, route.gas).name or 'none'
+        if gas == options.gas or gas == 'none' then
+          local inputs = ingredients(data, data.feeds[route.feed])
+          if route.gas ~= 0 then
+            inputs[#inputs + 1] = M.ingredient(data, route.gas, route.gasAmount)
+          end
+          local outputs = ingredients(data, data.products[route.output])
+          local independent = graph:independent(inputs, { fluid, ingot }, excluded)
+          if independent then
+            local stock = route.circuit ~= 0
+                and {
+                  {
+                    type = 'item',
+                    name = 'gregtech:gt.integrated_circuit',
+                    damage = route.circuit,
+                    size = 1,
+                    label = 'Programmed Circuit ' .. route.circuit,
+                  },
+                }
+              or {}
+            selected, reason =
+              scaled(material, route, inputs, outputs, 'c' .. route.circuit, 'Molten', stock)
+            if selected then
+              break
+            end
+          else
+            reason = 'Feed depends on this molten material or its ingot cast; would create a loop.'
+          end
+        end
+      end
+      reason = reason or 'No enabled, verified Melting Core feed route.'
+    else
+      reason = variant and ('Fluid Shaper excludes ' .. variant .. ' material variants.')
+        or 'Preserve installed independent liquid production.'
+    end
+    if selected then
+      candidates[#candidates + 1] =
+        { recipe = selected, material = material, fluid = fluid, ingot = ingot }
+    elseif #routes > 0 then
+      skip(material, fluid, 'c' .. routes[1].circuit, reason)
+    end
+    if variant then
+      if options.forms.ingot then
+        skip(material, ingot, 'ingot', reason)
+      end
+    else
+      casts[#casts + 1] = { material = material, fluid = fluid, ingot = ingot }
+    end
+  end
+  -- Production and casting must be checked as one proposed graph. Otherwise an
+  -- ingot provided by another new cast can be mistaken for an external input.
+  local originalCount = #graph.recipes
+  for n, entry in ipairs(candidates) do
+    entry.origin = 'new-melting-' .. n
+    graph:add(entry.recipe, 'new-melting-' .. n)
+  end
+  local casting = {}
+  if options.forms.ingot then
+    for n, entry in ipairs(casts) do
+      local material, fluid, ingot = entry.material, entry.fluid, entry.ingot
+      local recipe, reason = scaled(
+        material,
+        { eut = material.castEUt, cost = 1 },
+        { U.clone(fluid) },
+        { U.clone(ingot) },
+        'ingot',
+        'Ingot',
+        data.ingotMold and { M.ingredient(data, data.ingotMold, 1) } or nil
+      )
+      if recipe then
+        entry.recipe, entry.origin = recipe, 'new-cast-' .. n
+        graph:add(recipe, entry.origin)
+        casting[#casting + 1] = entry
+      else
+        skip(material, ingot, 'ingot', reason)
+      end
+    end
+  end
+  local changed = true
+  while changed do
+    changed = false
+    local unsafe = {}
+    for _, entry in ipairs(casting) do
+      if not excluded[entry.origin] and not graph:hasProducer(entry.fluid, excluded) then
+        unsafe[entry.origin] = true
+      end
+    end
+    for origin in pairs(unsafe) do
+      excluded[origin], changed = true, true
+    end
+    unsafe = {}
+    for _, list in ipairs({ candidates, casting }) do
+      for _, entry in ipairs(list) do
+        if not excluded[entry.origin] then
+          local forbidden = U.clone(excluded)
+          forbidden[entry.origin] = true
+          if not graph:independent(entry.recipe.inputs, entry.recipe.outputs, forbidden) then
+            unsafe[entry.origin] = true
+          end
+        end
+      end
+    end
+    for origin in pairs(unsafe) do
+      excluded[origin], changed = true, true
+    end
+  end
+  local supplied = {}
+  for _, list in ipairs({ candidates, casting }) do
+    for _, entry in ipairs(list) do
+      if excluded[entry.origin] then
+        skip(
+          entry.material,
+          entry.recipe.outputForm == 'ingot' and entry.ingot or entry.fluid,
+          entry.recipe.outputForm,
+          'No independent supply in the complete melting/casting plan; would create a loop or lacks a liquid producer.'
+        )
+      else
+        manifest.recipes[#manifest.recipes + 1] = entry.recipe
+        for _, output in ipairs(entry.recipe.outputs) do
+          if output.type == 'fluid' then
+            supplied[output.name] = true
+          end
+        end
+        if entry.recipe.outputForm == 'ingot' then
+          supplied[entry.fluid.name] = true
+        end
+      end
+    end
+  end
+  manifest.suppliedFluids = supplied
+  graph:restore(originalCount)
+  return manifest
+end
+
+return M
+
+end)()
 -- Source: source/app/25_maker.lua
 -- Shared named-interface adapter. Planning is read-only; execution uses the
 -- same editor, durable operations and recovery as the assembly-line program.
@@ -4608,6 +5270,53 @@ local function patternRecipe(data, p, root)
     end
   end
   return r
+end
+-- One decoder for maker snapshots and cross-program dependency scans.
+local function compactPattern(hw, p)
+  U.check(type(p.tag) == 'string', 'Pattern NBT hidden')
+  local reason, root = donorIssue(hw.data, p)
+  local value = { kind = 'unknown', fingerprint = patternFingerprint(hw, p), reason = reason }
+  local output = p.outputs and p.outputs[1]
+  if U.exists(output) then
+    value.output = {
+      name = output.name,
+      damage = output.damage,
+      size = U.patternCount(output, U.patternEntry(root, 'outputs', 1)),
+      label = output.label,
+    }
+  end
+  local inputLabels = {}
+  for _, index in ipairs(U.keys(p.inputs)) do
+    local input = p.inputs[index]
+    if U.exists(input) then
+      inputLabels[#inputLabels + 1] = tostring(
+        U.patternCount(input, U.patternEntry(root, 'inputs', index)) or '?'
+      ) .. ' x ' .. tostring(input.label or input.name)
+    end
+  end
+  value.inputSummary = table.concat(inputLabels, ', ')
+  local recipe
+  if root then
+    local issue
+    recipe, issue = patternRecipe(hw.data, p, root)
+    if recipe then
+      value.kind = recipe.kind
+      value.inputSummary = U.ingredientSummary(recipe.inputs)
+      if recipe.outputs[1] then
+        value.output = U.clone(recipe.outputs[1])
+      end
+      local valid, key, scale = pcall(recipeKey, hw.data, recipe)
+      if valid then
+        value.recipeKey, value.scale = key, scale
+      else
+        value.matchIssue = 'Encoded ingredients could not be compared'
+      end
+      value.donor = value.reason == nil
+    else
+      value.matchIssue, value.reason = issue, value.reason or issue
+    end
+  end
+  return value, recipe
 end
 -- NetworkControl is exposed by a block ME interface or an ME controller,
 -- not by multipart interfaces. These queries are read-only; never submit a
@@ -4853,6 +5562,11 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     group(destination(item), 'destination')
   end
   group(routing.donors, 'donor')
+  for _, extra in ipairs(routing.additionalDonors or {}) do
+    if not names[extra.name] then
+      group(extra.name, 'donor')
+    end
+  end
   group(routing.workspace, 'workspace')
   local hw = {
     terminal = selectDevice('me_interface_terminal', c.shared.terminalAddress),
@@ -4880,51 +5594,18 @@ local function scanManifest(c, manifest, routing, progress, control, started)
       }
       for slot, p in pairs(i.patterns or {}) do
         if U.exists(p) then
-          U.check(type(p.tag) == 'string', 'Pattern NBT hidden in ' .. g.name)
-          local reason, root = donorIssue(hw.data, p)
-          local value =
-            { kind = 'unknown', fingerprint = patternFingerprint(hw, p), reason = reason }
-          local output = p.outputs and p.outputs[1]
-          if U.exists(output) then
-            value.output = {
-              name = output.name,
-              damage = output.damage,
-              size = U.patternCount(output, U.patternEntry(root, 'outputs', 1)),
-              label = output.label,
-            }
-          end
-          local inputLabels = {}
-          for _, index in ipairs(U.keys(p.inputs)) do
-            local input = p.inputs[index]
-            if U.exists(input) then
-              inputLabels[#inputLabels + 1] = tostring(
-                U.patternCount(input, U.patternEntry(root, 'inputs', index)) or '?'
-              ) .. ' x ' .. tostring(input.label or input.name)
+          local include = g.role ~= 'donor' or g.name == routing.donors
+          if not include then
+            for _, extra in ipairs(routing.additionalDonors or {}) do
+              if where(extra.from) == where(i) and extra.from.slot == slot then
+                include = true
+                break
+              end
             end
           end
-          value.inputSummary = table.concat(inputLabels, ', ')
-          if root then
-            local r, issue = patternRecipe(hw.data, p, root)
-            if r then
-              value.kind = r.kind
-              value.inputSummary = U.ingredientSummary(r.inputs)
-              if r.outputs[1] then
-                value.output = U.clone(r.outputs[1])
-              end
-              local valid, key, scale = pcall(recipeKey, hw.data, r)
-              if valid then
-                value.recipeKey = key
-                value.scale = scale
-              else
-                value.matchIssue = 'Encoded ingredients could not be compared'
-              end
-              value.donor = value.reason == nil
-            else
-              value.matchIssue = issue
-              value.reason = value.reason or issue
-            end
+          if include then
+            compacted.patterns[slot] = compactPattern(hw, p)
           end
-          compacted.patterns[slot] = value
         end
       end
       snapshot.interfaces[#snapshot.interfaces + 1] = compacted
@@ -4972,6 +5653,7 @@ C.maker = {
   report = Preview.report,
   rows = Preview.planRows,
   discover = discover,
+  compactPattern = compactPattern,
 }
 local function programRouting(c, id)
   local program = Config.requireProgram(c, id)
@@ -5024,6 +5706,10 @@ function C.maker.preview(c, id, progress, control)
   local data = catalogs[program.mode] or require('assline_data')
   local manifest = Modes.compile(data, program.mode, options, gate)
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)
+  return C.maker.finishPreview(plan, snapshot, manifest, routing)
+end
+
+function C.maker.finishPreview(plan, snapshot, manifest, routing)
   local groups = {}
   for _, recipe in ipairs(manifest.recipes) do
     local name = routing.destinations and routing.destinations[recipe.outputForm or recipe.form]
@@ -5042,6 +5728,8 @@ function C.maker.preview(c, id, progress, control)
   local report = Preview.report(plan, manifest)
   return plan, report, manifest
 end
+
+C.maker.routing = programRouting
 
 function C.maker.finishMove(hw, op)
   local sourceBank, destinationBank = current(hw, op.source), current(hw, op.destination)
@@ -5108,7 +5796,7 @@ function C.maker.finishSort(hw, op, progress)
   end
 end
 
-function C.maker.apply(c, id, plan, manifest, progress, control)
+function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
   U.check(
     not fs.exists(paths.pending),
     'Continue or stop the saved operation before executing another preview'
@@ -5118,7 +5806,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     not manifest.unresolved or #manifest.unresolved == 0,
     'Resolve unverified registry spellings before execution'
   )
-  local routing = programRouting(c, id)
+  local routing = customRouting or programRouting(c, id)
   local baseline = U.clone(plan)
   baseline.capacities = nil
   local _, snapshot, request = scanManifest(c, manifest, routing, progress, control)
@@ -5166,7 +5854,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
       protected[where(i)] = true
     end
   end
-  local takeDonor = donorPool(hw, c.shared.donors, protected, progress)
+  local takeDonor = donorPool(hw, c.shared.donors, protected, progress, routing.additionalDonors)
   local function imprint(entry, resize)
     local recipe = recipes[entry.key]
     U.check(recipe and recipe.kind == 'processing', 'Unsupported pattern kind')
@@ -5220,6 +5908,9 @@ end
 C.runner = {}
 function C.runner.hasChanges(preview)
   local plan = preview.plan
+  if plan.retirements and #plan.retirements > 0 then
+    return true
+  end
   if plan.kind == 'donorCleanup' then
     return #plan.cleanups > 0
   end
@@ -5246,6 +5937,8 @@ function C.runner.preview(c, id, progress, control)
     preview.plan, preview.report = C.transition.preview(c, progress, control)
   elseif id == 'patternMover' then
     preview.plan, preview.report = C.mover.preview(c, progress, control)
+  elseif id == 'meltingCore' then
+    preview.plan, preview.report, preview.manifest = C.liquids.preview(c, progress, control)
   else
     preview.plan, preview.report, preview.manifest = C.maker.preview(c, id, progress, control)
   end
@@ -5264,6 +5957,8 @@ function C.runner.execute(c, preview, progress, control)
     C.transition.apply(c, preview.plan, progress, control)
   elseif preview.id == 'patternMover' then
     C.mover.apply(c, preview.plan, progress, control)
+  elseif preview.id == 'meltingCore' then
+    C.liquids.apply(c, preview.plan, preview.manifest, progress, control)
   else
     C.maker.apply(c, preview.id, preview.plan, preview.manifest, progress, control)
   end
@@ -5338,6 +6033,7 @@ local function donorMarker(hw)
   local marker = { type = 'item', name = 'minecraft:paper', damage = 0, size = 1, tag = tag }
   return { kind = 'processing', inputs = { marker }, outputs = { U.clone(marker) } }
 end
+C.donors.markerRecipe = donorMarker
 
 function C.donors.scan(c, progress, control)
   local hw = connect(c, progress, control)
@@ -5849,6 +6545,322 @@ function C.mover.apply(c, plan, progress, control)
   end
 end
 
+-- Source: source/app/29_liquids.lua
+-- Coordinated production migration. The dependency graph is read-only; writes
+-- use the existing parking, sorting, imprinting and recovery operations.
+C.liquids = {}
+local indexedData, extractorMatch, coreKeys
+
+local function liquidOrigin(ref, slot)
+  return where(ref) .. ':' .. slot
+end
+
+local function liquidInterfaces(hw)
+  local result = invoke(hw.terminal, 'getInterfaces')
+  U.check(result and result.getAll, 'Supply checks require metadata-only getAll(false)')
+  local refs = {}
+  iterate(invoke(result, 'getAll', false), function(ref)
+    U.check(ref.patterns == nil, 'Driver ignored metadata-only discovery')
+    refs[#refs + 1] = ref
+  end)
+  table.sort(refs, function(a, b)
+    return U.ordered(endpoint(a), endpoint(b))
+  end)
+  return refs
+end
+
+local function liquidScan(c, data, hw, routing, options, progress)
+  if indexedData ~= data then
+    extractorMatch, coreKeys = Melting.extractorMatcher(data), Melting.coreKeys(data)
+    indexedData = data
+  end
+  local graph, retirement, placeholders, owned, baseline, parkedOrigins =
+    Supply.new(gate), {}, {}, {}, {}, {}
+  local marker = C.donors.markerRecipe(hw)
+  local markerKey = recipeKey(hw.data, marker)
+  local coreBanks = {}
+  for form, name in pairs(routing.destinations) do
+    if options.forms[form] then
+      if form ~= 'ingot' then
+        coreBanks[name] = true
+      end
+    end
+  end
+  local counts = { banks = 0, patterns = 0, unreadable = 0 }
+  for _, ref in ipairs(liquidInterfaces(hw)) do
+    gate()
+    if where(ref) ~= where(hw.buffer) then
+      local bank = current(hw, ref)
+      U.check(bank.name == ref.name, 'Interface renamed during supply scan')
+      local saved = { name = bank.name, ref = endpoint(bank), patterns = {} }
+      counts.banks = counts.banks + 1
+      for _, slot in ipairs(U.keys(bank.patterns)) do
+        local p = bank.patterns[slot]
+        if U.exists(p) then
+          gate()
+          local value, recipe = compactPattern(hw, p)
+          counts.patterns = counts.patterns + 1
+          local origin = liquidOrigin(bank, slot)
+          saved.patterns[slot] = value.fingerprint
+          if recipe then
+            for _, which in ipairs({ 'inputs', 'outputs' }) do
+              for _, s in pairs(recipe[which]) do
+                local tag = tagKey(hw.data, s)
+                s.tag = tag ~= '{}' and tag or nil
+              end
+            end
+            -- Classification ignores flags; unsafe flags block retirement
+            -- instead of hiding a looping recipe from the cross-comparison.
+            local valid, key = pcall(Planner.recipeKey, {
+              kind = recipe.kind,
+              inputs = recipe.inputs,
+              outputs = recipe.outputs,
+            })
+            local core = valid and coreKeys[key]
+            if coreBanks[bank.name] and core then
+              owned[origin] = true
+            end
+            local fluid = extractorMatch(recipe)
+            local reason = fluid and 'Retire solid-to-fluid extraction'
+            if not fluid and coreBanks[bank.name] and core then
+              fluid = core.fluid
+              reason = 'Replace an obsolete or circular Melting Core route'
+            end
+            local issue = value.reason
+            if not value.donor or recipe.kind ~= 'processing' then
+              issue = issue or 'Pattern is not an editable processing pattern.'
+            end
+            local entry = {
+              from = endpoint(bank, slot),
+              name = bank.name,
+              origin = origin,
+              fingerprint = value.fingerprint,
+              label = U.ingredientSummary(recipe.outputs),
+              reason = issue,
+              fluid = fluid,
+              action = reason,
+              coreKey = coreBanks[bank.name] and core and key or nil,
+            }
+            if fluid then
+              retirement[#retirement + 1] = entry
+            end
+            local parked = value.recipeKey == markerKey
+              and value.donor
+              and recipe.kind == 'processing'
+            if parked then
+              parkedOrigins[origin] = true
+              if bank.name ~= c.shared.donors then
+                placeholders[#placeholders + 1] = entry
+              end
+            end
+            if not parked and bank.name ~= c.shared.donors then
+              if value.reason or recipe.substitute or recipe.beSubstitute then
+                -- Unsafe flags cannot prove an active, exact material supply.
+                -- A self edge keeps that output from becoming an assumed leaf.
+                graph:add({ inputs = recipe.outputs, outputs = recipe.outputs }, origin)
+              else
+                graph:add(recipe, origin)
+              end
+            end
+          else
+            counts.unreadable = counts.unreadable + 1
+            local outputs = effectivePattern(hw.data, p).outputs or {}
+            if next(outputs) then
+              graph:add({ inputs = outputs, outputs = outputs }, origin)
+            end
+          end
+        end
+      end
+      if bank.name ~= c.shared.donors then
+        baseline[#baseline + 1] = saved
+      end
+      if progress then
+        progress(
+          'Supply scan: ' .. counts.banks .. ' interfaces / ' .. counts.patterns .. ' patterns'
+        )
+      end
+      U.check(
+        computer.freeMemory() > 350000,
+        'Low memory during supply comparison; stop other OC programs and retry'
+      )
+    end
+  end
+  return graph, retirement, placeholders, owned, baseline, counts, parkedOrigins
+end
+
+function C.liquids.preview(c, progress, control)
+  Config.requireProgram(c, 'meltingCore')
+  local hw = connect(c, progress, control)
+  local data = require('assline_liquid_data')
+  local routing, options = C.maker.routing(c, 'meltingCore')
+  options.gas = c.programs.meltingCore.gas
+  local graph, candidates, placeholders, owned, baseline, counts, parkedOrigins =
+    liquidScan(c, data, hw, routing, options, progress)
+  local excluded = {}
+  for _, entry in ipairs(candidates) do
+    excluded[entry.origin] = true
+  end
+  local manifest
+  -- Restore extractors for liquids this run will not replace. Repeating only
+  -- removes exclusions, so a chain cannot oscillate between migration plans.
+  while true do
+    manifest = Melting.compile(data, options, graph, excluded, owned, gate)
+    local wanted = {}
+    for _, recipe in ipairs(manifest.recipes) do
+      wanted[Planner.recipeKey(recipe)] = true
+    end
+    local changed = false
+    for _, entry in ipairs(candidates) do
+      if
+        excluded[entry.origin]
+        and (
+          not manifest.suppliedFluids[entry.fluid]
+          or entry.coreKey and wanted[entry.coreKey] and not entry.reason
+        )
+      then
+        excluded[entry.origin], changed = nil, true
+      end
+      if
+        entry.coreKey
+        and owned[entry.origin]
+        and not excluded[entry.origin]
+        and not wanted[entry.coreKey]
+      then
+        owned[entry.origin], changed = nil, true
+      end
+    end
+    if not changed then
+      break
+    end
+  end
+  local destinations = {}
+  for _, rows in ipairs({ manifest.recipes, manifest.skipped }) do
+    for _, row in ipairs(rows) do
+      destinations[routing.destinations[row.outputForm or row.form]] = true
+    end
+  end
+  local retirements, errors = {}, {}
+  routing.additionalDonors = {}
+  for _, entry in ipairs(placeholders) do
+    if not destinations[entry.name] then
+      routing.additionalDonors[#routing.additionalDonors + 1] = entry
+    end
+  end
+  for _, entry in ipairs(candidates) do
+    if excluded[entry.origin] then
+      retirements[#retirements + 1] = entry
+      if entry.reason then
+        errors[#errors + 1] = 'Cannot retire '
+          .. entry.name
+          .. ' / '
+          .. U.locationText(entry.from)
+          .. ' slot '
+          .. entry.from.slot
+          .. ': '
+          .. entry.reason
+      elseif entry.name ~= c.shared.donors and not destinations[entry.name] then
+        routing.additionalDonors[#routing.additionalDonors + 1] = entry
+      end
+    end
+  end
+  local plan, snapshot = C.maker.scan(c, manifest, routing, progress, control, true)
+  if #retirements > 0 then
+    local workspace
+    for slot = 0, editorCapacity(hw) - 1 do
+      if not U.exists(direct(hw, 'getInterfacePattern', slot)) then
+        workspace = slot
+        break
+      end
+    end
+    if not workspace then
+      errors[#errors + 1] = 'The pattern editor needs one empty slot for retirement.'
+    else
+      plan.retirementWorkspace = endpoint(hw.buffer, workspace)
+    end
+  end
+  plan.retirements, plan.supplyCounts = retirements, counts
+  plan.networkBaseline = invoke(hw.data, 'sha256', U.canonical(baseline))
+  for _, err in ipairs(errors) do
+    plan.errors[#plan.errors + 1] = err
+  end
+  local result, report = C.maker.finishPreview(plan, snapshot, manifest, routing)
+  return result, report, manifest, routing, hw, { banks = baseline, parked = parkedOrigins }
+end
+
+local function unchangedSupply(before, after, retirements)
+  local ignored = {}
+  for _, entry in ipairs(retirements) do
+    U.check(after.parked[entry.origin], 'Retired pattern changed before installation. Scan again.')
+    ignored[entry.origin] = true
+  end
+  local function withoutRetired(proof)
+    for _, bank in ipairs(proof.banks) do
+      for slot in pairs(bank.patterns) do
+        if ignored[liquidOrigin(bank.ref, slot)] then
+          bank.patterns[slot] = nil
+        end
+      end
+    end
+    return U.canonical(proof.banks)
+  end
+  return withoutRetired(before) == withoutRetired(after)
+end
+
+function C.liquids.apply(c, plan, manifest, progress, control)
+  U.check(#plan.errors == 0, 'Resolve liquid migration blockers first')
+  local fresh, _, proposed, freshRouting, hw, proof = C.liquids.preview(c, progress, control)
+  U.check(
+    #fresh.errors == 0
+      and fresh.networkBaseline == plan.networkBaseline
+      and U.eq(proposed.recipes, manifest.recipes),
+    'Production patterns changed since preview. Scan again.'
+  )
+  writeFile(
+    paths.backup,
+    { config = U.clone(c), program = 'meltingCore', retired = #fresh.retirements }
+  )
+  if #fresh.retirements == 0 then
+    return C.maker.apply(c, 'meltingCore', fresh, proposed, progress, control, freshRouting)
+  end
+  local marker = C.donors.markerRecipe(hw)
+  local workspace = U.check(fresh.retirementWorkspace, 'No retirement workspace').slot
+  for n, entry in ipairs(fresh.retirements) do
+    gate()
+    local bank = current(hw, entry.from)
+    local original = bank.patterns[entry.from.slot]
+    U.check(
+      bank.name == entry.name and patternFingerprint(hw, original) == entry.fingerprint,
+      'Extraction pattern changed before retirement'
+    )
+    U.check(safeDonor(hw.data, original), 'Extraction pattern is no longer editable')
+    U.check(
+      not U.exists(direct(hw, 'getInterfacePattern', workspace)),
+      'Retirement workspace occupied'
+    )
+    local op = {
+      kind = 'park',
+      slot = workspace,
+      destination = entry.from,
+      original = compact(original),
+      recipe = marker,
+    }
+    saveOp(hw, op)
+    finish(hw, op, progress)
+    clearOp()
+    if progress then
+      progress('Retired extraction pattern ' .. n .. ' / ' .. #fresh.retirements)
+    end
+  end
+  local ready, _, readyManifest, routing, _, readyProof = C.liquids.preview(c, progress, control)
+  U.check(
+    #ready.errors == 0
+      and U.eq(readyManifest.recipes, proposed.recipes)
+      and unchangedSupply(proof, readyProof, fresh.retirements),
+    'Supply changed during retirement. Continue to review a fresh preview.'
+  )
+  C.maker.apply(c, 'meltingCore', ready, readyManifest, progress, control, routing)
+end
+
 -- Source: source/app/30_ui.lua
 local function runUI()
   local gpu = component.gpu
@@ -6196,7 +7208,15 @@ local function runUI()
       for _, row in ipairs(Preview.rows(state.section, p)) do
         add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
-    elseif preview.manifest and (state.section == 'existing' or state.section == 'skipped') then
+    elseif
+      preview.manifest
+      and (
+        state.section == 'existing'
+        or state.section == 'skipped'
+        or state.section == 'retirements'
+        or state.section == 'details' and p.supplyCounts
+      )
+    then
       for _, row in ipairs(Preview.rows(state.section, p, preview.manifest)) do
         add(row[1], row[2], row[3], row[4], row[5], row[6])
       end
@@ -6790,6 +7810,15 @@ local function runUI()
             p.required.processing < p.available.processing and 'green' or 'red'
           )
           text(113, layout.body + 8, #p.moves .. ' sorting moves first', 45)
+          if p.retirements then
+            text(
+              113,
+              layout.body + 9,
+              #p.retirements .. ' old liquid recipes to retire',
+              45,
+              'yellow'
+            )
+          end
         end
         local y = layout.body + 10
         text(

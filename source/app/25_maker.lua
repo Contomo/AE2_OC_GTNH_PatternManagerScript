@@ -39,6 +39,53 @@ local function patternRecipe(data, p, root)
   end
   return r
 end
+-- One decoder for maker snapshots and cross-program dependency scans.
+local function compactPattern(hw, p)
+  U.check(type(p.tag) == 'string', 'Pattern NBT hidden')
+  local reason, root = donorIssue(hw.data, p)
+  local value = { kind = 'unknown', fingerprint = patternFingerprint(hw, p), reason = reason }
+  local output = p.outputs and p.outputs[1]
+  if U.exists(output) then
+    value.output = {
+      name = output.name,
+      damage = output.damage,
+      size = U.patternCount(output, U.patternEntry(root, 'outputs', 1)),
+      label = output.label,
+    }
+  end
+  local inputLabels = {}
+  for _, index in ipairs(U.keys(p.inputs)) do
+    local input = p.inputs[index]
+    if U.exists(input) then
+      inputLabels[#inputLabels + 1] = tostring(
+        U.patternCount(input, U.patternEntry(root, 'inputs', index)) or '?'
+      ) .. ' x ' .. tostring(input.label or input.name)
+    end
+  end
+  value.inputSummary = table.concat(inputLabels, ', ')
+  local recipe
+  if root then
+    local issue
+    recipe, issue = patternRecipe(hw.data, p, root)
+    if recipe then
+      value.kind = recipe.kind
+      value.inputSummary = U.ingredientSummary(recipe.inputs)
+      if recipe.outputs[1] then
+        value.output = U.clone(recipe.outputs[1])
+      end
+      local valid, key, scale = pcall(recipeKey, hw.data, recipe)
+      if valid then
+        value.recipeKey, value.scale = key, scale
+      else
+        value.matchIssue = 'Encoded ingredients could not be compared'
+      end
+      value.donor = value.reason == nil
+    else
+      value.matchIssue, value.reason = issue, value.reason or issue
+    end
+  end
+  return value, recipe
+end
 -- NetworkControl is exposed by a block ME interface or an ME controller,
 -- not by multipart interfaces. These queries are read-only; never submit a
 -- crafting job just to inspect whether an output already has a recipe.
@@ -283,6 +330,11 @@ local function scanManifest(c, manifest, routing, progress, control, started)
     group(destination(item), 'destination')
   end
   group(routing.donors, 'donor')
+  for _, extra in ipairs(routing.additionalDonors or {}) do
+    if not names[extra.name] then
+      group(extra.name, 'donor')
+    end
+  end
   group(routing.workspace, 'workspace')
   local hw = {
     terminal = selectDevice('me_interface_terminal', c.shared.terminalAddress),
@@ -310,51 +362,18 @@ local function scanManifest(c, manifest, routing, progress, control, started)
       }
       for slot, p in pairs(i.patterns or {}) do
         if U.exists(p) then
-          U.check(type(p.tag) == 'string', 'Pattern NBT hidden in ' .. g.name)
-          local reason, root = donorIssue(hw.data, p)
-          local value =
-            { kind = 'unknown', fingerprint = patternFingerprint(hw, p), reason = reason }
-          local output = p.outputs and p.outputs[1]
-          if U.exists(output) then
-            value.output = {
-              name = output.name,
-              damage = output.damage,
-              size = U.patternCount(output, U.patternEntry(root, 'outputs', 1)),
-              label = output.label,
-            }
-          end
-          local inputLabels = {}
-          for _, index in ipairs(U.keys(p.inputs)) do
-            local input = p.inputs[index]
-            if U.exists(input) then
-              inputLabels[#inputLabels + 1] = tostring(
-                U.patternCount(input, U.patternEntry(root, 'inputs', index)) or '?'
-              ) .. ' x ' .. tostring(input.label or input.name)
+          local include = g.role ~= 'donor' or g.name == routing.donors
+          if not include then
+            for _, extra in ipairs(routing.additionalDonors or {}) do
+              if where(extra.from) == where(i) and extra.from.slot == slot then
+                include = true
+                break
+              end
             end
           end
-          value.inputSummary = table.concat(inputLabels, ', ')
-          if root then
-            local r, issue = patternRecipe(hw.data, p, root)
-            if r then
-              value.kind = r.kind
-              value.inputSummary = U.ingredientSummary(r.inputs)
-              if r.outputs[1] then
-                value.output = U.clone(r.outputs[1])
-              end
-              local valid, key, scale = pcall(recipeKey, hw.data, r)
-              if valid then
-                value.recipeKey = key
-                value.scale = scale
-              else
-                value.matchIssue = 'Encoded ingredients could not be compared'
-              end
-              value.donor = value.reason == nil
-            else
-              value.matchIssue = issue
-              value.reason = value.reason or issue
-            end
+          if include then
+            compacted.patterns[slot] = compactPattern(hw, p)
           end
-          compacted.patterns[slot] = value
         end
       end
       snapshot.interfaces[#snapshot.interfaces + 1] = compacted
@@ -402,6 +421,7 @@ C.maker = {
   report = Preview.report,
   rows = Preview.planRows,
   discover = discover,
+  compactPattern = compactPattern,
 }
 local function programRouting(c, id)
   local program = Config.requireProgram(c, id)
@@ -454,6 +474,10 @@ function C.maker.preview(c, id, progress, control)
   local data = catalogs[program.mode] or require('assline_data')
   local manifest = Modes.compile(data, program.mode, options, gate)
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)
+  return C.maker.finishPreview(plan, snapshot, manifest, routing)
+end
+
+function C.maker.finishPreview(plan, snapshot, manifest, routing)
   local groups = {}
   for _, recipe in ipairs(manifest.recipes) do
     local name = routing.destinations and routing.destinations[recipe.outputForm or recipe.form]
@@ -472,6 +496,8 @@ function C.maker.preview(c, id, progress, control)
   local report = Preview.report(plan, manifest)
   return plan, report, manifest
 end
+
+C.maker.routing = programRouting
 
 function C.maker.finishMove(hw, op)
   local sourceBank, destinationBank = current(hw, op.source), current(hw, op.destination)
@@ -538,7 +564,7 @@ function C.maker.finishSort(hw, op, progress)
   end
 end
 
-function C.maker.apply(c, id, plan, manifest, progress, control)
+function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
   U.check(
     not fs.exists(paths.pending),
     'Continue or stop the saved operation before executing another preview'
@@ -548,7 +574,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
     not manifest.unresolved or #manifest.unresolved == 0,
     'Resolve unverified registry spellings before execution'
   )
-  local routing = programRouting(c, id)
+  local routing = customRouting or programRouting(c, id)
   local baseline = U.clone(plan)
   baseline.capacities = nil
   local _, snapshot, request = scanManifest(c, manifest, routing, progress, control)
@@ -596,7 +622,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control)
       protected[where(i)] = true
     end
   end
-  local takeDonor = donorPool(hw, c.shared.donors, protected, progress)
+  local takeDonor = donorPool(hw, c.shared.donors, protected, progress, routing.additionalDonors)
   local function imprint(entry, resize)
     local recipe = recipes[entry.key]
     U.check(recipe and recipe.kind == 'processing', 'Unsupported pattern kind')
@@ -650,6 +676,9 @@ end
 C.runner = {}
 function C.runner.hasChanges(preview)
   local plan = preview.plan
+  if plan.retirements and #plan.retirements > 0 then
+    return true
+  end
   if plan.kind == 'donorCleanup' then
     return #plan.cleanups > 0
   end
@@ -676,6 +705,8 @@ function C.runner.preview(c, id, progress, control)
     preview.plan, preview.report = C.transition.preview(c, progress, control)
   elseif id == 'patternMover' then
     preview.plan, preview.report = C.mover.preview(c, progress, control)
+  elseif id == 'meltingCore' then
+    preview.plan, preview.report, preview.manifest = C.liquids.preview(c, progress, control)
   else
     preview.plan, preview.report, preview.manifest = C.maker.preview(c, id, progress, control)
   end
@@ -694,6 +725,8 @@ function C.runner.execute(c, preview, progress, control)
     C.transition.apply(c, preview.plan, progress, control)
   elseif preview.id == 'patternMover' then
     C.mover.apply(c, preview.plan, progress, control)
+  elseif preview.id == 'meltingCore' then
+    C.liquids.apply(c, preview.plan, preview.manifest, progress, control)
   else
     C.maker.apply(c, preview.id, preview.plan, preview.manifest, progress, control)
   end

@@ -1,0 +1,54 @@
+{
+  "circuits": [
+    0,
+    1,
+    2,
+    11,
+    12,
+    16,
+    17,
+    22
+  ],
+  "gases": [
+    {
+      "name": "oxygen",
+      "label": "Oxygen"
+    },
+    {
+      "name": "oganesson",
+      "label": "Oganesson"
+    },
+    {
+      "name": "xenon",
+      "label": "Xenon"
+    },
+    {
+      "name": "krypton",
+      "label": "Krypton"
+    },
+    {
+      "name": "neon",
+      "label": "Neon"
+    },
+    {
+      "name": "radon",
+      "label": "Radon"
+    },
+    {
+      "name": "argon",
+      "label": "Argon"
+    },
+    {
+      "name": "helium",
+      "label": "Helium"
+    },
+    {
+      "name": "nitrogen",
+      "label": "Nitrogen"
+    },
+    {
+      "name": "hydrogen",
+      "label": "Hydrogen"
+    }
+  ]
+}

@@ -3305,6 +3305,236 @@ test('pattern mover chooser, settings and shared preview show mappings and capac
   api.runUI()
 end)
 
+local function withLiquidMaterials(keys, run)
+  local saved=package.loaded.assline_liquid_data
+  local original=require('assline_liquid_data');local data={}
+  for k,v in pairs(original) do data[k]=v end
+  data.materials={}
+  for _,m in ipairs(original.materials) do if keys[m.key] then data.materials[#data.materials+1]=cp(m) end end
+  package.loaded.assline_liquid_data=data
+  local ok,why=pcall(run,data)
+  package.loaded.assline_liquid_data=saved
+  assert(ok,why)
+end
+local function liquidStack(data,index,amount)
+  local s=require('assline_melting').ingredient(data,index,amount)
+  s.type=nil
+  if s.damage==nil then s.amount=s.size end
+  return s
+end
+local function liquidPattern(inputs,outputs)
+  local p=pattern(inputs,outputs);p.name='ae2fc:encodedPattern';return p
+end
+local function liquidFixture(data)
+  cfg.programs.meltingCore.forms='c1,ingot'
+  local m=data.materials[1]
+  local fluid=liquidStack(data,m.fluid,147456)
+  local ingot=liquidStack(data,m.ingot,1024)
+  local extractor=iface('Old Fluid Extractor',80,{[4]=liquidPattern({ingot},{fluid})})
+  local core=iface(cfg.programs.meltingCore.c1,81)
+  local casts=iface(cfg.programs.meltingCore.ingot,82)
+  return extractor,core,casts
+end
+
+test('liquid migration retires scaled extractors, reuses their patterns first and installs independent casts',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local old,core,casts=liquidFixture(data)
+    local before=ser(buffer.patterns[1])
+    local preview=api.runner.preview(cfg,'meltingCore')
+    assert(mutations==0 and #preview.plan.errors==0 and #preview.plan.retirements==1)
+    assert(preview.plan.retirements[1].from.slot==4 and #preview.manifest.recipes==2)
+    assert(preview.plan.available.processing==3 and preview.plan.required.processing==2)
+    assert(preview.report:find('Old Fluid Extractor',1,true))
+    api.runner.execute(cfg,preview)
+    assert(not old.patterns[4] and core.patterns[0] and casts.patterns[0])
+    assert(core.patterns[0].name=='ae2fc:encodedPattern' and ser(buffer.patterns[1])==before)
+    assert(not buffer.patterns[0] and next(editor.patterns)==nil and not api.runner.hasSaved())
+    local nextPlan=api.runner.preview(cfg,'meltingCore')
+    assert(nextPlan.plan.reused==2 and #nextPlan.plan.retirements==0 and not api.runner.hasChanges(nextPlan))
+  end)
+end)
+
+test('liquid migration parks surplus retired patterns without advertising their old fluid products',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local old,core,casts=liquidFixture(data)
+    old.patterns[5],old.patterns[6]=cp(old.patterns[4]),cp(old.patterns[4])
+    local donors=ser(buffer.patterns)
+    api.runner.execute(cfg,api.runner.preview(cfg,'meltingCore'))
+    assert(not old.patterns[4] and not old.patterns[5] and old.patterns[6])
+    assert(old.patterns[6].outputs[1].name=='minecraft:paper')
+    assert(core.patterns[0] and casts.patterns[0] and ser(buffer.patterns)==donors)
+  end)
+end)
+
+test('liquid migration leaves ABS and DTPF production intact and excludes their dust remelting routes',function()
+  withLiquidMaterials({quantum=true,hypogen=true},function(data)
+    cfg.programs.meltingCore.forms='c0,ingot'
+    local core=iface(cfg.programs.meltingCore.c0,81)
+    local casts=iface(cfg.programs.meltingCore.ingot,82)
+    local producer=iface('Existing ABS and DTPF',83)
+    local macerator=iface('Macerator',84)
+    for n,m in ipairs(data.materials) do
+      local fluid=liquidStack(data,m.fluid,144)
+      local ingot=liquidStack(data,m.ingot,1)
+      local dust=liquidStack(data,data.feeds[m.routes[1].feed][1][1],1)
+      producer.patterns[n-1]=liquidPattern({item('Independent feed',1,800+n)},{fluid})
+      macerator.patterns[n-1]=pattern({ingot},{dust})
+      casts.patterns[n-1]=liquidPattern({fluid},{ingot})
+    end
+    local unchanged=ser(producer.patterns)
+    local preview=api.runner.preview(cfg,'meltingCore')
+    assert(#preview.plan.errors==0 and #preview.manifest.recipes==2 and preview.plan.reused==2)
+    for _,r in ipairs(preview.manifest.recipes) do assert(r.outputForm=='ingot') end
+    assert(next(core.patterns)==nil and ser(producer.patterns)==unchanged and mutations==0)
+    assert(preview.report:find('Preserve installed independent liquid production.',1,true))
+  end)
+end)
+
+test('liquid migration rejects dust supplied only by its own cast and keeps unrelated production',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local old,core,casts=liquidFixture(data)
+    local m=data.materials[1]
+    local fluid=liquidStack(data,m.fluid,144);local ingot=liquidStack(data,m.ingot,1)
+    local route;for _,r in ipairs(m.routes) do if r.rank==0 then route=r;break end end
+    local dust=liquidStack(data,data.feeds[route.feed][1][1],1)
+    iface('Only dust source',83,{[0]=pattern({ingot},{dust})})
+    casts.patterns[0]=liquidPattern({fluid},{ingot})
+    -- Other non-dust routes consume coke and ore; disable their circuits for
+    -- this exact same-material dust-loop fixture.
+    m.routes={cp(route)};m.routes[1].circuit=1;m.routes[1].gas=0
+    local preview=api.runner.preview(cfg,'meltingCore')
+    assert(#preview.manifest.recipes==0 and #preview.plan.retirements==0)
+    assert(not api.runner.hasChanges(preview) and old.patterns[4] and casts.patterns[0] and not core.patterns[0])
+    assert(preview.report:find('would create a loop',1,true))
+  end)
+end)
+
+test('liquid migration checks capacity and unsafe extraction flags before retiring anything',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local old,core=liquidFixture(data)
+    for slot=0,35 do core.patterns[slot]=pattern({item('Unrelated',1,900+slot)}) end
+    local preview=api.runner.preview(cfg,'meltingCore')
+    assert(#preview.plan.errors>0)
+    mustFail(function() api.runner.execute(cfg,preview) end,'Resolve liquid migration blockers')
+    assert(mutations==0 and old.patterns[4])
+    core.patterns={}
+    local root=unser(old.patterns[4].tag);root.__value.substitute=typed('byte',1);old.patterns[4].tag=ser(root)
+    preview=api.runner.preview(cfg,'meltingCore')
+    assert(#preview.plan.errors==1 and preview.plan.errors[1]:find('Input substitution enabled',1,true))
+    mustFail(function() api.runner.execute(cfg,preview) end,'Resolve liquid migration blockers')
+    assert(mutations==0)
+  end)
+end)
+
+test('liquid migration notices changed upstream production before any pattern write',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    liquidFixture(data)
+    local upstream=iface('Some upstream machine',83,{[0]=pattern({item('Raw',1,777)},{item('Product',1,778)})})
+    local preview=api.runner.preview(cfg,'meltingCore')
+    upstream.patterns[0]=pattern({item('Changed',1,779)},{item('Product',1,778)})
+    mustFail(function() api.runner.execute(cfg,preview) end,'changed since preview')
+    assert(mutations==0)
+  end)
+end)
+
+test('liquid migration cannot use an AE-invalid producer as proof of independent liquid supply',function()
+  withLiquidMaterials({quantum=true},function(data)
+    cfg.programs.meltingCore.forms='c0,ingot'
+    local m=data.materials[1]
+    local fluid=liquidStack(data,m.fluid,144);local ingot=liquidStack(data,m.ingot,1)
+    local dust=liquidStack(data,data.feeds[m.routes[1].feed][1][1],1)
+    iface(cfg.programs.meltingCore.c0,81)
+    iface(cfg.programs.meltingCore.ingot,82,{[0]=liquidPattern({fluid},{ingot})})
+    local invalid=liquidPattern({item('Raw',1,777)},{fluid})
+    local root=unser(invalid.tag);root.__value.InvalidPattern=typed('byte',1);invalid.tag=ser(root)
+    iface('Invalid liquid source',83,{[0]=invalid})
+    iface('Macerated Quantum',84,{[0]=pattern({ingot},{dust})})
+    local preview=api.runner.preview(cfg,'meltingCore')
+    assert(#preview.manifest.recipes==0 and not api.runner.hasChanges(preview) and mutations==0)
+  end)
+end)
+
+test('liquid migration stops if upstream patterns change while retirement is running',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local old,core,casts=liquidFixture(data)
+    local upstream=iface('Upstream changed during retirement',83,{[0]=pattern({item('Raw',1,777)},{item('Product',1,778)})})
+    local preview=api.runner.preview(cfg,'meltingCore')
+    mustFail(function()
+      api.runner.execute(cfg,preview,function(message)
+        if message:find('Retired extraction pattern',1,true) then
+          upstream.patterns[0]=pattern({item('Changed',1,779)},{item('Product',1,778)})
+        end
+      end)
+    end,'Supply changed during retirement')
+    assert(old.patterns[4].outputs[1].name=='minecraft:paper' and not core.patterns[0] and not casts.patterns[0])
+    assert(not files[api.paths.pending] and api.runner.hasSaved())
+  end)
+end)
+
+test('liquid migration can stop after retirement and Continue reuses the parked pattern',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local old,core,casts=liquidFixture(data)
+    local preview=api.runner.preview(cfg,'meltingCore')
+    mustFail(function()
+      api.runner.execute(cfg,preview,nil,function() return {stop=(callCounts.setInterfacePatternOutput or 0)>0} end)
+    end,'Work stopped')
+    assert(old.patterns[4] and old.patterns[4].outputs[1].name=='minecraft:paper')
+    assert(not core.patterns[0] and not casts.patterns[0] and not files[api.paths.pending])
+    local remaining=api.runner.continue(cfg)
+    assert(remaining.id=='meltingCore' and #remaining.plan.retirements==0 and remaining.plan.available.processing==3)
+    api.runner.execute(cfg,remaining)
+    assert(core.patterns[0] and casts.patterns[0] and not old.patterns[4] and not api.runner.hasSaved())
+  end)
+end)
+
+test('liquid migration recovers interrupted retirement setters and rescans the remaining supply',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local old,core,casts=liquidFixture(data)
+    local preview=api.runner.preview(cfg,'meltingCore');fail={label='set-after'}
+    mustFail(function() api.runner.execute(cfg,preview) end,'injected')
+    assert(files[api.paths.pending])
+    local remaining=api.runner.continue(cfg)
+    assert(#remaining.plan.retirements==0 and next(editor.patterns)==nil)
+    api.runner.execute(cfg,remaining)
+    assert(core.patterns[0] and casts.patterns[0] and not old.patterns[4] and not api.runner.hasSaved())
+  end)
+end)
+
+test('liquid migration gas selection replaces an obsolete owned route without duplicating its product',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    local old,core,casts=liquidFixture(data)
+    api.runner.execute(cfg,api.runner.preview(cfg,'meltingCore'))
+    cfg.programs.meltingCore.forms='c1,c11,ingot';cfg.programs.meltingCore.gas='nitrogen'
+    local gasBank=iface(cfg.programs.meltingCore.c11,85)
+    local preview=api.runner.preview(cfg,'meltingCore')
+    assert(#preview.plan.retirements==1 and preview.plan.retirements[1].name==core.name)
+    api.runner.execute(cfg,preview)
+    assert(not core.patterns[0] and gasBank.patterns[0] and casts.patterns[0])
+    local nextPlan=api.runner.preview(cfg,'meltingCore')
+    assert(nextPlan.plan.reused==2 and #nextPlan.plan.retirements==0)
+  end)
+end)
+
+test('liquid migration UI exposes circuit fields, gas selector and a readable retirement list',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    liquidFixture(data);files[api.paths.config]=ser(cfg)
+    queue(click('[ Melting Core ]'),click('[ Preview selected ]',47),function()
+      assert(frame[2]:find('Preview - Melting Core',1,true) and frame[4]:find('Retirements',1,true))
+      return click('[ Retirements ]',4)()
+    end,function()
+      assert(frame[7]:find('LIQUID RECIPES TO RETIRE',1,true))
+      local found=false;for y=7,42 do if frame[y]:find('Old Fluid Extractor',1,true) then found=true end end
+      assert(found);snapshot('melting_core_retirements')
+      return click('[ Program settings ]',47)()
+    end,function()
+      local found=false;for y=6,42 do if frame[y]:find('Helioflux Melting Core (Circuit 1)',1,true) then found=true end end
+      assert(found);snapshot('melting_core_settings')
+      return 'interrupted'
+    end)
+    api.runUI()
+  end)
+end)
+
 local function componentFixture(casing)
   cfg.programs.componentAssembly.casingTier=casing or 'UXV'
   local catalog=require('assline_component_data')

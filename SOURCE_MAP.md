@@ -15,6 +15,7 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/app/26_donors.lua` | Donor cleanup preview and parking, using shared discovery, editing and recovery |
 | `source/app/27_transition.lua` | Implosion transition cleanup using the shared editor and journal |
 | `source/app/28_mover.lua` | Wildcard interface-group discovery, capacity planning and intact transfers using the shared move journal |
+| `source/app/29_liquids.lua` | Installed supply scan and coordinated Melting Core / extractor / ingot-cast migration |
 | `source/app/30_ui.lua` | Common UI, buttons, scrolling, configuration and preview pages |
 | `source/app/90_main.lua` | Application entry point |
 | `source/lib/util.lua` | Shared value/collection helpers, identities, endpoints and text-row construction |
@@ -23,6 +24,8 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/lib/batch.lua`, `source/data/tiers.json` | One shared batch policy and one versioned voltage-tier definition table |
 | `source/lib/modes.lua` | Expands selected semantic recipe rules using the material matrix |
 | `source/lib/planner.lua` | Pure destination capacity, reuse, sorting and creation planning |
+| `source/lib/supply.lua` | Reusable AND/OR recipe dependency graph and independent-supply checks |
+| `source/lib/melting.lua` | Melting Core route selection, semantic extractor matching and loop-checked casting manifest |
 | `source/lib/preview.lua` | One maker preview renderer used by the UI and exported report |
 | `source/launcher.lua`, `source/install.lua`, `source/interface_probe_src.lua` | Launcher/updater entry, installer, and interface probe sources |
 | `source/tools/` | Desktop scrape import and matrix compilation |
@@ -47,6 +50,7 @@ pattern edits and sorting in `20_apply.lua`.
 - `assline.lua` from `source/launcher.lua`: the small stable launcher.
 - `assline_app.lua` from `source/app/` and `source/lib/`: the complete application.
 - `assline_data.lua` from `data/matrix.lua`: the semantic material/rule data.
+- `assline_liquid_data.lua` from `source/data/melting_core.json`: the lazily loaded melting/casting catalog.
 - `interface_probe.lua` from `source/interface_probe_src.lua`: the diagnostic tool.
 
 The same build copies them, plus generated `install.lua`, into `dist/` and generates
@@ -103,6 +107,22 @@ counts live in `data/material-sources.json`; they are desktop evidence, not OC d
 large process sets for each source classification. `modes.lua` excludes ingots without
 a native liquid source; plates and other shapes retain their existing rules.
 The compiler and source index share mold-route recognition in `material_forms.py`.
+
+`source/tools/build_melting_core.py` derives supported Helioflux recipes from the
+pinned `Godforge.java` conversion and live EBF export. It reuses the registry-name
+import and canonical-fluid selection used by the material matrix. Run
+`python source/tools/build_melting_core.py` with the pinned research inputs present
+to regenerate `source/data/melting_core.json` and its small settings schema.
+Feeds, output sets and extraction rules are shared; material rows hold rule-set
+indices. The normal application build reads these inputs without rewriting them.
+
+`supply.lua` contains the reusable dependency solver. `melting.lua` selects routes
+and proves supply against that graph; `29_liquids.lua` collects installed recipes
+and coordinates retirement before calling the normal maker. It uses the same
+pattern decoder, `Count`/`Cnt` handling, fluid-drop normalization, parking recipe,
+donor pool and operation journal. The broad historical native-liquid flag is
+provenance, not the decision to suppress a Melting Core route: installed producers
+must pass the independent-supply check.
 
 ## Recipe proportions and configured batches
 

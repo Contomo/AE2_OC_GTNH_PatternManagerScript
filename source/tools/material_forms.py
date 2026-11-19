@@ -3,6 +3,7 @@
 Registration is evidence of an item, not evidence of a machine recipe.
 """
 import re
+from collections import Counter, defaultdict
 
 
 def normal(name):
@@ -153,6 +154,23 @@ def solidifier_route(recipe, reverse):
     if not destination or destination[1] in ('dust', 'gem'):
         return None
     return destination[0], destination[1], consumed[0]['id']
+
+
+def primary_solidifier_fluids(recipes, reverse, materials=None):
+    """Shared canonical-fluid choice, excluding rare casts of another metal's fluid."""
+    frequencies = defaultdict(Counter)
+    for recipe in recipes:
+        route = solidifier_route(recipe, reverse)
+        if route:
+            frequencies[route[0]][route[2]] += 1
+    result = {}
+    for key, values in frequencies.items():
+        ranked = values.most_common()
+        if len(ranked) > 1 and ranked[0][1] == ranked[1][1]:
+            label = (materials or {}).get(key, {}).get('name', key)
+            raise ValueError('Ambiguous molten fluid for ' + label)
+        result[key] = ranked[0][0]
+    return result
 
 
 def resolve(families, material, form):

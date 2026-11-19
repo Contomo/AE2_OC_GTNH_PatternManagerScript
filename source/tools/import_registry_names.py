@@ -54,6 +54,14 @@ def recover(archive, registry, catalog, enderio_item, enderio_objects, item_regi
             for form in components:
                 add('miscutils:item' + form + material, 'gtPlusPlus/core/item/base/BaseItemComponent.java + registry material declarations')
 
+        block = source('gtPlusPlus/core/block/base/BlockBaseModular.java')
+        block_types = source('gtPlusPlus/core/block/base/BasicBlock.java')
+        assert 'StringUtils.sanitizeString(blockType.getTexture() + unlocalizedName)' in block
+        for prefix in re.findall(r'\w+\("(block\w+)",', block_types):
+            for material in registry['gtppMaterials']:
+                add('miscutils:' + prefix + material,
+                    'gtPlusPlus/core/block/base/BlockBaseModular.java + BasicBlock.java + registry material declarations')
+
         bw = source('bartworks/system/material/BWMetaGeneratedItems.java')
         generic = source('gregtech/api/items/GTGenericItem.java')
         assert 'super("bwMetaGenerated" + orePrefixes.getName()' in bw
