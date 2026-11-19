@@ -677,7 +677,6 @@ local Programs=(function()
 local Batch = Batch
 local ComponentData = ComponentData
 local LiquidSettings = LiquidSettings
-local Melting = require('assline_melting')
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -1023,7 +1022,7 @@ M.list[#M.list + 1] = {
 local liquidChoices, liquidDefinitions = {}, {}
 for _, circuit in ipairs(LiquidSettings.circuits) do
   local key, label = 'c' .. circuit, circuit == 0 and 'No Circuit' or 'Circuit ' .. circuit
-  for _, group in ipairs(Melting.priorities) do
+  for _, group in ipairs({ { 'high', 'High' }, { 'medium', 'Medium' }, { 'low', 'Low' } }) do
     local form = key .. (group[1] ~= 'high' and '_' .. group[1] or '')
     local name = label .. ', ' .. group[2]
     liquidChoices[#liquidChoices + 1] = { form, name }
@@ -5006,7 +5005,6 @@ local Batch = Batch
 local Planner = Planner
 local Supply = Supply
 local M = {}
-M.priorities = { { 'high', 'High' }, { 'medium', 'Medium' }, { 'low', 'Low' } }
 
 function M.priority(route, policy)
   if not policy then

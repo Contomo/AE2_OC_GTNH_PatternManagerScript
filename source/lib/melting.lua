@@ -5,7 +5,6 @@ local Batch = require('assline_batch')
 local Planner = require('assline_planner')
 local Supply = require('assline_supply')
 local M = {}
-M.priorities = { { 'high', 'High' }, { 'medium', 'Medium' }, { 'low', 'Low' } }
 
 function M.priority(route, policy)
   if not policy then

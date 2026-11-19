@@ -51,6 +51,13 @@ const body = pure('U','source/lib/util.lua')+'local TierDefinitions=(function()\
   pure('Preview','source/lib/preview.lua')+pure('Settings','source/lib/settings.lua')+pure('Wildcard','source/lib/wildcard.lua')+
   pure('Supply','source/lib/supply.lua')+pure('Melting','source/lib/melting.lua')+
   inline(section('source/app/25_maker.lua'))+'\n'+section('source/app/26_donors.lua')+'\n'+section('source/app/27_transition.lua')+'\n'+section('source/app/28_mover.lua')+'\n'+section('source/app/29_liquids.lua')+'\n'+section('source/app/30_ui.lua')+'\n'+section('source/app/90_main.lua');
+// Helpers must be inlined; only deployed catalogs may be required at runtime.
+// The test module path must never hide an undeployed dependency.
+for (const match of body.matchAll(/require\(['"](assline_[^'"]+)['"]\)/g)) {
+  if (!['assline_data', 'assline_liquid_data'].includes(match[1])) {
+    throw Error('Undeployed runtime dependency: '+match[1]);
+  }
+}
 const entry = `-- Readable application bundle, generated from the source files named below.
 local savedPath=package.path
 local function unload()

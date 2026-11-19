@@ -2,7 +2,6 @@
 local Batch = require('assline_batch')
 local ComponentData = require('assline_component_data')
 local LiquidSettings = require('assline_liquid_settings')
-local Melting = require('assline_melting')
 local M = {}
 local function field(key, label, help, default, kind, optional)
   return {
@@ -348,7 +347,7 @@ M.list[#M.list + 1] = {
 local liquidChoices, liquidDefinitions = {}, {}
 for _, circuit in ipairs(LiquidSettings.circuits) do
   local key, label = 'c' .. circuit, circuit == 0 and 'No Circuit' or 'Circuit ' .. circuit
-  for _, group in ipairs(Melting.priorities) do
+  for _, group in ipairs({ { 'high', 'High' }, { 'medium', 'Medium' }, { 'low', 'Low' } }) do
     local form = key .. (group[1] ~= 'high' and '_' .. group[1] or '')
     local name = label .. ', ' .. group[2]
     liquidChoices[#liquidChoices + 1] = { form, name }
