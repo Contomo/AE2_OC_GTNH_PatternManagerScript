@@ -3331,6 +3331,27 @@ local function liquidFixture(data)
   return extractor,core,casts
 end
 
+test('shared destinations combine melting priorities and check their total capacity once',function()
+  withLiquidMaterials({tungsten=true,blackplutonium=true},function()
+    local values=cfg.programs.meltingCore
+    values.forms='c1,c1_medium';values.c1='Shared Core';values.c1_medium=values.c1
+    local bank=iface(values.c1,80)
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.plan.errors==0 and #p.manifest.recipes==2 and #p.plan.capacities==1)
+    local forms={};for _,r in ipairs(p.manifest.recipes) do forms[r.outputForm]=true end
+    assert(forms.c1 and forms.c1_medium and p.plan.capacities[1].patterns==2)
+    for slot=0,34 do bank.patterns[slot]=pattern({item('Unrelated',1,900+slot)}) end
+    local full=api.runner.preview(cfg,'meltingCore')
+    assert(#full.plan.errors==1 and full.plan.errors[1]:find('need 37, have 36',1,true))
+    assert(mutations==0)
+    bank.patterns={}
+    api.runner.execute(cfg,api.runner.preview(cfg,'meltingCore'))
+    assert(bank.patterns[0] and bank.patterns[1] and not bank.patterns[2])
+    p=api.runner.preview(cfg,'meltingCore')
+    assert(p.plan.reused==2 and not api.runner.hasChanges(p))
+  end)
+end)
+
 test('liquid migration retires scaled extractors, reuses their patterns first and installs independent casts',function()
   withLiquidMaterials({tungsten=true},function(data)
     local old,core,casts=liquidFixture(data)
@@ -3717,6 +3738,21 @@ test('component program discovers eight named banks and installs all native item
   assert(not api.runner.hasSaved())
   local again=api.runner.preview(cfg,'componentAssembly')
   assert(again.plan.reused==104 and again.plan.resizeCount==0 and not api.runner.hasChanges(again))
+end)
+
+test('shared destinations combine component outputs and reuse every installed pattern',function()
+  local values=cfg.programs.componentAssembly
+  values.forms='motor,piston';values.casingTier='IV'
+  values.motor='Shared Components';values.piston=values.motor
+  local bank=iface(values.motor,201)
+  for slot=0,9 do buffer.patterns[slot]=pattern({item('Disposable',1,789)}) end
+  local p=api.runner.preview(cfg,'componentAssembly')
+  assert(#p.plan.errors==0 and #p.manifest.recipes==10 and #p.plan.capacities==1)
+  assert(p.plan.capacities[1].patterns==10)
+  api.runner.execute(cfg,p)
+  assert(bank.patterns[0] and bank.patterns[9] and not bank.patterns[10])
+  p=api.runner.preview(cfg,'componentAssembly')
+  assert(p.plan.reused==10 and not api.runner.hasChanges(p))
 end)
 
 test('component selection scans only enabled banks and installs only their recipes',function()

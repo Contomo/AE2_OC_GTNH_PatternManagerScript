@@ -141,7 +141,7 @@ test('alternate choices are distinct verified routes for the same output', funct
 end)
 
 test(
-  'unified configuration supplies eight distinct defaults and casing/rubber selections',
+  'unified configuration prefills component names and allows shared destinations',
   function()
     local cfg = Config.migrate({
       version = 2,
@@ -156,8 +156,7 @@ test(
     end
     assert(Config.requireProgram(cfg, 'componentAssembly'))
     values.piston = values.motor
-    local ok, error = pcall(Config.requireProgram, cfg, 'componentAssembly')
-    assert(not ok and error:find('distinct destination', 1, true))
+    assert(Config.requireProgram(cfg, 'componentAssembly'))
   end
 )
 

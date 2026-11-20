@@ -39,7 +39,8 @@ retain the previous program selection.
    newly added matching banks are discovered too. Stop/Escape stops the wait; Pause/Resume suspends and continues it.
    Completed work is retained and reused by the next preview.
 5. Configure destination names in **Settings**, under the appropriate program.
-   All destination interfaces with a matching exact name participate. The editor
+   Different outputs may share a destination name; their patterns and space
+   requirements are combined across every matching interface. The editor
    and donor bank must have different names and must not overlap destinations.
 6. **Run program** opens the chooser. Select a program, then **Preview selected**.
    Review the plan, donor budget and capacity. Destinations are assumed to have
@@ -279,9 +280,9 @@ use the same transaction journal as the other programs.
 
 **Component Assembly Line** patterns the eight component groups: Motor, Piston,
 Pump, Robot Arm, Conveyor, Emitter, Sensor and Field Generator. Each group gets
-its own destination bank, defaulting to `Component Assembly Line (<component>)`.
-Enabled component names must be distinct; multiple interfaces with the same group name
-are all included. Shared editor/donor settings, capacity verification, sorting,
+a configurable destination, defaulting to `Component Assembly Line (<component>)`.
+Component groups may share that name; all matching interfaces participate with
+combined capacity. Shared editor/donor settings, capacity verification, sorting,
 refills and Pause/Stop/Continue work through the existing maker.
 
 Its **Installed component casing tier** selector limits recipes by their actual

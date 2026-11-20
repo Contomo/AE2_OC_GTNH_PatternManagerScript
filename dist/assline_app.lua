@@ -1101,7 +1101,6 @@ local componentProgram = {
   name = 'Component Assembly Line',
   mode = 'components',
   description = 'Eight component banks, filtered by installed casing tier.',
-  distinctDestinations = true,
   costForms = {},
   outputs = {},
   fields = { casingField, rubberField },
@@ -1202,7 +1201,6 @@ M.list[#M.list + 1] = {
   id = 'meltingCore',
   name = 'Melting Core',
   mode = 'meltingCore',
-  distinctDestinations = true,
   description = 'Install molten production and retire matching extraction loops; casts belong to Fluid Shaper.',
   formChoices = liquidChoices,
   outputs = {},
@@ -1786,7 +1784,7 @@ function M.requireProgram(c, id)
       'Set ' .. f.label .. ' in Settings > ' .. p.name
     )
   end
-  local needed, assigned = {}, {}
+  local needed = {}
   for form, enabled in pairs(M.enabledOutputs(c, id)) do
     if enabled then
       needed[p.outputs[form]] = true
@@ -1796,13 +1794,6 @@ function M.requireProgram(c, id)
     if needed[f.key] then
       local name = c.programs[id][f.key]
       U.check(name ~= '', 'Set ' .. f.label .. ' in Settings > ' .. p.name)
-      if p.distinctDestinations then
-        U.check(
-          not assigned[name],
-          'Each enabled output needs a distinct destination name: ' .. name
-        )
-        assigned[name] = true
-      end
     end
   end
   return p
