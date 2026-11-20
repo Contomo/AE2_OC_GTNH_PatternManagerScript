@@ -18,7 +18,7 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/app/29_liquids.lua` | Shared installed-supply scan and retirement coordinator for Melting Core and Fluid Shaper |
 | `source/app/30_ui.lua` | Common UI, buttons, scrolling, configuration and preview pages |
 | `source/app/90_main.lua` | Application entry point |
-| `source/lib/util.lua` | Shared value/collection helpers, identities, endpoints and text-row construction |
+| `source/lib/util.lua` | Shared value/collection helpers, identities, bounded hashing, endpoints and text-row construction |
 | `source/lib/wildcard.lua` | Literal name matching and substitution with one `*` wildcard |
 | `source/lib/config.lua`, `source/lib/programs.lua` | Unified settings and program definitions |
 | `source/lib/batch.lua`, `source/data/tiers.json` | One shared batch policy and one versioned voltage-tier definition table |
@@ -148,6 +148,15 @@ compiler ignores shared material/voltage budgets by design and applies the chose
 plasma upgrades. Manifest detail rows are shared by the UI and exported report.
 The build rejects helper imports that were not inlined, and the application smoke
 test runs without `tests/lib` on its module path so mocks cannot hide missing files.
+
+`00_core.lua:dataHash` caches the Data Card byte limit for each work session and
+uses `util.lua:boundedHash` for pattern and sorting fingerprints. Ordinary small
+SHA-256 values stay compatible; oversized inputs use a framed, length-terminated
+hash chain with bounded callback inputs. `29_liquids.lua:supplyFingerprint` hashes
+one interface at a time and combines the results for both preview revalidation
+and post-retirement comparison. Component exceptions retain the method and
+payload size. The test card now returns fixed 32-byte digests and enforces a
+byte ceiling, including a 480-pattern network regression under a 1 KB card limit.
 
 ## Recipe proportions and configured batches
 

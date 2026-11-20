@@ -62,6 +62,28 @@ function M.canonical(t)
   return '{' .. table.concat(r, ',') .. '}'
 end
 
+-- Keep ordinary digests compatible. Larger fingerprints use a framed SHA-256
+-- chain; every callback input stays within the card's reported byte limit.
+-- The prefix distinguishes a chained fingerprint from a raw 32-byte digest.
+function M.boundedHash(value, limit, hash)
+  M.check(
+    type(value) == 'string' and M.integer(limit) and limit > 0,
+    'Invalid hash input or byte limit'
+  )
+  if #value <= limit then
+    return hash(value)
+  end
+  local state = hash('')
+  local width = limit - #state - 1
+  M.check(width > 0, 'Data Card byte limit is too small to combine digests')
+  for offset = 1, #value, width do
+    state = hash('\1' .. state .. value:sub(offset, offset + width - 1))
+  end
+  local final = '\2' .. tostring(#value) .. ':' .. state
+  M.check(#final <= limit, 'Data Card byte limit is too small for the final digest')
+  return 'chunked-sha256:' .. hash(final)
+end
+
 function M.eq(a, b)
   if type(a) ~= type(b) then
     return false
@@ -1824,6 +1846,7 @@ local function releaseWork()
   work.progress = nil
   work.control = nil
   work.atomic = false
+  work.cardLimits = nil
   tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
 end
 local function sampleEnergy()
@@ -2058,9 +2081,41 @@ local function invoke(p, name, ...)
   U.check(p[name] ~= nil, 'Missing API ' .. name .. '; check GTNH / OpenComputers version')
   gate()
   local t = computer.uptime()
-  local a, b, c = p[name](...)
+  local ok, a, b, c = pcall(p[name], ...)
   record(name, computer.uptime() - t)
+  if not ok then
+    local first, size = ..., ''
+    if type(first) == 'string' then
+      local limit = work.cardLimits and work.cardLimits[p.address or p]
+      size = ' (' .. #first .. ' input bytes' .. (limit and (', limit ' .. limit) or '') .. ')'
+    end
+    error(
+      tostring(p.type or p.address or 'component')
+        .. '.'
+        .. name
+        .. ' failed'
+        .. size
+        .. ': '
+        .. tostring(a),
+      0
+    )
+  end
   return a, b, c
+end
+local function dataLimit(data)
+  work.cardLimits = work.cardLimits or {}
+  local key = data.address or data
+  if not work.cardLimits[key] then
+    local limit = invoke(data, 'getLimit')
+    U.check(U.integer(limit) and limit > 0, 'Data Card returned an invalid byte limit')
+    work.cardLimits[key] = limit
+  end
+  return work.cardLimits[key]
+end
+local function dataHash(data, value)
+  return U.boundedHash(value, dataLimit(data), function(part)
+    return invoke(data, 'sha256', part)
+  end)
 end
 local function nbt(data, tag)
   local t = tag and invoke(data, 'decodeNBT', tag) or { __nbt_type = 'compound', __value = {} }
@@ -2381,7 +2436,7 @@ local function patternFingerprint(hw, p)
     return nil
   end
   U.check(type(p.tag) == 'string', 'Pattern NBT hidden')
-  return U.canonical({ p.name, p.damage, p.size, invoke(hw.data, 'sha256', p.tag) })
+  return U.canonical({ p.name, p.damage, p.size, dataHash(hw.data, p.tag) })
 end
 local function editorCapacity(hw)
   local function valid(n)
@@ -2427,6 +2482,7 @@ local function connect(c, progress, control)
     data = selectDevice('data', shared.dataAddress),
   }
   hw.buffer = endpoint(unique(hw, shared.editor))
+  dataLimit(hw.data)
   nbt(hw.data, invoke(hw.data, 'encodeNBT', { __nbt_type = 'compound', __value = {} }))
   return hw
 end
@@ -6140,7 +6196,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
     -- Keep the whole sorting stage durable. A cycle can temporarily park a
     -- pattern in the editor; continuation finishes that cycle before replanning.
     local op =
-      { kind = 'sort', moves = plan.moves, id = invoke(hw.data, 'sha256', U.canonical(plan.moves)) }
+      { kind = 'sort', moves = plan.moves, id = dataHash(hw.data, U.canonical(plan.moves)) }
     writeFile(paths.cursor, { id = op.id, index = 1 })
     saveOp(hw, op)
     C.maker.finishSort(hw, op, progress)
@@ -6857,6 +6913,15 @@ local function liquidOrigin(ref, slot)
   return where(ref) .. ':' .. slot
 end
 
+local function supplyFingerprint(hw, banks)
+  local parts = {}
+  for _, bank in ipairs(banks) do
+    gate()
+    parts[#parts + 1] = dataHash(hw.data, U.canonical(bank))
+  end
+  return dataHash(hw.data, U.canonical(parts))
+end
+
 local function liquidInterfaces(hw)
   local result = invoke(hw.terminal, 'getInterfaces')
   U.check(result and result.getAll, 'Supply checks require metadata-only getAll(false)')
@@ -7117,7 +7182,7 @@ function C.liquids.preview(c, progress, control, id)
     end
   end
   plan.retirements, plan.supplyCounts = retirements, counts
-  plan.networkBaseline = invoke(hw.data, 'sha256', U.canonical(baseline))
+  plan.networkBaseline = supplyFingerprint(hw, baseline)
   for _, err in ipairs(errors) do
     plan.errors[#plan.errors + 1] = err
   end
@@ -7125,7 +7190,7 @@ function C.liquids.preview(c, progress, control, id)
   return result, report, manifest, routing, hw, { banks = baseline, parked = parkedOrigins }
 end
 
-local function unchangedSupply(before, after, retirements)
+local function unchangedSupply(hw, before, after, retirements)
   local ignored = {}
   for _, entry in ipairs(retirements) do
     U.check(after.parked[entry.origin], 'Retired pattern changed before installation. Scan again.')
@@ -7139,7 +7204,7 @@ local function unchangedSupply(before, after, retirements)
         end
       end
     end
-    return U.canonical(proof.banks)
+    return supplyFingerprint(hw, proof.banks)
   end
   return withoutRetired(before) == withoutRetired(after)
 end
@@ -7192,7 +7257,7 @@ function C.liquids.apply(c, plan, manifest, progress, control, id)
   U.check(
     #ready.errors == 0
       and U.eq(readyManifest.recipes, proposed.recipes)
-      and unchangedSupply(proof, readyProof, fresh.retirements),
+      and unchangedSupply(hw, proof, readyProof, fresh.retirements),
     'Supply changed during retirement. Continue to review a fresh preview.'
   )
   C.maker.apply(c, id, ready, readyManifest, progress, control, routing)

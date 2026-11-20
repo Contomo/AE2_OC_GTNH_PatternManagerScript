@@ -25,6 +25,9 @@ local callCost,callCounts,pollEvents=0,{},{}
 local networkCraftables={}
 local queriedNames={}
 local networkController=false
+local cardLimit,largestHashInput=8192,0
+local hashIds,hashNext={},0
+local decodeLimit
 local function typed(kind,value) return {__nbt_type=kind,__value=value} end
 local function compound(value) return typed('compound',value or {}) end
 local function item(label,qty,damage,extra)
@@ -197,7 +200,18 @@ local function dataCharge()
   energy=energy-dataCost
 end
 proxies.data={address='data',encodeNBT=function(t) dataCharge();return ser(encodeTree(t)) end,
-  decodeNBT=function(t) dataCharge();return unser(t) end,sha256=function(t) dataCharge();return 'mock-hash:'..t end}
+  decodeNBT=function(t)
+    dataCharge();assert(not decodeLimit or #t<=decodeLimit,'data size limit exceeded');return unser(t)
+  end,
+  getLimit=function() return cardLimit end,
+  sha256=function(t)
+    dataCharge();largestHashInput=math.max(largestHashInput,#t)
+    assert(#t<=cardLimit,'data size limit exceeded')
+    -- SHA-256 returns 32 bytes. Stable test digests keep that contract without
+    -- retaining the whole input, which previously hid the real byte limit.
+    if not hashIds[t] then hashNext=hashNext+1;hashIds[t]=string.format('%032d',hashNext) end
+    return hashIds[t]
+  end}
 for _,proxy in pairs(proxies) do
   for name,method in pairs(proxy) do
     if type(method)=='function' then
@@ -300,6 +314,7 @@ local function reset()
   networkCraftables={}
   queriedNames={}
   networkController=false
+  cardLimit,largestHashInput,hashIds,hashNext,decodeLimit=8192,0,{},0,nil
   cfg=cp(api.defaults)
   cfg.batch.mode='fixed'
   -- Existing fixtures exercise unscaled fixed batches; cost-aware cases opt in below.
@@ -3330,6 +3345,33 @@ local function liquidFixture(data)
   local casts=iface(cfg.programs.fluidShaper.ingot,82)
   return extractor,core,casts
 end
+
+test('liquid migration hashes large network snapshots within the Data Card byte limit',function()
+  cardLimit=1024
+  withLiquidMaterials({tungsten=true},function(data)
+    liquidFixture(data)
+    for n=1,30 do
+      local bank=iface('Unrelated production '..n,500+n)
+      for slot=0,15 do bank.patterns[slot]=pattern({item('Feed',1,2000+n*16+slot)}) end
+    end
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.plan.errors==0 and #p.manifest.recipes==1 and p.plan.supplyCounts.patterns>480)
+    assert(largestHashInput<=cardLimit and mutations==0)
+    interfaces[#interfaces].patterns[0]=pattern({item('Changed upstream',1,9999)})
+    mustFail(function() api.runner.execute(cfg,p) end,'changed since preview')
+    assert(mutations==0)
+  end)
+end)
+
+test('liquid migration component failures identify the method and input size',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    liquidFixture(data);cardLimit,decodeLimit=128,128
+    local ok,why=pcall(api.runner.preview,cfg,'meltingCore')
+    assert(not ok and tostring(why):find('data.decodeNBT failed (',1,true))
+    assert(tostring(why):find('input bytes, limit 128',1,true))
+    assert(tostring(why):find('data size limit exceeded',1,true) and mutations==0)
+  end)
+end)
 
 test('shared destinations combine melting priorities and check their total capacity once',function()
   withLiquidMaterials({tungsten=true,blackplutonium=true},function()

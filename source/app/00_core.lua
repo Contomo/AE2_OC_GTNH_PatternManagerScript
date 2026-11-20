@@ -20,6 +20,7 @@ local function releaseWork()
   work.progress = nil
   work.control = nil
   work.atomic = false
+  work.cardLimits = nil
   tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
 end
 local function sampleEnergy()
@@ -254,9 +255,41 @@ local function invoke(p, name, ...)
   U.check(p[name] ~= nil, 'Missing API ' .. name .. '; check GTNH / OpenComputers version')
   gate()
   local t = computer.uptime()
-  local a, b, c = p[name](...)
+  local ok, a, b, c = pcall(p[name], ...)
   record(name, computer.uptime() - t)
+  if not ok then
+    local first, size = ..., ''
+    if type(first) == 'string' then
+      local limit = work.cardLimits and work.cardLimits[p.address or p]
+      size = ' (' .. #first .. ' input bytes' .. (limit and (', limit ' .. limit) or '') .. ')'
+    end
+    error(
+      tostring(p.type or p.address or 'component')
+        .. '.'
+        .. name
+        .. ' failed'
+        .. size
+        .. ': '
+        .. tostring(a),
+      0
+    )
+  end
   return a, b, c
+end
+local function dataLimit(data)
+  work.cardLimits = work.cardLimits or {}
+  local key = data.address or data
+  if not work.cardLimits[key] then
+    local limit = invoke(data, 'getLimit')
+    U.check(U.integer(limit) and limit > 0, 'Data Card returned an invalid byte limit')
+    work.cardLimits[key] = limit
+  end
+  return work.cardLimits[key]
+end
+local function dataHash(data, value)
+  return U.boundedHash(value, dataLimit(data), function(part)
+    return invoke(data, 'sha256', part)
+  end)
 end
 local function nbt(data, tag)
   local t = tag and invoke(data, 'decodeNBT', tag) or { __nbt_type = 'compound', __value = {} }
@@ -577,7 +610,7 @@ local function patternFingerprint(hw, p)
     return nil
   end
   U.check(type(p.tag) == 'string', 'Pattern NBT hidden')
-  return U.canonical({ p.name, p.damage, p.size, invoke(hw.data, 'sha256', p.tag) })
+  return U.canonical({ p.name, p.damage, p.size, dataHash(hw.data, p.tag) })
 end
 local function editorCapacity(hw)
   local function valid(n)
@@ -623,6 +656,7 @@ local function connect(c, progress, control)
     data = selectDevice('data', shared.dataAddress),
   }
   hw.buffer = endpoint(unique(hw, shared.editor))
+  dataLimit(hw.data)
   nbt(hw.data, invoke(hw.data, 'encodeNBT', { __nbt_type = 'compound', __value = {} }))
   return hw
 end

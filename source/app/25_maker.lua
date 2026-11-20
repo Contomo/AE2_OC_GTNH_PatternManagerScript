@@ -534,7 +534,7 @@ function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
     -- Keep the whole sorting stage durable. A cycle can temporarily park a
     -- pattern in the editor; continuation finishes that cycle before replanning.
     local op =
-      { kind = 'sort', moves = plan.moves, id = invoke(hw.data, 'sha256', U.canonical(plan.moves)) }
+      { kind = 'sort', moves = plan.moves, id = dataHash(hw.data, U.canonical(plan.moves)) }
     writeFile(paths.cursor, { id = op.id, index = 1 })
     saveOp(hw, op)
     C.maker.finishSort(hw, op, progress)

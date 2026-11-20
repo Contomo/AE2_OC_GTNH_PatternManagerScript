@@ -43,6 +43,28 @@ function M.canonical(t)
   return '{' .. table.concat(r, ',') .. '}'
 end
 
+-- Keep ordinary digests compatible. Larger fingerprints use a framed SHA-256
+-- chain; every callback input stays within the card's reported byte limit.
+-- The prefix distinguishes a chained fingerprint from a raw 32-byte digest.
+function M.boundedHash(value, limit, hash)
+  M.check(
+    type(value) == 'string' and M.integer(limit) and limit > 0,
+    'Invalid hash input or byte limit'
+  )
+  if #value <= limit then
+    return hash(value)
+  end
+  local state = hash('')
+  local width = limit - #state - 1
+  M.check(width > 0, 'Data Card byte limit is too small to combine digests')
+  for offset = 1, #value, width do
+    state = hash('\1' .. state .. value:sub(offset, offset + width - 1))
+  end
+  local final = '\2' .. tostring(#value) .. ':' .. state
+  M.check(#final <= limit, 'Data Card byte limit is too small for the final digest')
+  return 'chunked-sha256:' .. hash(final)
+end
+
 function M.eq(a, b)
   if type(a) ~= type(b) then
     return false

@@ -35,6 +35,36 @@ local function options()
   return { forms = { c0 = true, c1 = true, c11 = true, ingot = true }, gas = 'none', multiplier = 1 }
 end
 
+local function limitedHash(limit)
+  local ids,nextId,largest={},0,0
+  return function(value)
+    assert(#value<=limit,'data size limit exceeded')
+    largest=math.max(largest,#value)
+    if not ids[value] then nextId=nextId+1;ids[value]=string.format('%032d',nextId) end
+    return ids[value]
+  end,function() return largest end
+end
+
+test('bounded hashing preserves ordinary SHA-256 fingerprints within the reported limit',function()
+  local hash=limitedHash(128)
+  for _,value in ipairs({'',string.rep('x',127),string.rep('x',128)}) do
+    assert(U.boundedHash(value,128,hash)==hash(value))
+  end
+end)
+
+test('bounded hashing detects changes across chunk boundaries and at the end',function()
+  local hash,largest=limitedHash(128)
+  local value=string.rep('x',513)
+  local original=U.boundedHash(value,128,hash)
+  assert(#original>32 and original==U.boundedHash(value,128,hash))
+  for _,at in ipairs({1,95,96,190,191,513}) do
+    local changed=value:sub(1,at-1)..'y'..value:sub(at+1)
+    assert(U.boundedHash(changed,128,hash)~=original)
+  end
+  assert(U.boundedHash(value..'\0',128,hash)~=original)
+  assert(largest()<=128)
+end)
+
 test('supply proof detects ingot dust loops and accepts an independent alternative', function()
   local graph = Supply.new()
   graph:add(recipe({ fluid }, { ingot }), 'cast')

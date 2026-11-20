@@ -7,6 +7,15 @@ local function liquidOrigin(ref, slot)
   return where(ref) .. ':' .. slot
 end
 
+local function supplyFingerprint(hw, banks)
+  local parts = {}
+  for _, bank in ipairs(banks) do
+    gate()
+    parts[#parts + 1] = dataHash(hw.data, U.canonical(bank))
+  end
+  return dataHash(hw.data, U.canonical(parts))
+end
+
 local function liquidInterfaces(hw)
   local result = invoke(hw.terminal, 'getInterfaces')
   U.check(result and result.getAll, 'Supply checks require metadata-only getAll(false)')
@@ -267,7 +276,7 @@ function C.liquids.preview(c, progress, control, id)
     end
   end
   plan.retirements, plan.supplyCounts = retirements, counts
-  plan.networkBaseline = invoke(hw.data, 'sha256', U.canonical(baseline))
+  plan.networkBaseline = supplyFingerprint(hw, baseline)
   for _, err in ipairs(errors) do
     plan.errors[#plan.errors + 1] = err
   end
@@ -275,7 +284,7 @@ function C.liquids.preview(c, progress, control, id)
   return result, report, manifest, routing, hw, { banks = baseline, parked = parkedOrigins }
 end
 
-local function unchangedSupply(before, after, retirements)
+local function unchangedSupply(hw, before, after, retirements)
   local ignored = {}
   for _, entry in ipairs(retirements) do
     U.check(after.parked[entry.origin], 'Retired pattern changed before installation. Scan again.')
@@ -289,7 +298,7 @@ local function unchangedSupply(before, after, retirements)
         end
       end
     end
-    return U.canonical(proof.banks)
+    return supplyFingerprint(hw, proof.banks)
   end
   return withoutRetired(before) == withoutRetired(after)
 end
@@ -342,7 +351,7 @@ function C.liquids.apply(c, plan, manifest, progress, control, id)
   U.check(
     #ready.errors == 0
       and U.eq(readyManifest.recipes, proposed.recipes)
-      and unchangedSupply(proof, readyProof, fresh.retirements),
+      and unchangedSupply(hw, proof, readyProof, fresh.retirements),
     'Supply changed during retirement. Continue to review a fresh preview.'
   )
   C.maker.apply(c, id, ready, readyManifest, progress, control, routing)

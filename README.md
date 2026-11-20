@@ -544,6 +544,15 @@ successfully completed. All setters and transfers are checked and read back.
 
 ## Energy and memory
 
+Data Card `data size limit exceeded` refers to a per-call byte limit, independently
+of installed RAM. Hashing reads the card's `getLimit()` value and bounds every
+request. Fluid-supply comparisons fingerprint each interface separately, then
+combine those fingerprints; they never send the entire network snapshot to one
+Data Card call. Large sorting fingerprints use the same bounded helper.
+Component exceptions identify the API method and string-input byte count, with
+the reported card limit when available. This distinguishes hashing failures from
+an individual pattern's NBT decode failure.
+
 Work checks `computer.energy()` / `computer.maxEnergy()` before AE/Data Card
 calls and interface iterator reads. Below the pause threshold it waits, yielding
 through `event.pull`, until the resume threshold is reached. The status line
