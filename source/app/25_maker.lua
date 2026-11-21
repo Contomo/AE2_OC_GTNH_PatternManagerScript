@@ -69,6 +69,8 @@ local function compactPattern(hw, p)
     recipe, issue = patternRecipe(hw.data, p, root)
     if recipe then
       value.kind = recipe.kind
+      value.produces = not U.truth(root.InvalidPattern and root.InvalidPattern.__value)
+        and not U.truth(root.tunnel and root.tunnel.__value)
       value.inputSummary = U.ingredientSummary(recipe.inputs)
       if recipe.outputs[1] then
         value.output = U.clone(recipe.outputs[1])

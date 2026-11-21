@@ -291,6 +291,30 @@ local function dataHash(data, value)
     return invoke(data, 'sha256', part)
   end)
 end
+-- Read crafting availability through NetworkControl, including providers that
+-- the interface terminal does not expose. Never submit a crafting job here.
+local function craftingNetwork(c, hw)
+  local prefix = c.shared.networkAddress
+  if prefix == '' and hw.direct.getCraftable then
+    return hw.direct
+  end
+  local matches = {}
+  for _, kind in ipairs(prefix == '' and { 'me_controller' } or { 'me_controller', 'me_interface' }) do
+    for address, tp in component.list(kind, true) do
+      if tp == kind and address:sub(1, #prefix) == prefix then
+        local proxy = component.proxy(address)
+        if proxy.getCraftable then
+          matches[#matches + 1] = proxy
+        end
+      end
+    end
+  end
+  U.check(
+    #matches == 1,
+    'Fluid crafting checks need one ME network component; set its address in Shared interfaces'
+  )
+  return matches[1]
+end
 local function nbt(data, tag)
   local t = tag and invoke(data, 'decodeNBT', tag) or { __nbt_type = 'compound', __value = {} }
   U.check(

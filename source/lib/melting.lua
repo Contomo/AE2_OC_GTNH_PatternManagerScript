@@ -159,8 +159,10 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       priority = U.clone(options.priority),
       batch = U.clone(options.batch),
       multiplier = options.multiplier,
+      craftableFluids = U.clone(options.craftableFluids),
     },
     recipes = {},
+    existingFluids = {},
     skipped = {},
     unresolved = {},
     unusedExcluded = 0,
@@ -170,6 +172,10 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
   local excluded = U.clone(retired or {})
   for origin in pairs(owned or {}) do
     excluded[origin] = true
+  end
+  local producerExcluded = U.clone(excluded)
+  for origin in pairs(options.extractionOrigins or {}) do
+    producerExcluded[origin] = true
   end
   local function skip(material, stack, form, reason)
     if form == 'ingot' and options.emitCasting == false then
@@ -237,8 +243,13 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     end
     local fluid = M.ingredient(data, material.fluid, 144)
     local ingot = M.ingredient(data, material.ingot, 1)
-    local native = graph:hasProducer(fluid, excluded)
-      and graph:independent({ fluid }, { ingot }, excluded)
+    -- Presence prevents duplicate production. Dependency proofs decide whether
+    -- a new route/cast is safe; failing one must never authorize a duplicate.
+    local advertised = (options.craftableFluids or {})[fluid.name]
+    local native = advertised or graph:hasProducer(fluid, producerExcluded, true)
+    if native then
+      manifest.existingFluids[fluid.name] = true
+    end
     local variant
     local token = material.key
     for _, modifier in ipairs({ 'magnetic', 'attuned' }) do
@@ -296,7 +307,7 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
             local form, priority = M.routeForm(route, options.priority)
             selected, reason = scaled(material, route, inputs, outputs, form, 'Molten', stock)
             if selected then
-              selected.priority = priority
+              selected.priority, selected.primaryFluid = priority, fluid.name
               break
             end
           else
@@ -308,7 +319,8 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
         or 'No enabled route for the selected gas/circuit; no no-gas fallback is installed.'
     else
       reason = variant and ('Fluid Shaper excludes ' .. variant .. ' material variants.')
-        or 'Preserve installed independent liquid production.'
+        or advertised and 'Fluid already craftable in ME; no melting recipe added.'
+        or 'Existing fluid-output pattern; no duplicate melting route added.'
     end
     if selected then
       candidates[#candidates + 1] =

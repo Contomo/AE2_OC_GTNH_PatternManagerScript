@@ -31,8 +31,9 @@ destinations, a gas selector and a separate request-gas toggle. Fluid Shaper own
 ingot casting and uses the same installed-supply graph when Ingot is enabled. Its **Retirements** page
 lists old extraction/obsolete melting recipes that must stop advertising fluid
 before the new casts are installed. Parking and donor reuse use the same editor
-and journal as other programs. Installed native fluid producers are compared in
-the shared dependency graph, so a dust obtainable only through the fluid's own
+and journal as other programs. Existing fluid outputs are excluded from new
+melting recipes by pattern presence and live ME craftability. Proposed feeds and
+casts are checked in the shared dependency graph, so a dust obtainable only through the fluid's own
 ingot cast cannot become a replacement production route. See [setup and supply
 assumptions](README.md) before executing.
 

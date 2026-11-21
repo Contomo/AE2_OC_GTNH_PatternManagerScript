@@ -1495,6 +1495,13 @@ M.fields = {
     help = 'At least 10 percentage points above the pause level; at most 95%.',
     default = '75',
   },
+  {
+    key = 'networkAddress',
+    placeholder = 'auto',
+    label = 'ME network component address',
+    help = 'Fluid crafting lookup: blank uses the block editor or sole ME controller; otherwise enter its address prefix.',
+    default = '',
+  },
 }
 M.defaults = { version = 2, shared = {}, batch = {}, programs = {} }
 for _, f in ipairs(M.fields) do
@@ -2116,6 +2123,30 @@ local function dataHash(data, value)
   return U.boundedHash(value, dataLimit(data), function(part)
     return invoke(data, 'sha256', part)
   end)
+end
+-- Read crafting availability through NetworkControl, including providers that
+-- the interface terminal does not expose. Never submit a crafting job here.
+local function craftingNetwork(c, hw)
+  local prefix = c.shared.networkAddress
+  if prefix == '' and hw.direct.getCraftable then
+    return hw.direct
+  end
+  local matches = {}
+  for _, kind in ipairs(prefix == '' and { 'me_controller' } or { 'me_controller', 'me_interface' }) do
+    for address, tp in component.list(kind, true) do
+      if tp == kind and address:sub(1, #prefix) == prefix then
+        local proxy = component.proxy(address)
+        if proxy.getCraftable then
+          matches[#matches + 1] = proxy
+        end
+      end
+    end
+  end
+  U.check(
+    #matches == 1,
+    'Fluid crafting checks need one ME network component; set its address in Shared interfaces'
+  )
+  return matches[1]
 end
 local function nbt(data, tag)
   local t = tag and invoke(data, 'decodeNBT', tag) or { __nbt_type = 'compound', __value = {} }
@@ -4797,14 +4828,20 @@ function M.liquidDetails(plan, manifest)
       .. plan.supplyCounts.patterns
       .. ' installed patterns compared.'
   )
-  add('Native fluid production from ABS, DTPF and other source recipes is preserved.')
+  add('Existing fluid-output patterns prevent duplicate Melting Core recipes.')
+  if melting then
+    add(
+      (plan.supplyCounts.fluidChecks or 0)
+        .. ' candidate fluids checked against live ME crafting availability.'
+    )
+  end
   add('A dust feed must have a path that does not require its own molten product or cast ingot.')
   add(
     'Unpatterned inputs are external supplies; this checks dependencies, not stock or machine readiness.',
     'muted'
   )
   add(
-    'Only terminal-visible interfaces can be compared. Connect every relevant production interface.',
+    'Dependency checks use terminal-visible patterns. Live ME lookup also checks new fluid outputs.',
     'yellow'
   )
   add(
@@ -5081,8 +5118,8 @@ function M.new(checkpoint)
     return id
   end
 
-  function graph:add(recipe, origin)
-    local row = { origin = origin, inputs = {}, outputs = {} }
+  function graph:add(recipe, origin, opaque)
+    local row = { origin = origin, inputs = {}, outputs = {}, opaque = opaque == true }
     for _, which in ipairs({ 'inputs', 'outputs' }) do
       local seen = {}
       for _, stack in pairs(recipe[which]) do
@@ -5101,10 +5138,13 @@ function M.new(checkpoint)
     return index
   end
 
-  function graph:hasProducer(stack, excluded)
+  function graph:hasProducer(stack, excluded, activeOnly)
     local id = self.ids[M.identity(stack)]
     for _, index in ipairs(id and self.nodes[id].producers or {}) do
-      if not (excluded or {})[self.recipes[index].origin] then
+      if
+        not (excluded or {})[self.recipes[index].origin]
+        and not (activeOnly and self.recipes[index].opaque)
+      then
         return true
       end
     end
@@ -5396,8 +5436,10 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       priority = U.clone(options.priority),
       batch = U.clone(options.batch),
       multiplier = options.multiplier,
+      craftableFluids = U.clone(options.craftableFluids),
     },
     recipes = {},
+    existingFluids = {},
     skipped = {},
     unresolved = {},
     unusedExcluded = 0,
@@ -5407,6 +5449,10 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
   local excluded = U.clone(retired or {})
   for origin in pairs(owned or {}) do
     excluded[origin] = true
+  end
+  local producerExcluded = U.clone(excluded)
+  for origin in pairs(options.extractionOrigins or {}) do
+    producerExcluded[origin] = true
   end
   local function skip(material, stack, form, reason)
     if form == 'ingot' and options.emitCasting == false then
@@ -5474,8 +5520,13 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     end
     local fluid = M.ingredient(data, material.fluid, 144)
     local ingot = M.ingredient(data, material.ingot, 1)
-    local native = graph:hasProducer(fluid, excluded)
-      and graph:independent({ fluid }, { ingot }, excluded)
+    -- Presence prevents duplicate production. Dependency proofs decide whether
+    -- a new route/cast is safe; failing one must never authorize a duplicate.
+    local advertised = (options.craftableFluids or {})[fluid.name]
+    local native = advertised or graph:hasProducer(fluid, producerExcluded, true)
+    if native then
+      manifest.existingFluids[fluid.name] = true
+    end
     local variant
     local token = material.key
     for _, modifier in ipairs({ 'magnetic', 'attuned' }) do
@@ -5533,7 +5584,7 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
             local form, priority = M.routeForm(route, options.priority)
             selected, reason = scaled(material, route, inputs, outputs, form, 'Molten', stock)
             if selected then
-              selected.priority = priority
+              selected.priority, selected.primaryFluid = priority, fluid.name
               break
             end
           else
@@ -5545,7 +5596,8 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
         or 'No enabled route for the selected gas/circuit; no no-gas fallback is installed.'
     else
       reason = variant and ('Fluid Shaper excludes ' .. variant .. ' material variants.')
-        or 'Preserve installed independent liquid production.'
+        or advertised and 'Fluid already craftable in ME; no melting recipe added.'
+        or 'Existing fluid-output pattern; no duplicate melting route added.'
     end
     if selected then
       candidates[#candidates + 1] =
@@ -5731,6 +5783,8 @@ local function compactPattern(hw, p)
     recipe, issue = patternRecipe(hw.data, p, root)
     if recipe then
       value.kind = recipe.kind
+      value.produces = not U.truth(root.InvalidPattern and root.InvalidPattern.__value)
+        and not U.truth(root.tunnel and root.tunnel.__value)
       value.inputSummary = U.ingredientSummary(recipe.inputs)
       if recipe.outputs[1] then
         value.output = U.clone(recipe.outputs[1])
@@ -7021,10 +7075,10 @@ local function liquidScan(c, data, hw, routing, options, progress, id)
               end
             end
             if not parked and bank.name ~= c.shared.donors then
-              if value.reason or recipe.substitute or recipe.beSubstitute then
-                -- Unsafe flags cannot prove an active, exact material supply.
+              if not value.produces then
+                -- Invalid/input-only patterns cannot prove an active supply.
                 -- A self edge keeps that output from becoming an assumed leaf.
-                graph:add({ inputs = recipe.outputs, outputs = recipe.outputs }, origin)
+                graph:add({ inputs = recipe.outputs, outputs = recipe.outputs }, origin, true)
               else
                 graph:add(recipe, origin)
               end
@@ -7033,7 +7087,7 @@ local function liquidScan(c, data, hw, routing, options, progress, id)
             counts.unreadable = counts.unreadable + 1
             local outputs = effectivePattern(hw.data, p).outputs or {}
             if next(outputs) then
-              graph:add({ inputs = outputs, outputs = outputs }, origin)
+              graph:add({ inputs = outputs, outputs = outputs }, origin, true)
             end
           end
         end
@@ -7078,26 +7132,64 @@ function C.liquids.preview(c, progress, control, id)
   local graph, candidates, placeholders, owned, baseline, counts, parkedOrigins =
     liquidScan(c, data, hw, routing, options, progress, id)
   local excluded = {}
+  options.extractionOrigins = {}
   for _, entry in ipairs(candidates) do
     excluded[entry.origin] = true
+    if not entry.coreKey then
+      options.extractionOrigins[entry.origin] = true
+    end
   end
   local manifest
+  local checked, network = {}, nil
+  options.craftableFluids = {}
+  counts.fluidChecks = 0
   -- Restore extractors for liquids this run will not replace. Repeating only
   -- removes exclusions, so a chain cannot oscillate between migration plans.
   while true do
     manifest = base and Melting.filterCasts(base, graph, excluded)
       or Melting.compile(data, options, graph, excluded, owned, gate)
+    local changed = false
+    if id == 'meltingCore' then
+      for _, recipe in ipairs(manifest.recipes) do
+        local name = recipe.primaryFluid
+        local fluid = { type = 'fluid', name = name }
+        -- A visible owned/retiring pattern already explains ME's craftable
+        -- flag. Do not mistake it for a second producer or suppress reuse.
+        if checked[name] == nil and not graph:hasProducer(fluid, nil, true) then
+          network = network or craftingNetwork(c, hw)
+          local available = invoke(
+            network,
+            'getCraftable',
+            { name = name, amount = 1, size = 1 },
+            'fluid'
+          ) ~= nil
+          if not available then
+            available = invoke(
+              network,
+              'getCraftable',
+              fluidDrop(hw.data, { name = name, size = 1 }),
+              'item'
+            ) ~= nil
+          end
+          checked[name], counts.fluidChecks = available, counts.fluidChecks + 1
+          if available then
+            options.craftableFluids[name], changed = true, true
+          end
+        end
+      end
+    end
     local wanted = {}
     for _, recipe in ipairs(manifest.recipes) do
       wanted[Planner.recipeKey(recipe)] = routing.destinations[recipe.outputForm]
     end
-    local changed = false
     for _, entry in ipairs(candidates) do
       if
         excluded[entry.origin]
         and (
-          not manifest.suppliedFluids[entry.fluid]
-          or entry.coreKey and wanted[entry.coreKey] and not entry.reason
+          not (
+            manifest.suppliedFluids[entry.fluid]
+            or entry.coreKey and (manifest.existingFluids or {})[entry.fluid]
+          ) or entry.coreKey and wanted[entry.coreKey] and not entry.reason
         )
       then
         excluded[entry.origin], changed = nil, true

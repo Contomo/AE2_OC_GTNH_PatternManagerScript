@@ -124,8 +124,16 @@ and proves supply against that graph; `29_liquids.lua` collects installed recipe
 and coordinates retirement before calling the normal maker. It uses the same
 pattern decoder, `Count`/`Cnt` handling, fluid-drop normalization, parking recipe,
 donor pool and operation journal. The broad historical native-liquid flag is
-provenance, not the decision to suppress a Melting Core route: installed producers
-must pass the independent-supply check. `supply.lua:plan` checks proposed recipes
+provenance. Duplicate prevention uses existing active fluid-output patterns,
+independently of the upstream proof used to approve new recipes. `compactPattern`
+exposes production validity separately from donor editability: substitution flags
+do not disable a producer, while invalid and input-only patterns remain opaque.
+`29_liquids.lua` checks otherwise-unaccounted candidate outputs through live ME
+craftability, including native fluids and legacy drops. Queries are cached per
+preview and repeated during preflight. Existing owned/retiring recipes are
+accounted for to avoid self-exclusion. An independently justified cast is still
+required before extraction retirement, while managed duplicate melting recipes
+can be retired as soon as another producer is known. `supply.lua:plan` checks proposed recipes
 together and propagates exclusions. Melting Core includes virtual casts in that
 proof but emits only molten production; Fluid Shaper owns all installed casts.
 Gas choice and requesting gas are independent. Optional stocked gas does not enter

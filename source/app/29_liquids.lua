@@ -115,10 +115,10 @@ local function liquidScan(c, data, hw, routing, options, progress, id)
               end
             end
             if not parked and bank.name ~= c.shared.donors then
-              if value.reason or recipe.substitute or recipe.beSubstitute then
-                -- Unsafe flags cannot prove an active, exact material supply.
+              if not value.produces then
+                -- Invalid/input-only patterns cannot prove an active supply.
                 -- A self edge keeps that output from becoming an assumed leaf.
-                graph:add({ inputs = recipe.outputs, outputs = recipe.outputs }, origin)
+                graph:add({ inputs = recipe.outputs, outputs = recipe.outputs }, origin, true)
               else
                 graph:add(recipe, origin)
               end
@@ -127,7 +127,7 @@ local function liquidScan(c, data, hw, routing, options, progress, id)
             counts.unreadable = counts.unreadable + 1
             local outputs = effectivePattern(hw.data, p).outputs or {}
             if next(outputs) then
-              graph:add({ inputs = outputs, outputs = outputs }, origin)
+              graph:add({ inputs = outputs, outputs = outputs }, origin, true)
             end
           end
         end
@@ -172,26 +172,64 @@ function C.liquids.preview(c, progress, control, id)
   local graph, candidates, placeholders, owned, baseline, counts, parkedOrigins =
     liquidScan(c, data, hw, routing, options, progress, id)
   local excluded = {}
+  options.extractionOrigins = {}
   for _, entry in ipairs(candidates) do
     excluded[entry.origin] = true
+    if not entry.coreKey then
+      options.extractionOrigins[entry.origin] = true
+    end
   end
   local manifest
+  local checked, network = {}, nil
+  options.craftableFluids = {}
+  counts.fluidChecks = 0
   -- Restore extractors for liquids this run will not replace. Repeating only
   -- removes exclusions, so a chain cannot oscillate between migration plans.
   while true do
     manifest = base and Melting.filterCasts(base, graph, excluded)
       or Melting.compile(data, options, graph, excluded, owned, gate)
+    local changed = false
+    if id == 'meltingCore' then
+      for _, recipe in ipairs(manifest.recipes) do
+        local name = recipe.primaryFluid
+        local fluid = { type = 'fluid', name = name }
+        -- A visible owned/retiring pattern already explains ME's craftable
+        -- flag. Do not mistake it for a second producer or suppress reuse.
+        if checked[name] == nil and not graph:hasProducer(fluid, nil, true) then
+          network = network or craftingNetwork(c, hw)
+          local available = invoke(
+            network,
+            'getCraftable',
+            { name = name, amount = 1, size = 1 },
+            'fluid'
+          ) ~= nil
+          if not available then
+            available = invoke(
+              network,
+              'getCraftable',
+              fluidDrop(hw.data, { name = name, size = 1 }),
+              'item'
+            ) ~= nil
+          end
+          checked[name], counts.fluidChecks = available, counts.fluidChecks + 1
+          if available then
+            options.craftableFluids[name], changed = true, true
+          end
+        end
+      end
+    end
     local wanted = {}
     for _, recipe in ipairs(manifest.recipes) do
       wanted[Planner.recipeKey(recipe)] = routing.destinations[recipe.outputForm]
     end
-    local changed = false
     for _, entry in ipairs(candidates) do
       if
         excluded[entry.origin]
         and (
-          not manifest.suppliedFluids[entry.fluid]
-          or entry.coreKey and wanted[entry.coreKey] and not entry.reason
+          not (
+            manifest.suppliedFluids[entry.fluid]
+            or entry.coreKey and (manifest.existingFluids or {})[entry.fluid]
+          ) or entry.coreKey and wanted[entry.coreKey] and not entry.reason
         )
       then
         excluded[entry.origin], changed = nil, true

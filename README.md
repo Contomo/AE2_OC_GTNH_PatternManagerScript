@@ -103,8 +103,16 @@ Required reaction fluids remain requested. One feed route is selected per molten
 product, preferring its dust route; batches, voltage and heat appear in the preview.
 
 Both programs use one dependency solver and compare terminal-visible encoded
-recipes across the network. Installed independent liquid producers, including ABS
-and DTPF routes, are preserved. Dust supplied only by `fluid -> ingot -> dust`
+recipes across the network. An existing active fluid-output pattern prevents a
+second Melting Core route, including ABS, DTPF and Exoticizer products. This
+presence check does not require proving the existing factory's dependencies.
+New candidate outputs without a visible producer are also checked through AE's
+read-only `getCraftable` API, for both native fluids and legacy fluid drops.
+The block editor supplies this lookup; a multipart editor can use a connected
+ME controller. **ME network component address** in Shared interfaces selects one
+when automatic discovery is ambiguous. Owned Melting Core patterns and retiring
+extractors are accounted for so they do not suppress reuse or their own replacement.
+Dust supplied only by `fluid -> ingot -> dust`
 cannot seed a new melting route. Melting Core checks proposed molten production
 together with virtual future casts, including cross-material cycles, but installs
 only molten recipes. Fluid Shaper checks its cast candidates against installed
@@ -120,7 +128,9 @@ interface is inspected, and extraction is recognized from its input/output
 identities and proportions, including scaled patterns.
 
 The **Retirements** tab lists exact locations of solid-to-fluid extraction or
-obsolete owned melting routes that conflict with the new supply. Before installing
+obsolete owned melting routes that conflict with the new supply. A managed
+Melting Core duplicate can be retired when another producer is found, even if
+that producer's dependency graph cannot independently justify a new ingot cast. Before installing
 patterns, execution replaces those recipes with the shared tagged donor placeholder.
 Retired patterns outside active destination groups are reused first, then ordinary
 donor buffers; unused retired patterns remain safe placeholders. Unrelated patterns
@@ -470,7 +480,7 @@ obsolete slot limits are not carried forward.
 
 | Section | Fields |
 | --- | --- |
-| Shared interfaces | Pattern editor name, new pattern buffer name, terminal/editor/Data Card addresses, energy thresholds |
+| Shared interfaces | Pattern editor name, new pattern buffer name, terminal/editor/Data Card/ME network addresses, energy thresholds |
 | Assembly line renamer | Target interface, item-name template, rename-destination template |
 | Wire insulator | Checkbox/name per cable size, five-way polymer selector, request PPS |
 | Wiremill | 1x wire and fine-wire destination names; separate input routes, default Ingot |

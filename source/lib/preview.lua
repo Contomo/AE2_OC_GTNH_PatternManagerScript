@@ -542,14 +542,20 @@ function M.liquidDetails(plan, manifest)
       .. plan.supplyCounts.patterns
       .. ' installed patterns compared.'
   )
-  add('Native fluid production from ABS, DTPF and other source recipes is preserved.')
+  add('Existing fluid-output patterns prevent duplicate Melting Core recipes.')
+  if melting then
+    add(
+      (plan.supplyCounts.fluidChecks or 0)
+        .. ' candidate fluids checked against live ME crafting availability.'
+    )
+  end
   add('A dust feed must have a path that does not require its own molten product or cast ingot.')
   add(
     'Unpatterned inputs are external supplies; this checks dependencies, not stock or machine readiness.',
     'muted'
   )
   add(
-    'Only terminal-visible interfaces can be compared. Connect every relevant production interface.',
+    'Dependency checks use terminal-visible patterns. Live ME lookup also checks new fluid outputs.',
     'yellow'
   )
   add(

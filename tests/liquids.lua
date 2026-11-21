@@ -174,6 +174,45 @@ test('priority classification uses configurable heat and voltage, including boun
   assert(Melting.priority({heat=11701,eut=31457280},policy)=='high')
 end)
 
+test('an existing fluid producer excludes melting even when its dependency graph is circular',function()
+  local graph=Supply.new()
+  graph:add(recipe({ingot},{fluid}),'existing-producer')
+  graph:add(recipe({fluid},{ingot}),'existing-cast')
+  assert(not graph:independent({fluid},{ingot}))
+  local result=Melting.compile(catalog(),options(),graph)
+  assert(#result.recipes==0 and result.existingFluids[fluid.name])
+  assert(result.skipped[1].reason:find('Existing fluid-output pattern',1,true))
+end)
+
+test('opaque invalid outputs do not count as active producers and live ME craftability prevents duplicates',function()
+  local graph=Supply.new()
+  graph:add(recipe({fluid},{fluid}),'invalid',true)
+  local result=Melting.compile(catalog(),options(),graph)
+  assert(#result.recipes==2)
+  local opts=options();opts.craftableFluids={[fluid.name]=true};opts.emitCasting=false
+  result=Melting.compile(catalog(),opts,graph)
+  assert(#result.recipes==0 and result.skipped[1].reason:find('already craftable in ME',1,true))
+end)
+
+test('real Shirabon UMV Octiron and Magmatter producers exclude every new remelting route',function()
+  local fixtures=assert(loadfile('tests/fixtures/liquid_producers.lua'))()
+  local selected,byKey={},{}
+  local data=U.clone(require('assline_liquid_data'))
+  for _,f in ipairs(fixtures) do byKey[f.key]=f end
+  for _,m in ipairs(data.materials) do if byKey[m.key] then selected[#selected+1]=m end end
+  assert(#selected==4);data.materials=selected
+  local graph=Supply.new()
+  for _,m in ipairs(selected) do
+    local f=byKey[m.key];graph:add(recipe(f.inputs,f.outputs),f.sourceId)
+    if m.key=='octiron' then
+      graph:add(recipe({Melting.ingredient(data,m.ingot)},{U.clone(f.inputs[1])}),'macerator')
+    end
+  end
+  local opts=options();opts.emitCasting=false
+  local result=Melting.compile(data,opts,graph)
+  assert(#result.recipes==0 and #result.skipped==4)
+end)
+
 test('native-fluid materials preserve their producer and never generate a remelting route', function()
   local data, graph = catalog(), Supply.new()
   data.materials[1].native, data.materials[1].nativeMachine = true, 'Alloy Blast Smelter'
@@ -182,7 +221,7 @@ test('native-fluid materials preserve their producer and never generate a remelt
   graph:add(recipe({ ingot }, { dust }), 'dust')
   local result = Melting.compile(data, options(), graph)
   assert(#result.recipes == 1 and result.recipes[1].outputForm == 'ingot')
-  assert(result.skipped[1].reason:find('installed independent', 1, true))
+  assert(result.skipped[1].reason:find('Existing fluid-output pattern', 1, true))
   assert(#graph.recipes == 3)
 end)
 

@@ -143,11 +143,21 @@ local function directArgs(...)
 end
 proxies.direct={address='direct',getInterfacePattern=function(...)
   local b,s=directArgs(...);return cp(b.patterns[s])
+end,getCraftable=function(filter,tp)
+  local key
+  if tp=='fluid' then
+    assert(filter.name and filter.damage==nil);key='fluid:'..filter.name
+  elseif filter.name=='ae2fc:fluid_drop' then
+    key='drop:'..unser(filter.tag).__value.Fluid.__value
+  else
+    assert(tp=='item' and filter.damage~=nil);key=filter.name..':'..filter.damage
+  end
+  return networkCraftables[key] and {} or nil
 end,getCraftables=function(filter)
   assert(filter.name and filter.damage~=nil,'craftable lookups must be filtered')
   return networkCraftables[filter.name..':'..filter.damage] and {{}} or {}
 end}
-proxies.controller={address='controller',getCraftables=proxies.direct.getCraftables}
+proxies.controller={address='controller',getCraftables=proxies.direct.getCraftables,getCraftable=proxies.direct.getCraftable}
 for _,which in ipairs({'Input','Output'}) do
   local key=which=='Input' and 'inputs' or 'outputs'
   proxies.direct['setInterfacePattern'..which]=function(...)
@@ -3427,6 +3437,96 @@ test('liquid migration parks surplus retired patterns without advertising their 
   end)
 end)
 
+local nativeLiquidFixtures=assert(loadfile('tests/fixtures/liquid_producers.lua'))()
+local function nativePattern(fixture,legacy)
+  local function stacks(values)
+    local result={}
+    for _,s in ipairs(values) do
+      local value=cp(s)
+      if legacy and s.type=='fluid' then
+        value={name='ae2fc:fluid_drop',damage=0,size=s.size,label='Drop of '..s.label,
+          hasTag=true,tag=ser(compound({Fluid=typed('string',s.name)}))}
+      end
+      result[#result+1]=value
+    end
+    return result
+  end
+  local p=legacy and pattern(stacks(fixture.inputs),stacks(fixture.outputs))
+    or liquidPattern(stacks(fixture.inputs),stacks(fixture.outputs))
+  return p
+end
+
+test('liquid migration excludes real ABS DTPF and Magmatter outputs including secondary drops and substitution',function()
+  withLiquidMaterials({shirabon=true,superconductorumvbase=true,octiron=true,magmatter=true},function(data)
+    cfg.programs.meltingCore.forms='c0_medium,c1_low,c11_low'
+    for n,key in ipairs({'c0_medium','c1_low','c11_low'}) do iface(cfg.programs.meltingCore[key],80+n) end
+    local originals={}
+    for n,f in ipairs(nativeLiquidFixtures) do
+      local p=nativePattern(f,f.key=='shirabon')
+      if f.key=='superconductorumvbase' then p=newPattern(f.inputs,f.outputs);assert(p.outputs[2].size==0) end
+      if f.key=='octiron' then
+        local root=unser(p.tag);root.__value.substitute=typed('byte',1);p.tag=ser(root)
+        for _,m in ipairs(data.materials) do if m.key=='octiron' then
+          iface('Macerator',100,{[0]=pattern({liquidStack(data,m.ingot,1)},{cp(f.inputs[1])})})
+        end end
+      end
+      local bank=iface('Existing '..f.machine..n,90+n,{[0]=p})
+      originals[bank]=ser(bank.patterns)
+    end
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==0 and #p.manifest.skipped==4 and #p.plan.retirements==0)
+    assert(not api.runner.hasChanges(p) and mutations==0)
+    for bank,before in pairs(originals) do assert(ser(bank.patterns)==before) end
+    for _,row in ipairs(p.manifest.skipped) do assert(row.reason:find('Existing fluid-output pattern',1,true)) end
+  end)
+end)
+
+test('liquid migration checks unlisted ME fluid producers and detects changed crafting availability',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    cfg.programs.meltingCore.forms='c1';iface(cfg.programs.meltingCore.c1,81)
+    local name=data.names[data.items[data.materials[1].fluid].name]
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==1 and p.plan.supplyCounts.fluidChecks==1)
+    networkCraftables['fluid:'..name]=true
+    mustFail(function() api.runner.execute(cfg,p) end,'changed since preview')
+    assert(mutations==0)
+    p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==0 and p.report:find('already craftable in ME',1,true))
+    networkCraftables={['drop:'..name]=true}
+    p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==0 and p.report:find('already craftable in ME',1,true))
+  end)
+end)
+
+test('liquid migration uses a configured ME controller with multipart editors',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    cfg.programs.meltingCore.forms='c1';iface(cfg.programs.meltingCore.c1,81)
+    cfg.shared.networkAddress='contr';networkController=true;methodsAsTables=true
+    local name=data.names[data.items[data.materials[1].fluid].name]
+    networkCraftables['fluid:'..name]=true
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==0 and mutations==0)
+  end)
+end)
+
+test('liquid migration retires a managed duplicate when another producer exists without relying on cast proof',function()
+  withLiquidMaterials({octiron=true},function(data)
+    cfg.programs.meltingCore.forms='c0_medium'
+    local core=iface(cfg.programs.meltingCore.c0_medium,81)
+    local first=api.runner.preview(cfg,'meltingCore')
+    local r=assert(first.manifest.recipes[1]);core.patterns[0]=liquidPattern(r.inputs,r.outputs)
+    local f;for _,row in ipairs(nativeLiquidFixtures) do if row.key=='octiron' then f=row end end
+    local producer=iface('Existing ABS',90,{[0]=nativePattern(f)})
+    iface('Macerator',91,{[0]=pattern({liquidStack(data,data.materials[1].ingot,1)},{cp(f.inputs[1])})})
+    local original=ser(producer.patterns)
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==0 and #p.plan.retirements==1 and #p.plan.errors==0)
+    api.runner.execute(cfg,p)
+    assert(core.patterns[0].outputs[1].name=='minecraft:paper' and ser(producer.patterns)==original)
+    assert(not api.runner.hasSaved())
+  end)
+end)
+
 test('liquid migration leaves ABS and DTPF production intact and excludes their dust remelting routes',function()
   withLiquidMaterials({quantum=true,hypogen=true},function(data)
     cfg.programs.meltingCore.forms='c0,c0_medium,c0_low'
@@ -3446,7 +3546,7 @@ test('liquid migration leaves ABS and DTPF production intact and excludes their 
     local unchanged=ser(producer.patterns)
     local preview=api.runner.preview(cfg,'meltingCore')
     assert(#preview.plan.errors==0 and #preview.manifest.recipes==0)
-    assert(preview.report:find('Preserve installed independent liquid production.',1,true))
+    assert(preview.report:find('Existing fluid-output pattern',1,true))
     preview=api.runner.preview(cfg,'fluidShaper')
     assert(#preview.plan.errors==0 and #preview.manifest.recipes==2 and preview.plan.reused==2)
     for _,r in ipairs(preview.manifest.recipes) do assert(r.outputForm=='ingot') end

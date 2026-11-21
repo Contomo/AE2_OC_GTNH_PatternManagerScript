@@ -21,8 +21,8 @@ function M.new(checkpoint)
     return id
   end
 
-  function graph:add(recipe, origin)
-    local row = { origin = origin, inputs = {}, outputs = {} }
+  function graph:add(recipe, origin, opaque)
+    local row = { origin = origin, inputs = {}, outputs = {}, opaque = opaque == true }
     for _, which in ipairs({ 'inputs', 'outputs' }) do
       local seen = {}
       for _, stack in pairs(recipe[which]) do
@@ -41,10 +41,13 @@ function M.new(checkpoint)
     return index
   end
 
-  function graph:hasProducer(stack, excluded)
+  function graph:hasProducer(stack, excluded, activeOnly)
     local id = self.ids[M.identity(stack)]
     for _, index in ipairs(id and self.nodes[id].producers or {}) do
-      if not (excluded or {})[self.recipes[index].origin] then
+      if
+        not (excluded or {})[self.recipes[index].origin]
+        and not (activeOnly and self.recipes[index].opaque)
+      then
         return true
       end
     end
