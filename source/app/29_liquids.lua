@@ -78,14 +78,17 @@ local function liquidScan(c, data, hw, routing, options, progress, id)
               outputs = recipe.outputs,
             })
             local core = valid and coreKeys[key]
-            if coreBanks[bank.name] and core then
+            local managed = core
+              and (coreBanks[bank.name] or id == 'meltingCore' and core.migratable)
+            if managed then
               owned[origin] = true
             end
             local fluid = extractorMatch(recipe)
             local reason = fluid and 'Retire solid-to-fluid extraction'
-            if not fluid and coreBanks[bank.name] and core then
+            if managed then
               fluid = core.fluid
-              reason = 'Replace an obsolete or circular Melting Core route'
+              reason = coreBanks[bank.name] and 'Replace an obsolete or circular Melting Core route'
+                or 'Migrate matching molten-production recipe'
             end
             local issue = value.reason
             if not value.donor or recipe.kind ~= 'processing' then
@@ -100,7 +103,7 @@ local function liquidScan(c, data, hw, routing, options, progress, id)
               reason = issue,
               fluid = fluid,
               action = reason,
-              coreKey = coreBanks[bank.name] and core and key or nil,
+              coreKey = managed and key or nil,
             }
             if fluid then
               retirement[#retirement + 1] = entry
@@ -229,6 +232,7 @@ function C.liquids.preview(c, progress, control, id)
           not (
             manifest.suppliedFluids[entry.fluid]
             or entry.coreKey and (manifest.existingFluids or {})[entry.fluid]
+            or entry.coreKey and (manifest.invalidFluids or {})[entry.fluid]
           ) or entry.coreKey and wanted[entry.coreKey] and not entry.reason
         )
       then

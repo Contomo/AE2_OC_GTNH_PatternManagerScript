@@ -124,24 +124,49 @@ end
 function M.coreKeys(data)
   local keys = {}
   for _, material in ipairs(data.materials) do
+    local direct = false
     for _, route in ipairs(material.routes) do
+      direct = direct or route.rank == 0
+    end
+    local fluid = M.ingredient(data, material.fluid).name
+    local info = { fluid = fluid, migratable = direct and material.rawSource ~= false }
+    for _, route in ipairs(material.routes) do
+      local outputs = ingredients(data, data.products[route.output])
+      local function register(inputs)
+        local function remember(values, partial)
+          local key = Planner.recipeKey({ kind = 'processing', inputs = inputs, outputs = values })
+          if not partial or not keys[key] then
+            keys[key] = info
+          end
+        end
+        remember(outputs)
+        -- A manually encoded recipe may omit coproducts. Recognize its primary
+        -- output for migration; the new pattern still writes the full recipe.
+        if #outputs > 1 then
+          for _, output in ipairs(outputs) do
+            if output.type == 'fluid' and output.name == fluid then
+              remember({ output }, true)
+              break
+            end
+          end
+        end
+      end
       local inputs = ingredients(data, data.feeds[route.feed])
       if route.gas ~= 0 then
         inputs[#inputs + 1] = M.ingredient(data, route.gas, route.gasAmount)
       end
-      local key = Planner.recipeKey({
-        kind = 'processing',
-        inputs = inputs,
-        outputs = ingredients(data, data.products[route.output]),
-      })
-      keys[key] = { fluid = M.ingredient(data, material.fluid).name, native = material.native }
+      register(inputs)
       if route.gas ~= 0 then
-        local stocked = Planner.recipeKey({
-          kind = 'processing',
-          inputs = ingredients(data, data.feeds[route.feed]),
-          outputs = ingredients(data, data.products[route.output]),
-        })
-        keys[stocked] = keys[key]
+        register(ingredients(data, data.feeds[route.feed]))
+      end
+      if route.legacyGas then
+        local legacy = {}
+        for _, input in ipairs(inputs) do
+          if Supply.identity(input) ~= Supply.identity(M.ingredient(data, route.legacyGas)) then
+            legacy[#legacy + 1] = input
+          end
+        end
+        register(legacy)
       end
     end
   end
@@ -163,6 +188,7 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
     },
     recipes = {},
     existingFluids = {},
+    invalidFluids = {},
     skipped = {},
     unresolved = {},
     unusedExcluded = 0,
@@ -258,13 +284,22 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       end
     end
     local selected, reason
-    local routes, hasGasRoute = {}, false
+    local routes, hasGasRoute, direct = {}, false, false
     for _, route in ipairs(material.routes) do
-      hasGasRoute = hasGasRoute or route.gas ~= 0
+      direct = direct or route.rank == 0
+      hasGasRoute = hasGasRoute or route.rank == 0 and route.gas ~= 0
       local form = M.routeForm(route, options.priority)
-      if options.forms[form] then
+      if options.forms[form] and route.rank == 0 then
         routes[#routes + 1] = route
       end
+    end
+    local invalid = material.rawSource == false
+        and 'The scrape has no independent raw-dust source; only recovery/repacking is available.'
+      or not direct
+        and #material.routes > 0
+        and 'Only ore-processing or alternative-material feeds are available; no direct material-dust route.'
+    if invalid then
+      manifest.invalidFluids[fluid.name] = true
     end
     table.sort(routes, function(a, b)
       local function rank(r)
@@ -279,7 +314,7 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
       end
       return a.feed < b.feed
     end)
-    if not native and not variant then
+    if not native and not variant and not invalid then
       for _, route in ipairs(routes) do
         local gas = route.gas ~= 0 and M.ingredient(data, route.gas).name or 'none'
         if gas == options.gas or gas == 'none' and not hasGasRoute then
@@ -319,14 +354,20 @@ function M.compile(data, options, graph, retired, owned, checkpoint)
         or 'No enabled route for the selected gas/circuit; no no-gas fallback is installed.'
     else
       reason = variant and ('Fluid Shaper excludes ' .. variant .. ' material variants.')
-        or advertised and 'Fluid already craftable in ME; no melting recipe added.'
-        or 'Existing fluid-output pattern; no duplicate melting route added.'
+        or native and (advertised and 'Fluid already craftable in ME; no melting recipe added.' or 'Existing fluid-output pattern; no duplicate melting route added.')
+        or invalid
     end
     if selected then
       candidates[#candidates + 1] =
         { recipe = selected, material = material, fluid = fluid, ingot = ingot }
-    elseif #routes > 0 then
-      skip(material, fluid, M.routeForm(routes[1], options.priority), reason)
+    else
+      for _, route in ipairs(material.routes) do
+        local form = M.routeForm(route, options.priority)
+        if options.forms[form] then
+          skip(material, fluid, form, reason)
+          break
+        end
+      end
     end
     if variant then
       if options.forms.ingot then

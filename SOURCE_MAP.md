@@ -118,6 +118,14 @@ import and canonical-fluid selection used by the material matrix. Run
 to regenerate `source/data/melting_core.json` and its small settings schema.
 Feeds, output sets and extraction rules are shared; material rows hold rule-set
 indices. The normal application build reads these inputs without rewriting them.
+`build_material_sources.py:raw_material_sources` grounds raw forms from registered
+ore and producer recipes, resolves ore-dictionary inputs and follows same-material
+raw-form conversions. Finished parts and the material's own fluid cannot seed
+the proof. The liquid catalog stores one `rawSource` flag per material; recipe
+witnesses remain desktop evidence. `build_melting_core.py:process_gases` reads
+the pinned `BlastFurnaceGasStat` enum so hydrogen/oxygen reactions remain ordinary
+required inputs. `legacyGas` recognizes the earlier incorrectly stocked variants
+for migration and does not permit omitting those inputs in new patterns.
 
 `supply.lua` contains the reusable dependency solver. `melting.lua` selects routes
 and proves supply against that graph; `29_liquids.lua` collects installed recipes
@@ -141,6 +149,12 @@ pattern quantities; mandatory reaction fluids do. Heat/voltage priority classifi
 lives in `melting.lua`, while the normal togglable destination schema supplies each
 circuit's High/Medium/Low names. The shared planner's opt-in cross-destination matching
 moves existing recipes between those groups before creating any missing patterns.
+Matching recipes in old furnace groups participate in that migration too. Only
+materials with an eligible direct-dust route are adopted from other groups;
+unrelated alloy/fluid synthesis remains a separate producer. `coreKeys` also
+recognizes primary-only output patterns for retirement and a complete rewrite.
+Only direct material-dust routes can be selected; ranked ore-processing alternatives
+remain in the catalog for recognizing previous patterns.
 
 `source/tools/build_plasma.py` streams fabrication and regular-fusion recipes.
 It recovers the missing multistep metadata from pinned `Godforge.java` arrays and

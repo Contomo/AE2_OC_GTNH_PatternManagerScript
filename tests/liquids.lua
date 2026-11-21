@@ -137,6 +137,49 @@ test('a missing selected gas variant never silently falls back to circuit one', 
   assert(#result.recipes==2 and result.recipes[1].outputForm=='c1')
 end)
 
+test('direct feed selection never falls back to ore processing or recovery-only raw dust',function()
+  local data,opts=catalog(),options();opts.emitCasting=false
+  data.materials[1].routes[1].rank=1
+  data.materials[1].routes[2].rank=1
+  local result=Melting.compile(data,opts,Supply.new())
+  assert(#result.recipes==0 and result.skipped[1].reason:find('ore-processing',1,true))
+  data=catalog();data.materials[1].rawSource=false
+  result=Melting.compile(data,opts,Supply.new())
+  assert(#result.recipes==0 and result.invalidFluids[fluid.name])
+  assert(result.skipped[1].reason:find('raw-dust source',1,true))
+end)
+
+test('real hydrogen and oxygen reactions survive Oganesson selection and always request their fluids',function()
+  local data=U.clone(require('assline_liquid_data'));local selected={}
+  for _,m in ipairs(data.materials) do
+    if m.key=='energeticalloy' or m.key=='stainlesssteel' then selected[#selected+1]=m end
+  end
+  assert(#selected==2);data.materials=selected
+  local opts=options();opts.gas='oganesson';opts.requestGas=false;opts.emitCasting=false
+  local result=Melting.compile(data,opts,Supply.new())
+  assert(#result.recipes==2)
+  for _,r in ipairs(result.recipes) do
+    assert(r.outputForm=='c11' and #r.inputs==2 and #r.stock==1)
+    local fluidInput
+    for _,s in ipairs(r.inputs) do if s.type=='fluid' then fluidInput=s.name end end
+    assert(fluidInput==(r.material=='EnergeticAlloy' and 'hydrogen' or 'oxygen'))
+    local keys=Melting.coreKeys(data)
+    assert(keys[require('assline_planner').recipeKey(r)])
+    local legacy=U.clone(r)
+    for i=#legacy.inputs,1,-1 do if legacy.inputs[i].type=='fluid' then table.remove(legacy.inputs,i) end end
+    assert(keys[require('assline_planner').recipeKey(legacy)])
+  end
+end)
+
+test('passively stocked Magmatter cannot turn recovery dust into a new fluid source',function()
+  local data=U.clone(require('assline_liquid_data'));local selected={}
+  for _,m in ipairs(data.materials) do if m.key=='magmatter' then selected[#selected+1]=m end end
+  assert(#selected==1 and selected[1].rawSource==false);data.materials=selected
+  local opts=options();opts.emitCasting=false
+  local result=Melting.compile(data,opts,Supply.new())
+  assert(#result.recipes==0 and #result.skipped==1 and result.invalidFluids['molten.magmatter'])
+end)
+
 test('Melting Core can check future casts without emitting Fluid Shaper recipes', function()
   local opts=options();opts.emitCasting=false
   local graph=Supply.new()

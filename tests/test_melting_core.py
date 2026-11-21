@@ -9,7 +9,8 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'source' / 'tools'))
-from build_melting_core import compile_catalog, source_contract
+from build_melting_core import compile_catalog, source_contract, process_gases
+from build_material_sources import raw_material_sources
 
 
 def item(rid, n=1, **extra):
@@ -43,7 +44,53 @@ class MeltingCoreTests(unittest.TestCase):
 
     def compile(self, recipes):
         return compile_catalog(recipes, self.resources, self.registry, {}, self.units,
-                               {'sample': {'tier': 'EV'}}, {})
+                               {'sample': {'tier': 'EV'}}, {}, {'nitrogen'})
+
+    def test_only_the_scraped_blast_furnace_gas_stat_list_is_optional(self):
+        if not Path('.research/gt-5.09.54.133.zip').exists():
+            self.skipTest('Pinned source archive unavailable')
+        gases = process_gases('.research/gt-5.09.54.133.zip')
+        self.assertIn('oganesson', gases)
+        self.assertIn('nitrogen', gases)
+        self.assertNotIn('hydrogen', gases)
+        self.assertNotIn('oxygen', gases)
+
+    def test_reaction_fluid_is_required_even_with_an_identical_dry_counterpart(self):
+        reaction = recipe('reaction', 'Blast Furnace', [self.dust,
+            item('gregtech:gt.integrated_circuit@11', consumed=False), fluid('hydrogen', 1000)],
+            [self.hot], durationTicks=100)
+        result, _ = self.compile([self.cast, self.dry, reaction])
+        route = next(r for r in result['materials'][0]['routes'] if r['circuit'] == 11)
+        self.assertEqual(route['gas'], 0)
+        self.assertEqual(len(result['feeds'][route['feed'] - 1]), 2)
+        self.assertIn('legacyGas', route)
+
+    def test_raw_feed_proof_excludes_finished_part_recycling_and_incomplete_hammer_exports(self):
+        dust, small, ingot, ore = 'sample:dust', 'sample:small', 'sample:ingot', 'sample:ore'
+        reverse = {dust: ('sample', 'dust'), small: ('sample', 'dustSmall'), ingot: ('sample', 'ingot')}
+        rows = [recipe('recover', 'Macerator', [item(ingot)], [item(dust)]),
+                recipe('pack', 'Packager', [item(small, 4)], [item(dust)]),
+                recipe('unpack', 'Unpackager', [item(dust)], [item(small, 4)]),
+                recipe('broken-hammer', 'Shaped Crafting', [item('oredict:craftingToolHardHammer')], [item(dust)])]
+        result = raw_material_sources(rows, {}, reverse)
+        self.assertFalse(result[dust]['independent'])
+        rows.append(recipe('ore', 'Macerator', [item(ore)], [item(dust)]))
+        result = raw_material_sources(rows, {ore: {'tags': ['oreSample']}}, reverse)
+        self.assertTrue(result[dust]['independent'])
+        self.assertTrue(result[small]['independent'])
+        self.assertEqual(result[dust]['example']['recipe'], 'ore')
+
+    def test_raw_feed_proof_resolves_ore_dictionary_inputs_and_keeps_real_crafting_sources(self):
+        reverse = {'test:dust': ('sample', 'dust'), 'test:ingot': ('sample', 'ingot')}
+        resources = {'test:ingot': {'tags': ['ingotSample']}}
+        recycled = recipe('hammer', 'Shaped Crafting', [item('oredict:ingotSample'),
+                           item('oredict:craftingToolHardHammer')], [item('test:dust')])
+        result = raw_material_sources([recycled], resources, reverse)
+        self.assertFalse(result['test:dust']['independent'])
+        production = recipe('synthesis', 'Extreme Crafting', [item('test:raw-catalyst')], [item('test:dust')])
+        result = raw_material_sources([recycled, production], resources, reverse)
+        self.assertTrue(result['test:dust']['independent'])
+        self.assertEqual(result['test:dust']['example']['recipe'], 'synthesis')
 
     def test_hot_ingot_conversion_copies_amount_heat_voltage_and_stocked_circuit(self):
         hot = {**self.hot, 'amount': 3}
@@ -100,6 +147,11 @@ class MeltingCoreTests(unittest.TestCase):
         self.assertLess(len(result['extraction']['rules']), 100)
         self.assertLess(Path('source/data/melting_core.json').stat().st_size, 800000)
         self.assertNotIn('extractors', result)
+        self.assertFalse(materials['magmatter']['rawSource'])
+        self.assertTrue(materials['energeticalloy']['rawSource'])
+        self.assertTrue(materials['stainlesssteel']['rawSource'])
+        self.assertTrue(materials['transcendentmetal']['rawSource'])
+        self.assertTrue(all(r['rank'] > 0 for r in materials['platinum']['routes']))
         if Path('.research/gt-5.09.54.133.zip').exists():
             self.assertEqual(source_contract('.research/gt-5.09.54.133.zip'), result['source']['godforgeSha256'])
 

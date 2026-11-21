@@ -10,11 +10,13 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import re
 import zipfile
 
 from import_catalog import records
 from import_registry_names import recover
 from material_forms import descriptor, registry_forms, solidifier_route, primary_solidifier_fluids
+from build_material_sources import raw_material_sources
 
 
 def source_contract(archive):
@@ -36,7 +38,17 @@ def source_contract(archive):
     return hashlib.sha256(java.encode()).hexdigest()
 
 
-def compile_catalog(recipes, resources, registry, names, units, tiers, origins):
+def process_gases(archive):
+    with zipfile.ZipFile(archive) as z:
+        java = z.read(next(p for p in z.namelist() if p.endswith('/BlastFurnaceGasStat.java'))).decode()
+    gases = re.findall(r'^\s*(\w+)\((?:Materials|WerkstoffLoader)\.\w+\.get(?:Gas|FluidOrGas)\(', java, re.M)
+    if not gases:
+        raise ValueError('Unknown BlastFurnaceGasStat declarations')
+    return {name.lower() for name in gases}
+
+
+def compile_catalog(recipes, resources, registry, names, units, tiers, origins,
+                    optional_gases, raw_sources=None):
     families, materials, reverse = registry_forms(registry, resources)
     primary = primary_solidifier_fluids(recipes, reverse, materials)
     casts, ingot_molds = {}, set()
@@ -163,9 +175,14 @@ def compile_catalog(recipes, resources, registry, names, units, tiers, origins):
         solids = [[i, n] for i, n in row['feed'] if items[i - 1]['type'] == 'item']
         row['gas'] = 0
         if len(fluids) == 1 and (row['output'], tuple(map(tuple, solids))) in dry:
-            row['gas'], row['gasAmount'] = fluids[0]
-            row['feed'] = solids
-            gases.add(row['gas'])
+            if namespaces[items[fluids[0][0] - 1]['name'] - 1] in optional_gases:
+                row['gas'], row['gasAmount'] = fluids[0]
+                row['feed'] = solids
+                gases.add(row['gas'])
+            else:
+                # Earlier releases incorrectly treated reaction fluids as
+                # optional. Recognize that old pattern for migration only.
+                row['legacyGas'] = fluids[0][0]
         row['feed'] = intern(row['feed'], feeds, feed_ids)
         witnesses.append({'recipe': row.pop('sourceId'), 'material': row['material']})
         groups[row['material']].append(row)
@@ -187,6 +204,9 @@ def compile_catalog(recipes, resources, registry, names, units, tiers, origins):
                               'fluid': item(fluid, 'fluid'), 'ingot': item(ingot), 'castEUt': eut,
                               'native': origin.get('native', False),
                               'nativeMachine': origin.get('example', {}).get('machine'), 'routes': unique})
+        dust = materials[key]['_forms'].get('dust')
+        if raw_sources is not None and dust in raw_sources:
+            material_rows[-1]['rawSource'] = raw_sources[dust]['independent']
 
     # Only exact, deterministic extractor routes are eligible for automatic
     # retirement. Coproduct or unrecognized patterns remain visible to proof.
@@ -276,7 +296,12 @@ def main():
     units = json.loads(Path('source/data/material_units.json').read_text())
     tiers = json.loads(Path('data/material-tiers.json').read_text())['materials']
     origins = json.loads(Path('data/material-sources.json').read_text())['materials']
-    result, evidence = compile_catalog(recipes, resources, registry, names, units, tiers, origins)
+    _, _, reverse = registry_forms(registry, resources)
+    raw_sources = raw_material_sources(
+        (row for section, _, row in records(args.export) if section == 'recipes'), resources, reverse)
+    result, evidence = compile_catalog(recipes, resources, registry, names, units, tiers, origins,
+                                       process_gases(args.gt), raw_sources)
+    evidence['rawSources'] = raw_sources
     result['source'] = {'recipeVersion': meta['gtnhVersion'], 'targetVersion': '2.9.0-beta-3',
                         'datasetId': meta['datasetVersionId'],
                         'recipeSource': 'https://github.com/GTNewHorizons/GT5-Unofficial/blob/5.09.54.133/src/main/java/tectech/loader/recipe/Godforge.java',
@@ -285,7 +310,9 @@ def main():
     args.output.write_text(json.dumps(result, indent=2) + '\n')
     settings = {'circuits': result['circuits'], 'gases': [
         {'name': result['names'][result['items'][i - 1]['name'] - 1], 'label': result['items'][i - 1]['label']}
-        for i in result['gases']]}
+        for i in result['gases']], 'legacyGases': sorted({
+            result['names'][result['items'][r['legacyGas'] - 1]['name'] - 1]
+            for m in result['materials'] for r in m['routes'] if r.get('legacyGas')})}
     Path('source/data/melting_settings.json').write_text(json.dumps(settings, indent=2) + '\n')
     Path('.research/melting-core-evidence.json').write_text(json.dumps(evidence, indent=2))
     print(len(result['materials']), 'ingot casts;', sum(len(m['routes']) for m in result['materials']),

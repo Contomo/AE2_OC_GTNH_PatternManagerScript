@@ -3,7 +3,7 @@ local Batch = require('assline_batch')
 local ComponentData = require('assline_component_data')
 local LiquidSettings = require('assline_liquid_settings')
 local Plasma = require('assline_plasma')
-local M = {}
+local M = { legacyProcessGases = LiquidSettings.legacyGases or {} }
 local function field(key, label, help, default, kind, optional)
   return {
     key = key,
@@ -363,7 +363,7 @@ local gasField = choice(
   'Optional process gas',
   gasChoices,
   'none',
-  'Select the process-gas variant, or Without Optional Gas. A missing selected variant is excluded, never replaced by a no-gas variant.'
+  'Select an acceleration gas. Required reaction fluids such as hydrogen remain requested. A missing acceleration-gas variant is excluded.'
 )
 gasField.kind = 'select'
 local requestGas = field(

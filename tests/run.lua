@@ -3344,6 +3344,13 @@ end
 local function liquidPattern(inputs,outputs)
   local p=pattern(inputs,outputs);p.name='ae2fc:encodedPattern';return p
 end
+local function legacyMeltingRecipe(data)
+  local legacy=cp(data)
+  for _,m in ipairs(legacy.materials) do m.rawSource=nil end
+  return require('assline_melting').compile(legacy,
+    {forms={c0=true,c1=true,c11=true,ingot=true},gas='none',multiplier=1,emitCasting=false},
+    require('assline_supply').new()).recipes[1]
+end
 local function liquidFixture(data)
   cfg.programs.meltingCore.forms='c1'
   cfg.programs.fluidShaper.forms='ingot'
@@ -3513,8 +3520,7 @@ test('liquid migration retires a managed duplicate when another producer exists 
   withLiquidMaterials({octiron=true},function(data)
     cfg.programs.meltingCore.forms='c0_medium'
     local core=iface(cfg.programs.meltingCore.c0_medium,81)
-    local first=api.runner.preview(cfg,'meltingCore')
-    local r=assert(first.manifest.recipes[1]);core.patterns[0]=liquidPattern(r.inputs,r.outputs)
+    local r=assert(legacyMeltingRecipe(data));core.patterns[0]=liquidPattern(r.inputs,r.outputs)
     local f;for _,row in ipairs(nativeLiquidFixtures) do if row.key=='octiron' then f=row end end
     local producer=iface('Existing ABS',90,{[0]=nativePattern(f)})
     iface('Macerator',91,{[0]=pattern({liquidStack(data,data.materials[1].ingot,1)},{cp(f.inputs[1])})})
@@ -3525,6 +3531,116 @@ test('liquid migration retires a managed duplicate when another producer exists 
     assert(core.patterns[0].outputs[1].name=='minecraft:paper' and ser(producer.patterns)==original)
     assert(not api.runner.hasSaved())
   end)
+end)
+
+test('liquid migration excludes passive Magmatter and retires the previously generated recovery loop',function()
+  withLiquidMaterials({magmatter=true},function(data)
+    cfg.programs.meltingCore.forms='c1_low'
+    local core=iface(cfg.programs.meltingCore.c1_low,81)
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==0 and #p.plan.retirements==0)
+    assert(data.materials[1].rawSource==false)
+    local legacy=assert(legacyMeltingRecipe(data))
+    core.patterns[3]=liquidPattern(legacy.inputs,legacy.outputs)
+    p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==0 and #p.plan.retirements==1 and #p.plan.errors==0)
+    api.runner.execute(cfg,p)
+    assert(core.patterns[3].outputs[1].name=='minecraft:paper')
+    assert(#api.runner.preview(cfg,'meltingCore').plan.retirements==0)
+  end)
+end)
+
+test('liquid migration selects real hydrogen and oxygen routes and retires only their ingot extractors',function()
+  withLiquidMaterials({energeticalloy=true,stainlesssteel=true},function(data)
+    cfg.programs.meltingCore.forms='c11';cfg.programs.meltingCore.gas='oganesson'
+    cfg.programs.meltingCore.requestGas='off'
+    local core=iface(cfg.programs.meltingCore.c11,81)
+    local old=iface('Fluid Extractor',90)
+    for i,m in ipairs(data.materials) do
+      old.patterns[i-1]=liquidPattern({liquidStack(data,m.ingot,256)},{liquidStack(data,m.fluid,36864)})
+    end
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==2 and #p.plan.retirements==2 and #p.plan.errors==0)
+    for _,r in ipairs(p.manifest.recipes) do assert(#r.inputs==2 and r.stock[1].damage==11) end
+    api.runner.execute(cfg,p)
+    assert(core.patterns[0] and core.patterns[1])
+    local nextPlan=api.runner.preview(cfg,'meltingCore')
+    assert(nextPlan.plan.reused==2 and #nextPlan.plan.retirements==0 and #nextPlan.plan.creates==0)
+  end)
+end)
+
+test('liquid migration moves and resizes real Samarium and Transcendent Metal from older furnaces',function()
+  withLiquidMaterials({samarium=true,transcendentmetal=true},function(data)
+    cfg.programs.meltingCore.forms='c1,c1_low';cfg.programs.meltingCore.multiplier='4'
+    cfg.programs.meltingCore.gas='oganesson'
+    local high=iface(cfg.programs.meltingCore.c1,81)
+    local low=iface(cfg.programs.meltingCore.c1_low,82)
+    local initial=api.runner.preview(cfg,'meltingCore');assert(#initial.manifest.recipes==2)
+    local old=iface('MABS Circuit 1',90)
+    for i,r in ipairs(initial.manifest.recipes) do
+      local encoded=cp(r)
+      for _,stacks in ipairs({encoded.inputs,encoded.outputs}) do for _,s in pairs(stacks) do s.size=s.size*64 end end
+      old.patterns[i-1]=liquidPattern(encoded.inputs,encoded.outputs)
+    end
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==2 and p.plan.reused==2 and #p.plan.resizes==2)
+    assert(#p.plan.retirements==0 and #p.plan.creates==0 and #p.plan.errors==0)
+    api.runner.execute(cfg,p)
+    assert(not next(old.patterns) and high.patterns[0] and low.patterns[0])
+    for _,bank in ipairs({high,low}) do
+      local pattern=bank.patterns[0]
+      local amount
+      for _,s in pairs(pattern.inputs) do if s.damage~=nil then amount=s.size end end
+      assert(amount==4)
+    end
+    assert(api.runner.preview(cfg,'meltingCore').plan.reused==2)
+  end)
+end)
+
+test('liquid migration replaces an old Samarium oxide route with the selected direct dust feed',function()
+  withLiquidMaterials({samarium=true},function(data)
+    cfg.programs.meltingCore.forms='c1';cfg.programs.meltingCore.gas='oganesson'
+    local core=iface(cfg.programs.meltingCore.c1,81)
+    local m=data.materials[1];local alternative
+    for _,r in ipairs(m.routes) do if r.rank==1 then alternative=r end end
+    assert(alternative)
+    local inputs,outputs={},{}
+    for _,pair in ipairs(data.feeds[alternative.feed]) do inputs[#inputs+1]=liquidStack(data,pair[1],pair[2]*256) end
+    for _,pair in ipairs(data.products[alternative.output]) do outputs[#outputs+1]=liquidStack(data,pair[1],pair[2]*256) end
+    local old=iface('MABS Circuit 1',90,{[0]=liquidPattern(inputs,outputs)})
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==1 and #p.plan.retirements==1 and #p.plan.errors==0)
+    api.runner.execute(cfg,p)
+    assert(core.patterns[0].inputs[1].damage==2069)
+    assert(not next(old.patterns) or old.patterns[0].outputs[1].name=='minecraft:paper')
+  end)
+end)
+
+test('liquid migration recognizes scaled Transcendent Metal patterns that omitted the secondary output',function()
+  withLiquidMaterials({transcendentmetal=true},function(data)
+    cfg.programs.meltingCore.forms='c1_low';cfg.programs.meltingCore.multiplier='4'
+    local core=iface(cfg.programs.meltingCore.c1_low,81)
+    local r=assert(legacyMeltingRecipe(data));assert(#r.outputs==2)
+    for _,values in ipairs({r.inputs,r.outputs}) do for _,s in ipairs(values) do s.size=s.size*1024 end end
+    local primary
+    for _,s in ipairs(r.outputs) do if s.name=='molten.transcendentmetal' then primary=s end end
+    local old=iface('MABS Circuit 1',90,{[3]=liquidPattern(r.inputs,{primary})})
+    local p=api.runner.preview(cfg,'meltingCore')
+    assert(#p.manifest.recipes==1 and #p.plan.retirements==1 and #p.plan.errors==0)
+    api.runner.execute(cfg,p)
+    assert(#core.patterns[0].outputs==2 and core.patterns[0].outputs[1].size==576)
+    assert(not old.patterns[3] or old.patterns[3].outputs[1].name=='minecraft:paper')
+    assert(api.runner.preview(cfg,'meltingCore').plan.reused==1)
+  end)
+end)
+
+test('liquid settings migrate the former reaction-gas choices without changing noble-gas selection',function()
+  for _,gas in ipairs({'hydrogen','oxygen'}) do
+    local old=cp(cfg);old.programs.meltingCore.gas=gas
+    assert(api.config.migrate(old).programs.meltingCore.gas=='none')
+  end
+  local old=cp(cfg);old.programs.meltingCore.gas='oganesson'
+  assert(api.config.migrate(old).programs.meltingCore.gas=='oganesson')
 end)
 
 test('liquid migration leaves ABS and DTPF production intact and excludes their dust remelting routes',function()

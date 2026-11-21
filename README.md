@@ -99,8 +99,11 @@ but lacks the selected one, it is excluded instead of silently falling back to
 circuit 1. Materials with no optional-gas variants keep their sole route.
 **Request process gas** controls only the encoded gas ingredient: switch it off
 to stock gas externally while retaining the assisted route and circuit.
-Required reaction fluids remain requested. One feed route is selected per molten
-product, preferring its dust route; batches, voltage and heat appear in the preview.
+The acceleration-gas list is scraped from GT's `BlastFurnaceGasStat` enum.
+Hydrogen and oxygen reactions remain requested even with Oganesson selected or
+**Request process gas** off. One direct material-dust route is selected per molten
+product; ore-processing and other-material feeds are excluded. Batches, voltage
+and heat appear in the preview.
 
 Both programs use one dependency solver and compare terminal-visible encoded
 recipes across the network. An existing active fluid-output pattern prevents a
@@ -112,6 +115,10 @@ The block editor supplies this lookup; a multipart editor can use a connected
 ME controller. **ME network component address** in Shared interfaces selects one
 when automatic discovery is ambiguous. Owned Melting Core patterns and retiring
 extractors are accounted for so they do not suppress reuse or their own replacement.
+Matching furnace recipes in other interface groups can move into the selected
+Helioflux destinations and resize through the shared planner. Old recipes with
+omitted secondary outputs are retired and rewritten with the complete selected
+recipe, using the same donor-reuse flow.
 Dust supplied only by `fluid -> ingot -> dust`
 cannot seed a new melting route. Melting Core checks proposed molten production
 together with virtual future casts, including cross-material cycles, but installs
@@ -120,7 +127,14 @@ supply, including completed Melting Core recipes. Ingot casts require an indepen
 installed liquid producer; other shapes can still use extracted fluid.
 Magnetic and attuned variants remain excluded.
 
-Ingredients with no encoded producer are treated as external supplies; this does
+The desktop scrape also checks raw-material feeds independently of installed
+patterns: ore or raw-material synthesis can ground a feed, while remelting,
+finished-part recovery and repacking cycles cannot. This excludes recovery-only
+feeds such as Magmatter Dust even when the fluid is passively stocked and has no
+encoded producer. Previously generated invalid routes in enabled Melting Core
+destinations appear under **Retirements**.
+
+Other ingredients with no encoded producer are treated as external supplies; this does
 not prove inventory levels, passive production or machine readiness. Connect all
 relevant production interfaces to the terminal during planning and execution.
 No separate fluid-extractor interface setting is needed: every terminal-visible

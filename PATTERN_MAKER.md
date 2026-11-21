@@ -37,6 +37,13 @@ casts are checked in the shared dependency graph, so a dust obtainable only thro
 ingot cast cannot become a replacement production route. See [setup and supply
 assumptions](README.md) before executing.
 
+The liquid catalog also carries a scraped raw-feed source flag, preventing
+recovery-only dust from becoming a new production route when the fluid is stocked
+passively. Selection uses direct material dust, and reaction fluids stay requested
+independently of the optional acceleration gas. Matching old furnace recipes can
+move and resize through the shared planner; omitted coproducts require a complete
+rewrite through the ordinary retirement/donor flow.
+
 Plasma Fabricator uses the same maker with one selected dust/fluid feed per
 plasma. It has its own plasma-tier cap, multistep unlock, regular-fusion inclusion
 checkbox and fixed multiplier. Its source-derived catalog stores one product row

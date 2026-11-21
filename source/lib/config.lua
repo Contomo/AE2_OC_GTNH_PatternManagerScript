@@ -324,6 +324,11 @@ function M.migrate(old)
     c.programs.insulator.polymer = prior.pvc == 'off' and 'none' or 'pvcSmall'
   end
   local melting = old.programs and old.programs.meltingCore
+  for _, name in ipairs(Programs.legacyProcessGases) do
+    if c.programs.meltingCore.gas == name then
+      c.programs.meltingCore.gas = 'none'
+    end
+  end
   if melting and melting.forms then
     local forms, casting = {}, false
     for key in melting.forms:gmatch('[^,]+') do

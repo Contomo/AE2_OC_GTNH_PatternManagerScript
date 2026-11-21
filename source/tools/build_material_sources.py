@@ -53,6 +53,80 @@ def example(recipe, dependencies=()):
     return result
 
 
+def raw_material_sources(recipes, resources, reverse):
+    """Ground raw forms in ore or production, never in their finished parts.
+
+    Other materials are external to this per-material proof. The installed
+    recipe graph still checks those dependencies at runtime. Dynamic hammer
+    exports containing only the tool cannot establish a source of free dust.
+    """
+    raw = {rid: material for rid, (material, form) in reverse.items()
+           if form in RAW_FORMS}
+    ready, witnesses, aliases = set(), {}, defaultdict(set)
+    # Actual registered ore tags, rather than availability of generated dusts,
+    # identify raw resources. Ore can enter from mining without an AE recipe.
+    for rid, resource in resources.items():
+        for tag in resource.get('tags', []):
+            aliases['oredict:' + tag].add(rid)
+        if any(tag.startswith('ore') and not tag.startswith('oredict:')
+               for tag in resource.get('tags', [])):
+            ready.add(rid)
+    pending = []
+    for recipe in recipes:
+        inputs = [e for e in recipe['inputs'] if e.get('consumed', True)
+                  and not e['id'].startswith('oredict:craftingTool')]
+        if not inputs:
+            continue
+        for output in recipe['outputs']:
+            key = raw.get(output['id'])
+            if key is None:
+                continue
+            dependencies, blocked, recovery_feed = [], False, False
+            for entry in inputs:
+                choices = set()
+                external = False
+                for option in [entry, *entry.get('alternatives', [])]:
+                    for rid in aliases.get(option['id'], {option['id']}):
+                        found = reverse.get(rid)
+                        if rid in ready or found and found[0] == key and rid in raw:
+                            choices.add(rid)
+                            recovery_feed = True
+                        elif found and found[0] == key:
+                            continue
+                        elif option.get('kind') == 'fluid' and normal(rid.split('.', 1)[-1]) == key:
+                            continue
+                        else:
+                            external = True
+                if not external:
+                    if choices:
+                        dependencies.append(choices)
+                    else:
+                        blocked = True
+            # Recovery of unregistered machines/tools must not seed raw dust.
+            # Ore processing and same-material raw-form conversions may pass.
+            if recipe['machineType'] in NON_PRODUCTION | {'Forge Hammer'}:
+                if not recovery_feed:
+                    blocked = True
+            if not blocked:
+                pending.append((output['id'], dependencies, example(recipe)))
+    changed = True
+    while changed:
+        changed = False
+        remaining = []
+        for output, dependencies, witness in pending:
+            if output in ready:
+                continue
+            if all(choices & ready for choices in dependencies):
+                ready.add(output)
+                witnesses[output] = witness
+                changed = True
+            else:
+                remaining.append((output, dependencies, witness))
+        pending = remaining
+    return {rid: {'independent': rid in ready, **({'example': witnesses[rid]} if rid in witnesses else {})}
+            for rid in raw}
+
+
 def source_index(recipes, reverse, fluid_materials):
     """One streaming pass, then resolve only same-material liquid dependencies."""
     materials = {}
