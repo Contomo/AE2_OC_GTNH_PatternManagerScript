@@ -414,14 +414,18 @@ end
 
 function M.revalidate(request, snapshot, preview, checkpoint)
   local fresh = M.plan(request, snapshot, checkpoint)
+  return M.verify(preview, fresh)
+end
+
+function M.verify(preview, fresh)
   local function operations(p)
-    return encoded({ p.layout, p.moves, p.creates, p.resizes, p.preserved, p.required })
+    return { p.layout, p.moves, p.creates, p.resizes, p.preserved, p.required }
   end
   need(
     #fresh.errors == 0
       and preview.baseline
       and fresh.baseline == preview.baseline
-      and operations(fresh) == operations(preview),
+      and U.eq(operations(fresh), operations(preview)),
     'Patterns, settings or manifest changed; scan again'
   )
   return fresh

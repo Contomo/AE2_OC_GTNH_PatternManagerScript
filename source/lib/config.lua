@@ -86,6 +86,13 @@ M.fields = {
     help = 'Fluid crafting lookup: blank uses the block editor or sole ME controller; otherwise enter its address prefix.',
     default = '',
   },
+  {
+    key = 'chunked',
+    kind = 'toggle',
+    default = 'on',
+    label = 'Process one destination at a time',
+    help = 'Keeps one destination preview and edit plan in memory. Interfaces sharing a name stay together for sorting.',
+  },
 }
 M.defaults = { version = 2, shared = {}, batch = {}, programs = {} }
 for _, f in ipairs(M.fields) do

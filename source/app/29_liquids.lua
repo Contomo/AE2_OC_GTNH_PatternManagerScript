@@ -2,9 +2,34 @@
 -- use the existing parking, sorting, imprinting and recovery operations.
 C.liquids = {}
 local indexedData, extractorMatch, coreKeys
+function C.liquids.release()
+  indexedData, extractorMatch, coreKeys = nil, nil, nil
+end
 
 local function liquidOrigin(ref, slot)
   return where(ref) .. ':' .. slot
+end
+
+local function retirementIssue(entry)
+  if entry.reason then
+    return 'Cannot retire '
+      .. entry.name
+      .. ' / '
+      .. U.locationText(entry.from)
+      .. ' slot '
+      .. entry.from.slot
+      .. ': '
+      .. entry.reason
+  end
+end
+
+local function retirementSlot(hw, errors)
+  for slot = 0, editorCapacity(hw) - 1 do
+    if not U.exists(direct(hw, 'getInterfacePattern', slot)) then
+      return slot
+    end
+  end
+  errors[#errors + 1] = 'The pattern editor needs one empty slot for retirement.'
 end
 
 local function supplyFingerprint(hw, banks)
@@ -152,6 +177,142 @@ local function liquidScan(c, data, hw, routing, options, progress, id)
   return graph, retirement, placeholders, owned, baseline, counts, parkedOrigins
 end
 
+-- One compact, program-wide proof; full recipes are compiled one destination
+-- at a time and immediately reduced to graph node IDs. This preserves cycle
+-- detection between casts in different chunks without keeping their manifests.
+function C.liquids.session(c, groups, progress, control, ignored, first)
+  local hw = connect(c, progress, control, true)
+  local routing, options = C.maker.routing(c, 'fluidShaper')
+  local graph, candidates, placeholders, _, baseline, counts, parked =
+    liquidScan(c, require('assline_liquid_data'), hw, routing, options, progress, 'fluidShaper')
+  local excluded, indexes, offsets, ingots, existingCasts = {}, {}, {}, {}, {}
+  for _, entry in ipairs(candidates) do
+    excluded[entry.origin] = true
+  end
+  local retirementChunk = 1
+  for index, group in ipairs(groups) do
+    offsets[index] = #indexes
+    if group.forms.ingot then
+      retirementChunk = index
+    end
+    local manifest = C.maker.compile(c, 'fluidShaper', group.forms)
+    for _, recipe in ipairs(manifest.recipes) do
+      if index >= (first or 1) then
+        local n = #indexes + 1
+        local row = graph:add(recipe, 'new-shaper-' .. n)
+        indexes[n] = row
+        if recipe.outputForm == 'ingot' then
+          graph.recipes[row].requireProducer = graph:node(recipe.inputs[1])
+          ingots[n] = recipe.inputs[1].name
+        end
+      elseif recipe.outputForm == 'ingot' then
+        -- Finished chunks are installed supply, never fictional future casts.
+        existingCasts[#existingCasts + 1] = { fluid = recipe.inputs[1], ingot = recipe.outputs[1] }
+      end
+    end
+    manifest = nil
+    releaseChunk()
+  end
+  local approved
+  while true do
+    approved = graph:approve(indexes, excluded)
+    local supplied, changed = {}, false
+    for n, fluid in pairs(ingots) do
+      if not approved['new-shaper-' .. n] then
+        supplied[fluid] = true
+      end
+    end
+    for _, cast in ipairs(existingCasts) do
+      if
+        graph:hasProducer(cast.ingot, excluded, true)
+        and graph:independent({ cast.fluid }, { cast.ingot }, approved)
+      then
+        supplied[cast.fluid.name] = true
+      end
+    end
+    for _, entry in ipairs(candidates) do
+      if excluded[entry.origin] and not supplied[entry.fluid] then
+        excluded[entry.origin], changed = nil, true
+      end
+    end
+    if not changed then
+      break
+    end
+  end
+  local rejected, eligibility, retirements, errors = {}, {}, {}, {}
+  for n = 1, #indexes do
+    rejected[n] = approved['new-shaper-' .. n] == true
+    eligibility[n] = rejected[n] and '0' or '1'
+  end
+  for _, entry in ipairs(candidates) do
+    if excluded[entry.origin] then
+      retirements[#retirements + 1] = entry
+      if entry.reason then
+        errors[#errors + 1] = retirementIssue(entry)
+      end
+    end
+  end
+  local workspace
+  if #retirements > 0 then
+    workspace = retirementSlot(hw, errors)
+  end
+  local network = supplyFingerprint(hw, baseline)
+  if not ignored then
+    ignored = {}
+    for _, entry in ipairs(retirements) do
+      ignored[entry.origin] = true
+    end
+  end
+  for _, bank in ipairs(baseline) do
+    for slot in pairs(bank.patterns) do
+      if ignored and ignored[liquidOrigin(bank.ref, slot)] then
+        bank.patterns[slot] = nil
+      end
+    end
+  end
+  local masked = supplyFingerprint(hw, baseline)
+  C.liquids.release()
+  package.loaded.assline_liquid_data = nil
+  return {
+    hw = hw,
+    routing = routing,
+    groups = groups,
+    offsets = offsets,
+    rejected = rejected,
+    eligibility = table.concat(eligibility),
+    network = network,
+    masked = masked,
+    retirements = retirements,
+    retirementChunk = retirementChunk,
+    workspace = workspace,
+    placeholders = placeholders,
+    counts = counts,
+    parked = parked,
+    errors = errors,
+  }
+end
+
+function C.liquids.chunk(session, index, base)
+  local manifest = Melting.castManifest(base, function(n)
+    return session.rejected[session.offsets[index] + n]
+  end)
+  local routing = U.clone(session.routing)
+  routing.additionalDonors = {}
+  for _, entries in ipairs({ session.retirements, session.placeholders }) do
+    for _, entry in ipairs(entries) do
+      if
+        not entry.used
+        and not entry.reason
+        and entry.name ~= session.groups[index].name
+        and entry.name ~= routing.donors
+      then
+        routing.additionalDonors[#routing.additionalDonors + 1] = entry
+      end
+    end
+  end
+  return manifest, routing
+end
+
 function C.liquids.preview(c, progress, control, id)
   id = id or 'meltingCore'
   Config.requireProgram(c, id)
@@ -289,14 +450,7 @@ function C.liquids.preview(c, progress, control, id)
     if excluded[entry.origin] then
       retirements[#retirements + 1] = entry
       if entry.reason then
-        errors[#errors + 1] = 'Cannot retire '
-          .. entry.name
-          .. ' / '
-          .. U.locationText(entry.from)
-          .. ' slot '
-          .. entry.from.slot
-          .. ': '
-          .. entry.reason
+        errors[#errors + 1] = retirementIssue(entry)
       elseif entry.name ~= c.shared.donors and not destinations[entry.name] then
         routing.additionalDonors[#routing.additionalDonors + 1] = entry
       end
@@ -304,16 +458,8 @@ function C.liquids.preview(c, progress, control, id)
   end
   local plan, snapshot = C.maker.scan(c, manifest, routing, progress, control, true)
   if #retirements > 0 then
-    local workspace
-    for slot = 0, editorCapacity(hw) - 1 do
-      if not U.exists(direct(hw, 'getInterfacePattern', slot)) then
-        workspace = slot
-        break
-      end
-    end
-    if not workspace then
-      errors[#errors + 1] = 'The pattern editor needs one empty slot for retirement.'
-    else
+    local workspace = retirementSlot(hw, errors)
+    if workspace then
       plan.retirementWorkspace = endpoint(hw.buffer, workspace)
     end
   end
@@ -359,9 +505,22 @@ function C.liquids.apply(c, plan, manifest, progress, control, id)
   if #fresh.retirements == 0 then
     return C.maker.apply(c, id, fresh, proposed, progress, control, freshRouting)
   end
-  local marker = C.donors.markerRecipe(hw)
   local workspace = U.check(fresh.retirementWorkspace, 'No retirement workspace').slot
-  for n, entry in ipairs(fresh.retirements) do
+  C.liquids.retire(hw, fresh.retirements, workspace, progress)
+  local ready, _, readyManifest, routing, _, readyProof =
+    C.liquids.preview(c, progress, control, id)
+  U.check(
+    #ready.errors == 0
+      and U.eq(readyManifest.recipes, proposed.recipes)
+      and unchangedSupply(hw, proof, readyProof, fresh.retirements),
+    'Supply changed during retirement. Continue to review a fresh preview.'
+  )
+  C.maker.apply(c, id, ready, readyManifest, progress, control, routing)
+end
+
+function C.liquids.retire(hw, entries, workspace, progress)
+  local marker = C.donors.markerRecipe(hw)
+  for n, entry in ipairs(entries) do
     gate()
     local bank = current(hw, entry.from)
     local original = bank.patterns[entry.from.slot]
@@ -385,16 +544,7 @@ function C.liquids.apply(c, plan, manifest, progress, control, id)
     finish(hw, op, progress)
     clearOp()
     if progress then
-      progress('Retired extraction pattern ' .. n .. ' / ' .. #fresh.retirements)
+      progress('Retired extraction pattern ' .. n .. ' / ' .. #entries)
     end
   end
-  local ready, _, readyManifest, routing, _, readyProof =
-    C.liquids.preview(c, progress, control, id)
-  U.check(
-    #ready.errors == 0
-      and U.eq(readyManifest.recipes, proposed.recipes)
-      and unchangedSupply(hw, proof, readyProof, fresh.retirements),
-    'Supply changed during retirement. Continue to review a fresh preview.'
-  )
-  C.maker.apply(c, id, ready, readyManifest, progress, control, routing)
 end

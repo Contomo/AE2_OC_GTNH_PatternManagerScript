@@ -84,6 +84,16 @@ function M.boundedHash(value, limit, hash)
   return 'chunked-sha256:' .. hash(final)
 end
 
+-- Incremental checksum for journal streams; no whole-file buffer is needed.
+function M.adler32(value, previous)
+  local a, b = (previous or 1) % 65536, math.floor((previous or 1) / 65536)
+  for i = 1, #value do
+    a = (a + value:byte(i)) % 65521
+    b = (b + a) % 65521
+  end
+  return b * 65536.0 + a
+end
+
 function M.eq(a, b)
   if type(a) ~= type(b) then
     return false
@@ -1502,6 +1512,13 @@ M.fields = {
     help = 'Fluid crafting lookup: blank uses the block editor or sole ME controller; otherwise enter its address prefix.',
     default = '',
   },
+  {
+    key = 'chunked',
+    kind = 'toggle',
+    default = 'on',
+    label = 'Process one destination at a time',
+    help = 'Keeps one destination preview and edit plan in memory. Interfaces sharing a name stay together for sorting.',
+  },
 }
 M.defaults = { version = 2, shared = {}, batch = {}, programs = {} }
 for _, f in ipairs(M.fields) do
@@ -1853,13 +1870,27 @@ local cfg = U.clone(defaults)
 local work = { pause = 0.25, resume = 0.75 }
 local perf
 local tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
+local pollWork
 local function releaseWork()
   perf = nil
   work.progress = nil
   work.control = nil
   work.atomic = false
+  work.stopping, work.stopReason = false, nil
   work.cardLimits = nil
   tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
+  if C.liquids and C.liquids.release then
+    C.liquids.release()
+  end
+  package.loaded.assline_data, package.loaded.assline_liquid_data = nil, nil
+end
+local function releaseChunk()
+  tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
+  -- OC owns collection in the host. Drop references and yield through the
+  -- normal control path; collectgarbage is absent from its Lua sandbox.
+  if pollWork and not work.stopping then
+    pollWork(0.01)
+  end
 end
 local function sampleEnergy()
   local t = computer.uptime()
@@ -1934,7 +1965,7 @@ local function energyFraction()
 end
 -- All component gates and waits share one cooperative control path. Stop is
 -- deferred inside a journaled transaction; Pause can wait at any call boundary.
-local function pollWork(delay)
+pollWork = function(delay)
   local e
   repeat
     local t = computer.uptime()
@@ -2030,6 +2061,7 @@ local paths = {
   run = '/home/assline.run',
   abandoned = '/home/assline.abandoned',
   backup = '/home/assline.last',
+  sorting = '/home/assline.sort',
 }
 local function readRaw(path, maximum)
   if not fs.exists(path) then
@@ -2055,11 +2087,25 @@ local function writeFile(path, t, maximum)
   local s = serialization.serialize(t)
   U.check(
     #s <= (maximum or 400000),
-    'Recovery data exceeds disk/memory budget; use a smaller target interface'
+    'Saved record exceeds its ' .. (maximum or 400000) .. ' byte limit: ' .. path
   )
+  if computer.freeMemory() <= #s + 131072 then
+    for _ = 1, 10 do
+      pollWork(0.01)
+      if computer.freeMemory() > #s + 131072 then
+        break
+      end
+    end
+  end
   U.check(
     computer.freeMemory() > #s + 131072,
-    'Not enough memory to verify saved data; use a smaller target interface'
+    'Not enough memory to verify saved data: need '
+      .. (#s + 131072)
+      .. ' bytes, free '
+      .. computer.freeMemory()
+      .. ' ('
+      .. path
+      .. ')'
   )
   local temp = path .. '.tmp'
   local f = U.check(io.open(temp, 'w'), 'Cannot write ' .. temp)
@@ -2508,9 +2554,11 @@ local function capacity(i)
   -- requires verification of fully expanded destination interfaces before Apply.
   return Config.destinationSlots
 end
-local function connect(c, progress, control)
+local function connect(c, progress, control, started)
   validate(c)
-  startWork(c, progress, control)
+  if not started then
+    startWork(c, progress, control)
+  end
   local shared = c.shared
   local hw = {
     terminal = selectDevice('me_interface_terminal', shared.terminalAddress),
@@ -3023,6 +3071,9 @@ local function clearOp()
   if fs.exists(paths.cursor) then
     U.check(fs.remove(paths.cursor), 'Cannot clear completed recovery progress')
   end
+  if fs.exists(paths.sorting) then
+    U.check(fs.remove(paths.sorting), 'Cannot clear completed sorting journal')
+  end
   work.atomic = false
   gate()
 end
@@ -3055,6 +3106,7 @@ local function donorPool(hw, name, protected, progress, additional)
           'Reclaimed donor changed; scan again'
         )
         U.check(safeDonor(hw.data, pattern), 'Reclaimed pattern is no longer editable')
+        extra.used = true
         return extra.from, compact(pattern)
       end
       local source = slots[slotIndex]
@@ -3125,7 +3177,10 @@ local function apply(c, plan, progress, control)
     'Patterns or destinations changed since preview. Scan again.'
   )
   fresh = nil
-  writeFile(paths.backup, { config = U.clone(c), plan = plan })
+  writeFile(
+    paths.backup,
+    { config = U.clone(c), program = 'assline', renamed = #plan.changes, created = plan.newRecipes }
+  )
   local workspace = plan.empty[1]
   local protected = U.clone(plan.protected)
   protected[where(plan.target)] = true
@@ -3187,8 +3242,8 @@ local function apply(c, plan, progress, control)
     clearOp()
   end
 end
-local function recover(c, progress, control)
-  local op = U.check(readFile(paths.pending), 'No pending operation')
+local function recover(c, progress, control, savedOperation)
+  local op = U.check(savedOperation or readFile(paths.pending), 'No pending operation')
   local hw = connect(c, progress, control)
   work.atomic = true
   if op.kind == 'move' or op.kind == 'sort' then
@@ -3632,14 +3687,18 @@ end
 
 function M.revalidate(request, snapshot, preview, checkpoint)
   local fresh = M.plan(request, snapshot, checkpoint)
+  return M.verify(preview, fresh)
+end
+
+function M.verify(preview, fresh)
   local function operations(p)
-    return encoded({ p.layout, p.moves, p.creates, p.resizes, p.preserved, p.required })
+    return { p.layout, p.moves, p.creates, p.resizes, p.preserved, p.required }
   end
   need(
     #fresh.errors == 0
       and preview.baseline
       and fresh.baseline == preview.baseline
-      and operations(fresh) == operations(preview),
+      and U.eq(operations(fresh), operations(preview)),
     'Patterns, settings or manifest changed; scan again'
   )
   return fresh
@@ -4281,7 +4340,10 @@ function M.compile(data, mode, options, checkpoint)
       end
     end
   end
-  U.check(#manifest.recipes > 0 or #manifest.skipped > 0, 'No verified recipes for this mode')
+  U.check(
+    options.allowEmpty or #manifest.recipes > 0 or #manifest.skipped > 0,
+    'No verified recipes for this mode'
+  )
   return manifest
 end
 return M
@@ -5143,17 +5205,19 @@ function M.new(checkpoint)
     return index
   end
 
-  function graph:hasProducer(stack, excluded, activeOnly)
-    local id = self.ids[M.identity(stack)]
-    for _, index in ipairs(id and self.nodes[id].producers or {}) do
+  local function hasProducer(id, excluded, activeOnly)
+    for _, index in ipairs(id and graph.nodes[id].producers or {}) do
       if
-        not (excluded or {})[self.recipes[index].origin]
-        and not (activeOnly and self.recipes[index].opaque)
+        not (excluded or {})[graph.recipes[index].origin]
+        and not (activeOnly and graph.recipes[index].opaque)
       then
         return true
       end
     end
     return false
+  end
+  function graph:hasProducer(stack, excluded, activeOnly)
+    return hasProducer(self.ids[M.identity(stack)], excluded, activeOnly)
   end
 
   function graph:restore(count)
@@ -5166,14 +5230,24 @@ function M.new(checkpoint)
   end
 
   function graph:independent(inputs, forbidden, excluded)
+    local roots, blocked = {}, {}
+    for _, stack in pairs(inputs) do
+      roots[#roots + 1] = self:node(stack)
+    end
+    for _, stack in pairs(forbidden or {}) do
+      blocked[#blocked + 1] = self:node(stack)
+    end
+    return self:independentNodes(roots, blocked, excluded)
+  end
+
+  function graph:independentNodes(inputs, forbidden, excluded)
     local blocked, pending, wanted, relevant, producers = {}, {}, {}, {}, {}
     excluded = excluded or {}
-    for _, stack in pairs(forbidden or {}) do
-      blocked[self:node(stack)] = true
+    for _, id in pairs(forbidden or {}) do
+      blocked[id] = true
     end
     local roots = {}
-    for _, stack in pairs(inputs) do
-      local id = self:node(stack)
+    for _, id in pairs(inputs) do
       roots[#roots + 1] = id
       pending[#pending + 1] = id
     end
@@ -5233,20 +5307,18 @@ function M.new(checkpoint)
 
   -- Validate all proposed recipes together, including future casts. Removing
   -- an unavailable producer must also invalidate any plan that depended on it.
-  function graph:plan(entries, omitted)
-    local excluded, original = U.clone(omitted or {}), #self.recipes
-    for _, entry in ipairs(entries) do
-      self:add(entry.recipe, entry.origin)
-    end
+  function graph:approve(indexes, omitted)
+    local excluded = U.clone(omitted or {})
     local changed = true
     while changed do
       changed = false
       local unsafe = {}
-      for _, entry in ipairs(entries) do
+      for _, index in ipairs(indexes) do
+        local entry = self.recipes[index]
         if
           not excluded[entry.origin]
           and entry.requireProducer
-          and not self:hasProducer(entry.requireProducer, excluded)
+          and not hasProducer(entry.requireProducer, excluded)
         then
           unsafe[entry.origin] = true
         end
@@ -5255,11 +5327,12 @@ function M.new(checkpoint)
         excluded[origin], changed = true, true
       end
       unsafe = {}
-      for _, entry in ipairs(entries) do
+      for _, index in ipairs(indexes) do
+        local entry = self.recipes[index]
         if not excluded[entry.origin] then
           local forbidden = U.clone(excluded)
           forbidden[entry.origin] = true
-          if not self:independent(entry.recipe.inputs, entry.recipe.outputs, forbidden) then
+          if not self:independentNodes(entry.inputs, entry.outputs, forbidden) then
             unsafe[entry.origin] = true
           end
         end
@@ -5268,6 +5341,18 @@ function M.new(checkpoint)
         excluded[origin], changed = true, true
       end
     end
+    return excluded
+  end
+
+  function graph:plan(entries, omitted)
+    local original, indexes = #self.recipes, {}
+    for _, entry in ipairs(entries) do
+      local index = self:add(entry.recipe, entry.origin)
+      self.recipes[index].requireProducer = entry.requireProducer
+        and self:node(entry.requireProducer)
+      indexes[#indexes + 1] = index
+    end
+    local excluded = self:approve(indexes, omitted)
     self:restore(original)
     return excluded
   end
@@ -5722,8 +5807,7 @@ end
 -- Fluid Shaper owns casts. Its normal rule compiler supplies the recipes and
 -- batches; the shared graph replaces the historical native-liquid/ME guards.
 function M.filterCasts(base, graph, omitted)
-  local manifest, proposed = U.clone(base), {}
-  manifest.recipes, manifest.suppliedFluids = {}, {}
+  local proposed = {}
   for n, recipe in ipairs(base.recipes) do
     proposed[#proposed + 1] = {
       recipe = recipe,
@@ -5732,9 +5816,21 @@ function M.filterCasts(base, graph, omitted)
     }
   end
   local excluded = graph:plan(proposed, omitted)
-  for _, entry in ipairs(proposed) do
-    local recipe = entry.recipe
-    if excluded[entry.origin] then
+  return M.castManifest(base, function(n)
+    return excluded['new-shaper-' .. n]
+  end)
+end
+
+-- Shared by ordinary previews and destination-sized compilation. Eligibility
+-- can be proved with compact graph rows without retaining every full recipe.
+function M.castManifest(base, rejected)
+  local manifest = {}
+  for key, value in pairs(base) do
+    manifest[key] = value
+  end
+  manifest.recipes, manifest.suppliedFluids, manifest.skipped = {}, {}, U.clone(base.skipped)
+  for n, recipe in ipairs(base.recipes) do
+    if rejected(n) then
       local out = recipe.outputs[1]
       manifest.skipped[#manifest.skipped + 1] = {
         material = recipe.material,
@@ -6102,13 +6198,18 @@ C.maker = {
   discover = discover,
   compactPattern = compactPattern,
 }
-local function programRouting(c, id)
+local function programRouting(c, id, selected)
   local program = Config.requireProgram(c, id)
   local values = c.programs[id]
   local routing = { donors = c.shared.donors, workspace = c.shared.editor }
   local forms
   if program.outputs then
     forms = Config.enabledOutputs(c, id)
+    if selected then
+      for form in pairs(forms) do
+        forms[form] = forms[form] and selected[form] == true
+      end
+    end
     routing.destinations = {}
     for form, key in pairs(program.outputs) do
       routing.destinations[form] = values[key]
@@ -6149,19 +6250,39 @@ local function programRouting(c, id)
     },
     program
 end
-function C.maker.preview(c, id, progress, control)
-  validate(c)
-  startWork(c, progress, control)
-  local routing, options, program = programRouting(c, id)
-  if id == 'fluidShaper' and options.forms.ingot then
-    return C.liquids.preview(c, progress, control, id)
+function C.maker.compile(c, id, selected)
+  local routing, options, program = programRouting(c, id, selected)
+  options.allowEmpty = selected ~= nil
+  if id == 'fluidShaper' and Config.enabledOutputs(c, id).ingot then
+    options.ingotSupply = 'installed'
   end
   local catalogs =
     { singularities = SingularityData, components = ComponentData, plasma = PlasmaData }
   local data = catalogs[program.mode] or require('assline_data')
-  local manifest = Modes.compile(data, program.mode, options, gate)
+  return Modes.compile(data, program.mode, options, gate), routing, options
+end
+
+function C.maker.preview(c, id, progress, control, scope)
+  validate(c)
+  if not scope then
+    startWork(c, progress, control)
+  end
+  local routing, options = programRouting(c, id, scope and scope.forms)
+  if not scope and id == 'fluidShaper' and options.forms.ingot then
+    return C.liquids.preview(c, progress, control, id)
+  end
+  local manifest = C.maker.compile(c, id, scope and scope.forms)
+  if scope and scope.liquid then
+    manifest, routing = C.liquids.chunk(scope.liquid, scope.index, manifest)
+  end
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)
-  return C.maker.finishPreview(plan, snapshot, manifest, routing)
+  if scope and scope.liquid then
+    plan.supplyCounts = scope.liquid.counts
+    plan.retirements = scope.index == scope.liquid.retirementChunk and scope.liquid.retirements
+      or {}
+  end
+  local result, report = C.maker.finishPreview(plan, snapshot, manifest, routing)
+  return result, report, manifest, routing, snapshot
 end
 
 function C.maker.finishPreview(plan, snapshot, manifest, routing)
@@ -6208,16 +6329,108 @@ function C.maker.finishMove(hw, op)
   verifyDelivery(hw, op.source, op.destination, matches, 'Moved pattern read-back failed')
 end
 
+local sortingRecordLimit = 4096
+local function journalChecksum(path)
+  local file = U.check(io.open(path, 'r'), 'Cannot read sorting journal')
+  local checksum, bytes = 1, 0
+  local ok, why = pcall(function()
+    while true do
+      local part = file:read(sortingRecordLimit)
+      if not part or part == '' then
+        break
+      end
+      checksum, bytes = U.adler32(part, checksum), bytes + #part
+      gate()
+    end
+  end)
+  file:close()
+  U.check(ok, why)
+  return checksum, bytes
+end
+
+local function saveSorting(moves)
+  local temp = paths.sorting .. '.tmp'
+  local file = U.check(io.open(temp, 'w'), 'Cannot write sorting journal')
+  local checksum, bytes = 1, 0
+  local ok, why = pcall(function()
+    for _, move in ipairs(moves) do
+      local value = serialization.serialize(move)
+      U.check(#value <= sortingRecordLimit, 'Sorting move exceeds journal record limit')
+      local record = string.format('%08x\n', #value) .. value
+      U.check(file:write(record), 'Cannot write sorting move')
+      checksum, bytes = U.adler32(record, checksum), bytes + #record
+      gate()
+    end
+    U.check(file:flush(), 'Cannot flush sorting journal')
+  end)
+  file:close()
+  if not ok then
+    if fs.exists(temp) then
+      fs.remove(temp)
+    end
+    error(why, 0)
+  end
+  local saved, length = journalChecksum(temp)
+  U.check(saved == checksum and length == bytes, 'Sorting journal verification failed')
+  if fs.exists(paths.sorting) then
+    U.check(fs.remove(paths.sorting), 'Cannot replace sorting journal')
+  end
+  U.check(fs.rename(temp, paths.sorting), 'Cannot activate sorting journal')
+  return {
+    kind = 'sort',
+    count = #moves,
+    bytes = bytes,
+    checksum = checksum,
+    id = tostring(checksum) .. ':' .. bytes .. ':' .. #moves,
+  }
+end
+
+local function readSortingMove(offset)
+  local file = U.check(io.open(paths.sorting, 'r'), 'Missing sorting journal')
+  local ok, move, nextOffset = pcall(function()
+    U.check(file:seek('set', offset), 'Cannot seek sorting journal')
+    local header = file:read(9)
+    U.check(header and header:match('^%x%x%x%x%x%x%x%x\n$'), 'Invalid sorting record header')
+    local length = tonumber(header:sub(1, 8), 16)
+    U.check(length > 0 and length <= sortingRecordLimit, 'Invalid sorting record size')
+    local value = file:read(length)
+    U.check(value and #value == length, 'Truncated sorting record')
+    local record = serialization.unserialize(value)
+    U.check(
+      type(record) == 'table' and record.from and record.to and record.fingerprint,
+      'Invalid sorting move'
+    )
+    return record, offset + 9 + length
+  end)
+  file:close()
+  U.check(ok, move)
+  return move, nextOffset
+end
+
 function C.maker.finishSort(hw, op, progress)
   local cursor = U.check(readFile(paths.cursor), 'Missing sorting recovery progress')
+  local count = op.moves and #op.moves or op.count
   U.check(
     cursor.id == op.id
       and U.integer(cursor.index)
       and cursor.index >= 1
-      and cursor.index <= #op.moves + 1,
+      and U.integer(count)
+      and count >= 0
+      and cursor.index <= count + 1,
     'Invalid sorting recovery progress'
   )
-  local parked = false
+  if not op.moves then
+    local checksum, bytes = journalChecksum(paths.sorting)
+    U.check(
+      checksum == op.checksum and bytes == op.bytes,
+      'Sorting journal changed; recovery stopped'
+    )
+    U.check(
+      U.integer(cursor.offset) and cursor.offset >= 0 and cursor.offset <= bytes,
+      'Invalid sorting journal offset'
+    )
+  end
+  local parked = cursor.parked == true
   local function track(move)
     if where(move.to) == where(hw.buffer) then
       parked = true
@@ -6227,17 +6440,25 @@ function C.maker.finishSort(hw, op, progress)
     end
   end
   -- An interrupted cycle may already have a pattern in its workspace.
-  for n = 1, cursor.index - 1 do
-    track(op.moves[n])
+  if op.moves then
+    for n = 1, cursor.index - 1 do
+      track(op.moves[n])
+    end
   end
-  for n = cursor.index, #op.moves do
-    local move = op.moves[n]
+  for n = cursor.index, count do
+    local move, offset
+    if op.moves then
+      move = op.moves[n]
+    else
+      move, offset = readSortingMove(cursor.offset)
+    end
     C.maker.finishMove(
       hw,
       { source = move.from, destination = move.to, fingerprint = move.fingerprint }
     )
-    writeFile(paths.cursor, { id = op.id, index = n + 1 })
     track(move)
+    cursor = { id = op.id, index = n + 1, offset = offset, parked = parked }
+    writeFile(paths.cursor, cursor)
     -- Stop only when the cycle has returned its parked pattern. The cursor
     -- retains the remaining moves without holding an editor slot hostage.
     if not parked then
@@ -6246,12 +6467,12 @@ function C.maker.finishSort(hw, op, progress)
       work.atomic = true
     end
     if progress then
-      progress('Sorted pattern ' .. n .. ' / ' .. #op.moves)
+      progress('Sorted pattern ' .. n .. ' / ' .. count)
     end
   end
 end
 
-function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
+function C.maker.apply(c, id, plan, manifest, progress, control, customRouting, prepared)
   if id == 'fluidShaper' and plan.supplyCounts and not customRouting then
     return C.liquids.apply(c, plan, manifest, progress, control, id)
   end
@@ -6265,11 +6486,13 @@ function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
     'Resolve unverified registry spellings before execution'
   )
   local routing = customRouting or programRouting(c, id)
-  local baseline = U.clone(plan)
-  baseline.capacities = nil
-  local _, snapshot, request = scanManifest(c, manifest, routing, progress, control)
-  Planner.revalidate(request, snapshot, baseline, gate)
-  local hw = connect(c, progress, control)
+  local snapshot = prepared
+  if not snapshot then
+    local fresh
+    fresh, snapshot = scanManifest(c, manifest, routing, progress, control, work.chunked)
+    Planner.verify(plan, fresh)
+  end
+  local hw = connect(c, progress, control, work.chunked)
   local editor = current(hw, hw.buffer)
   local firstEdit = plan.resizes[1] or plan.creates[1]
   local slot = firstEdit and firstEdit.workspace.slot
@@ -6295,9 +6518,8 @@ function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
   if #plan.moves > 0 then
     -- Keep the whole sorting stage durable. A cycle can temporarily park a
     -- pattern in the editor; continuation finishes that cycle before replanning.
-    local op =
-      { kind = 'sort', moves = plan.moves, id = dataHash(hw.data, U.canonical(plan.moves)) }
-    writeFile(paths.cursor, { id = op.id, index = 1 })
+    local op = saveSorting(plan.moves)
+    writeFile(paths.cursor, { id = op.id, index = 1, offset = 0, parked = false })
     saveOp(hw, op)
     C.maker.finishSort(hw, op, progress)
     clearOp()
@@ -6366,6 +6588,10 @@ end
 C.runner = {}
 function C.runner.hasChanges(preview)
   local plan = preview.plan
+  if preview.chunked then
+    local n = plan.counts
+    return n.move + n.create + n.resize + n.retire > 0
+  end
   if plan.retirements and #plan.retirements > 0 then
     return true
   end
@@ -6386,6 +6612,9 @@ function C.runner.requiresVerification(preview)
 end
 function C.runner.preview(c, id, progress, control)
   Config.requireProgram(c, id)
+  if C.chunks.enabled(c, id) then
+    return C.chunks.preview(c, id, progress, control)
+  end
   local preview = { id = id, configKey = U.canonical(c) }
   if id == 'assline' then
     preview.plan = scan(c, progress, control)
@@ -6406,8 +6635,17 @@ function C.runner.execute(c, preview, progress, control)
   U.check(preview and preview.configKey == U.canonical(c), 'Settings changed; build a new preview')
   Config.requireProgram(c, preview.id)
   U.check(not fs.exists(paths.pending), 'Continue or stop the saved operation before executing')
-  writeFile(paths.run, { version = 1, program = preview.id, configKey = U.canonical(c) })
-  if preview.id == 'assline' then
+  startWork(c, progress, control)
+  writeFile(paths.run, {
+    version = 1,
+    program = preview.id,
+    configKey = U.canonical(c),
+    chunked = preview.chunked,
+    nextChunk = preview.first,
+  })
+  if preview.chunked then
+    C.chunks.execute(c, preview, progress, control)
+  elseif preview.id == 'assline' then
     apply(c, preview.plan, progress, control)
   elseif preview.id == 'donorCleanup' then
     C.donors.apply(c, preview.plan, progress, control)
@@ -6428,22 +6666,34 @@ function C.runner.hasSaved()
 end
 
 function C.runner.continue(c, progress, control)
+  startWork(c, progress, control)
   local saved, op = readFile(paths.run), readFile(paths.pending)
   U.check(saved or op, 'No saved operation')
-  local backup = readFile(paths.backup)
   local id = saved and saved.program
     or op and (op.kind == 'edit' or op.kind == 'recipe') and 'assline'
-    or backup and backup.program
+  if not id then
+    local backup = readFile(paths.backup)
+    id = backup and backup.program
+  end
   if id and not saved then
     writeFile(paths.run, { version = 1, program = id, configKey = U.canonical(c) })
   end
   if op then
-    recover(c, progress, control)
+    recover(c, progress, control, op)
   end
+  op = nil
+  releaseChunk()
   -- A fresh plan recognizes the finished patterns and checks today's interface
   -- contents/settings. Never replay an old full plan after a stop or restart.
   if id then
-    local preview = C.runner.preview(c, id, progress, control)
+    local first = saved and saved.chunked and saved.configKey == U.canonical(c) and saved.nextChunk
+    U.check(not first or U.integer(first) and first >= 1, 'Invalid saved destination progress')
+    if first and first > #C.chunks.groups(c, id) then
+      U.check(fs.remove(paths.run), 'Cannot clear completed program run')
+      return
+    end
+    local preview = first and C.chunks.preview(c, id, progress, control, first)
+      or C.runner.preview(c, id, progress, control)
     preview.continuedWithChangedSettings = saved and saved.configKey ~= U.canonical(c) or false
     if
       not C.runner.hasChanges(preview)
@@ -6464,6 +6714,13 @@ function C.runner.discard()
     step = readFile(paths.cursor),
     run = readFile(paths.run),
   }, 900000)
+  if fs.exists(paths.sorting) then
+    local archive = paths.sorting .. '.abandoned'
+    if fs.exists(archive) then
+      U.check(fs.remove(archive), 'Cannot replace discarded sorting journal')
+    end
+    U.check(fs.rename(paths.sorting, archive), 'Cannot archive discarded sorting journal')
+  end
   for _, path in ipairs({ paths.pending, paths.cursor, paths.run }) do
     if fs.exists(path) then
       U.check(fs.remove(path), 'Cannot discard ' .. path)
@@ -7008,9 +7265,34 @@ end
 -- use the existing parking, sorting, imprinting and recovery operations.
 C.liquids = {}
 local indexedData, extractorMatch, coreKeys
+function C.liquids.release()
+  indexedData, extractorMatch, coreKeys = nil, nil, nil
+end
 
 local function liquidOrigin(ref, slot)
   return where(ref) .. ':' .. slot
+end
+
+local function retirementIssue(entry)
+  if entry.reason then
+    return 'Cannot retire '
+      .. entry.name
+      .. ' / '
+      .. U.locationText(entry.from)
+      .. ' slot '
+      .. entry.from.slot
+      .. ': '
+      .. entry.reason
+  end
+end
+
+local function retirementSlot(hw, errors)
+  for slot = 0, editorCapacity(hw) - 1 do
+    if not U.exists(direct(hw, 'getInterfacePattern', slot)) then
+      return slot
+    end
+  end
+  errors[#errors + 1] = 'The pattern editor needs one empty slot for retirement.'
 end
 
 local function supplyFingerprint(hw, banks)
@@ -7158,6 +7440,142 @@ local function liquidScan(c, data, hw, routing, options, progress, id)
   return graph, retirement, placeholders, owned, baseline, counts, parkedOrigins
 end
 
+-- One compact, program-wide proof; full recipes are compiled one destination
+-- at a time and immediately reduced to graph node IDs. This preserves cycle
+-- detection between casts in different chunks without keeping their manifests.
+function C.liquids.session(c, groups, progress, control, ignored, first)
+  local hw = connect(c, progress, control, true)
+  local routing, options = C.maker.routing(c, 'fluidShaper')
+  local graph, candidates, placeholders, _, baseline, counts, parked =
+    liquidScan(c, require('assline_liquid_data'), hw, routing, options, progress, 'fluidShaper')
+  local excluded, indexes, offsets, ingots, existingCasts = {}, {}, {}, {}, {}
+  for _, entry in ipairs(candidates) do
+    excluded[entry.origin] = true
+  end
+  local retirementChunk = 1
+  for index, group in ipairs(groups) do
+    offsets[index] = #indexes
+    if group.forms.ingot then
+      retirementChunk = index
+    end
+    local manifest = C.maker.compile(c, 'fluidShaper', group.forms)
+    for _, recipe in ipairs(manifest.recipes) do
+      if index >= (first or 1) then
+        local n = #indexes + 1
+        local row = graph:add(recipe, 'new-shaper-' .. n)
+        indexes[n] = row
+        if recipe.outputForm == 'ingot' then
+          graph.recipes[row].requireProducer = graph:node(recipe.inputs[1])
+          ingots[n] = recipe.inputs[1].name
+        end
+      elseif recipe.outputForm == 'ingot' then
+        -- Finished chunks are installed supply, never fictional future casts.
+        existingCasts[#existingCasts + 1] = { fluid = recipe.inputs[1], ingot = recipe.outputs[1] }
+      end
+    end
+    manifest = nil
+    releaseChunk()
+  end
+  local approved
+  while true do
+    approved = graph:approve(indexes, excluded)
+    local supplied, changed = {}, false
+    for n, fluid in pairs(ingots) do
+      if not approved['new-shaper-' .. n] then
+        supplied[fluid] = true
+      end
+    end
+    for _, cast in ipairs(existingCasts) do
+      if
+        graph:hasProducer(cast.ingot, excluded, true)
+        and graph:independent({ cast.fluid }, { cast.ingot }, approved)
+      then
+        supplied[cast.fluid.name] = true
+      end
+    end
+    for _, entry in ipairs(candidates) do
+      if excluded[entry.origin] and not supplied[entry.fluid] then
+        excluded[entry.origin], changed = nil, true
+      end
+    end
+    if not changed then
+      break
+    end
+  end
+  local rejected, eligibility, retirements, errors = {}, {}, {}, {}
+  for n = 1, #indexes do
+    rejected[n] = approved['new-shaper-' .. n] == true
+    eligibility[n] = rejected[n] and '0' or '1'
+  end
+  for _, entry in ipairs(candidates) do
+    if excluded[entry.origin] then
+      retirements[#retirements + 1] = entry
+      if entry.reason then
+        errors[#errors + 1] = retirementIssue(entry)
+      end
+    end
+  end
+  local workspace
+  if #retirements > 0 then
+    workspace = retirementSlot(hw, errors)
+  end
+  local network = supplyFingerprint(hw, baseline)
+  if not ignored then
+    ignored = {}
+    for _, entry in ipairs(retirements) do
+      ignored[entry.origin] = true
+    end
+  end
+  for _, bank in ipairs(baseline) do
+    for slot in pairs(bank.patterns) do
+      if ignored and ignored[liquidOrigin(bank.ref, slot)] then
+        bank.patterns[slot] = nil
+      end
+    end
+  end
+  local masked = supplyFingerprint(hw, baseline)
+  C.liquids.release()
+  package.loaded.assline_liquid_data = nil
+  return {
+    hw = hw,
+    routing = routing,
+    groups = groups,
+    offsets = offsets,
+    rejected = rejected,
+    eligibility = table.concat(eligibility),
+    network = network,
+    masked = masked,
+    retirements = retirements,
+    retirementChunk = retirementChunk,
+    workspace = workspace,
+    placeholders = placeholders,
+    counts = counts,
+    parked = parked,
+    errors = errors,
+  }
+end
+
+function C.liquids.chunk(session, index, base)
+  local manifest = Melting.castManifest(base, function(n)
+    return session.rejected[session.offsets[index] + n]
+  end)
+  local routing = U.clone(session.routing)
+  routing.additionalDonors = {}
+  for _, entries in ipairs({ session.retirements, session.placeholders }) do
+    for _, entry in ipairs(entries) do
+      if
+        not entry.used
+        and not entry.reason
+        and entry.name ~= session.groups[index].name
+        and entry.name ~= routing.donors
+      then
+        routing.additionalDonors[#routing.additionalDonors + 1] = entry
+      end
+    end
+  end
+  return manifest, routing
+end
+
 function C.liquids.preview(c, progress, control, id)
   id = id or 'meltingCore'
   Config.requireProgram(c, id)
@@ -7295,14 +7713,7 @@ function C.liquids.preview(c, progress, control, id)
     if excluded[entry.origin] then
       retirements[#retirements + 1] = entry
       if entry.reason then
-        errors[#errors + 1] = 'Cannot retire '
-          .. entry.name
-          .. ' / '
-          .. U.locationText(entry.from)
-          .. ' slot '
-          .. entry.from.slot
-          .. ': '
-          .. entry.reason
+        errors[#errors + 1] = retirementIssue(entry)
       elseif entry.name ~= c.shared.donors and not destinations[entry.name] then
         routing.additionalDonors[#routing.additionalDonors + 1] = entry
       end
@@ -7310,16 +7721,8 @@ function C.liquids.preview(c, progress, control, id)
   end
   local plan, snapshot = C.maker.scan(c, manifest, routing, progress, control, true)
   if #retirements > 0 then
-    local workspace
-    for slot = 0, editorCapacity(hw) - 1 do
-      if not U.exists(direct(hw, 'getInterfacePattern', slot)) then
-        workspace = slot
-        break
-      end
-    end
-    if not workspace then
-      errors[#errors + 1] = 'The pattern editor needs one empty slot for retirement.'
-    else
+    local workspace = retirementSlot(hw, errors)
+    if workspace then
       plan.retirementWorkspace = endpoint(hw.buffer, workspace)
     end
   end
@@ -7365,9 +7768,22 @@ function C.liquids.apply(c, plan, manifest, progress, control, id)
   if #fresh.retirements == 0 then
     return C.maker.apply(c, id, fresh, proposed, progress, control, freshRouting)
   end
-  local marker = C.donors.markerRecipe(hw)
   local workspace = U.check(fresh.retirementWorkspace, 'No retirement workspace').slot
-  for n, entry in ipairs(fresh.retirements) do
+  C.liquids.retire(hw, fresh.retirements, workspace, progress)
+  local ready, _, readyManifest, routing, _, readyProof =
+    C.liquids.preview(c, progress, control, id)
+  U.check(
+    #ready.errors == 0
+      and U.eq(readyManifest.recipes, proposed.recipes)
+      and unchangedSupply(hw, proof, readyProof, fresh.retirements),
+    'Supply changed during retirement. Continue to review a fresh preview.'
+  )
+  C.maker.apply(c, id, ready, readyManifest, progress, control, routing)
+end
+
+function C.liquids.retire(hw, entries, workspace, progress)
+  local marker = C.donors.markerRecipe(hw)
+  for n, entry in ipairs(entries) do
     gate()
     local bank = current(hw, entry.from)
     local original = bank.patterns[entry.from.slot]
@@ -7391,18 +7807,322 @@ function C.liquids.apply(c, plan, manifest, progress, control, id)
     finish(hw, op, progress)
     clearOp()
     if progress then
-      progress('Retired extraction pattern ' .. n .. ' / ' .. #fresh.retirements)
+      progress('Retired extraction pattern ' .. n .. ' / ' .. #entries)
     end
   end
-  local ready, _, readyManifest, routing, _, readyProof =
-    C.liquids.preview(c, progress, control, id)
-  U.check(
-    #ready.errors == 0
-      and U.eq(readyManifest.recipes, proposed.recipes)
-      and unchangedSupply(hw, proof, readyProof, fresh.retirements),
-    'Supply changed during retirement. Continue to review a fresh preview.'
+end
+
+-- Source: source/app/29_chunks.lua
+-- Destination-sized work. Only summaries survive between chunks; recipes,
+-- snapshots and sorting plans are rebuilt and validated for the active group.
+C.chunks = {}
+
+function C.chunks.groups(c, id)
+  local program = Programs.byId[id]
+  if not program.mode or program.mode == 'meltingCore' or not program.outputs then
+    return {}
+  end
+  local enabled, groups, names, visited = Config.enabledOutputs(c, id), {}, {}, {}
+  local function add(form)
+    if not enabled[form] or visited[form] then
+      return
+    end
+    visited[form] = true
+    local name = c.programs[id][program.outputs[form]]
+    local group = names[name]
+    if not group then
+      group = { name = name, forms = {} }
+      names[name], groups[#groups + 1] = group, group
+    end
+    group.forms[form] = true
+  end
+  for _, choice in ipairs(program.formChoices or {}) do
+    for _, form in ipairs(U.keys(enabled)) do
+      if Programs.switchKey(program, form) == choice[1] then
+        add(form)
+      end
+    end
+  end
+  for _, form in ipairs(U.keys(enabled)) do
+    add(form)
+  end
+  return groups
+end
+
+function C.chunks.enabled(c, id)
+  return c.shared.chunked == 'on' and #C.chunks.groups(c, id) > 1
+end
+
+local function context(c, id, groups, progress, control, ignored, first)
+  if id == 'fluidShaper' and Config.enabledOutputs(c, id).ingot then
+    return C.liquids.session(c, groups, progress, control, ignored, first)
+  end
+  return { hw = connect(c, progress, control, true), errors = {} }
+end
+
+local function detail(c, preview, index, session, progress, control)
+  if progress then
+    progress(
+      'Destination ' .. index .. ' / ' .. #preview.chunks .. ': ' .. preview.chunks[index].name
+    )
+  end
+  local group = preview.chunks[index]
+  local plan, report, manifest, routing, snapshot = C.maker.preview(
+    c,
+    preview.id,
+    progress,
+    control,
+    { forms = group.forms, index = index, liquid = session.rejected and session or nil }
   )
-  C.maker.apply(c, id, ready, readyManifest, progress, control, routing)
+  return { id = preview.id, plan = plan, report = report, manifest = manifest }, routing, snapshot
+end
+
+local function signature(session, item)
+  local data = session.hw.data
+  local contents = dataHash(data, U.canonical(item.manifest.recipes))
+  return dataHash(
+    data,
+    U.canonical({ item.plan.baseline, contents, item.manifest.unresolved, item.plan.retirements })
+  ),
+    contents
+end
+
+local function summarize(item, stamp, contents)
+  local p = item.plan
+  return {
+    stamp = stamp,
+    contents = contents,
+    changes = C.runner.hasChanges(item),
+    reused = p.reused,
+    resize = #p.resizes,
+    create = #p.creates,
+    move = #p.moves,
+    kept = #p.preserved,
+    existing = #(p.existing or {}),
+    retire = #(p.retirements or {}),
+    required = U.clone(p.required),
+    available = U.clone(p.available),
+    donorBanks = p.donorBanks,
+    donorOccupied = p.donorOccupied,
+    donorRejected = p.donorRejected,
+    capacities = p.capacities,
+    errors = p.errors,
+    unresolved = item.manifest.unresolved,
+  }
+end
+
+local function aggregate(preview, session)
+  local p = {
+    errors = U.clone(session.errors),
+    warnings = {},
+    capacities = {},
+    counts = { resize = 0, create = 0, move = 0, kept = 0, existing = 0, retire = 0 },
+    reused = 0,
+    resizeCount = 0,
+    required = { processing = 0, crafting = 0 },
+    available = { processing = 0, crafting = 0 },
+    donorBanks = 0,
+    donorOccupied = 0,
+    donorRejected = 0,
+    donorReasons = {},
+  }
+  p.supplyCounts = session.counts
+  local unresolved, seen = {}, {}
+  for index = preview.first, #preview.chunks do
+    local group = preview.chunks[index]
+    local s = group.summary
+    for key in pairs(p.counts) do
+      p.counts[key] = p.counts[key] + s[key]
+    end
+    p.reused, p.resizeCount = p.reused + s.reused, p.resizeCount + s.resize
+    p.donorBanks, p.donorOccupied, p.donorRejected =
+      math.max(p.donorBanks, s.donorBanks),
+      math.max(p.donorOccupied, s.donorOccupied),
+      math.max(p.donorRejected, s.donorRejected)
+    for kind in pairs(p.required) do
+      p.required[kind] = p.required[kind] + s.required[kind]
+      p.available[kind] = math.max(p.available[kind], s.available[kind])
+    end
+    for _, capacity in ipairs(s.capacities) do
+      p.capacities[#p.capacities + 1] = capacity
+    end
+    for _, err in ipairs(s.errors) do
+      p.errors[#p.errors + 1] = group.name .. ': ' .. err
+    end
+    for _, name in ipairs(s.unresolved) do
+      if not seen[name] then
+        seen[name], unresolved[#unresolved + 1] = true, name
+      end
+    end
+  end
+  for kind, amount in pairs(p.required) do
+    if amount > p.available[kind] then
+      p.warnings[#p.warnings + 1] = 'Need '
+        .. amount
+        .. ' disposable '
+        .. kind
+        .. ' donors; have '
+        .. p.available[kind]
+        .. '. Execution will wait for refills.'
+    end
+  end
+  preview.plan, preview.manifest = p, { unresolved = unresolved }
+  preview.report = (#preview.chunks - preview.first + 1)
+    .. ' destination chunks checked. '
+    .. 'Details are loaded one destination at a time.\n'
+end
+
+function C.chunks.preview(c, id, progress, control, first)
+  startWork(c, progress, control)
+  work.chunked = true
+  local preview = {
+    id = id,
+    chunked = true,
+    configKey = U.canonical(c),
+    chunks = C.chunks.groups(c, id),
+    first = first or 1,
+  }
+  U.check(preview.first >= 1 and preview.first <= #preview.chunks, 'Invalid saved destination')
+  local session = context(c, id, preview.chunks, progress, control, nil, preview.first)
+  preview.supplyKey = session.network
+  for index = preview.first, #preview.chunks do
+    local item = detail(c, preview, index, session, progress, control)
+    local stamp, contents = signature(session, item)
+    preview.chunks[index].summary = summarize(item, stamp, contents)
+    item = nil
+    releaseChunk()
+  end
+  aggregate(preview, session)
+  local item = detail(c, preview, preview.first, session, progress, control)
+  U.check(
+    signature(session, item) == preview.chunks[preview.first].summary.stamp,
+    'Patterns changed while building the preview. Scan again.'
+  )
+  preview.current, preview.chunkIndex = item, preview.first
+  return preview
+end
+
+function C.chunks.select(c, preview, index, progress, control)
+  U.check(preview.configKey == U.canonical(c), 'Settings changed; build a new preview')
+  U.check(index >= preview.first and index <= #preview.chunks, 'Invalid destination index')
+  startWork(c, progress, control)
+  work.chunked = true
+  preview.current = nil
+  releaseChunk()
+  local session = context(c, preview.id, preview.chunks, progress, control, nil, preview.first)
+  U.check(
+    session.network == preview.supplyKey,
+    'Production patterns changed since preview. Scan again.'
+  )
+  local item = detail(c, preview, index, session, progress, control)
+  U.check(
+    signature(session, item) == preview.chunks[index].summary.stamp,
+    'Patterns changed since preview. Scan again.'
+  )
+  preview.current, preview.chunkIndex = item, index
+end
+
+function C.chunks.execute(c, preview, progress, control)
+  U.check(
+    #preview.plan.errors == 0 and #preview.manifest.unresolved == 0,
+    'Resolve preview blockers first'
+  )
+  startWork(c, progress, control)
+  work.chunked = true
+  preview.current = nil
+  releaseChunk()
+  local session = context(c, preview.id, preview.chunks, progress, control, nil, preview.first)
+  U.check(
+    session.network == preview.supplyKey,
+    'Production patterns changed since preview. Scan again.'
+  )
+  -- Validate every remaining destination before the first pattern write.
+  for index = preview.first, #preview.chunks do
+    local item = detail(c, preview, index, session, progress, control)
+    U.check(
+      signature(session, item) == preview.chunks[index].summary.stamp,
+      'Patterns changed since preview. Scan again.'
+    )
+    item = nil
+    releaseChunk()
+  end
+  local retired = session.retirements and #session.retirements > 0
+  if retired then
+    local ignored = {}
+    for _, entry in ipairs(session.retirements) do
+      ignored[entry.origin] = true
+    end
+    local expected, eligibility = session.masked, session.eligibility
+    C.liquids.retire(session.hw, session.retirements, session.workspace, progress)
+    session = nil
+    releaseChunk()
+    session = context(c, preview.id, preview.chunks, progress, control, ignored, preview.first)
+    U.check(
+      session.masked == expected and session.eligibility == eligibility and #session.errors == 0,
+      'Supply changed during retirement. Continue to review a fresh preview.'
+    )
+    for origin in pairs(ignored) do
+      U.check(session.parked[origin], 'Retired pattern changed; scan again')
+    end
+  end
+  for index = preview.first, #preview.chunks do
+    gate()
+    local group = preview.chunks[index]
+    writeFile(paths.run, {
+      version = 1,
+      program = preview.id,
+      configKey = preview.configKey,
+      chunked = true,
+      nextChunk = index,
+      destination = group.name,
+    })
+    local item, routing, snapshot = detail(c, preview, index, session, progress, control)
+    local stamp, contents = signature(session, item)
+    U.check(
+      (
+        retired and contents == group.summary.contents
+        or not retired and stamp == group.summary.stamp
+      ) and #item.plan.errors == 0,
+      'Destination changed before its chunk. Scan again.'
+    )
+    if C.runner.hasChanges(item) then
+      C.maker.apply(c, preview.id, item.plan, item.manifest, progress, control, routing, snapshot)
+    end
+    writeFile(paths.run, {
+      version = 1,
+      program = preview.id,
+      configKey = preview.configKey,
+      chunked = true,
+      nextChunk = index + 1,
+    })
+    item, routing, snapshot = nil, nil, nil
+    releaseChunk()
+    if progress then
+      progress('Completed destination ' .. index .. ' / ' .. #preview.chunks .. ': ' .. group.name)
+    end
+  end
+end
+
+function C.chunks.export(c, preview, file, progress, control)
+  startWork(c, progress, control)
+  work.chunked = true
+  preview.current = nil
+  releaseChunk()
+  local session = context(c, preview.id, preview.chunks, progress, control, nil, preview.first)
+  U.check(
+    session.network == preview.supplyKey,
+    'Production patterns changed since preview. Scan again.'
+  )
+  for index = preview.first, #preview.chunks do
+    local item = detail(c, preview, index, session, progress, control)
+    U.check(
+      signature(session, item) == preview.chunks[index].summary.stamp,
+      'Patterns changed; scan again'
+    )
+    U.check(file:write(item.report .. '\n'), 'Cannot write preview report')
+    item = nil
+    releaseChunk()
+  end
 end
 
 -- Source: source/app/30_ui.lua
@@ -7569,6 +8289,7 @@ local function runUI()
   local function invalidate()
     state.preview = nil
     state.verified = false
+    contentKey, contentRows, destinations = nil, nil, nil
   end
   local function saveConfig(value)
     Config.validate(Config.normalize(value))
@@ -7703,11 +8424,36 @@ local function runUI()
   end
   local function lines()
     local rows, add = U.rows()
-    local preview = state.preview
+    local overall = state.preview
+    local preview = overall and (overall.current or overall)
     local p = preview and preview.plan
     if state.page == 'preview' and state.error then
       add('LAST ERROR', 'red')
       add(state.error, 'red')
+      add('')
+    end
+    if state.page == 'preview' and overall and overall.chunked then
+      if state.section == 'capacity' then
+        return Preview.capacityRows(overall.plan)
+      end
+      if not overall.current then
+        add(
+          state.busy and 'Destination work is running; details are released between chunks.'
+            or 'Details are unloaded. Use Previous/Next destination or Scan.',
+          'muted'
+        )
+        return rows
+      end
+      add(
+        'DESTINATION '
+          .. overall.chunkIndex
+          .. ' / '
+          .. #overall.chunks
+          .. ': '
+          .. overall.chunks[overall.chunkIndex].name,
+        'blue'
+      )
+      add('Execute preview runs every remaining destination in order.', 'muted')
       add('')
     end
     if state.page == 'history' then
@@ -7902,6 +8648,7 @@ local function runUI()
     local key = state.page
       .. state.section
       .. tostring(state.preview)
+      .. tostring(state.preview and state.preview.current)
       .. tostring(state.history)
       .. tostring(state.error)
       .. width
@@ -8011,6 +8758,7 @@ local function runUI()
       .. tostring(state.selected)
       .. state.section
       .. tostring(state.preview)
+      .. tostring(state.preview and state.preview.chunkIndex)
       .. tostring(state.busy)
       .. tostring(state.paused)
       .. tostring(state.stopRequested)
@@ -8286,6 +9034,21 @@ local function runUI()
           state.offset = 0
         end)
       end
+      if preview and preview.chunked then
+        local x = button(34, layout.body - 1, 'Previous destination', function()
+          action('chunkPrevious')
+        end, not state.busy and preview.chunkIndex > preview.first)
+        x = button(x, layout.body - 1, 'Next destination', function()
+          action('chunkNext')
+        end, not state.busy and preview.chunkIndex < #preview.chunks)
+        text(
+          x,
+          layout.body - 1,
+          preview.chunkIndex .. '/' .. #preview.chunks .. ' destinations',
+          158 - x,
+          'muted'
+        )
+      end
       scrollRows(34, layout.body, 74, layout.bodyBottom - layout.body + 1)
       text(113, layout.body, 'Summary', 45, 'blue')
       if p then
@@ -8334,13 +9097,14 @@ local function runUI()
           )
           text(113, layout.body + 6, p.available .. ' processing donors available', 45, 'muted')
         else
-          text(
-            113,
-            layout.body + 1,
-            #(p.existing or {}) .. ' existing patterns scanned',
-            45,
-            'muted'
-          )
+          local counts = p.counts
+            or {
+              existing = #(p.existing or {}),
+              kept = #p.preserved,
+              move = #p.moves,
+              retire = #(p.retirements or {}),
+            }
+          text(113, layout.body + 1, counts.existing .. ' existing patterns scanned', 45, 'muted')
           text(113, layout.body + 2, p.reused .. ' reused patterns recipes', 45, 'green')
           text(
             113,
@@ -8349,7 +9113,7 @@ local function runUI()
             45,
             p.resizeCount > 0 and 'yellow_lighter1' or 'muted'
           )
-          text(113, layout.body + 4, #p.preserved .. ' unrelated kept', 45, 'muted')
+          text(113, layout.body + 4, counts.kept .. ' unrelated kept', 45, 'muted')
           text(
             113,
             layout.body + 6,
@@ -8360,12 +9124,12 @@ local function runUI()
             45,
             p.required.processing < p.available.processing and 'green' or 'red'
           )
-          text(113, layout.body + 8, #p.moves .. ' sorting moves first', 45)
-          if p.retirements then
+          text(113, layout.body + 8, counts.move .. ' sorting moves first', 45)
+          if counts.retire > 0 then
             text(
               113,
               layout.body + 9,
-              #p.retirements .. ' old liquid recipes to retire',
+              counts.retire .. ' old liquid recipes to retire',
               45,
               'yellow'
             )
@@ -8435,6 +9199,10 @@ local function runUI()
       end, not state.busy)
       if preview and preview.report and not state.busy then
         button(34, layout.scrollFooter + 1, 'Export report', function()
+          if preview.chunked then
+            action('exportChunks')
+            return
+          end
           local path = '/home/assline-preview.txt'
           local ok, why = pcall(function()
             local file, err = io.open(path, 'w')
@@ -8608,12 +9376,20 @@ local function runUI()
   end
   action = function(name)
     commitEdit()
-    local isWork = name == 'preview' or name == 'execute' or name == 'continue'
+    local isWork = name == 'preview'
+      or name == 'execute'
+      or name == 'continue'
+      or name == 'chunkPrevious'
+      or name == 'chunkNext'
+      or name == 'exportChunks'
     U.check(not isWork or not state.busy, 'Work already running')
     if name == 'execute' then
       U.check(executable(), 'Review and verify the preview first')
     end
     if isWork then
+      if state.preview and state.preview.chunked then
+        contentKey, contentRows, destinations = nil, nil, nil
+      end
       state.error = nil
       state.busy = true
       state.stopRequested, state.paused = false, false
@@ -8637,6 +9413,25 @@ local function runUI()
             or 'Preview ready. Review which disposable donor recipes will be replaced before Execute preview.',
           'green'
         )
+      elseif name == 'chunkPrevious' or name == 'chunkNext' then
+        local preview = state.preview
+        C.chunks.select(
+          cfg,
+          preview,
+          preview.chunkIndex + (name == 'chunkNext' and 1 or -1),
+          progress,
+          control
+        )
+        state.offset = 0
+        status('Destination preview loaded.', 'green')
+      elseif name == 'exportChunks' then
+        local preview = state.preview
+        local file = U.check(io.open('/home/assline-preview.txt', 'w'), 'Cannot open report file')
+        local exported, why = pcall(C.chunks.export, cfg, preview, file, progress, control)
+        local closed = file:close()
+        U.check(exported and closed, why or 'Cannot finish report')
+        C.chunks.select(cfg, preview, preview.chunkIndex, progress, control)
+        status('Saved full report to /home/assline-preview.txt', 'green')
       elseif name == 'execute' then
         local preview = state.preview
         C.runner.execute(cfg, preview, progress, control)

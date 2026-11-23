@@ -26,6 +26,13 @@ reusable mold stays stocked in the machine.
 All buffers matching the shared donor name are counted from their actual
 patterns, independently of their capacity. Only the shared editor is local.
 
+Destination chunking defaults on in Shared interfaces. The shared runner keeps
+summaries for the whole program and loads one destination's full plan at a time.
+Names shared by multiple enabled outputs remain one sorting/capacity group.
+Continue checkpoints the next group; report export streams all groups. Fluid
+Shaper retains a compact global cycle proof across its selected casts while
+compiling and editing each destination separately.
+
 Melting Core adds a coordinated supply migration with per-circuit, per-priority
 destinations, a gas selector and a separate request-gas toggle. Fluid Shaper owns
 ingot casting and uses the same installed-supply graph when Ingot is enabled. Its **Retirements** page

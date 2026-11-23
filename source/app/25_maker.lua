@@ -342,13 +342,18 @@ C.maker = {
   discover = discover,
   compactPattern = compactPattern,
 }
-local function programRouting(c, id)
+local function programRouting(c, id, selected)
   local program = Config.requireProgram(c, id)
   local values = c.programs[id]
   local routing = { donors = c.shared.donors, workspace = c.shared.editor }
   local forms
   if program.outputs then
     forms = Config.enabledOutputs(c, id)
+    if selected then
+      for form in pairs(forms) do
+        forms[form] = forms[form] and selected[form] == true
+      end
+    end
     routing.destinations = {}
     for form, key in pairs(program.outputs) do
       routing.destinations[form] = values[key]
@@ -389,19 +394,39 @@ local function programRouting(c, id)
     },
     program
 end
-function C.maker.preview(c, id, progress, control)
-  validate(c)
-  startWork(c, progress, control)
-  local routing, options, program = programRouting(c, id)
-  if id == 'fluidShaper' and options.forms.ingot then
-    return C.liquids.preview(c, progress, control, id)
+function C.maker.compile(c, id, selected)
+  local routing, options, program = programRouting(c, id, selected)
+  options.allowEmpty = selected ~= nil
+  if id == 'fluidShaper' and Config.enabledOutputs(c, id).ingot then
+    options.ingotSupply = 'installed'
   end
   local catalogs =
     { singularities = SingularityData, components = ComponentData, plasma = PlasmaData }
   local data = catalogs[program.mode] or require('assline_data')
-  local manifest = Modes.compile(data, program.mode, options, gate)
+  return Modes.compile(data, program.mode, options, gate), routing, options
+end
+
+function C.maker.preview(c, id, progress, control, scope)
+  validate(c)
+  if not scope then
+    startWork(c, progress, control)
+  end
+  local routing, options = programRouting(c, id, scope and scope.forms)
+  if not scope and id == 'fluidShaper' and options.forms.ingot then
+    return C.liquids.preview(c, progress, control, id)
+  end
+  local manifest = C.maker.compile(c, id, scope and scope.forms)
+  if scope and scope.liquid then
+    manifest, routing = C.liquids.chunk(scope.liquid, scope.index, manifest)
+  end
   local plan, snapshot, _, labels = scanManifest(c, manifest, routing, progress, control, true)
-  return C.maker.finishPreview(plan, snapshot, manifest, routing)
+  if scope and scope.liquid then
+    plan.supplyCounts = scope.liquid.counts
+    plan.retirements = scope.index == scope.liquid.retirementChunk and scope.liquid.retirements
+      or {}
+  end
+  local result, report = C.maker.finishPreview(plan, snapshot, manifest, routing)
+  return result, report, manifest, routing, snapshot
 end
 
 function C.maker.finishPreview(plan, snapshot, manifest, routing)
@@ -448,16 +473,108 @@ function C.maker.finishMove(hw, op)
   verifyDelivery(hw, op.source, op.destination, matches, 'Moved pattern read-back failed')
 end
 
+local sortingRecordLimit = 4096
+local function journalChecksum(path)
+  local file = U.check(io.open(path, 'r'), 'Cannot read sorting journal')
+  local checksum, bytes = 1, 0
+  local ok, why = pcall(function()
+    while true do
+      local part = file:read(sortingRecordLimit)
+      if not part or part == '' then
+        break
+      end
+      checksum, bytes = U.adler32(part, checksum), bytes + #part
+      gate()
+    end
+  end)
+  file:close()
+  U.check(ok, why)
+  return checksum, bytes
+end
+
+local function saveSorting(moves)
+  local temp = paths.sorting .. '.tmp'
+  local file = U.check(io.open(temp, 'w'), 'Cannot write sorting journal')
+  local checksum, bytes = 1, 0
+  local ok, why = pcall(function()
+    for _, move in ipairs(moves) do
+      local value = serialization.serialize(move)
+      U.check(#value <= sortingRecordLimit, 'Sorting move exceeds journal record limit')
+      local record = string.format('%08x\n', #value) .. value
+      U.check(file:write(record), 'Cannot write sorting move')
+      checksum, bytes = U.adler32(record, checksum), bytes + #record
+      gate()
+    end
+    U.check(file:flush(), 'Cannot flush sorting journal')
+  end)
+  file:close()
+  if not ok then
+    if fs.exists(temp) then
+      fs.remove(temp)
+    end
+    error(why, 0)
+  end
+  local saved, length = journalChecksum(temp)
+  U.check(saved == checksum and length == bytes, 'Sorting journal verification failed')
+  if fs.exists(paths.sorting) then
+    U.check(fs.remove(paths.sorting), 'Cannot replace sorting journal')
+  end
+  U.check(fs.rename(temp, paths.sorting), 'Cannot activate sorting journal')
+  return {
+    kind = 'sort',
+    count = #moves,
+    bytes = bytes,
+    checksum = checksum,
+    id = tostring(checksum) .. ':' .. bytes .. ':' .. #moves,
+  }
+end
+
+local function readSortingMove(offset)
+  local file = U.check(io.open(paths.sorting, 'r'), 'Missing sorting journal')
+  local ok, move, nextOffset = pcall(function()
+    U.check(file:seek('set', offset), 'Cannot seek sorting journal')
+    local header = file:read(9)
+    U.check(header and header:match('^%x%x%x%x%x%x%x%x\n$'), 'Invalid sorting record header')
+    local length = tonumber(header:sub(1, 8), 16)
+    U.check(length > 0 and length <= sortingRecordLimit, 'Invalid sorting record size')
+    local value = file:read(length)
+    U.check(value and #value == length, 'Truncated sorting record')
+    local record = serialization.unserialize(value)
+    U.check(
+      type(record) == 'table' and record.from and record.to and record.fingerprint,
+      'Invalid sorting move'
+    )
+    return record, offset + 9 + length
+  end)
+  file:close()
+  U.check(ok, move)
+  return move, nextOffset
+end
+
 function C.maker.finishSort(hw, op, progress)
   local cursor = U.check(readFile(paths.cursor), 'Missing sorting recovery progress')
+  local count = op.moves and #op.moves or op.count
   U.check(
     cursor.id == op.id
       and U.integer(cursor.index)
       and cursor.index >= 1
-      and cursor.index <= #op.moves + 1,
+      and U.integer(count)
+      and count >= 0
+      and cursor.index <= count + 1,
     'Invalid sorting recovery progress'
   )
-  local parked = false
+  if not op.moves then
+    local checksum, bytes = journalChecksum(paths.sorting)
+    U.check(
+      checksum == op.checksum and bytes == op.bytes,
+      'Sorting journal changed; recovery stopped'
+    )
+    U.check(
+      U.integer(cursor.offset) and cursor.offset >= 0 and cursor.offset <= bytes,
+      'Invalid sorting journal offset'
+    )
+  end
+  local parked = cursor.parked == true
   local function track(move)
     if where(move.to) == where(hw.buffer) then
       parked = true
@@ -467,17 +584,25 @@ function C.maker.finishSort(hw, op, progress)
     end
   end
   -- An interrupted cycle may already have a pattern in its workspace.
-  for n = 1, cursor.index - 1 do
-    track(op.moves[n])
+  if op.moves then
+    for n = 1, cursor.index - 1 do
+      track(op.moves[n])
+    end
   end
-  for n = cursor.index, #op.moves do
-    local move = op.moves[n]
+  for n = cursor.index, count do
+    local move, offset
+    if op.moves then
+      move = op.moves[n]
+    else
+      move, offset = readSortingMove(cursor.offset)
+    end
     C.maker.finishMove(
       hw,
       { source = move.from, destination = move.to, fingerprint = move.fingerprint }
     )
-    writeFile(paths.cursor, { id = op.id, index = n + 1 })
     track(move)
+    cursor = { id = op.id, index = n + 1, offset = offset, parked = parked }
+    writeFile(paths.cursor, cursor)
     -- Stop only when the cycle has returned its parked pattern. The cursor
     -- retains the remaining moves without holding an editor slot hostage.
     if not parked then
@@ -486,12 +611,12 @@ function C.maker.finishSort(hw, op, progress)
       work.atomic = true
     end
     if progress then
-      progress('Sorted pattern ' .. n .. ' / ' .. #op.moves)
+      progress('Sorted pattern ' .. n .. ' / ' .. count)
     end
   end
 end
 
-function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
+function C.maker.apply(c, id, plan, manifest, progress, control, customRouting, prepared)
   if id == 'fluidShaper' and plan.supplyCounts and not customRouting then
     return C.liquids.apply(c, plan, manifest, progress, control, id)
   end
@@ -505,11 +630,13 @@ function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
     'Resolve unverified registry spellings before execution'
   )
   local routing = customRouting or programRouting(c, id)
-  local baseline = U.clone(plan)
-  baseline.capacities = nil
-  local _, snapshot, request = scanManifest(c, manifest, routing, progress, control)
-  Planner.revalidate(request, snapshot, baseline, gate)
-  local hw = connect(c, progress, control)
+  local snapshot = prepared
+  if not snapshot then
+    local fresh
+    fresh, snapshot = scanManifest(c, manifest, routing, progress, control, work.chunked)
+    Planner.verify(plan, fresh)
+  end
+  local hw = connect(c, progress, control, work.chunked)
   local editor = current(hw, hw.buffer)
   local firstEdit = plan.resizes[1] or plan.creates[1]
   local slot = firstEdit and firstEdit.workspace.slot
@@ -535,9 +662,8 @@ function C.maker.apply(c, id, plan, manifest, progress, control, customRouting)
   if #plan.moves > 0 then
     -- Keep the whole sorting stage durable. A cycle can temporarily park a
     -- pattern in the editor; continuation finishes that cycle before replanning.
-    local op =
-      { kind = 'sort', moves = plan.moves, id = dataHash(hw.data, U.canonical(plan.moves)) }
-    writeFile(paths.cursor, { id = op.id, index = 1 })
+    local op = saveSorting(plan.moves)
+    writeFile(paths.cursor, { id = op.id, index = 1, offset = 0, parked = false })
     saveOp(hw, op)
     C.maker.finishSort(hw, op, progress)
     clearOp()
@@ -606,6 +732,10 @@ end
 C.runner = {}
 function C.runner.hasChanges(preview)
   local plan = preview.plan
+  if preview.chunked then
+    local n = plan.counts
+    return n.move + n.create + n.resize + n.retire > 0
+  end
   if plan.retirements and #plan.retirements > 0 then
     return true
   end
@@ -626,6 +756,9 @@ function C.runner.requiresVerification(preview)
 end
 function C.runner.preview(c, id, progress, control)
   Config.requireProgram(c, id)
+  if C.chunks.enabled(c, id) then
+    return C.chunks.preview(c, id, progress, control)
+  end
   local preview = { id = id, configKey = U.canonical(c) }
   if id == 'assline' then
     preview.plan = scan(c, progress, control)
@@ -646,8 +779,17 @@ function C.runner.execute(c, preview, progress, control)
   U.check(preview and preview.configKey == U.canonical(c), 'Settings changed; build a new preview')
   Config.requireProgram(c, preview.id)
   U.check(not fs.exists(paths.pending), 'Continue or stop the saved operation before executing')
-  writeFile(paths.run, { version = 1, program = preview.id, configKey = U.canonical(c) })
-  if preview.id == 'assline' then
+  startWork(c, progress, control)
+  writeFile(paths.run, {
+    version = 1,
+    program = preview.id,
+    configKey = U.canonical(c),
+    chunked = preview.chunked,
+    nextChunk = preview.first,
+  })
+  if preview.chunked then
+    C.chunks.execute(c, preview, progress, control)
+  elseif preview.id == 'assline' then
     apply(c, preview.plan, progress, control)
   elseif preview.id == 'donorCleanup' then
     C.donors.apply(c, preview.plan, progress, control)
@@ -668,22 +810,34 @@ function C.runner.hasSaved()
 end
 
 function C.runner.continue(c, progress, control)
+  startWork(c, progress, control)
   local saved, op = readFile(paths.run), readFile(paths.pending)
   U.check(saved or op, 'No saved operation')
-  local backup = readFile(paths.backup)
   local id = saved and saved.program
     or op and (op.kind == 'edit' or op.kind == 'recipe') and 'assline'
-    or backup and backup.program
+  if not id then
+    local backup = readFile(paths.backup)
+    id = backup and backup.program
+  end
   if id and not saved then
     writeFile(paths.run, { version = 1, program = id, configKey = U.canonical(c) })
   end
   if op then
-    recover(c, progress, control)
+    recover(c, progress, control, op)
   end
+  op = nil
+  releaseChunk()
   -- A fresh plan recognizes the finished patterns and checks today's interface
   -- contents/settings. Never replay an old full plan after a stop or restart.
   if id then
-    local preview = C.runner.preview(c, id, progress, control)
+    local first = saved and saved.chunked and saved.configKey == U.canonical(c) and saved.nextChunk
+    U.check(not first or U.integer(first) and first >= 1, 'Invalid saved destination progress')
+    if first and first > #C.chunks.groups(c, id) then
+      U.check(fs.remove(paths.run), 'Cannot clear completed program run')
+      return
+    end
+    local preview = first and C.chunks.preview(c, id, progress, control, first)
+      or C.runner.preview(c, id, progress, control)
     preview.continuedWithChangedSettings = saved and saved.configKey ~= U.canonical(c) or false
     if
       not C.runner.hasChanges(preview)
@@ -704,6 +858,13 @@ function C.runner.discard()
     step = readFile(paths.cursor),
     run = readFile(paths.run),
   }, 900000)
+  if fs.exists(paths.sorting) then
+    local archive = paths.sorting .. '.abandoned'
+    if fs.exists(archive) then
+      U.check(fs.remove(archive), 'Cannot replace discarded sorting journal')
+    end
+    U.check(fs.rename(paths.sorting, archive), 'Cannot archive discarded sorting journal')
+  end
   for _, path in ipairs({ paths.pending, paths.cursor, paths.run }) do
     if fs.exists(path) then
       U.check(fs.remove(path), 'Cannot discard ' .. path)

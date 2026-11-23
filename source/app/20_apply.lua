@@ -242,6 +242,9 @@ local function clearOp()
   if fs.exists(paths.cursor) then
     U.check(fs.remove(paths.cursor), 'Cannot clear completed recovery progress')
   end
+  if fs.exists(paths.sorting) then
+    U.check(fs.remove(paths.sorting), 'Cannot clear completed sorting journal')
+  end
   work.atomic = false
   gate()
 end
@@ -274,6 +277,7 @@ local function donorPool(hw, name, protected, progress, additional)
           'Reclaimed donor changed; scan again'
         )
         U.check(safeDonor(hw.data, pattern), 'Reclaimed pattern is no longer editable')
+        extra.used = true
         return extra.from, compact(pattern)
       end
       local source = slots[slotIndex]
@@ -344,7 +348,10 @@ local function apply(c, plan, progress, control)
     'Patterns or destinations changed since preview. Scan again.'
   )
   fresh = nil
-  writeFile(paths.backup, { config = U.clone(c), plan = plan })
+  writeFile(
+    paths.backup,
+    { config = U.clone(c), program = 'assline', renamed = #plan.changes, created = plan.newRecipes }
+  )
   local workspace = plan.empty[1]
   local protected = U.clone(plan.protected)
   protected[where(plan.target)] = true
@@ -406,8 +413,8 @@ local function apply(c, plan, progress, control)
     clearOp()
   end
 end
-local function recover(c, progress, control)
-  local op = U.check(readFile(paths.pending), 'No pending operation')
+local function recover(c, progress, control, savedOperation)
+  local op = U.check(savedOperation or readFile(paths.pending), 'No pending operation')
   local hw = connect(c, progress, control)
   work.atomic = true
   if op.kind == 'move' or op.kind == 'sort' then

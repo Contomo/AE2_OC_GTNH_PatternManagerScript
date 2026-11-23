@@ -16,6 +16,7 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/app/27_transition.lua` | Implosion transition cleanup using the shared editor and journal |
 | `source/app/28_mover.lua` | Wildcard interface-group discovery, capacity planning and intact transfers using the shared move journal |
 | `source/app/29_liquids.lua` | Shared installed-supply scan and retirement coordinator for Melting Core and Fluid Shaper |
+| `source/app/29_chunks.lua` | Destination-sized preview/execution, bounded summaries, validation and continuation checkpoints |
 | `source/app/30_ui.lua` | Common UI, buttons, scrolling, configuration and preview pages |
 | `source/app/90_main.lua` | Application entry point |
 | `source/lib/util.lua` | Shared value/collection helpers, identities, bounded hashing, endpoints and text-row construction |
@@ -43,6 +44,28 @@ and cleared for every pattern; their presence changes idle recovery controls but
 does not invalidate the screen during execution. Progress only updates its status
 row. Transfer return values and destination read-back diagnostics are shared by
 pattern edits and sorting in `20_apply.lua`.
+
+`29_chunks.lua` groups enabled output forms by their exact destination name. It
+retains one detailed preview and small summaries/checksums for the other groups;
+preflight scans every remaining group before writes, then validates each active
+group again. `25_maker.lua` accepts scoped form selection and uses the same
+compiler/planner/editor as the whole-program path. `Planner.verify` compares an
+already scanned plan without cloning it or planning it twice.
+
+Fluid Shaper's `29_liquids.lua:session` streams destination manifests into compact
+`Supply` graph rows, proves all proposed casts together, then releases the graph.
+`Supply.approve` is also used by the existing `Supply.plan` wrapper. Cast rejection
+rendering remains in `Melting.castManifest`; retirement writes use one shared
+function. Completed destinations are installed supply when continuing, rather
+than hypothetical future recipes. Only the remaining destination details are
+loaded for editing.
+
+Sorting is serialized as length-prefixed records in `assline.sort`; its pending
+intent holds a checksum/count and the cursor holds one byte offset. The shared
+move function still verifies every transfer. Recovery verifies the stream in 4 KB
+blocks and reads one move at a time; old inline move journals remain supported.
+The global catalog/NBT caches are released at work completion. No manual GC API
+is assumed in the OC sandbox.
 
 ## Generated files and what runs on OC
 

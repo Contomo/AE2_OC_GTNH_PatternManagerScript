@@ -440,8 +440,7 @@ end
 -- Fluid Shaper owns casts. Its normal rule compiler supplies the recipes and
 -- batches; the shared graph replaces the historical native-liquid/ME guards.
 function M.filterCasts(base, graph, omitted)
-  local manifest, proposed = U.clone(base), {}
-  manifest.recipes, manifest.suppliedFluids = {}, {}
+  local proposed = {}
   for n, recipe in ipairs(base.recipes) do
     proposed[#proposed + 1] = {
       recipe = recipe,
@@ -450,9 +449,21 @@ function M.filterCasts(base, graph, omitted)
     }
   end
   local excluded = graph:plan(proposed, omitted)
-  for _, entry in ipairs(proposed) do
-    local recipe = entry.recipe
-    if excluded[entry.origin] then
+  return M.castManifest(base, function(n)
+    return excluded['new-shaper-' .. n]
+  end)
+end
+
+-- Shared by ordinary previews and destination-sized compilation. Eligibility
+-- can be proved with compact graph rows without retaining every full recipe.
+function M.castManifest(base, rejected)
+  local manifest = {}
+  for key, value in pairs(base) do
+    manifest[key] = value
+  end
+  manifest.recipes, manifest.suppliedFluids, manifest.skipped = {}, {}, U.clone(base.skipped)
+  for n, recipe in ipairs(base.recipes) do
+    if rejected(n) then
       local out = recipe.outputs[1]
       manifest.skipped[#manifest.skipped + 1] = {
         material = recipe.material,

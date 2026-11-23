@@ -161,6 +161,7 @@ local function runUI()
   local function invalidate()
     state.preview = nil
     state.verified = false
+    contentKey, contentRows, destinations = nil, nil, nil
   end
   local function saveConfig(value)
     Config.validate(Config.normalize(value))
@@ -295,11 +296,36 @@ local function runUI()
   end
   local function lines()
     local rows, add = U.rows()
-    local preview = state.preview
+    local overall = state.preview
+    local preview = overall and (overall.current or overall)
     local p = preview and preview.plan
     if state.page == 'preview' and state.error then
       add('LAST ERROR', 'red')
       add(state.error, 'red')
+      add('')
+    end
+    if state.page == 'preview' and overall and overall.chunked then
+      if state.section == 'capacity' then
+        return Preview.capacityRows(overall.plan)
+      end
+      if not overall.current then
+        add(
+          state.busy and 'Destination work is running; details are released between chunks.'
+            or 'Details are unloaded. Use Previous/Next destination or Scan.',
+          'muted'
+        )
+        return rows
+      end
+      add(
+        'DESTINATION '
+          .. overall.chunkIndex
+          .. ' / '
+          .. #overall.chunks
+          .. ': '
+          .. overall.chunks[overall.chunkIndex].name,
+        'blue'
+      )
+      add('Execute preview runs every remaining destination in order.', 'muted')
       add('')
     end
     if state.page == 'history' then
@@ -494,6 +520,7 @@ local function runUI()
     local key = state.page
       .. state.section
       .. tostring(state.preview)
+      .. tostring(state.preview and state.preview.current)
       .. tostring(state.history)
       .. tostring(state.error)
       .. width
@@ -603,6 +630,7 @@ local function runUI()
       .. tostring(state.selected)
       .. state.section
       .. tostring(state.preview)
+      .. tostring(state.preview and state.preview.chunkIndex)
       .. tostring(state.busy)
       .. tostring(state.paused)
       .. tostring(state.stopRequested)
@@ -878,6 +906,21 @@ local function runUI()
           state.offset = 0
         end)
       end
+      if preview and preview.chunked then
+        local x = button(34, layout.body - 1, 'Previous destination', function()
+          action('chunkPrevious')
+        end, not state.busy and preview.chunkIndex > preview.first)
+        x = button(x, layout.body - 1, 'Next destination', function()
+          action('chunkNext')
+        end, not state.busy and preview.chunkIndex < #preview.chunks)
+        text(
+          x,
+          layout.body - 1,
+          preview.chunkIndex .. '/' .. #preview.chunks .. ' destinations',
+          158 - x,
+          'muted'
+        )
+      end
       scrollRows(34, layout.body, 74, layout.bodyBottom - layout.body + 1)
       text(113, layout.body, 'Summary', 45, 'blue')
       if p then
@@ -926,13 +969,14 @@ local function runUI()
           )
           text(113, layout.body + 6, p.available .. ' processing donors available', 45, 'muted')
         else
-          text(
-            113,
-            layout.body + 1,
-            #(p.existing or {}) .. ' existing patterns scanned',
-            45,
-            'muted'
-          )
+          local counts = p.counts
+            or {
+              existing = #(p.existing or {}),
+              kept = #p.preserved,
+              move = #p.moves,
+              retire = #(p.retirements or {}),
+            }
+          text(113, layout.body + 1, counts.existing .. ' existing patterns scanned', 45, 'muted')
           text(113, layout.body + 2, p.reused .. ' reused patterns recipes', 45, 'green')
           text(
             113,
@@ -941,7 +985,7 @@ local function runUI()
             45,
             p.resizeCount > 0 and 'yellow_lighter1' or 'muted'
           )
-          text(113, layout.body + 4, #p.preserved .. ' unrelated kept', 45, 'muted')
+          text(113, layout.body + 4, counts.kept .. ' unrelated kept', 45, 'muted')
           text(
             113,
             layout.body + 6,
@@ -952,12 +996,12 @@ local function runUI()
             45,
             p.required.processing < p.available.processing and 'green' or 'red'
           )
-          text(113, layout.body + 8, #p.moves .. ' sorting moves first', 45)
-          if p.retirements then
+          text(113, layout.body + 8, counts.move .. ' sorting moves first', 45)
+          if counts.retire > 0 then
             text(
               113,
               layout.body + 9,
-              #p.retirements .. ' old liquid recipes to retire',
+              counts.retire .. ' old liquid recipes to retire',
               45,
               'yellow'
             )
@@ -1027,6 +1071,10 @@ local function runUI()
       end, not state.busy)
       if preview and preview.report and not state.busy then
         button(34, layout.scrollFooter + 1, 'Export report', function()
+          if preview.chunked then
+            action('exportChunks')
+            return
+          end
           local path = '/home/assline-preview.txt'
           local ok, why = pcall(function()
             local file, err = io.open(path, 'w')
@@ -1200,12 +1248,20 @@ local function runUI()
   end
   action = function(name)
     commitEdit()
-    local isWork = name == 'preview' or name == 'execute' or name == 'continue'
+    local isWork = name == 'preview'
+      or name == 'execute'
+      or name == 'continue'
+      or name == 'chunkPrevious'
+      or name == 'chunkNext'
+      or name == 'exportChunks'
     U.check(not isWork or not state.busy, 'Work already running')
     if name == 'execute' then
       U.check(executable(), 'Review and verify the preview first')
     end
     if isWork then
+      if state.preview and state.preview.chunked then
+        contentKey, contentRows, destinations = nil, nil, nil
+      end
       state.error = nil
       state.busy = true
       state.stopRequested, state.paused = false, false
@@ -1229,6 +1285,25 @@ local function runUI()
             or 'Preview ready. Review which disposable donor recipes will be replaced before Execute preview.',
           'green'
         )
+      elseif name == 'chunkPrevious' or name == 'chunkNext' then
+        local preview = state.preview
+        C.chunks.select(
+          cfg,
+          preview,
+          preview.chunkIndex + (name == 'chunkNext' and 1 or -1),
+          progress,
+          control
+        )
+        state.offset = 0
+        status('Destination preview loaded.', 'green')
+      elseif name == 'exportChunks' then
+        local preview = state.preview
+        local file = U.check(io.open('/home/assline-preview.txt', 'w'), 'Cannot open report file')
+        local exported, why = pcall(C.chunks.export, cfg, preview, file, progress, control)
+        local closed = file:close()
+        U.check(exported and closed, why or 'Cannot finish report')
+        C.chunks.select(cfg, preview, preview.chunkIndex, progress, control)
+        status('Saved full report to /home/assline-preview.txt', 'green')
       elseif name == 'execute' then
         local preview = state.preview
         C.runner.execute(cfg, preview, progress, control)

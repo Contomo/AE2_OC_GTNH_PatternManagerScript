@@ -385,7 +385,10 @@ function M.compile(data, mode, options, checkpoint)
       end
     end
   end
-  U.check(#manifest.recipes > 0 or #manifest.skipped > 0, 'No verified recipes for this mode')
+  U.check(
+    options.allowEmpty or #manifest.recipes > 0 or #manifest.skipped > 0,
+    'No verified recipes for this mode'
+  )
   return manifest
 end
 return M

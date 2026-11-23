@@ -494,7 +494,7 @@ obsolete slot limits are not carried forward.
 
 | Section | Fields |
 | --- | --- |
-| Shared interfaces | Pattern editor name, new pattern buffer name, terminal/editor/Data Card/ME network addresses, energy thresholds |
+| Shared interfaces | Pattern editor name, new pattern buffer name, terminal/editor/Data Card/ME network addresses, energy thresholds, destination chunking |
 | Assembly line renamer | Target interface, item-name template, rename-destination template |
 | Wire insulator | Checkbox/name per cable size, five-way polymer selector, request PPS |
 | Wiremill | 1x wire and fine-wire destination names; separate input routes, default Ingot |
@@ -615,6 +615,36 @@ references are released and OC performs collection during normal yields.
 
 ## Recovery and files
 
+**Process one destination at a time** is enabled by default in Shared interfaces.
+For the normal recipe programs, enabling multiple destinations builds a small
+program summary and keeps only one destination's recipes, snapshot and edit plan
+in memory. Previous/Next destination changes the details being reviewed;
+**Execute preview** runs all remaining destinations. Capacity/settings are checked
+for every destination before the first pattern write, and each destination is
+checked again immediately before editing. Export report streams all destinations.
+
+All interfaces with the same exact destination name stay in one chunk so sorting,
+deduplication and spillover retain their normal order. Distinct destinations can
+therefore all be enabled in Fluid Shaper, bender, wiremill, insulator and Component
+Assembly Line. A single shared name remains one combined group. Melting Core keeps
+its coupled migration plan; assembly-line renaming and the dedicated move/cleanup
+programs retain their existing transaction flows. All maker sorting uses the new
+streamed journal regardless of this setting.
+
+Fluid Shaper with Ingot enabled still proves dependencies across all selected casts.
+The proof holds shared graph node IDs, not every full manifest, so a cycle between
+different mold destinations is rejected. Extraction retirement runs once before
+the destination chunks and reclaimed donors are shared across those chunks.
+Continue records the next destination and does not repeat completed edits.
+Changing settings causes continuation to build a fresh preview of the full program.
+
+Catalog and NBT caches are released after work. OC does not expose manual Lua
+garbage collection; references are dropped and the normal event path yields at
+chunk boundaries. Large sorting stages use a length-framed, checksummed file read
+in blocks of at most 4 KB and apply one move at a time. Older inline sorting
+journals remain readable. Individual pattern edits retain the same original-NBT
+journal and read-back checks.
+
 **Pause** suspends execution at a component-call boundary; **Resume** continues the
 same in-memory run. **Stop**, Escape and Quit finish the current journaled pattern
 transaction before stopping. During sorting, they finish the current cycle so its
@@ -645,15 +675,18 @@ before executing a different plan; a clean stopped run can be replaced directly.
 | `/home/assline.cfg` | Shared configuration and per-program settings |
 | `/home/assline.pending` | Active operation, retained on failure; removed on completion |
 | `/home/assline.pending.step` | Verified progress through an active sorting stage |
-| `/home/assline.run` | Saved program choice for optional continuation after Stop/restart |
+| `/home/assline.sort` | Streamed sorting moves, verified before execution/recovery |
+| `/home/assline.sort.abandoned` | Latest discarded sorting stream |
+| `/home/assline.run` | Saved program and next destination for optional continuation |
 | `/home/assline.abandoned` | Latest discarded transaction/run records; no automatic Undo |
-| `/home/assline.last` | Latest submitted assembly-line plan or generator operation summary |
+| `/home/assline.last` | Latest operation summary and configuration |
 | `/home/assline-perf.log` | Timing/charge summaries; rotates above 64 KB |
 | `*.tmp` | Temporary files used while saving |
 
 The latest-plan file is an inspection/backup record, **not an automatic Undo**.
 Completed rename recipes and edits stay applied if a later operation stops.
-Active recovery files are bounded to 400 KB each. The combined discard archive is
+Individual recovery records are bounded to 400 KB each; the sorting stream is
+written and read in bounded records rather than loaded as one table. The combined discard archive is
 bounded to 900 KB and replaces the previous archive; the timing log is rotated.
 
 OC terminal `send` returns success and the destination slot; the executor checks

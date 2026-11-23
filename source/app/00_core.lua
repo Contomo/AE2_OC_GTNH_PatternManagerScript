@@ -15,13 +15,27 @@ local cfg = U.clone(defaults)
 local work = { pause = 0.25, resume = 0.75 }
 local perf
 local tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
+local pollWork
 local function releaseWork()
   perf = nil
   work.progress = nil
   work.control = nil
   work.atomic = false
+  work.stopping, work.stopReason = false, nil
   work.cardLimits = nil
   tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
+  if C.liquids and C.liquids.release then
+    C.liquids.release()
+  end
+  package.loaded.assline_data, package.loaded.assline_liquid_data = nil, nil
+end
+local function releaseChunk()
+  tagKeys, renameTags, tagCount, renameCount = {}, {}, 0, 0
+  -- OC owns collection in the host. Drop references and yield through the
+  -- normal control path; collectgarbage is absent from its Lua sandbox.
+  if pollWork and not work.stopping then
+    pollWork(0.01)
+  end
 end
 local function sampleEnergy()
   local t = computer.uptime()
@@ -96,7 +110,7 @@ local function energyFraction()
 end
 -- All component gates and waits share one cooperative control path. Stop is
 -- deferred inside a journaled transaction; Pause can wait at any call boundary.
-local function pollWork(delay)
+pollWork = function(delay)
   local e
   repeat
     local t = computer.uptime()
@@ -192,6 +206,7 @@ local paths = {
   run = '/home/assline.run',
   abandoned = '/home/assline.abandoned',
   backup = '/home/assline.last',
+  sorting = '/home/assline.sort',
 }
 local function readRaw(path, maximum)
   if not fs.exists(path) then
@@ -217,11 +232,25 @@ local function writeFile(path, t, maximum)
   local s = serialization.serialize(t)
   U.check(
     #s <= (maximum or 400000),
-    'Recovery data exceeds disk/memory budget; use a smaller target interface'
+    'Saved record exceeds its ' .. (maximum or 400000) .. ' byte limit: ' .. path
   )
+  if computer.freeMemory() <= #s + 131072 then
+    for _ = 1, 10 do
+      pollWork(0.01)
+      if computer.freeMemory() > #s + 131072 then
+        break
+      end
+    end
+  end
   U.check(
     computer.freeMemory() > #s + 131072,
-    'Not enough memory to verify saved data; use a smaller target interface'
+    'Not enough memory to verify saved data: need '
+      .. (#s + 131072)
+      .. ' bytes, free '
+      .. computer.freeMemory()
+      .. ' ('
+      .. path
+      .. ')'
   )
   local temp = path .. '.tmp'
   local f = U.check(io.open(temp, 'w'), 'Cannot write ' .. temp)
@@ -670,9 +699,11 @@ local function capacity(i)
   -- requires verification of fully expanded destination interfaces before Apply.
   return Config.destinationSlots
 end
-local function connect(c, progress, control)
+local function connect(c, progress, control, started)
   validate(c)
-  startWork(c, progress, control)
+  if not started then
+    startWork(c, progress, control)
+  end
   local shared = c.shared
   local hw = {
     terminal = selectDevice('me_interface_terminal', shared.terminalAddress),

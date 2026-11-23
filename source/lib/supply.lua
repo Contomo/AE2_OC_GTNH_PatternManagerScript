@@ -41,17 +41,19 @@ function M.new(checkpoint)
     return index
   end
 
-  function graph:hasProducer(stack, excluded, activeOnly)
-    local id = self.ids[M.identity(stack)]
-    for _, index in ipairs(id and self.nodes[id].producers or {}) do
+  local function hasProducer(id, excluded, activeOnly)
+    for _, index in ipairs(id and graph.nodes[id].producers or {}) do
       if
-        not (excluded or {})[self.recipes[index].origin]
-        and not (activeOnly and self.recipes[index].opaque)
+        not (excluded or {})[graph.recipes[index].origin]
+        and not (activeOnly and graph.recipes[index].opaque)
       then
         return true
       end
     end
     return false
+  end
+  function graph:hasProducer(stack, excluded, activeOnly)
+    return hasProducer(self.ids[M.identity(stack)], excluded, activeOnly)
   end
 
   function graph:restore(count)
@@ -64,14 +66,24 @@ function M.new(checkpoint)
   end
 
   function graph:independent(inputs, forbidden, excluded)
+    local roots, blocked = {}, {}
+    for _, stack in pairs(inputs) do
+      roots[#roots + 1] = self:node(stack)
+    end
+    for _, stack in pairs(forbidden or {}) do
+      blocked[#blocked + 1] = self:node(stack)
+    end
+    return self:independentNodes(roots, blocked, excluded)
+  end
+
+  function graph:independentNodes(inputs, forbidden, excluded)
     local blocked, pending, wanted, relevant, producers = {}, {}, {}, {}, {}
     excluded = excluded or {}
-    for _, stack in pairs(forbidden or {}) do
-      blocked[self:node(stack)] = true
+    for _, id in pairs(forbidden or {}) do
+      blocked[id] = true
     end
     local roots = {}
-    for _, stack in pairs(inputs) do
-      local id = self:node(stack)
+    for _, id in pairs(inputs) do
       roots[#roots + 1] = id
       pending[#pending + 1] = id
     end
@@ -131,20 +143,18 @@ function M.new(checkpoint)
 
   -- Validate all proposed recipes together, including future casts. Removing
   -- an unavailable producer must also invalidate any plan that depended on it.
-  function graph:plan(entries, omitted)
-    local excluded, original = U.clone(omitted or {}), #self.recipes
-    for _, entry in ipairs(entries) do
-      self:add(entry.recipe, entry.origin)
-    end
+  function graph:approve(indexes, omitted)
+    local excluded = U.clone(omitted or {})
     local changed = true
     while changed do
       changed = false
       local unsafe = {}
-      for _, entry in ipairs(entries) do
+      for _, index in ipairs(indexes) do
+        local entry = self.recipes[index]
         if
           not excluded[entry.origin]
           and entry.requireProducer
-          and not self:hasProducer(entry.requireProducer, excluded)
+          and not hasProducer(entry.requireProducer, excluded)
         then
           unsafe[entry.origin] = true
         end
@@ -153,11 +163,12 @@ function M.new(checkpoint)
         excluded[origin], changed = true, true
       end
       unsafe = {}
-      for _, entry in ipairs(entries) do
+      for _, index in ipairs(indexes) do
+        local entry = self.recipes[index]
         if not excluded[entry.origin] then
           local forbidden = U.clone(excluded)
           forbidden[entry.origin] = true
-          if not self:independent(entry.recipe.inputs, entry.recipe.outputs, forbidden) then
+          if not self:independentNodes(entry.inputs, entry.outputs, forbidden) then
             unsafe[entry.origin] = true
           end
         end
@@ -166,6 +177,18 @@ function M.new(checkpoint)
         excluded[origin], changed = true, true
       end
     end
+    return excluded
+  end
+
+  function graph:plan(entries, omitted)
+    local original, indexes = #self.recipes, {}
+    for _, entry in ipairs(entries) do
+      local index = self:add(entry.recipe, entry.origin)
+      self.recipes[index].requireProducer = entry.requireProducer
+        and self:node(entry.requireProducer)
+      indexes[#indexes + 1] = index
+    end
+    local excluded = self:approve(indexes, omitted)
     self:restore(original)
     return excluded
   end

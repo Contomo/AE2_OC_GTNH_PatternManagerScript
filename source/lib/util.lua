@@ -65,6 +65,16 @@ function M.boundedHash(value, limit, hash)
   return 'chunked-sha256:' .. hash(final)
 end
 
+-- Incremental checksum for journal streams; no whole-file buffer is needed.
+function M.adler32(value, previous)
+  local a, b = (previous or 1) % 65536, math.floor((previous or 1) / 65536)
+  for i = 1, #value do
+    a = (a + value:byte(i)) % 65521
+    b = (b + a) % 65521
+  end
+  return b * 65536.0 + a
+end
+
 function M.eq(a, b)
   if type(a) ~= type(b) then
     return false

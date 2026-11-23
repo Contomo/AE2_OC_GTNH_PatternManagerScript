@@ -15,6 +15,7 @@ local function ser(t)
 end
 local function unser(s) local f=load('return '..s,'mock','t',{});if f then return f() end end
 local files,interfaces,mutations,fail,events,frame,history={},{},0,nil,{},{},{}
+local largestFileRead=0
 local foreground,background,fg,bg={},{},0xffffff,0
 local controlDown=false
 local now,energy,capacity,recharge,sleeps=123,10000,10000,0,0
@@ -217,6 +218,7 @@ proxies.data={address='data',encodeNBT=function(t) dataCharge();return ser(encod
   sha256=function(t)
     dataCharge();largestHashInput=math.max(largestHashInput,#t)
     assert(#t<=cardLimit,'data size limit exceeded')
+    if nativeTestHash then return nativeTestHash(t) end
     -- SHA-256 returns 32 bytes. Stable test digests keep that contract without
     -- retaining the whole input, which previously hid the real byte limit.
     if not hashIds[t] then hashNext=hashNext+1;hashIds[t]=string.format('%032d',hashNext) end
@@ -309,7 +311,15 @@ io.open=function(path,mode)
   local content=(mode=='r' or mode=='a') and (files[path] or '') or ''
   local offset=0
   return {seek=function(_,whence,n) assert(whence=='set');offset=n;return n end,
-    read=function() return content:sub(offset+1) end,write=function(self,s) content=content..s;return self end,
+    read=function(_,amount)
+      if type(amount)=='number' then
+        if offset>=#content then return nil end
+        local value=content:sub(offset+1,offset+amount);offset=offset+#value
+        largestFileRead=math.max(largestFileRead,#value);return value
+      end
+      local value=content:sub(offset+1);offset=#content
+      largestFileRead=math.max(largestFileRead,#value);return value
+    end,write=function(self,s) content=content..s;return self end,
     flush=function(self) if failDisk then return nil,'disk full' end;files[path]=content;return self end,
     close=function() files[path]=content;return true end}
 end
@@ -322,10 +332,12 @@ local function reset()
   gpuWrites={}
   callCost,callCounts,pollEvents=0,{},{}
   networkCraftables={}
+  largestFileRead=0
   queriedNames={}
   networkController=false
   cardLimit,largestHashInput,hashIds,hashNext,decodeLimit=8192,0,{},0,nil
   cfg=cp(api.defaults)
+  cfg.shared.chunked='off' -- Existing transaction fixtures exercise the legacy single-plan path.
   cfg.batch.mode='fixed'
   -- Existing fixtures exercise unscaled fixed batches; cost-aware cases opt in below.
   cfg.batch.costScaling='off'
@@ -861,9 +873,108 @@ local function matrixFixture()
       {id='fine',mode='wiremill',process='ingot_wireFine',requires={'ingot','wireFine'},inputs={{f='ingot',n=1}},outputs={{f='wireFine',n=8}},stock={}}}}
 end
 local function withMatrix(f)
-  local saved=package.loaded.assline_data;package.loaded.assline_data=matrixFixture()
-  local ok,why=pcall(f);package.loaded.assline_data=saved;assert(ok,why)
+  local saved,preload=package.loaded.assline_data,package.preload.assline_data
+  local matrix=matrixFixture();package.loaded.assline_data=matrix
+  package.preload.assline_data=function() return matrix end
+  local ok,why=pcall(f);package.loaded.assline_data=saved;package.preload.assline_data=preload;assert(ok,why)
 end
+
+local function chunkWireFixture()
+  cfg.shared.chunked='on'
+  local v=cfg.programs.wiremill;v.forms='wire1,wireFine'
+  local wire=iface(v.wire1,81);local fine=iface(v.wireFine,82)
+  for slot=2,7 do buffer.patterns[slot]=cp(buffer.patterns[0]) end
+  return wire,fine
+end
+
+test('chunked work retains only one destination detail and checks program totals',function()
+  withMatrix(function()
+    assert(api.defaults.shared.chunked=='on')
+    chunkWireFixture()
+    local p=api.runner.preview(cfg,'wiremill')
+    assert(p.chunked and #p.chunks==2 and p.plan.counts.create==4 and #p.plan.capacities==2)
+    assert(#p.current.manifest.recipes==2 and not p.plan.layout and not p.chunks[2].manifest)
+    api.chunks.select(cfg,p,2)
+    assert(p.chunkIndex==2 and #p.current.manifest.recipes==2 and mutations==0)
+    for _,r in ipairs(p.current.manifest.recipes) do assert(r.outputForm=='wireFine') end
+    api.runner.execute(cfg,p)
+    assert(not p.current and not api.runner.hasSaved())
+    local done=api.runner.preview(cfg,'wiremill')
+    assert(done.plan.reused==4 and not api.runner.hasChanges(done))
+  end)
+end)
+
+test('chunked work validates a stale later destination before writing the first',function()
+  withMatrix(function()
+    local wire,fine=chunkWireFixture()
+    local p=api.runner.preview(cfg,'wiremill')
+    fine.patterns[8]=pattern({item('Changed',1,999)})
+    mustFail(function() api.runner.execute(cfg,p) end,'changed since preview')
+    assert(mutations==0 and not next(wire.patterns) and not files[api.paths.pending])
+  end)
+end)
+
+test('chunked Stop and Continue skip the completed destination',function()
+  withMatrix(function()
+    local wire,fine=chunkWireFixture()
+    local p=api.runner.preview(cfg,'wiremill');local stopped=false
+    mustFail(function() api.runner.execute(cfg,p,function(message)
+      if message:find('Completed destination 1 /',1,true) then stopped=true end
+    end,function() return {stop=stopped} end) end,api.stopped)
+    assert(wire.patterns[0] and not next(fine.patterns) and not files[api.paths.pending])
+    assert(unser(files[api.paths.run]).nextChunk==2)
+    local before=ser(wire.patterns);queriedNames={}
+    local remaining=api.runner.continue(cfg)
+    assert(remaining.chunked and remaining.first==2 and remaining.plan.counts.create==2)
+    assert(not queriedNames[wire.name])
+    api.runner.execute(cfg,remaining)
+    assert(ser(wire.patterns)==before and fine.patterns[0] and not api.runner.hasSaved())
+  end)
+end)
+
+test('chunked work keeps shared names in one capacity and sorting group',function()
+  withMatrix(function()
+    cfg.shared.chunked='on'
+    cfg.programs.wiremill.wire1='Shared';cfg.programs.wiremill.wireFine='Shared'
+    iface('Shared',81)
+    local groups=api.chunks.groups(cfg,'wiremill')
+    assert(#groups==1 and groups[1].forms.wire1 and groups[1].forms.wireFine)
+    local p=api.runner.preview(cfg,'wiremill')
+    assert(not p.chunked and #p.plan.capacities==1 and #p.manifest.recipes==4)
+  end)
+end)
+
+test('chunked full report export streams every destination without retaining their recipes',function()
+  withMatrix(function()
+    chunkWireFixture()
+    local p=api.runner.preview(cfg,'wiremill')
+    local file=io.open('/home/chunk-report','w')
+    api.chunks.export(cfg,p,file);file:close()
+    assert(not p.current and files['/home/chunk-report']:lower():find('1x wire',1,true)
+      and files['/home/chunk-report']:lower():find('fine wire',1,true) and mutations==0)
+  end)
+end)
+
+test('chunked preview UI navigates destinations and exports the full program',function()
+  withMatrix(function()
+    chunkWireFixture();files[api.paths.config]=ser(cfg)
+    queue(click('[ Wiremill ]'),click('[ Preview selected ]',47),function()
+      assert(frame[6]:find('Next destination',1,true) and frame[6]:find('1/2 destinations',1,true))
+      assert(frame[8]:find('Execute preview runs every remaining',1,true))
+      return click('[ Next destination ]',6)()
+    end,function()
+      assert(frame[6]:find('2/2 destinations',1,true))
+      assert(table.concat(frame,'\n'):find('Fine wire',1,true))
+      return click('[ Export report ]',45)()
+    end,function()
+      assert(files['/home/assline-preview.txt']:lower():find('1x wire',1,true))
+      assert(files['/home/assline-preview.txt']:lower():find('fine wire',1,true))
+      snapshot('destination_chunks')
+      return 'interrupted'
+    end)
+    api.runUI()
+  end)
+end)
 local function insulator()
   cableDestinations(cfg,cfg.programs.assline.target);target.patterns={}
   return api.runner.preview(cfg,'insulator')
@@ -1445,6 +1556,50 @@ test('sorting progress write failure recovers without replaying an already deliv
     api.recover(cfg)
     assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
     assert(next(editor.patterns)==nil and not files[api.paths.pending])
+  end)
+end)
+
+test('streamed sorting recovery keeps a 108 pattern cycle out of the pending record',function()
+  local banks={}
+  for n=1,3 do banks[n]=iface('Large sorting group',200+n) end
+  local manifest={version=1,source={recipeVersion='test',targetVersion='test'},recipes={},unresolved={}}
+  for n=1,108 do
+    local p=pattern({item('Feed '..n,1,10000+n)},{item('Product '..n,1,20000+n)})
+    manifest.recipes[n]=manifestFor(p).recipes[1]
+    local place=n%108
+    banks[math.floor(place/36)+1].patterns[place%36]=p
+  end
+  local routing={destination='Large sorting group',donors=cfg.shared.donors,workspace=cfg.shared.editor}
+  local plan=maker.scan(cfg,manifest,routing);assert(#plan.moves==109 and #plan.errors==0)
+  fail={label='send-after'}
+  mustFail(function() maker.apply(cfg,'wiremill',plan,manifest,nil,nil,routing) end,'injected')
+  local op=unser(files[api.paths.pending])
+  assert(op.kind=='sort' and not op.moves and op.count==109 and #files[api.paths.pending]<1500)
+  assert(#files[api.paths.sorting]>20000)
+  local saved=files[api.paths.sorting]
+  files[api.paths.sorting]=saved:sub(1,20)..'x'..saved:sub(22)
+  local before=mutations
+  mustFail(function() api.recover(cfg) end,'journal changed')
+  assert(mutations==before and files[api.paths.pending])
+  files[api.paths.sorting]=saved;largestFileRead=0
+  api.recover(cfg)
+  assert(largestFileRead<=4096 and next(editor.patterns)==nil and not files[api.paths.sorting])
+  for n=1,108 do
+    assert(banks[math.floor((n-1)/36)+1].patterns[(n-1)%36].outputs[1].damage==20000+n)
+  end
+end)
+
+test('streamed sorting retains compatibility with an older inline recovery journal',function()
+  withMatrix(function()
+    local p=insulator();api.runner.execute(cfg,p)
+    target.patterns[0],target.patterns[1]=target.patterns[1],target.patterns[0]
+    p=api.runner.preview(cfg,'insulator')
+    files[api.paths.pending]=ser({version=1,kind='sort',id='old-inline',moves=p.plan.moves,
+      direct='direct',terminal='terminal',data='data',buffer={location=editor.location,side=editor.side}})
+    files[api.paths.cursor]=ser({id='old-inline',index=1})
+    api.recover(cfg)
+    assert(target.patterns[0].outputs[1].damage==106 and target.patterns[1].outputs[1].damage==206)
+    assert(not files[api.paths.pending] and next(editor.patterns)==nil)
   end)
 end)
 
@@ -3318,6 +3473,7 @@ end)
 local function withLiquidMaterials(keys, run)
   local saved=package.loaded.assline_liquid_data
   local savedMatrix=package.loaded.assline_data
+  local preload,preloadMatrix=package.preload.assline_liquid_data,package.preload.assline_data
   local originalMatrix=require('assline_data');local matrix={}
   for k,v in pairs(originalMatrix) do matrix[k]=v end
   matrix.materials={}
@@ -3325,14 +3481,17 @@ local function withLiquidMaterials(keys, run)
     if keys[m.name:lower():gsub('[^a-z0-9]','')] then matrix.materials[#matrix.materials+1]=cp(m) end
   end
   package.loaded.assline_data=matrix
+  package.preload.assline_data=function() return matrix end
   local original=require('assline_liquid_data');local data={}
   for k,v in pairs(original) do data[k]=v end
   data.materials={}
   for _,m in ipairs(original.materials) do if keys[m.key] then data.materials[#data.materials+1]=cp(m) end end
   package.loaded.assline_liquid_data=data
+  package.preload.assline_liquid_data=function() return data end
   local ok,why=pcall(run,data)
   package.loaded.assline_liquid_data=saved
   package.loaded.assline_data=savedMatrix
+  package.preload.assline_liquid_data,package.preload.assline_data=preload,preloadMatrix
   assert(ok,why)
 end
 local function liquidStack(data,index,amount)
@@ -3362,6 +3521,91 @@ local function liquidFixture(data)
   local casts=iface(cfg.programs.fluidShaper.ingot,82)
   return extractor,core,casts
 end
+
+test('chunked Fluid Shaper retires extraction once then shares donors across enabled molds',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    cfg.shared.chunked='on';cfg.programs.fluidShaper.forms='ingot,plate,stick'
+    for n,key in ipairs({'ingot','plate','stick'}) do iface(cfg.programs.fluidShaper[key],81+n) end
+    local m=data.materials[1]
+    local old=iface('Old Fluid Extractor',90,{[0]=liquidPattern({liquidStack(data,m.ingot,256)},
+      {liquidStack(data,m.fluid,36864)})})
+    iface('Independent melting',91,{[0]=liquidPattern({item('Tungsten Dust',1,2081)},
+      {liquidStack(data,m.fluid,144)})})
+    local p=api.runner.preview(cfg,'fluidShaper')
+    assert(p.chunked and #p.chunks==3 and p.plan.counts.create==3 and p.plan.counts.retire==1)
+    assert(#p.plan.errors==0 and p.current.plan.supplyCounts)
+    api.runner.execute(cfg,p)
+    assert(not api.runner.hasSaved() and not old.patterns[0])
+    local nextPlan=api.runner.preview(cfg,'fluidShaper')
+    assert(nextPlan.plan.reused==3 and nextPlan.plan.counts.retire==0 and not api.runner.hasChanges(nextPlan))
+  end)
+end)
+
+test('chunked Fluid Shaper Continue keeps the global proof and skips completed mold edits',function()
+  withLiquidMaterials({tungsten=true},function(data)
+    cfg.shared.chunked='on';cfg.programs.fluidShaper.forms='ingot,plate,stick'
+    local banks={}
+    for n,key in ipairs({'ingot','plate','stick'}) do banks[n]=iface(cfg.programs.fluidShaper[key],81+n) end
+    local m=data.materials[1]
+    iface('Independent melting',91,{[0]=liquidPattern({item('Tungsten Dust',1,2081)},
+      {liquidStack(data,m.fluid,144)})})
+    buffer.patterns[2]=cp(buffer.patterns[0])
+    local p=api.runner.preview(cfg,'fluidShaper');local stopping=false
+    mustFail(function() api.runner.execute(cfg,p,function(message)
+      if message:find('Completed destination 1 /',1,true) then stopping=true end
+    end,function() return {stop=stopping} end) end,api.stopped)
+    local before=ser(banks[1].patterns)
+    local remaining=api.runner.continue(cfg)
+    assert(remaining.first==2 and remaining.plan.counts.create==2)
+    api.runner.execute(cfg,remaining)
+    assert(ser(banks[1].patterns)==before and banks[2].patterns[0] and banks[3].patterns[0])
+    assert(not api.runner.hasSaved())
+  end)
+end)
+
+test('chunked Fluid Shaper rejects cycles crossing different material and mold destinations',function()
+  withLiquidMaterials({tungsten=true,aluminium=true},function(data)
+    cfg.shared.chunked='on';cfg.programs.fluidShaper.forms='ingot,plate'
+    iface(cfg.programs.fluidShaper.ingot,81);iface(cfg.programs.fluidShaper.plate,82)
+    local byKey={};for _,m in ipairs(data.materials) do byKey[m.key]=m end
+    local a,b=byKey.tungsten,byKey.aluminium
+    iface('Melting A',90,{[0]=liquidPattern({item('Aluminium Plate',1,17019)},
+      {liquidStack(data,a.fluid,144)})})
+    iface('Melting B',91,{[0]=liquidPattern({liquidStack(data,a.ingot,1)},
+      {liquidStack(data,b.fluid,144)})})
+    local p=api.runner.preview(cfg,'fluidShaper')
+    assert(p.chunked and p.plan.counts.create==0 and not api.runner.hasChanges(p))
+    iface('Independent A',92,{[0]=liquidPattern({item('External Feed',1,9999)},
+      {liquidStack(data,a.fluid,144)})})
+    p=api.runner.preview(cfg,'fluidShaper')
+    assert(p.plan.counts.create==4 and #p.plan.errors==0 and mutations==0)
+  end)
+end)
+
+test('chunked full-catalog Fluid Shaper preview holds one destination and compact summaries',function()
+  cfg.shared.chunked='on'
+  local choices=api.programs.byId.fluidShaper.formChoices
+  local selected={};for _,entry in ipairs(choices) do selected[#selected+1]=entry[1] end
+  cfg.programs.fluidShaper.forms=table.concat(selected,',')
+  local data=require('assline_data')
+  local banks=math.ceil(#data.materials/36)+1
+  for n,entry in ipairs(choices) do
+    local name=cfg.programs.fluidShaper[entry[1]]
+    for index=1,banks do iface(name,1000+n*banks+index) end
+  end
+  local compile=api.maker.compile;local largest=0
+  api.maker.compile=function(...)
+    local m,r,o=compile(...);largest=math.max(largest,#m.recipes);return m,r,o
+  end
+  local ok,p=pcall(api.runner.preview,cfg,'fluidShaper')
+  api.maker.compile=compile;assert(ok,p)
+  assert(p.chunked and #p.chunks==#choices and p.plan.counts.create>1000)
+  assert(largest<=#data.materials and #p.current.manifest.recipes<=#data.materials)
+  assert(#ser(p.chunks)<150000 and not p.plan.layout and not p.manifest.recipes)
+  assert(mutations==0 and #p.plan.errors==0)
+  print('STRESS: '..#p.chunks..' destinations; '..p.plan.counts.create..' new patterns; '
+    ..largest..' maximum recipes in one manifest; '..#ser(p.chunks)..' summary bytes')
+end)
 
 test('liquid migration hashes large network snapshots within the Data Card byte limit',function()
   cardLimit=1024
