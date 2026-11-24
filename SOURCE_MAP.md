@@ -25,6 +25,7 @@ build source is under `source/`. The root Lua files, `data/matrix.lua`,
 | `source/lib/batch.lua`, `source/data/tiers.json` | One shared batch policy and one versioned voltage-tier definition table |
 | `source/lib/modes.lua` | Expands selected semantic recipe rules using the material matrix |
 | `source/lib/planner.lua` | Pure destination capacity, reuse, sorting and creation planning |
+| `source/lib/components.lua`, `source/data/components.json` | Component casing/rubber selection over shared native recipe identities and alternate-route deltas |
 | `source/lib/supply.lua` | Reusable AND/OR recipe dependency graph and independent-supply checks |
 | `source/lib/plasma.lua`, `source/data/plasma.json` | Plasma upgrade/feed/fusion selection and compact source-verified product catalog |
 | `source/lib/melting.lua` | Melting Core route/priority selection, semantic extractor matching and shared cast filtering |

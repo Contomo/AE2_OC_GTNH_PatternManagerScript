@@ -312,7 +312,12 @@ refills and Pause/Stop/Continue work through the existing maker.
 Its **Installed component casing tier** selector limits recipes by their actual
 scraped casing requirement (LV through UXV), separately from recipe voltage.
 In tiered mode the shared progression and voltage gates also apply. The **Component
-rubber** selector chooses SBR, silicone or ordinary rubber. Ordinary rubber has
+rubber** selector chooses SBR, silicone, ordinary rubber, or **Both (SBR + Silicone)**.
+Both pairs verified routes with identical non-rubber inputs: their common inputs
+are doubled, one native batch of each rubber is requested, and the pattern outputs
+128 components. This applies to pumps and conveyors from LV through UMV, including
+solid rubber sheets and molten rubber. Rubber-free recipes retain their native
+64-component batches and alternative-route selection. Ordinary rubber has
 no pump/conveyor route at IV through UMV; those exclusions are shown explicitly.
 The eight interface names appear in one compact checkbox/name list. Disable banks
 you do not want in this run; disabled groups are excluded before recipe planning
@@ -321,10 +326,11 @@ and their interfaces are not scanned.
 Circuit assignments are Motor 1, Piston 2, Pump 3, Robot Arm 4, Conveyor 5,
 Emitter 6, Sensor 7 and Field Generator 8. These circuits stay stocked in their
 respective buffers and are omitted from patterns. Recipes below IV need no circuit.
-Each pattern requests the complete native batch for **64 components**. Batch
+Single-rubber and rubber-free patterns request a native batch of **64 components**;
+the combined-rubber patterns request two native batches for **128 components**. Batch
 curves and per-ingredient quantity limits do not shrink or multiply these cycles;
 some native fluid quantities exceed the global default limit. Existing proportional
-patterns are recognized and resized to the native amounts. Compatible installed
+patterns are recognized and resized to the selected batch. Compatible installed
 motor and high-tier material alternatives are preferred to a new competing route.
 Changing rubber does not delete old patterns for another rubber; they remain
 visible in Existing as other patterns kept by the shared planner.

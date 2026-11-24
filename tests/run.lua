@@ -4298,6 +4298,48 @@ test('component motor alternatives reuse and resize an existing multiplied recip
   assert(again.plan.reused==8 and not api.runner.hasChanges(again))
 end)
 
+test('component both-rubber mode installs and resizes combined batches through destination chunks',function()
+  local banks=componentFixture('IV')
+  local values=cfg.programs.componentAssembly
+  values.forms='pump,conveyor';values.rubber='both';cfg.shared.chunked='on'
+  local single=require('assline_components').compile(require('assline_component_data'),
+    {casingTier='LV',rubber='sbr',forms={pump=true}}).recipes[1]
+  banks.pump.patterns[0]=liquidPattern(single.inputs,single.outputs)
+  local p=api.runner.preview(cfg,'componentAssembly')
+  assert(p.chunked and p.plan.counts.create==10 and p.plan.reused==0 and p.plan.counts.kept==1)
+  local combined=cp(p.current.manifest.recipes[1])
+  for _,r in ipairs(p.current.manifest.recipes) do assert(r.outputs[1].size==128 and r.batch.multiplier==2) end
+  api.runner.execute(cfg,p)
+  for _,bank in ipairs({banks.pump,banks.conveyor}) do
+    for slot=0,4 do assert(bank.patterns[slot].outputs[1].size==128) end
+    assert(not bank.patterns[0].isCraftable and unser(bank.patterns[0].tag).__value.preserved.__value==42)
+  end
+  assert(banks.pump.patterns[5].outputs[1].size==64)
+  for _,stacks in ipairs({combined.inputs,combined.outputs}) do for _,s in ipairs(stacks) do s.size=s.size*2 end end
+  banks.pump.patterns[0]=liquidPattern(combined.inputs,combined.outputs)
+  p=api.runner.preview(cfg,'componentAssembly')
+  assert(p.plan.reused==10 and p.plan.counts.resize==1 and p.plan.counts.create==0)
+  api.runner.execute(cfg,p)
+  assert(banks.pump.patterns[0].outputs[1].size==128 and not api.runner.hasSaved())
+  assert(not api.runner.hasChanges(api.runner.preview(cfg,'componentAssembly')))
+end)
+
+test('component settings offer a fourth rubber selection and preview the combined native batches',function()
+  componentFixture('LV');cfg.programs.componentAssembly.forms='pump,conveyor'
+  files[api.paths.config]=ser(cfg)
+  queue(click('[ Component Assembly Line ]'),click('[ Program settings ]',47),
+    option('Component rubber','SBR'),click('Both (SBR + Silicone)'),function()
+      assert(unser(files[api.paths.config]).programs.componentAssembly.rubber=='both')
+      return nav('Programs')()
+    end,click('[ Preview selected ]',47),function()
+      local text=table.concat(frame,'\n')
+      assert(text:find('128 x',1,true) and text:find('2 native batches',1,true))
+      snapshot('component_both_rubbers')
+      return 'interrupted'
+    end)
+  api.runUI()
+end)
+
 test('component casing, rubber and eight togglable names share one measured settings page',function()
   local banks=componentFixture('IV');files[api.paths.config]=ser(cfg)
   queue(click('[ Component Assembly Line ]'),click('[ Preview selected ]',47),function()

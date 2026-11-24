@@ -140,6 +140,49 @@ test('alternate choices are distinct verified routes for the same output', funct
   assert(motorAlternates)
 end)
 
+test('both rubbers sums two verified batches while rubber-free recipes retain their native quantities',function()
+  local sbr=compile({casingTier='UXV',rubber='sbr'})
+  local silicone=compile({casingTier='UXV',rubber='silicone'})
+  local both=compile({casingTier='UXV',rubber='both'})
+  assert(#both.recipes==104 and #both.skipped==0 and both.policy.rubber=='both')
+  local doubled=0
+  local function amounts(recipe)
+    local result={}
+    for _,s in ipairs(recipe.inputs) do result[U.canonical({s.type,s.name,s.damage})]=s.size end
+    return result
+  end
+  for index,r in ipairs(both.recipes) do
+    local a,b=sbr.recipes[index],silicone.recipes[index]
+    if Planner.recipeKey(a)~=Planner.recipeKey(b) then
+      doubled=doubled+1
+      local expected=amounts(a)
+      for id,n in pairs(amounts(b)) do expected[id]=(expected[id] or 0)+n end
+      assert(U.eq(amounts(r),expected) and r.outputs[1].size==128)
+      assert(r.batch.native and r.batch.multiplier==2 and #both.choices[index]==1)
+      assert(require('assline_batch').describe(r.batch):find('2 native batches',1,true))
+      assert(U.eq(r.stock,a.stock) and U.eq(r.stock,b.stock))
+    else
+      assert(Planner.recipeKey(r)==Planner.recipeKey(a) and r.outputs[1].size==64)
+      assert(#both.choices[index]==#sbr.choices[index] and r.batch.multiplier==1)
+    end
+  end
+  assert(doubled==24)
+  local batch=U.clone(Config.defaults.batch)
+  batch.currentTier='UXV';batch.itemLimit='1';batch.fluidLimit='1'
+  assert(#compile({casingTier='UXV',rubber='both',batch=batch}).recipes==104)
+end)
+
+test('both rubbers never combines alternatives with different non-rubber quantities',function()
+  local sample={version=1,source={},casings={'LV'},components={{key='pump',label='Pump',circuit=3}},
+    names={'test:part','test:sbr','test:silicone','test:pump'},
+    items={{type='item',name=1,damage=0},{type='item',name=2,damage=0,polymer='sbr'},
+      {type='item',name=3,damage=0,polymer='silicone'},{type='item',name=4,damage=0}},
+    recipes={{component=1,tier='LV',casing=1,output=4,yield=64,eut=24,
+      inputs={{1,1},{2,2}},stock={},variants={{remove={2},set={{1,2},{3,2}}}}}}}
+  local r=Modes.compile(sample,'components',{casingTier='LV',rubber='both'})
+  assert(#r.recipes==0 and #r.skipped==1 and r.skipped[1].reason:find('identical other inputs',1,true))
+end)
+
 test(
   'unified configuration prefills component names and allows shared destinations',
   function()

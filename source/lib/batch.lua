@@ -361,7 +361,9 @@ end
 
 function M.describe(detail)
   if detail.native then
-    return 'Native batch  |  Component ' .. detail.materialTier .. '  |  ' .. M.voltageText(detail)
+    local label = (detail.multiplier or 1) > 1 and (detail.multiplier .. ' native batches')
+      or 'Native batch'
+    return label .. '  |  Component ' .. detail.materialTier .. '  |  ' .. M.voltageText(detail)
   end
   local material = detail.materialTier
     or (detail.effectiveTier and (detail.effectiveTier .. ' estimated') or 'unclassified')

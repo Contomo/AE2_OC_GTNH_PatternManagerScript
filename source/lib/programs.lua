@@ -303,9 +303,14 @@ casingField.kind, casingField.group = 'select', 'Recipe selection'
 local rubberField = choice(
   'rubber',
   'Component rubber',
-  { { 'sbr', 'SBR' }, { 'silicone', 'Silicone' }, { 'rubber', 'Rubber (LV-EV only)' } },
+  {
+    { 'sbr', 'SBR' },
+    { 'silicone', 'Silicone' },
+    { 'rubber', 'Rubber (LV-EV only)' },
+    { 'both', 'Both (SBR + Silicone)' },
+  },
   'sbr',
-  'Choose one route. Rubber has no pump/conveyor route at IV through UMV.'
+  'Both combines matching SBR and silicone batches into 128 components. Ordinary rubber has no pump/conveyor route at IV through UMV.'
 )
 rubberField.kind, rubberField.group = 'select', 'Recipe selection'
 local componentProgram = {

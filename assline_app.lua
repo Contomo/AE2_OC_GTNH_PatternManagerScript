@@ -673,7 +673,9 @@ end
 
 function M.describe(detail)
   if detail.native then
-    return 'Native batch  |  Component ' .. detail.materialTier .. '  |  ' .. M.voltageText(detail)
+    local label = (detail.multiplier or 1) > 1 and (detail.multiplier .. ' native batches')
+      or 'Native batch'
+    return label .. '  |  Component ' .. detail.materialTier .. '  |  ' .. M.voltageText(detail)
   end
   local material = detail.materialTier
     or (detail.effectiveTier and (detail.effectiveTier .. ' estimated') or 'unclassified')
@@ -1123,9 +1125,14 @@ casingField.kind, casingField.group = 'select', 'Recipe selection'
 local rubberField = choice(
   'rubber',
   'Component rubber',
-  { { 'sbr', 'SBR' }, { 'silicone', 'Silicone' }, { 'rubber', 'Rubber (LV-EV only)' } },
+  {
+    { 'sbr', 'SBR' },
+    { 'silicone', 'Silicone' },
+    { 'rubber', 'Rubber (LV-EV only)' },
+    { 'both', 'Both (SBR + Silicone)' },
+  },
   'sbr',
-  'Choose one route. Rubber has no pump/conveyor route at IV through UMV.'
+  'Both combines matching SBR and silicone batches into 128 components. Ordinary rubber has no pump/conveyor route at IV through UMV.'
 )
 rubberField.kind, rubberField.group = 'select', 'Recipe selection'
 local componentProgram = {
@@ -3816,10 +3823,68 @@ local Components=(function()
 -- Source: source/lib/components.lua
 -- Component recipes have genuinely different ingredients at each tier. Shared
 -- identities and alternate-route deltas are scraped; placement is handled by
--- the normal maker. A machine cycle always produces its native stack of 64.
+-- the normal maker. A machine cycle always produces its native stack of 64;
+-- both-rubber patterns combine two verified cycles.
 local U = U
 local Batch = Batch
 local M = {}
+
+-- Expand scraped deltas once for every selection mode. Both-rubber batches
+-- pair only routes whose other ingredients and quantities are identical.
+local function rubberRoutes(data, row, polymer)
+  local routes, groups, order = {}, {}, {}
+  for variantIndex = 0, #row.variants do
+    local amounts, common, kind, compatible = {}, {}, nil, true
+    for _, pair in ipairs(row.inputs) do
+      amounts[pair[1]] = pair[2]
+    end
+    if variantIndex > 0 then
+      local delta = row.variants[variantIndex]
+      for _, index in ipairs(delta.remove) do
+        amounts[index] = nil
+      end
+      for _, pair in ipairs(delta.set) do
+        amounts[pair[1]] = pair[2]
+      end
+    end
+    for index, amount in pairs(amounts) do
+      local material = data.items[index].polymer
+      if material then
+        kind = kind and kind ~= material and 'mixed' or material
+        if material ~= polymer then
+          compatible = false
+        end
+      else
+        common[index] = amount
+      end
+    end
+    if polymer == 'both' and kind then
+      if kind == 'sbr' or kind == 'silicone' then
+        local key = U.canonical(common)
+        if not groups[key] then
+          groups[key] = { sbr = {}, silicone = {} }
+          order[#order + 1] = groups[key]
+        end
+        local choices = groups[key][kind]
+        choices[#choices + 1] = amounts
+      end
+    elseif compatible then
+      routes[#routes + 1] = { amounts = amounts, cycles = 1 }
+    end
+  end
+  for _, group in ipairs(order) do
+    for _, sbr in ipairs(group.sbr) do
+      for _, silicone in ipairs(group.silicone) do
+        local amounts = U.clone(sbr)
+        for index, amount in pairs(silicone) do
+          amounts[index] = (amounts[index] or 0) + amount
+        end
+        routes[#routes + 1] = { amounts = amounts, cycles = 2 }
+      end
+    end
+  end
+  return routes
+end
 
 function M.compile(data, options, checkpoint)
   U.check(data.version == 1 and data.components and data.recipes, 'Unsupported component catalog')
@@ -3833,7 +3898,7 @@ function M.compile(data, options, checkpoint)
   U.check(casingIndex, 'Select the installed Component Assembly Line casing tier')
   local polymer = options.rubber or 'sbr'
   U.check(
-    polymer == 'sbr' or polymer == 'silicone' or polymer == 'rubber',
+    polymer == 'sbr' or polymer == 'silicone' or polymer == 'rubber' or polymer == 'both',
     'Unknown component rubber'
   )
   local manifest = {
@@ -3853,6 +3918,10 @@ function M.compile(data, options, checkpoint)
     unusedExcluded = 0,
     unclassifiedRecipes = 0,
   }
+  if polymer == 'both' then
+    manifest.source.batchPolicy =
+      'SBR + silicone pairs combine two native batches; rubber-free recipes use one. Shared tier gates and casing limit apply.'
+  end
   local function ingredient(index, amount)
     local item = U.check(data.items[index], 'Unknown component ingredient')
     return {
@@ -3883,50 +3952,35 @@ function M.compile(data, options, checkpoint)
         or batch.excluded
       local choices = {}
       if not reason then
-        for variantIndex = 0, #row.variants do
-          local amounts = {}
-          for _, pair in ipairs(row.inputs) do
-            amounts[pair[1]] = pair[2]
+        for _, route in ipairs(rubberRoutes(data, row, polymer)) do
+          local inputs = {}
+          for _, index in ipairs(U.keys(route.amounts)) do
+            inputs[#inputs + 1] = ingredient(index, route.amounts[index])
           end
-          if variantIndex > 0 then
-            local delta = row.variants[variantIndex]
-            for _, index in ipairs(delta.remove) do
-              amounts[index] = nil
-            end
-            for _, pair in ipairs(delta.set) do
-              amounts[pair[1]] = pair[2]
-            end
+          local stock = {}
+          for _, pair in ipairs(row.stock) do
+            stock[#stock + 1] = ingredient(pair[1], pair[2])
           end
-          local compatible, inputs = true, {}
-          for _, index in ipairs(U.keys(amounts)) do
-            local material = data.items[index].polymer
-            if material and material ~= polymer then
-              compatible = false
-            end
-            inputs[#inputs + 1] = ingredient(index, amounts[index])
-          end
-          if compatible then
-            local stock = {}
-            for _, pair in ipairs(row.stock) do
-              stock[#stock + 1] = ingredient(pair[1], pair[2])
-            end
-            choices[#choices + 1] = {
-              kind = 'processing',
-              material = component.label,
-              outputForm = component.key,
-              outputLabel = row.tier,
-              label = component.label .. ' / ' .. row.tier,
-              inputs = inputs,
-              outputs = { U.clone(output) },
-              stock = stock,
-              casingTier = row.tier,
-              componentCircuit = component.circuit,
-              batch = U.clone(batch),
-            }
-          end
+          local nativeBatch = U.clone(batch)
+          nativeBatch.multiplier = route.cycles
+          choices[#choices + 1] = {
+            kind = 'processing',
+            material = component.label,
+            outputForm = component.key,
+            outputLabel = row.tier,
+            label = component.label .. ' / ' .. row.tier,
+            inputs = inputs,
+            outputs = { ingredient(row.output, row.yield * route.cycles) },
+            stock = stock,
+            casingTier = row.tier,
+            componentCircuit = component.circuit,
+            batch = nativeBatch,
+          }
         end
         if #choices == 0 then
-          reason = 'No native route using the selected rubber'
+          reason = polymer == 'both'
+              and 'No matching SBR and silicone routes with identical other inputs'
+            or 'No native route using the selected rubber'
         end
       end
       if reason then
